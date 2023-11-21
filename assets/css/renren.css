@@ -1,0 +1,366 @@
+
+
+/* The grid: Four equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 25%;
+  padding: 0 10px 0 10px;
+  padding-bottom:0
+}
+.renDel {
+  position:relative;
+  top:-35px;
+  left:2px;
+}
+
+
+/* Style the images inside the grid */
+.column img {
+  opacity: 0.8; 
+  cursor: pointer; 
+  margin-bottom:0px;
+  height:208px;
+}
+
+.column img:hover {
+  opacity: 1;
+}
+.left_content{
+  float:left;
+  width:75%;
+}
+.right_content{
+  float:right;
+  width:25%;
+}
+.right_content ul li{
+  border-bottom:1px dotted #222;
+  padding:7px 0;
+  font-size:16px;
+  padding-left:5px;
+}
+.right_content ul li a:hover{
+  color:#4285f4;
+}
+.right_content ul{
+list-style-type: none;
+}
+
+
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* The expanding image container */
+.container {
+  position: relative;
+  display: none;
+}
+
+/* Expanding image text */
+#imgtext {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  color: white;
+  font-size: 20px;
+}
+
+/* Closable button inside the expanded image */
+.closebtn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  color: white;
+  font-size: 35px;
+  cursor: pointer;
+}
+
+.presentation{
+  background-color: brown;
+  background-image: url(../images/bg.jpg);
+  font-family: Constantia, Arial, Helvetica, sans-serif;
+}
+.section{
+  margin-top:290px;
+  margin-left:250px;
+}
+.section img{
+  float:left;
+}
+.section h1{
+  font-size:60px;
+  width:400px;
+  margin-left:450px;
+}
+.activity{
+  margin-top:600px;
+}
+.act {
+  font-size: 25px;
+  margin-left:300px;
+  margin-bottom:950px;
+  clear:both;
+}
+.act img{
+  width:600px;
+  float:left;
+  margin-right:20px;
+}
+*{
+  margin:0;
+  padding:0;
+}
+
+table{width:100% !important}
+
+.report table {
+  clear: both;
+  margin-top: 6px !important;
+  margin-bottom: 6px !important;
+  max-width: none !important;
+  border-collapse: separate !important;
+  border-spacing: 2px;
+  border:1px solid #fff;
+  width:100%;
+}
+.report table th{
+  background-color: #4285f4;
+  padding:10px;
+  color:#fff;
+  border-bottom:5px solid #fff;
+
+}
+.report table td{
+  background-color: #cfd9fb;
+  padding:20px 10px;
+}
+.aip_generate table td.mat{
+  text-align:left;
+  padding:.2%;
+}
+.coverpage{
+  background-image: url(../images/bg-report.jpg);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size:18px;
+  background-repeat: no-repeat;
+  padding:50px;
+  padding-bottom:200px;
+}
+
+.logocenter {
+  text-align:center;
+}
+.coverpage h1{
+  font-family: Poppins, Arial, Helvetica, sans-serif;
+  font-size:70px;
+  font-weight: 900;
+  text-align:center;
+  margin-bottom:50px;
+  margin-top:20px;
+}
+.coverpage h2{
+  font-family: Poppins, Arial, Helvetica, sans-serif;
+  font-size:60px;
+  font-weight: 600;
+  text-align:center;
+}
+.coverpage h3{
+  font-family: Poppins, Arial, Helvetica, sans-serif;
+  font-size:60px;
+  font-weight: 300;
+  text-align:center;
+  font-style:italic;
+  margin-top:40px;
+}
+
+.pagecontent{
+  background-image: url(../images/bg-report.jpg);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size:18px;
+  background-repeat: no-repeat;
+  padding:50px;
+  padding-bottom:200px;
+}
+
+.logocenter {
+  text-align:center;
+}
+.pagecontent h1{
+  font-family: Poppins, Arial, Helvetica, sans-serif;
+  font-size:50px;
+  font-weight: 900;
+  text-align:center;
+  margin-bottom:50px;
+  margin-top:20px;
+}
+.pagecontent h2{
+  font-family: Poppins, Arial, Helvetica, sans-serif;
+  font-size:40px;
+  font-weight: 300;
+  font-style: italic;
+}
+.pagecontent h3{
+  font-family: Poppins, Arial, Helvetica, sans-serif;
+  font-size:60px;
+  font-weight: 300;
+  text-align:center;
+  font-style:italic;
+  margin-top:40px;
+}
+
+.filter{
+  background-image: url(../images/bg-report.jpg);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size:18px;
+  background-repeat: no-repeat;
+  padding:50px;
+  padding-bottom:200px;
+}
+.filter form{
+  width:400px;
+  margin:auto;
+  margin-top:100px;
+
+}
+.filter label{
+  display:block;
+  font-size:14px;
+  margin-top:15px;
+  margin-bottom:5px;
+}
+.filter input, .filter select{
+  padding:10px 10px;
+  width:400px;
+}
+.filter input{
+  padding:8px 10px;
+  width:380px;
+}
+.filter input[type="submit"]{
+  font-size:16px;
+  background-color:#4285f4;
+  border:0;
+  color:#fff;
+  padding:10px 15px;
+  width:400px;
+  margin-top:15px;
+}
+.nr{
+  padding-top:160px;
+  padding-bottom:80px;
+}
+
+.blockimage{
+  clear:both !important;
+  width: 60%;
+}
+.aip_generate{
+  font-family: calibri, Arial, Helvetica, sans-serif;
+  margin-top:20px;
+  text-align:center;
+  padding:0 2%;
+}
+
+.aip_generate .logo{
+  width:107px;
+  height:107px;
+}
+.aip_generate p{
+  font-size:16px;
+  font-weight:700;
+}
+.aip_generate .hr{
+  width:80%;
+  margin:auto;
+  height:11px;
+  margin-top:30px;
+  margin-bottom:30px;
+  background-image: url(../images/layouts/hr.gif);
+}
+.aip_generate h1{
+  margin-bottom:5px;
+}
+.aip_generate ul{
+  text-align:left;
+  margin-left:2%;
+  list-style-type: none;
+  font-weight:700;
+}
+.aip_generate table{
+  border-collapse: collapse;
+  margin-top:10px;
+  margin-bottom:50px;
+  font-size:12px;
+}
+.aip_generate table th{
+  background-color:#2ea6a9;
+  color:#fff;
+  padding:5px 10px;
+}
+.aip_generate table th.nobc{
+  background-color:#fff;
+  color:#000;
+}
+.aip_generate table td.bar{
+  background-color:#c4d79b;
+  color:#000;
+  text-align:left;
+  font-weight:bold;
+  padding:10px !important;
+}
+
+.aip_generate table td.pt{
+  background-color:#da9694;
+  color:#000;
+  font-weight:bold;
+  padding:5px !important;
+}
+.aip_generate table td.t{
+  background-color:#84d8ed;
+  color:#000;
+  font-weight:bold;
+  padding:5px !important;
+}
+
+.aip_generate table td.st{
+  background-color:#fde9d9;
+  font-weight: bold;
+  padding:5px !important;
+}
+
+.aip_generate table th, 
+.aip_generate table td{
+  border:1px solid #000;
+}
+
+.at{
+  top:50px;
+  position:fixed;
+}
+.at a{
+  padding:15px 25px;
+  color:#fff;
+  text-decoration:none;
+  background-color:#295ae7;
+  border-radius: 5px;
+}
+.at a:hover{
+  background-color:#3795f5;
+}
+
+.rca p{
+  font-weight: normal;
+  text-align:left;
+  margin-bottom: 30px;
+}
+.rca p.coa{
+  line-height: 1.7em;
+}
+
+
+
