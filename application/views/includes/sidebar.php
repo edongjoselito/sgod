@@ -70,7 +70,7 @@
                         
                     </ul>
                 </li> -->
-                <li>
+                <!-- <li>
                     <a href="javascript: void(0);" class="waves-effect">
                         <i class="mdi mdi-account-multiple-outline"></i>
                         <span>Settings</span>
@@ -78,15 +78,15 @@
                         
                     </a>
                     <ul class="nav-second-level" aria-expanded="false">
-                        <li><a href="<?= base_url(); ?>Page/settings_pillar">Pillar</a></li>
+                        <li><a href="<?= base_url(); ?>Page/settings_section">Sections</a></li>
                         <li><a href="<?= base_url(); ?>Page/settings_domain">Domain</a></li>
                         <li><a href="<?= base_url(); ?>Page/settings_strand">Strand</a></li>
                         <li><a href="<?= base_url(); ?>Page/settings_matatag">Matatag</a></li>
                         <li><a href="<?= base_url(); ?>Page/settings_io">Intermediate Outcome</a></li>
 
                     </ul>
-                </li>
-                <li>
+                </li> -->
+                <!-- <li>
                     <a href="javascript: void(0);" class="waves-effect">
                         <i class="fas fa-scroll"></i>
                         <spa>Implementation Plans</span>
@@ -96,7 +96,7 @@
                         
                         <li><a href="<?= base_url(); ?>Page/aip_action_list">Submitted AIP</a></li>
                     </ul>
-                </li>
+                </li> -->
                 
 
                 <li>
@@ -147,7 +147,7 @@
         <li>
             <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
                 <i class="ion ion-ios-paper"></i>
-                <span>  Memos  </span>
+                <span>  Memo  </span>
             </a>
         </li>
 
@@ -243,6 +243,13 @@
                         
                     </ul>
                 </li>
+
+                <li>
+                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
+                        <i class="ion ion-ios-paper"></i>
+                        <span>  Memo  </span>
+                    </a>
+                </li>
                
                 
                 <li>
@@ -259,14 +266,6 @@
                 </li>
 
                 <li>
-                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
-                        <i class="ion ion-ios-paper"></i>
-                        <span>  Memo </span>
-                    </a>
-                </li>
-
-
-                <li>
                     <a href="usersListv2" class="waves-effect">
                         <i class="mdi mdi-account-multiple-outline"></i>
                         <span>  Manage Users  </span>
@@ -278,6 +277,56 @@
         </div>
                 <!-- End Sidebar -->
                
+        <?php elseif($this->session->userdata('section')==='School'):?>
+            <div id="sidebar-menu">
+            <ul class="metismenu" id="side-menu">
+
+                <li class="menu-title">Navigation</li>
+
+                <li>
+                    <a href="<?= base_url(); ?>Page/School" class="waves-effect">
+                        <i class="mdi mdi-view-dashboard"></i>
+                        <span>  Dashboard  </span>
+                    </a>
+                 
+                </li>
+                <li>
+                    <a href="<?= base_url(); ?>Page/school_profile/<?= $this->session->username; ?>" class="waves-effect">
+                        <i class="fas fa-school"></i>
+                        <span>  School Profile  </span>
+                    </a>
+                 
+                </li>
+                <li>
+                    <a href="javascript: void(0);" class="waves-effect">
+                        <i class="fas fa-scroll"></i>
+                        <spa>Implementation Plan</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <ul class="nav-second-level" aria-expanded="false">
+                        <li><a href="<?= base_url(); ?>Page/aip_filter">AIP</a></li>
+                        <li><a href="<?= base_url(); ?>Page/sop">SOP</a></li>
+                        <li><a href="<?= base_url(); ?>Page/view_app">APP</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a href="javascript: void(0);" class="waves-effect">
+                        <i class="mdi mdi-account-multiple-outline"></i>
+                        <span>Settings</span>
+                        <span class="menu-arrow"></span>
+                        
+                    </a>
+                    <ul class="nav-second-level" aria-expanded="false">
+                        <li><a href="<?= base_url(); ?>Page/settings_pias">PIAs</a></li>
+                        <li><a href="<?= base_url(); ?>Page/settings_bs">Budget Source</a></li>
+                    </ul>
+                </li>
+               
+            </ul>
+
+        </div>
+                <!-- End Sidebar -->
              <?php elseif($this->session->userdata('section')==='Planning'):?>
             <div id="sidebar-menu">
             <ul class="metismenu" id="side-menu">
@@ -304,6 +353,8 @@
                     </ul>
                 </li>
                 <li>
+           
+                <li>
                     <a href="javascript: void(0);" class="waves-effect">
                         <i class="mdi mdi-office-building"></i>
                         <span> Schools </span>
@@ -315,14 +366,6 @@
                         
                     </ul>
                 </li>
-
-                <li>
-                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
-                        <i class="ion ion-ios-paper"></i>
-                        <span>  Memo </span>
-                    </a>
-                </li>
-
 
                 <li>
                     <a href="usersListv2" class="waves-effect">
@@ -362,6 +405,12 @@
                     </ul>
                 </li>
                 <li>
+                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
+                        <i class="ion ion-ios-paper"></i>
+                        <span>  Memo  </span>
+                    </a>
+                </li>
+                <li>
                     <a href="javascript: void(0);" class="waves-effect">
                         <i class="mdi mdi-office-building"></i>
                         <span> Schools </span>
@@ -373,14 +422,6 @@
                         
                     </ul>
                 </li>
-
-                <li>
-                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
-                        <i class="ion ion-ios-paper"></i>
-                        <span>  Memo </span>
-                    </a>
-                </li>
-
 
                 <li>
                     <a href="usersListv2" class="waves-effect">
@@ -420,6 +461,12 @@
                     </ul>
                 </li>
                 <li>
+                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
+                        <i class="ion ion-ios-paper"></i>
+                        <span>  Memo  </span>
+                    </a>
+                </li>
+                <li>
                     <a href="javascript: void(0);" class="waves-effect">
                         <i class="mdi mdi-office-building"></i>
                         <span> Schools </span>
@@ -431,14 +478,6 @@
                         
                     </ul>
                 </li>
-
-                <li>
-                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
-                        <i class="ion ion-ios-paper"></i>
-                        <span>  Memo </span>
-                    </a>
-                </li>
-
 
                 <li>
                     <a href="usersListv2" class="waves-effect">
@@ -478,6 +517,12 @@
                     </ul>
                 </li>
                 <li>
+                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
+                        <i class="ion ion-ios-paper"></i>
+                        <span>  Memo  </span>
+                    </a>
+                </li>
+                <li>
                     <a href="javascript: void(0);" class="waves-effect">
                         <i class="mdi mdi-office-building"></i>
                         <span> Schools </span>
@@ -489,14 +534,6 @@
                         
                     </ul>
                 </li>
-
-                <li>
-                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
-                        <i class="ion ion-ios-paper"></i>
-                        <span>  Memo </span>
-                    </a>
-                </li>
-
 
                 <li>
                     <a href="usersListv2" class="waves-effect">
@@ -536,6 +573,12 @@
                     </ul>
                 </li>
                 <li>
+                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
+                        <i class="ion ion-ios-paper"></i>
+                        <span>  Memo  </span>
+                    </a>
+                </li>
+                <li>
                     <a href="javascript: void(0);" class="waves-effect">
                         <i class="mdi mdi-office-building"></i>
                         <span> Schools </span>
@@ -547,14 +590,6 @@
                         
                     </ul>
                 </li>
-
-                <li>
-                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
-                        <i class="ion ion-ios-paper"></i>
-                        <span>  Memo </span>
-                    </a>
-                </li>
-
 
                 <li>
                     <a href="usersListv2" class="waves-effect">
@@ -594,6 +629,12 @@
                     </ul>
                 </li>
                 <li>
+                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
+                        <i class="ion ion-ios-paper"></i>
+                        <span>  Memo  </span>
+                    </a>
+                </li>
+                <li>
                     <a href="javascript: void(0);" class="waves-effect">
                         <i class="mdi mdi-office-building"></i>
                         <span> Schools </span>
@@ -605,14 +646,6 @@
                         
                     </ul>
                 </li>
-
-                <li>
-                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
-                        <i class="ion ion-ios-paper"></i>
-                        <span>  Memo </span>
-                    </a>
-                </li>
-
 
                 <li>
                     <a href="usersListv2" class="waves-effect">
@@ -651,7 +684,12 @@
                         
                     </ul>
                 </li>
-               
+                <li>
+                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
+                        <i class="ion ion-ios-paper"></i>
+                        <span>  Memo  </span>
+                    </a>
+                </li>
                 
                 <li>
                     <a href="javascript: void(0);" class="waves-effect">
@@ -665,14 +703,6 @@
                         
                     </ul>
                 </li>
-
-                <li>
-                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
-                        <i class="ion ion-ios-paper"></i>
-                        <span>  Memo </span>
-                    </a>
-                </li>
-
 
                 <li>
                     <a href="usersListv2" class="waves-effect">
@@ -711,6 +741,12 @@
                     </ul>
                 </li>
                 <li>
+                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
+                        <i class="ion ion-ios-paper"></i>
+                        <span>  Memo  </span>
+                    </a>
+                </li>
+                <li>
                     <a href="javascript: void(0);" class="waves-effect">
                         <i class="mdi mdi-office-building"></i>
                         <span> Schools </span>
@@ -722,14 +758,6 @@
                         
                     </ul>
                 </li>
-
-                <li>
-                    <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
-                        <i class="ion ion-ios-paper"></i>
-                        <span>  Memo </span>
-                    </a>
-                </li>
-
 
                 <li>
                     <a href="usersListv2" class="waves-effect">

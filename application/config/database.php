@@ -83,7 +83,7 @@ $db['default'] = array(
 
 	'hostname' => 'localhost',
 	'username' => 'root',
-	'password' => '',
+	'password' => 'moth34board',
 	'database' => 'depedmis_hris',
 
 	'dbdriver' => 'mysqli',

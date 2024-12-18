@@ -2,46 +2,6 @@
 class SGODModel extends CI_Model 
 {
 
-	function getMemo($id){
-		$query=$this->db->query("select * from sgod_memo where id='".$id."'");
-		return $query->result();
-	}
-
-	public function memo_attach()
-    {
-
-        $file = $this->upload->data();
-        $filename = $file['file_name'];
-		$id = $this->input->post('id');
-
-        $data = array(
-            'fileName' => $filename
-            // 'id' => $this->input->post('id')
-
-        );
-		$this->db->where('id', $id);
-        return $this->db->update('sgod_memo', $data);
-    }
-
-	public function memo_update()
-    {
-
-        $id = $this->input->post('id');
-		$memoNo = $this->input->post('memoNo');
-		$title = $this->input->post('title');
-		$added_by = $this->session->added_by;
-
-        $data = array(
-            'memoNo' => $memoNo,
-			'title' => $title
-
-        );
-		$this->db->where('id', $id);
-		$this->db->where('added_by', $added_by);
-        return $this->db->update('sgod_memo', $data);
-    }
-
-
 	function cPublic(){
 		$query=$this->db->query("select count(recID) as schoolCounts from schools where schoolType='Public'");
 		return $query->result();
@@ -397,11 +357,7 @@ class SGODModel extends CI_Model
 		return $result;
 	}
 
-	public function one_cond_count($table,$col,$val){
-		$this->db->where($col, $val);
-		$result = $this->db->get($table);
-		return $result;
-	}
+	
 	
 	public function count_sections($table, $param){
 		$this->db->where("secGroup", $param);
@@ -451,6 +407,12 @@ class SGODModel extends CI_Model
 		$this->db->where($col, $val);
 		$result = $this->db->get($table);
 		return $result->result();
+	}
+
+	public function one_cond_count($table,$col,$val){
+		$this->db->where($col, $val);
+		$result = $this->db->get($table);
+		return $result;
 	}
 
 
@@ -534,6 +496,9 @@ class SGODModel extends CI_Model
 		$this->db->delete($table);
 		return true;
 	}
+	
+
+	
 	public function table_num($table){
 		$query = $this->db->get_where($table, array('status' => '0'));
 		return $query;
@@ -911,7 +876,7 @@ class SGODModel extends CI_Model
     	$date = date('m/d/Y', time());
 
 		$data = array(
-		'submit_id' => $this->uri->segment(3),	
+		'submit_id' => $this->input->post('id'),
 		'remarks' => "Open for Editing",
 		'date' => $date,
 		'res' => $this->session->username
@@ -919,9 +884,24 @@ class SGODModel extends CI_Model
 
 		return $this->db->insert('sgod_aip_track', $data);	
 	}
+
+	public function aip_open_plans(){
+		date_default_timezone_set('Asia/Manila');
+    	$date = date('m/d/Y', time());
+
+		$data = array(
+		'reason' => $this->input->post('reason'), 
+		'school_id' => $this->input->post('school_id'),
+		'date_open' => $date, 
+		'submit_id' => $this->input->post('id')
+		); 
+
+		return $this->db->insert('sgod_approved_plans', $data);	
+	}
+
 	public function update_aip_open(){
 
-		$id = $this->uri->segment(3);
+		$id = $this->input->post('id');
 
 		$data = array(
 			'status' => 0,
@@ -998,17 +978,65 @@ class SGODModel extends CI_Model
 		$result = $this->db->get('schools');
 		return $result->result();
 	}
-	function insert_memo(){
-	
-		$data = array(
-			'memoNo' => $this->input->post('memoNo'),
-			'added_by' => $this->session->username,
-			'title' => $this->input->post('title')
-		);
 
-		return $this->db->insert('sgod_memo', $data);
+	// configured by tyrone
+	public function insert_memo(){
+        $file = $this->upload->data();
+        $filename = $file['file_name'];
+
+        $data = array(
+            'fileName' => $filename,
+            'title' => $this->input->post('title'),
+            'memoNo' => $this->input->post('memoNo'),
+			'added_by' => $this->session->username
+        ); 
+
+        return $this->db->insert('sgod_memo', $data);
+    }
+
+	public function memo_update(){
+
+        $data = array(
+            'title' => $this->input->post('title'),
+            'memoNo' => $this->input->post('memoNo'),
+			'added_by' => $this->session->username
+        ); 
+
+		$this->db->where('id', $this->input->post('id'));
+        return $this->db->update('sgod_memo', $data);
+    }
+
+	public function mfu(){
+		$file = $this->upload->data();
+        $filename = $file['file_name'];
+
+        $data = array(
+            'fileName' => $filename,
+			'added_by' => $this->session->username
+        ); 
 		
-	}
+		$this->db->where('id', $this->input->post('id'));
+        return $this->db->update('sgod_memo', $data);
+    }
+
+
+	// Update Model sa Memo
+
+    public function update_memo($id, $memoNo, $title, $file) {
+        $data = array(
+            'memoNo' => $memoNo,
+            'title' => $title,
+            'file' => $file,
+        );
+        $this->db->where('id', $id);
+        $this->db->update('sgod_memo', $data);
+    }
+
+	
+	
+
+
+	// end in this portion
 
 	public function multiple_images($image = array()){
 		return $this->db->insert_batch('sgod_acc_image',$image);
@@ -1054,6 +1082,32 @@ class SGODModel extends CI_Model
 	}
 
 
+	public function insert_sections(){
+		$data = array(
+		'sectionName' => $this->input->post('sectionName'), 
+		'sectionHead' => $this->input->post('sectionHead'), 
+		'sectionHeadPosition' => $this->input->post('sectionHeadPosition'), 
+		'secGroup' => $this->input->post('secGroup'), 
+		'member' => $this->input->post('member')
+		); 
+
+		return $this->db->insert('sgod_sections', $data);	
+	}
+
+	public function update_sections(){
+		$data = array(
+		'sectionName' => $this->input->post('sectionName'), 
+		'sectionHead' => $this->input->post('sectionHead'), 
+		'sectionHeadPosition' => $this->input->post('sectionHeadPosition'), 
+		'secGroup' => $this->input->post('secGroup'), 
+		'member' => $this->input->post('member')
+		); 
+
+		$this->db->where('id', $this->input->post('id'));
+		return $this->db->update('sgod_sections', $data);	
+	}
+
+	
 
 
 

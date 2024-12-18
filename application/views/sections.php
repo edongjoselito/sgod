@@ -108,6 +108,7 @@
                                                         <th>Section</th>
                                                         <th>Section Head</th>
                                                         <th>Position</th>
+                                                        <th>Members</th>
                                                         <th style="text-align:center">Manage</th>
                                                         <!-- <th style="text-align:center">Reports</th> -->
                                                     </tr>
@@ -118,8 +119,10 @@
                                                             <td><?= $row->sectionName; ?></td>
                                                             <td><?= $row->sectionHead; ?></td>
                                                             <td><?= $row->sectionHeadPosition; ?></td>
+                                                            <td><?= $row->member; ?></td>
                                                             <td style="text-align:center">
-                                                            <a href="delete_sec?id=<?php echo $row->id; ?>" class="text-danger" onclick="return confirm('Are you sure?')"><i class="mdi mdi-file-document-box-check-outline"></i>Delete</a> 
+                                                            <a href="<?= base_url(); ?>page/sections_edit/<?= $row->id; ?>"  class="text-success mr-1 tooltips" data-placement="top" data-toggle="tooltip" data-original-title="Edit"><i class="fas fa-pencil-alt"></i></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                            <a href="delete_sec?id=<?= $row->id; ?>" class="text-danger tooltips" data-placement="top" data-toggle="tooltip" data-original-title="Delete" onclick="return confirm('Are you sure?')"><i class="fas fa-trash-alt "></i></a> 
                                                         </tr>
                                                         
                                                     <?php }  ?>
@@ -199,6 +202,16 @@
                                             <div class="form-group">
                                                 <label >Position <span class="text-danger">*</span></label>
                                                 <input type="text" required  class="form-control" name="sectionHeadPosition" >
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label>Section Group <span class="text-danger">*</span></label>
+                                                <input type="text" required  class="form-control" name="secGroup" >
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label>Members <span class="text-danger">*</span></label>
+                                                <input type="text" required  class="form-control" name="member" >
                                             </div>
 
                                            
@@ -309,7 +322,7 @@
             </div>
              <!-- /.modal -->
 
-             
+
 
 
      <script src="<?= base_url(); ?>assets/libs/custombox/custombox.min.js"></script>
