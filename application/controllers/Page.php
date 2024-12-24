@@ -727,17 +727,25 @@ public function memo_delete(){
 	
 	}
 
+
+
 	function aip_action_list(){
 		$result['title'] = "ANNUAL IMPLEMENTATION PLAN ACTION LIST";
 
-		if($this->session->userdata('section')==='System Administrator'){
-			$result['data']=$this->SGODModel->get_all('sgod_aip_submit');
-		}else{
-			$result['data']=$this->SGODModel->one_cond('sgod_aip_submit','school_id',$this->session->username);
-		}
+		$result['data'] = $this->SGODModel->two_cond('sgod_aip_submit', 'school_id', $this->session->username, 'fy', $_SESSION['fy']);
 
+		$this->load->view('templates/head');
+		$this->load->view('templates/header');
 		$this->load->view('aip_action_view', $result);
+	}
 
+	public function school_allocations2(){
+		$schoolID = $this->session->userdata('username');
+		$result['st'] = $this->SGODModel->one_cond_row('schools','schoolID',$this->session->username);
+		$result['bs'] = $this->SGODModel->no_cond('sgod_settings_bs');
+		$result['last'] = $this->SGODModel->get_last_record('sgod_school_allocation');
+		$result['data'] = $this->PersonnelModel->school_allocations2($schoolID);
+		$this->load->view('school_allocation2', $result);
 	}
 
 	function aip_track(){
@@ -999,6 +1007,18 @@ public function memo_delete(){
 
 		$this->load->view('aip_generate', $result);
 	}
+
+	function aip_sub(){
+		$result['title'] = "SUBMITTED PLANS";
+		$fys = $this->SGODModel->last_record('sgod_fy', 'id', 'DESC');
+
+		$result['data'] = $this->SGODModel->two_cond('sgod_aip_submit', 'fy', $fys->fy,'status',0);
+
+		$this->load->view('templates/head');
+		$this->load->view('templates/header');
+		$this->load->view('aip_action_view', $result);
+	}
+
 
 	function generate_aip_filter(){
 		$result['title'] = "Generate ANNUAL IMPLEMENTATION PLAN";
