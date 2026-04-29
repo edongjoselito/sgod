@@ -266,6 +266,32 @@ public function memo() {
 	
 	$data['page'] = $this->SGODModel->get_all_orderby('sgod_memo','id','DESC');
 	$data['ln'] = $this->SGODModel->get_last_record('sgod_memo');
+	
+	// Calculate next memo number
+	if ($data['ln']) {
+		$lastMemoNo = $data['ln']->memoNo;
+		preg_match('/SGOD-(\d{4})/', $lastMemoNo, $yearMatches);
+		preg_match('/(\d+)$/', $lastMemoNo, $numMatches);
+
+		if (isset($yearMatches[1]) && isset($numMatches[1])) {
+			$lastYear = intval($yearMatches[1]);
+			$currentYear = date('Y');
+			$lastNum = intval($numMatches[1]);
+
+			if ($currentYear > $lastYear) {
+				$data['next_memo_no'] = 'Memo_SGOD-' . $currentYear . '-001';
+			} else {
+				$nextNum = $lastNum + 1;
+				$nextNumPadded = str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+				$nextMemoNo = preg_replace('/\d+$/', $nextNumPadded, $lastMemoNo);
+				$data['next_memo_no'] = $nextMemoNo;
+			}
+		} else {
+			$data['next_memo_no'] = '';
+		}
+	} else {
+		$data['next_memo_no'] = 'Memo_SGOD-' . date('Y') . '-001';
+	}
 
 	$id = $this->input->post('id');
 	
@@ -316,18 +342,23 @@ public function memo_file_update() {
 	$data['m_title'] = "Add New Memo";
 	$data['e_title'] = "Update Memo";
 	$data['add_action'] = "memo_file_update";
-	
+
 	$data['data'] = $this->SGODModel->one_cond_row('sgod_memo','id',$this->uri->segment(3));
 	$this->load->view('memo_file_edit', $data);
-	
+
 	if ($this->input->post('submit')) {
 		$config['allowed_types'] = 'pdf';
-		$config['upload_path'] = './upload/sgod_memo/';
+		$config['upload_path'] = './upload/memo/';
 		$this->load->library('upload', $config);
-		$this->upload->do_upload('file');
-		$this->SGODModel->mfu();
-		$this->session->set_flashdata('success', 'Successfully saved.');
-		redirect(base_url().'Page/memo');
+
+		if($this->upload->do_upload('file')){
+			$this->SGODModel->mfu();
+			$this->session->set_flashdata('success', 'Successfully saved.');
+			redirect(base_url().'Page/memo');
+		}else{
+			$this->session->set_flashdata('danger', $this->upload->display_errors());
+			redirect(base_url().'Page/memo');
+		}
 	}
 }
 
@@ -1541,6 +1572,60 @@ function usersList(){
 	$this->db->query("delete  from sgod_users where username='".$id."'");
 	$this->session->set_flashdata('success', 'Deleted successfully!');
 	redirect('Page/usersListv2');
+}
+
+public function update_user(){
+	$username = $this->input->post('username');
+	$fName = $this->input->post('fName');
+	$lName = $this->input->post('lName');
+	$email = $this->input->post('email');
+	$section = $this->input->post('section');
+	$password = $this->input->post('password');
+
+	$data = array(
+		'fName' => $fName,
+		'lName' => $lName,
+		'email' => $email,
+		'section' => $section
+	);
+
+	// Update password only if provided
+	if (!empty($password)) {
+		$data['password'] = sha1($password);
+	}
+
+	$this->db->where('username', $username);
+	$this->db->update('sgod_users', $data);
+	$this->session->set_flashdata('success', 'User updated successfully!');
+	redirect('Page/usersList');
+}
+
+public function reset_password(){
+	$username = $this->input->get('username');
+	$new_password = '123456'; // Default password
+
+	$data = array(
+		'password' => sha1($new_password)
+	);
+
+	$this->db->where('username', $username);
+	$this->db->update('sgod_users', $data);
+	$this->session->set_flashdata('success', 'Password reset successfully! Default password: 123456');
+	redirect('Page/usersList');
+}
+
+public function deactivate_user(){
+	$username = $this->input->get('username');
+	$status = $this->input->get('status');
+
+	$data = array(
+		'acctStat' => $status
+	);
+
+	$this->db->where('username', $username);
+	$this->db->update('sgod_users', $data);
+	$this->session->set_flashdata('success', 'User status updated successfully!');
+	redirect('Page/usersList');
 }
 
 

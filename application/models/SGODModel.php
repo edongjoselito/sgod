@@ -451,6 +451,13 @@ class SGODModel extends CI_Model
 		return $result->row();
 	}
 
+	public function get_paginated($table, $order_col, $order_val, $limit, $offset){
+		$this->db->order_by($order_col, $order_val);
+		$this->db->limit($limit, $offset);
+		$result = $this->db->get($table);
+		return $result->result();
+	}
+
 
 	public function three_cond_row($table,$col,$val,$col2,$val2,$col3,$val3){
 		$this->db->where($col, $val);

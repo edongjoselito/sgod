@@ -101,7 +101,14 @@
                                                         <td><?= $row->section; ?></td>
                                                         <td><?= $row->acctStat; ?></td>
                                                             <td style="text-align:center">
-                                                                <a href="delete_account?id=<?= $row->username; ?>" onclick="return confirm('Are you sure?')"><button type="button" class="btn btn-danger btn-sm">Delete Account</button></a>
+                                                                <?php if($row->acctStat == 'Active'){ ?>
+                                                                    <a href="<?= base_url(); ?>Page/deactivate_user?username=<?= $row->username; ?>&status=Inactive" onclick="return confirm('Are you sure you want to deactivate this user?')"><button type="button" class="btn btn-warning btn-sm">Deactivate</button></a>
+                                                                <?php } else { ?>
+                                                                    <a href="<?= base_url(); ?>Page/deactivate_user?username=<?= $row->username; ?>&status=Active" onclick="return confirm('Are you sure you want to activate this user?')"><button type="button" class="btn btn-success btn-sm">Activate</button></a>
+                                                                <?php } ?>
+                                                                <a href="<?= base_url(); ?>Page/reset_password?username=<?= $row->username; ?>" onclick="return confirm('Are you sure you want to reset password to default (123456)?')"><button type="button" class="btn btn-info btn-sm">Reset Password</button></a>
+                                                                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editModal<?= $row->username; ?>">Edit</button>
+                                                                <a href="delete_account?id=<?= $row->username; ?>" onclick="return confirm('Are you sure you want to delete this account?')"><button type="button" class="btn btn-danger btn-sm">Delete</button></a>
                                                             </td>
                                                         <?php }  ?>
                                                 </tbody>
@@ -173,6 +180,57 @@
                                             </div>
                                             <!-- /.modal-dialog -->
                                         </div>
+
+                                                <!-- Edit User Modal -->
+                                                <?php foreach($data as $row){ ?>
+                                                <div id="editModal<?= $row->username; ?>" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" style="display: none;" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit User</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                            <form method="post" action="<?= base_url(); ?>Page/update_user">
+                                                                <div class="form-group col-md-12">
+                                                                    <label >First Name</label>
+                                                                    <input type="text" name="fName" class="form-control" value="<?= $row->fName; ?>" required />
+                                                                </div>
+                                                                <div class="form-group col-md-12">
+                                                                    <label >Last Name</label>
+                                                                    <input type="text" name="lName" class="form-control" value="<?= $row->lName; ?>" required />
+                                                                </div>
+                                                                <div class="form-group col-md-12">
+                                                                    <label >E-mail/Username</label>
+                                                                    <input type="text" name="email" class="form-control" value="<?= $row->email; ?>" required />
+                                                                </div>
+                                                                <div class="form-group col-md-12">
+                                                                    <label >Password (leave blank to keep current)</label>
+                                                                    <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current password" />
+                                                                </div>
+                                                                <div class="form-group col-md-12">
+                                                                    <label >Section <span class="text-danger">*</span></label>
+                                                                    <select class="form-control" name="section" required>
+                                                                        <?php   foreach($data1 as $sec){
+                                                                            $selected = ($sec->sectionName == $row->section) ? 'selected' : '';
+                                                                            echo "<option value='$sec->sectionName' $selected>$sec->sectionName</option>";
+                                                                           }
+                                                                        ?>
+                                                                    </select>
+                                                                </div>
+                                                                <input type="hidden" name="username" value="<?= $row->username; ?>" />
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                                <input type="submit" name="submit" class="btn btn-primary" value="Update" >
+                                                            </div>
+                                                            </form>
+                                                        </div>
+                                                        <!-- /.modal-content -->
+                                                    </div>
+                                                    <!-- /.modal-dialog -->
+                                                </div>
+                                                <?php } ?>
 
 
             <!-- ============================================================== -->
