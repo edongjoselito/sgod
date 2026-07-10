@@ -50,7 +50,8 @@ class SGODModel extends CI_Model
 	function get_user_whereabouts($username){
 		$this->db->where('username', $username);
 		$this->db->order_by('date', 'DESC');
-		$this->db->limit(10);
+		$this->db->order_by('updated_at', 'DESC');
+		$this->db->order_by('id', 'DESC');
 		$result = $this->db->get('sgod_employee_whereabouts');
 		return $result->result();
 	}
@@ -1204,4 +1205,3 @@ class SGODModel extends CI_Model
 
 
 }
-

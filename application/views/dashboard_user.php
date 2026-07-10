@@ -5,6 +5,8 @@ $username = $this->session->userdata('username');
 
 $totalAccomplishments = is_array($data) ? count($data) : 0;
 $myAccomplishments = 0;
+$manilaNow = new DateTime('now', new DateTimeZone('Asia/Manila'));
+$manilaToday = $manilaNow->format('Y-m-d');
 
 if (!empty($data)) {
     foreach ($data as $acc) {
@@ -34,6 +36,69 @@ $metrics = array(
         'badge' => 'Personal'
     )
 );
+
+$statusCalendarStyles = array(
+    'In Office' => array(
+        'gradient' => 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)',
+        'accent' => '#2563eb',
+        'tint' => 'rgba(37, 99, 235, 0.14)',
+        'shadow' => 'rgba(37, 99, 235, 0.28)'
+    ),
+    'Out of Office' => array(
+        'gradient' => 'linear-gradient(135deg, #0f9f9a 0%, #14b8a6 100%)',
+        'accent' => '#0f766e',
+        'tint' => 'rgba(15, 118, 110, 0.14)',
+        'shadow' => 'rgba(15, 118, 110, 0.24)'
+    ),
+    'On Official Business' => array(
+        'gradient' => 'linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%)',
+        'accent' => '#7c3aed',
+        'tint' => 'rgba(124, 58, 237, 0.14)',
+        'shadow' => 'rgba(124, 58, 237, 0.24)'
+    ),
+    'On Leave' => array(
+        'gradient' => 'linear-gradient(135deg, #f97316 0%, #fb7185 100%)',
+        'accent' => '#ea580c',
+        'tint' => 'rgba(234, 88, 12, 0.14)',
+        'shadow' => 'rgba(234, 88, 12, 0.24)'
+    ),
+    'On Field Work' => array(
+        'gradient' => 'linear-gradient(135deg, #059669 0%, #22c55e 100%)',
+        'accent' => '#047857',
+        'tint' => 'rgba(4, 120, 87, 0.14)',
+        'shadow' => 'rgba(4, 120, 87, 0.24)'
+    ),
+    'default' => array(
+        'gradient' => 'linear-gradient(135deg, #475569 0%, #64748b 100%)',
+        'accent' => '#475569',
+        'tint' => 'rgba(71, 85, 105, 0.14)',
+        'shadow' => 'rgba(71, 85, 105, 0.22)'
+    )
+);
+
+$calendarEntriesByDate = array();
+if (!empty($whereabouts)) {
+    foreach ($whereabouts as $where) {
+        if (empty($where->date)) {
+            continue;
+        }
+
+        $dateKey = (string) $where->date;
+        if (!isset($calendarEntriesByDate[$dateKey])) {
+            $calendarEntriesByDate[$dateKey] = array();
+        }
+
+        $calendarEntriesByDate[$dateKey][] = array(
+            'status' => isset($where->status) ? (string) $where->status : '',
+            'location' => isset($where->location) ? (string) $where->location : '',
+            'activity' => isset($where->activity) ? (string) $where->activity : '',
+            'notes' => isset($where->notes) ? (string) $where->notes : ''
+        );
+    }
+}
+
+$statusCalendarStylesJson = json_encode($statusCalendarStyles, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+$calendarEntriesJson = json_encode($calendarEntriesByDate, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -278,6 +343,120 @@ $metrics = array(
                 color: var(--user-blue);
             }
 
+            .mini-calendar-day {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 40px;
+                padding: 6px;
+                border-radius: 10px;
+                border: 1px solid transparent;
+                background: #f8f9ff;
+                color: var(--user-ink);
+                cursor: pointer;
+                font-size: 0.8rem;
+                font-weight: 600;
+                user-select: none;
+                transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            }
+
+            .activity-preview {
+                margin-top: 18px;
+                padding: 18px;
+                border-radius: 18px;
+                border: 1px solid rgba(60, 64, 198, 0.08);
+                background: linear-gradient(180deg, #fbfcff 0%, #f4f7ff 100%);
+            }
+
+            .activity-preview-label {
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--user-blue);
+                margin-bottom: 10px;
+            }
+
+            .activity-preview-empty {
+                margin: 0;
+                color: var(--user-muted);
+                font-size: 0.9rem;
+                line-height: 1.5;
+            }
+
+            .activity-preview-date {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+
+            .activity-preview-date strong {
+                color: var(--user-ink);
+                font-size: 1rem;
+            }
+
+            .activity-preview-count {
+                display: inline-flex;
+                align-items: center;
+                padding: 5px 10px;
+                border-radius: 999px;
+                background: rgba(60, 64, 198, 0.08);
+                color: var(--user-blue);
+                font-size: 0.75rem;
+                font-weight: 700;
+            }
+
+            .activity-preview-entry {
+                padding: 14px;
+                border-radius: 14px;
+                border: 1px solid rgba(60, 64, 198, 0.08);
+                background: #ffffff;
+            }
+
+            .activity-preview-entry + .activity-preview-entry {
+                margin-top: 10px;
+            }
+
+            .activity-preview-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .activity-preview-status {
+                display: inline-flex;
+                align-items: center;
+                padding: 5px 10px;
+                border-radius: 999px;
+                font-size: 0.75rem;
+                font-weight: 700;
+                line-height: 1;
+            }
+
+            .activity-preview-location {
+                color: var(--user-ink);
+                font-size: 0.9rem;
+                font-weight: 700;
+                margin-bottom: 6px;
+            }
+
+            .activity-preview-activity {
+                color: #42526b;
+                font-size: 0.9rem;
+                line-height: 1.5;
+            }
+
+            .activity-preview-notes {
+                margin-top: 8px;
+                color: var(--user-muted);
+                font-size: 0.82rem;
+                line-height: 1.45;
+            }
+
             @media (max-width: 767.98px) {
                 .dashboard-hero-body {
                     padding: 22px;
@@ -285,6 +464,11 @@ $metrics = array(
 
                 .hero-title {
                     font-size: 1.9rem;
+                }
+
+                .activity-preview-date {
+                    align-items: flex-start;
+                    flex-direction: column;
                 }
             }
         </style>
@@ -336,7 +520,7 @@ $metrics = array(
                             <div class="col-xl-12 mb-4">
                                 <div class="panel-card">
                                     <div class="panel-kicker">Whereabouts</div>
-                                    <h4 class="panel-title">Post Your Location</h4>
+                                    <h4 class="panel-title">Update Your Whereabouts</h4>
                                     <p class="panel-copy">
                                         Let others know where you are and what you're working on today.
                                     </p>
@@ -361,6 +545,13 @@ $metrics = array(
                                             <div class="mini-day-header" style="font-size: 0.7rem; color: var(--user-muted); font-weight: 600; padding: 4px;">S</div>
                                         </div>
                                         <div class="mini-calendar-days" id="miniCalendarDays" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;"></div>
+                                    </div>
+
+                                    <div class="activity-preview">
+                                        <div class="activity-preview-label">Saved Whereabouts</div>
+                                        <div id="calendarActivityPreviewBody">
+                                            <p class="activity-preview-empty">Hover a highlighted date to preview your saved whereabouts details.</p>
+                                        </div>
                                     </div>
 
                                     <a href="<?= base_url(); ?>Page/whereabouts" class="btn btn-gradient-primary" style="width: 100%; margin-top: 20px;">
@@ -443,22 +634,147 @@ $metrics = array(
         <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
 
         <script>
-            let miniCurrentDate = new Date();
+            const manilaToday = <?= $manilaToday ? json_encode($manilaToday, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) : "'0000-00-00'"; ?>;
+            const statusStyles = <?= $statusCalendarStylesJson ?: '{}' ?>;
+            const activityEntriesByDate = <?= $calendarEntriesJson ?: '{}' ?>;
+            const todayGradient = 'linear-gradient(135deg, #272b8c 0%, #3c40c6 58%, #6f74ff 100%)';
+            const selectedGradient = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)';
+            const defaultStatusStyle = statusStyles.default || {
+                gradient: 'linear-gradient(135deg, #475569 0%, #64748b 100%)',
+                accent: '#475569',
+                tint: 'rgba(71, 85, 105, 0.14)',
+                shadow: 'rgba(71, 85, 105, 0.22)'
+            };
+            const previewFallbackMessage = 'Hover a highlighted date to preview your saved whereabouts details.';
+            const datesWithActivities = new Set(Object.keys(activityEntriesByDate));
+
+            let miniCurrentDate = parseDateString(manilaToday) || new Date();
             let selectedDates = new Set();
             let isDragging = false;
             let dragStartDay = null;
-            let datesWithActivities = new Set();
 
-            <?php if (!empty($whereabouts)): ?>
-                <?php foreach ($whereabouts as $where): ?>
-                    datesWithActivities.add('<?= $where->date; ?>');
-                <?php endforeach; ?>
-            <?php endif; ?>
+            function parseDateString(dateStr) {
+                const parts = String(dateStr || '').split('-');
+                if (parts.length !== 3) {
+                    return null;
+                }
+
+                const year = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10);
+                const day = parseInt(parts[2], 10);
+
+                if (!year || !month || !day) {
+                    return null;
+                }
+
+                return new Date(year, month - 1, day);
+            }
+
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function getEntriesForDate(dateStr) {
+                return Array.isArray(activityEntriesByDate[dateStr]) ? activityEntriesByDate[dateStr] : [];
+            }
+
+            function getPrimaryEntry(dateStr) {
+                const entries = getEntriesForDate(dateStr);
+                return entries.length ? entries[0] : null;
+            }
+
+            function getStatusStyle(status) {
+                return statusStyles[status] || defaultStatusStyle;
+            }
+
+            function isTodayDate(dateStr) {
+                return dateStr === manilaToday;
+            }
+
+            function formatDateLabel(dateStr, options) {
+                const date = parseDateString(dateStr);
+                return date ? date.toLocaleDateString('en-US', options) : dateStr;
+            }
+
+            function buildDayTitle(dateStr) {
+                const entries = getEntriesForDate(dateStr);
+                if (!entries.length) {
+                    return '';
+                }
+
+                return entries.map(entry => {
+                    const parts = [];
+
+                    if (entry.status) {
+                        parts.push(entry.status);
+                    }
+                    if (entry.location) {
+                        parts.push(entry.location);
+                    }
+                    if (entry.activity) {
+                        parts.push(entry.activity);
+                    }
+                    if (entry.notes) {
+                        parts.push(entry.notes);
+                    }
+
+                    return parts.join(' | ');
+                }).join('\n');
+            }
+
+            function resetActivityPreview() {
+                const previewBody = document.getElementById('calendarActivityPreviewBody');
+                if (!previewBody) {
+                    return;
+                }
+
+                previewBody.innerHTML = `<p class="activity-preview-empty">${escapeHtml(previewFallbackMessage)}</p>`;
+            }
+
+            function renderActivityPreview(dateStr) {
+                const previewBody = document.getElementById('calendarActivityPreviewBody');
+                const entries = getEntriesForDate(dateStr);
+                if (!previewBody || !entries.length) {
+                    resetActivityPreview();
+                    return;
+                }
+
+                const previewHeader = `
+                    <div class="activity-preview-date">
+                        <strong>${escapeHtml(formatDateLabel(dateStr, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }))}</strong>
+                        <span class="activity-preview-count">${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}</span>
+                    </div>
+                `;
+
+                const previewCards = entries.map(entry => {
+                    const statusStyle = getStatusStyle(entry.status);
+                    const locationText = entry.location ? `Location: ${entry.location}` : 'Location not specified';
+                    const activityText = entry.activity || 'No activity details provided.';
+                    const notesText = entry.notes ? `<div class="activity-preview-notes">Notes: ${escapeHtml(entry.notes)}</div>` : '';
+
+                    return `
+                        <div class="activity-preview-entry">
+                            <div class="activity-preview-head">
+                                <span class="activity-preview-status" style="background: ${statusStyle.tint}; color: ${statusStyle.accent};">${escapeHtml(entry.status || 'Saved whereabouts')}</span>
+                            </div>
+                            <div class="activity-preview-location">${escapeHtml(locationText)}</div>
+                            <div class="activity-preview-activity">${escapeHtml(activityText)}</div>
+                            ${notesText}
+                        </div>
+                    `;
+                }).join('');
+
+                previewBody.innerHTML = previewHeader + previewCards;
+            }
 
             function renderMiniCalendar() {
                 const year = miniCurrentDate.getFullYear();
                 const month = miniCurrentDate.getMonth();
-                const today = new Date();
 
                 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -479,31 +795,9 @@ $metrics = array(
 
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dayElement = document.createElement('div');
-                    dayElement.textContent = day;
-                    dayElement.style.padding = '6px';
-                    dayElement.style.borderRadius = '6px';
-                    dayElement.style.cursor = 'pointer';
-                    dayElement.style.fontSize = '0.8rem';
-                    dayElement.style.fontWeight = '600';
-                    dayElement.style.color = 'var(--user-ink)';
-                    dayElement.style.background = '#f8f9ff';
-                    dayElement.style.transition = 'all 0.25s ease';
-                    dayElement.style.userSelect = 'none';
-
                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                        dayElement.style.background = 'linear-gradient(135deg, #272b8c 0%, #3c40c6 58%, #6f74ff 100%)';
-                        dayElement.style.color = '#ffffff';
-                    } else if (datesWithActivities.has(dateStr)) {
-                        dayElement.style.background = 'linear-gradient(135deg, #0f9f9a 0%, #2d7ff9 100%)';
-                        dayElement.style.color = '#ffffff';
-                    }
-
-                    if (selectedDates.has(dateStr)) {
-                        dayElement.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)';
-                        dayElement.style.color = '#ffffff';
-                    }
+                    dayElement.textContent = day;
+                    dayElement.className = 'mini-calendar-day';
 
                     dayElement.addEventListener('mousedown', (e) => {
                         e.preventDefault();
@@ -516,7 +810,7 @@ $metrics = array(
                             selectedDates.add(dateStr);
                         }
                         
-                        updateDayStyle(dayElement, dateStr, today, month, year);
+                        updateDayStyle(dayElement, dateStr);
                     });
 
                     dayElement.addEventListener('mouseenter', () => {
@@ -530,15 +824,34 @@ $metrics = array(
                             }
                             renderMiniCalendar();
                         } else if (!isDragging) {
-                            if (!(day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) && !selectedDates.has(dateStr)) {
+                            const hasActivity = datesWithActivities.has(dateStr);
+                            const isToday = isTodayDate(dateStr);
+
+                            updateDayStyle(dayElement, dateStr);
+                            dayElement.style.transform = 'translateY(-1px)';
+
+                            if (hasActivity) {
+                                const statusStyle = getStatusStyle(getPrimaryEntry(dateStr).status);
+                                dayElement.style.filter = 'brightness(1.08)';
+                                dayElement.style.boxShadow = `0 16px 30px ${statusStyle.shadow}`;
+                                dayElement.style.borderColor = 'rgba(255, 255, 255, 0.88)';
+                                renderActivityPreview(dateStr);
+                            } else {
                                 dayElement.style.background = 'rgba(60, 64, 198, 0.1)';
+                                dayElement.style.color = 'var(--user-blue)';
+                                if (selectedDates.has(dateStr) || isToday) {
+                                    updateDayStyle(dayElement, dateStr);
+                                    dayElement.style.transform = 'translateY(-1px)';
+                                }
+                                resetActivityPreview();
                             }
                         }
                     });
 
                     dayElement.addEventListener('mouseleave', () => {
                         if (!isDragging) {
-                            updateDayStyle(dayElement, dateStr, today, month, year);
+                            updateDayStyle(dayElement, dateStr);
+                            resetActivityPreview();
                         }
                     });
 
@@ -548,28 +861,50 @@ $metrics = array(
                         }
                     });
 
+                    updateDayStyle(dayElement, dateStr);
                     miniCalendarDays.appendChild(dayElement);
                 }
             }
 
-            function updateDayStyle(dayElement, dateStr, today, month, year) {
-                const day = parseInt(dayElement.textContent);
-                
-                if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                    dayElement.style.background = 'linear-gradient(135deg, #272b8c 0%, #3c40c6 58%, #6f74ff 100%)';
+            function updateDayStyle(dayElement, dateStr) {
+                const primaryEntry = getPrimaryEntry(dateStr);
+                const hasActivity = datesWithActivities.has(dateStr);
+                const isToday = isTodayDate(dateStr);
+                const statusStyle = primaryEntry ? getStatusStyle(primaryEntry.status) : defaultStatusStyle;
+
+                dayElement.style.transform = 'translateY(0)';
+                dayElement.style.filter = 'none';
+                dayElement.style.borderColor = 'transparent';
+                dayElement.style.boxShadow = 'none';
+                dayElement.title = hasActivity ? buildDayTitle(dateStr) : '';
+
+                if (selectedDates.has(dateStr)) {
+                    dayElement.style.background = selectedGradient;
                     dayElement.style.color = '#ffffff';
-                } else if (selectedDates.has(dateStr)) {
-                    dayElement.style.background = 'linear-gradient(135deg, #0f9f9a 0%, #2d7ff9 100%)';
+                    dayElement.style.boxShadow = '0 14px 28px rgba(238, 90, 36, 0.24)';
+                } else if (hasActivity) {
+                    dayElement.style.background = statusStyle.gradient;
+                    dayElement.style.color = '#ffffff';
+                    dayElement.style.boxShadow = `0 12px 22px ${statusStyle.shadow}`;
+                } else if (isToday) {
+                    dayElement.style.background = todayGradient;
                     dayElement.style.color = '#ffffff';
                 } else {
                     dayElement.style.background = '#f8f9ff';
                     dayElement.style.color = 'var(--user-ink)';
+                }
+
+                if (isToday && hasActivity && !selectedDates.has(dateStr)) {
+                    dayElement.style.borderColor = 'rgba(255, 255, 255, 0.88)';
+                } else if (isToday) {
+                    dayElement.style.borderColor = 'rgba(39, 43, 140, 0.24)';
                 }
             }
 
             function changeMiniMonth(delta) {
                 miniCurrentDate.setMonth(miniCurrentDate.getMonth() + delta);
                 selectedDates.clear();
+                resetActivityPreview();
                 renderMiniCalendar();
             }
 
@@ -580,10 +915,8 @@ $metrics = array(
                 
                 const sortedDates = Array.from(selectedDates).sort();
                 sortedDates.forEach(date => {
-                    const d = new Date(date);
-                    const options = { weekday: 'short', month: 'short', day: 'numeric' };
                     const li = document.createElement('li');
-                    li.textContent = d.toLocaleDateString('en-US', options);
+                    li.textContent = formatDateLabel(date, { weekday: 'short', month: 'short', day: 'numeric' });
                     li.style.padding = '4px 0';
                     li.style.borderBottom = '1px solid rgba(60, 64, 198, 0.08)';
                     datesList.appendChild(li);
@@ -598,11 +931,11 @@ $metrics = array(
 
             function submitWhereabouts() {
                 const status = document.getElementById('modalStatus').value;
-                const location = document.getElementById('modalLocation').value;
+                const locationValue = document.getElementById('modalLocation').value;
                 const activity = document.getElementById('modalActivity').value;
                 const notes = document.getElementById('modalNotes').value;
                 
-                if (!location || !activity) {
+                if (!locationValue || !activity) {
                     alert('Please fill in location and activity');
                     return;
                 }
@@ -614,7 +947,7 @@ $metrics = array(
                     const formData = new FormData();
                     formData.append('date', date);
                     formData.append('status', status);
-                    formData.append('location', location);
+                    formData.append('location', locationValue);
                     formData.append('activity', activity);
                     formData.append('notes', notes);
                     
@@ -647,6 +980,7 @@ $metrics = array(
             });
 
             document.addEventListener('DOMContentLoaded', function() {
+                resetActivityPreview();
                 renderMiniCalendar();
             });
         </script>
