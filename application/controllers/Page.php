@@ -16,15 +16,28 @@ class Page extends CI_Controller{
   function admin(){
     //Allowing access to Admin only
     if($this->session->userdata('section')==='System Administrator'){
-		$param=$this->session->userdata('secGroup');
-		$result['data']=$this->SGODModel->count_table_row('sgod_users');
-		$result['data1']=$this->SGODModel->count_sections('sgod_sections',$param);
-		$result['data2']=$this->SGODModel->count_table_row('sgod_accomplishments');
-		$result['data3']=$this->SGODModel->count_table_row('schools');
-		$this->load->view('dashboard_admin',$result);
+		$this->load_admin_dashboard('dashboard_admin');
     }else{
         echo "Access Denied";
     }
+  }
+
+  function cid_admin(){
+    //Allowing access to CID Admin only
+    if($this->session->userdata('section')==='CID Admin'){
+		$this->load_admin_dashboard('dashboard_cid_admin');
+    }else{
+        echo "Access Denied";
+    }
+  }
+
+  private function load_admin_dashboard($view){
+	$param=$this->session->userdata('secGroup');
+	$result['data']=$this->SGODModel->count_table_row('sgod_users');
+	$result['data1']=$this->SGODModel->count_sections('sgod_sections',$param);
+	$result['data2']=$this->SGODModel->count_table_row('sgod_accomplishments');
+	$result['data3']=$this->SGODModel->count_table_row('schools');
+	$this->load->view($view,$result);
   }
 
   function sgod(){

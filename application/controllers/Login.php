@@ -94,6 +94,9 @@ function registration(){
         //  access login for admin
         if($section === 'System Administrator'){
             redirect('page/admin');
+
+        }elseif($section === 'CID Admin'){
+            redirect('page/cid_admin');
  
        //  access login for Section User
         }elseif($section === 'Chief - SGOD'){

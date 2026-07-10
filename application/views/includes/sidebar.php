@@ -4,7 +4,8 @@
 
         <!--- Sidemenu -->
         <!-- System Administrator -->
-        <?php if ($this->session->userdata('section') === 'System Administrator'): ?>
+        <?php if (in_array($this->session->userdata('section'), ['System Administrator', 'CID Admin'], true)): ?>
+            <?php $adminDashboardRoute = $this->session->userdata('section') === 'CID Admin' ? 'Page/cid_admin' : 'Page/admin'; ?>
 
             <div id="sidebar-menu">
                 <ul class="metismenu" id="side-menu">
@@ -12,7 +13,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/admin" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $adminDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
