@@ -85,7 +85,7 @@
                                         
                                         
                                         <?= form_open('page/aip_action'); ?>
-                                        <?php if(in_array($this->session->section, ['System Administrator', 'CID Admin'], true)){ ?>
+                                        <?php if($this->session->section == "System Administrator"){ ?>
                                             <div class="row">
                                                         <div class="col-lg-4">
                                                             <div class="form-group">

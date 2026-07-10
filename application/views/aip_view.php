@@ -292,7 +292,7 @@
                                                     <?= form_open('page/submit_aip'); ?>
                                                          <div class="form-group">
                                                             <label>School ID</label>
-                                                            <input type="text" name="school_id" <?php if(!in_array($this->session->section, ['System Administrator', 'CID Admin'], true)){echo " readonly ";} ?> value="<?php if($this->session->section === 'School'){echo $this->session->username;} ?>" required class="form-control" >
+                                                            <input type="text" name="school_id" <?php if($this->session->section != 'System Administrator'){echo " readonly ";} ?> value="<?php if($this->session->section === 'School'){echo $this->session->username;} ?>" required class="form-control" >
                                                         </div>
                                                         <div class="form-group">
                                                             <label>YEAR</label>
@@ -336,7 +336,7 @@
                                                     <?= form_open('page/generate_aip'); ?>
                                                          <div class="form-group">
                                                             <label>School ID</label>
-                                                            <input type="text" name="school_id" <?php if(!in_array($this->session->section, ['System Administrator', 'CID Admin'], true)){echo " readonly ";} ?> value="<?php if($this->session->section === 'School'){echo $this->session->username;} ?>" required class="form-control" >
+                                                            <input type="text" name="school_id" <?php if($this->session->section != 'System Administrator'){echo " readonly ";} ?> value="<?php if($this->session->section === 'School'){echo $this->session->username;} ?>" required class="form-control" >
                                                         </div>
                                                         <div class="form-group">
                                                             <label>YEAR</label>

@@ -3,9 +3,43 @@
     <div class="slimscroll-menu">
 
         <!--- Sidemenu -->
+        <!-- Super Admin -->
+        <?php if ($this->session->userdata('section') === 'Super Admin'): ?>
+
+            <div id="sidebar-menu">
+                <ul class="metismenu" id="side-menu">
+
+                    <li class="menu-title">Navigation</li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/super_admin" class="waves-effect">
+                            <i class="mdi mdi-view-dashboard"></i>
+                            <span> Dashboard </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/super_admin_users" class="waves-effect">
+                            <i class="mdi mdi-account-multiple-outline"></i>
+                            <span> Manage Admins </span>
+                        </a>
+                    </li>
+
+                </ul>
+
+            </div>
+            <!-- End Sidebar -->
+
         <!-- System Administrator -->
-        <?php if (in_array($this->session->userdata('section'), ['System Administrator', 'CID Admin'], true)): ?>
-            <?php $adminDashboardRoute = $this->session->userdata('section') === 'CID Admin' ? 'Page/cid_admin' : 'Page/admin'; ?>
+        <?php elseif ($this->session->userdata('section') === 'System Administrator'): ?>
+            <?php
+                $adminRoutes = [
+                    'CID' => 'Page/cid_admin',
+                    'OSDS' => 'Page/osds_admin',
+                    'SGOD' => 'Page/admin',
+                ];
+                $adminDashboardRoute = $adminRoutes[$this->session->userdata('secGroup')] ?? 'Page/admin';
+            ?>
 
             <div id="sidebar-menu">
                 <ul class="metismenu" id="side-menu">
@@ -20,73 +54,18 @@
                     </li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/sections" class="waves-effect">
-                            <i class="mdi mdi-grid"></i>
-                            <span> Sections </span>
-                        </a>
-                    </li>
-
-                    <li>
                         <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
                             <i class="ion ion-ios-paper"></i>
                             <span> Memo </span>
                         </a>
                     </li>
 
-
-
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
-                            <i class="mdi mdi-office-building"></i>
-                            <span> Schools </span>
-                            <span class="menu-arrow"></span>
+                        <a href="<?= base_url(); ?>Page/sections" class="waves-effect">
+                            <i class="mdi mdi-grid"></i>
+                            <span> Sections </span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
-
-                    <li>
-                        <a href="javascript: void(0);" class="waves-effect">
-                            <i class="mdi mdi-office-building"></i>
-                            <span> SMEA </span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="#">1st Qtr</a></li>
-                            <li><a href="#">2nd Qtr</a></li>
-                            <li><a href="#">3rd Qtr</a></li>
-                            <li><a href="#">4th Qtr</a></li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <a href="javascript: void(0);" class="waves-effect">
-                            <i class="mdi mdi-office-building"></i>
-                            <span> SBM </span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="#">Action Plan</a></li>
-                            <li><a href="#">Self-Assessment</a></li>
-                            <li><a href="#">TA Form</a></li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <a href="javascript: void(0);" class="waves-effect">
-                            <i class="fas fa-scroll"></i>
-                            <spa>Implementation Plans</span>
-                                <span class="menu-arrow"></span>
-                        </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-
-                            <li><a href="<?= base_url(); ?>Page/aip_action_list">Submitted AIP</a></li>
-                        </ul>
-                    </li>
-
 
                     <li>
                         <a href="usersList" class="waves-effect">
@@ -760,6 +739,41 @@
             </div>
             <!-- End Sidebar -->
 
+        <?php else: ?>
+            <div id="sidebar-menu">
+                <ul class="metismenu" id="side-menu">
+
+                    <li class="menu-title">Navigation</li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/user_dashboard" class="waves-effect">
+                            <i class="mdi mdi-view-dashboard"></i>
+                            <span> Dashboard </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="javascript: void(0);" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-check"></i>
+                            <span> Accomplishments </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul class="nav-second-level" aria-expanded="false">
+                            <li><a href="<?= base_url(); ?>Page/addAccomplishments">Add New</a></li>
+                            <li><a href="<?= base_url(); ?>Page/viewSecAccomplishments">View</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
+                            <i class="ion ion-ios-paper"></i>
+                            <span> Memo </span>
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+            <!-- End Sidebar -->
 
         <?php endif; ?>
 

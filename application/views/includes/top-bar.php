@@ -26,6 +26,11 @@
                                 <span>Settings</span>
                             </a>
 
+                            <a href="<?= base_url(); ?>Page/changepassword" class="dropdown-item notify-item">
+                                <i class="mdi mdi-lock-reset"></i>
+                                <span>Change Password</span>
+                            </a>
+
                       
                             <div class="dropdown-divider"></div>
 

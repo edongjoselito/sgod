@@ -16,15 +16,15 @@
 
         <style>
             :root {
-                --sgod-navy: #272b8c;
-                --sgod-blue: #3c40c6;
-                --sgod-teal: #565de8;
-                --sgod-gold: #7a80ff;
-                --sgod-ink: #23275d;
-                --sgod-muted: #7b7fa7;
-                --sgod-surface: #ffffff;
-                --sgod-border: rgba(60, 64, 198, 0.12);
-                --sgod-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+                --osds-navy: #272b8c;
+                --osds-blue: #3c40c6;
+                --osds-teal: #565de8;
+                --osds-gold: #7a80ff;
+                --osds-ink: #23275d;
+                --osds-muted: #7b7fa7;
+                --osds-surface: #ffffff;
+                --osds-border: rgba(60, 64, 198, 0.12);
+                --osds-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
             }
 
             body {
@@ -37,12 +37,12 @@
                 background: transparent;
             }
 
-            .sgod-dashboard {
+            .osds-dashboard {
                 position: relative;
                 padding-bottom: 24px;
             }
 
-            .sgod-dashboard::before {
+            .osds-dashboard::before {
                 content: "";
                 position: absolute;
                 inset: 10px 0 auto;
@@ -53,7 +53,7 @@
                 z-index: 0;
             }
 
-            .sgod-dashboard > * {
+            .osds-dashboard > * {
                 position: relative;
                 z-index: 1;
             }
@@ -68,7 +68,7 @@
                 background:
                     radial-gradient(circle at top right, rgba(255, 255, 255, 0.16), transparent 30%),
                     linear-gradient(135deg, #272b8c 0%, #3c40c6 58%, #6f74ff 100%);
-                box-shadow: var(--sgod-shadow);
+                box-shadow: var(--osds-shadow);
             }
 
             .hero-eyebrow {
@@ -99,7 +99,7 @@
                 border: none;
                 border-radius: 22px;
                 background: rgba(255, 255, 255, 0.94);
-                box-shadow: var(--sgod-shadow);
+                box-shadow: var(--osds-shadow);
                 overflow: hidden;
                 position: relative;
                 transform: translateY(0);
@@ -147,7 +147,7 @@
                 padding: 7px 12px;
                 border-radius: 999px;
                 background: #f5f8fc;
-                color: var(--sgod-muted);
+                color: var(--osds-muted);
                 font-size: 0.78rem;
                 font-weight: 600;
                 letter-spacing: 0.05em;
@@ -156,7 +156,7 @@
 
             .stat-value {
                 margin-bottom: 8px;
-                color: var(--sgod-ink);
+                color: var(--osds-ink);
                 font-size: 2.2rem;
                 line-height: 1;
                 letter-spacing: -0.04em;
@@ -166,13 +166,13 @@
 
             .stat-label {
                 margin-bottom: 8px;
-                color: var(--sgod-ink);
+                color: var(--osds-ink);
                 font-size: 1rem;
                 font-weight: 600;
             }
 
             .stat-note {
-                color: var(--sgod-muted);
+                color: var(--osds-muted);
                 line-height: 1.6;
             }
 
@@ -180,15 +180,15 @@
                 height: 100%;
                 padding: 28px;
                 border-radius: 24px;
-                border: 1px solid var(--sgod-border);
+                border: 1px solid var(--osds-border);
                 background: rgba(255, 255, 255, 0.96);
-                box-shadow: var(--sgod-shadow);
+                box-shadow: var(--osds-shadow);
                 animation: fade-up 0.72s ease both;
             }
 
             .panel-kicker {
                 margin-bottom: 8px;
-                color: var(--sgod-blue);
+                color: var(--osds-blue);
                 font-size: 0.82rem;
                 font-weight: 700;
                 letter-spacing: 0.08em;
@@ -197,7 +197,7 @@
 
             .panel-title {
                 margin-bottom: 8px;
-                color: var(--sgod-ink);
+                color: var(--osds-ink);
                 font-weight: 700;
                 letter-spacing: -0.02em;
                 font-family: "Avenir Next", "Segoe UI", sans-serif;
@@ -205,7 +205,7 @@
 
             .panel-copy {
                 margin-bottom: 22px;
-                color: var(--sgod-muted);
+                color: var(--osds-muted);
                 line-height: 1.7;
             }
 
@@ -240,14 +240,14 @@
 
             .quick-action-label {
                 display: block;
-                color: var(--sgod-ink);
+                color: var(--osds-ink);
                 font-weight: 700;
                 margin-bottom: 4px;
             }
 
             .quick-action-copy small {
                 display: block;
-                color: var(--sgod-muted);
+                color: var(--osds-muted);
                 line-height: 1.5;
             }
 
@@ -260,7 +260,7 @@
                 align-items: center;
                 justify-content: center;
                 background: #ffffff;
-                color: var(--sgod-blue);
+                color: var(--osds-blue);
                 font-size: 1.3rem;
                 box-shadow: 0 12px 28px rgba(60, 64, 198, 0.14);
             }
@@ -288,11 +288,11 @@
             }
 
             .scope-item span {
-                color: var(--sgod-muted);
+                color: var(--osds-muted);
             }
 
             .scope-item strong {
-                color: var(--sgod-ink);
+                color: var(--osds-ink);
                 font-weight: 700;
                 text-align: right;
             }
@@ -371,25 +371,19 @@
     <body>
 
         <?php
-            $identifier = strtoupper(trim((string) ($this->session->userdata('identifier') ?: $this->session->userdata('secGroup') ?: 'SGOD')));
+            $identifier = strtoupper(trim((string) ($this->session->userdata('identifier') ?: $this->session->userdata('secGroup') ?: 'OSDS')));
 
             $quickLinks = [
                 [
                     'href' => base_url() . 'Page/memo',
                     'label' => 'Open Memos',
-                    'meta' => 'Post and track SGOD memoranda by group.',
+                    'meta' => 'Post and track OSDS memoranda by group.',
                     'icon' => 'mdi mdi-file-document-edit-outline',
-                ],
-                [
-                    'href' => base_url() . 'Page/sections',
-                    'label' => 'Manage Sections',
-                    'meta' => 'Create and maintain SGOD section records.',
-                    'icon' => 'mdi mdi-sitemap-outline',
                 ],
                 [
                     'href' => base_url() . 'Page/usersList',
                     'label' => 'Manage Users',
-                    'meta' => 'Create and maintain SGOD user accounts.',
+                    'meta' => '<i class="mdi mdi-account-plus-outline"></i> Create and maintain OSDS user accounts.',
                     'icon' => 'mdi mdi-account-cog-outline',
                 ],
                 [
@@ -412,7 +406,7 @@
 
             <div class="content-page">
                 <div class="content">
-                    <div class="container-fluid sgod-dashboard">
+                    <div class="container-fluid osds-dashboard">
                         <div class="row">
                             <div class="col-12">
                                 <div class="dashboard-hero">
@@ -420,7 +414,7 @@
                                         <div class="col-12">
                                             <span class="hero-eyebrow">
                                                 <i class="mdi mdi-shield-account-outline"></i>
-                                                School Governance and Operations Division
+                                                Office of the Schools Division Superintendent
                                             </span>
                                             <h1 class="hero-title">Welcome to <?= htmlspecialchars($identifier, ENT_QUOTES, 'UTF-8'); ?> Dashboard.</h1>
                                         </div>
@@ -433,12 +427,12 @@
                             <div class="col-xl-7 mb-4">
                                 <div class="panel-card">
                                     <div class="panel-kicker">Quick Actions</div>
-                                    <h4 class="panel-title">Jump straight into daily SGOD work</h4>
+                                    <h4 class="panel-title">Jump straight into daily OSDS work</h4>
                                     <p class="panel-copy">
                                         Open the most-used admin areas without digging through the menu. These shortcuts keep the
-                                        page practical while the dashboard stays focused on SGOD-only data.
+                                        page practical while the dashboard stays focused on OSDS-only data.
                                     </p>
-                                    <div class="quick-action-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+                                    <div class="quick-action-grid">
                                         <?php foreach ($quickLinks as $link) { ?>
                                             <a href="<?= $link['href']; ?>" class="quick-action">
                                                 <div class="quick-action-copy">
@@ -456,11 +450,11 @@
 
                             <div class="col-xl-5 mb-4">
                                 <div class="panel-card">
-                                    <div class="panel-kicker">SGOD Snapshot</div>
+                                    <div class="panel-kicker">OSDS Snapshot</div>
                                     <h4 class="panel-title">What this dashboard is showing</h4>
                                     <p class="panel-copy">
                                         The numbers below reflect the current department grouping so admins can spot scope issues
-                                        early and keep SGOD records neatly separated from CID and OSDS.
+                                        early and keep OSDS records neatly separated from CID and SGOD.
                                     </p>
                                     <ul class="scope-list">
                                         <?php foreach ($snapshotItems as $item) { ?>

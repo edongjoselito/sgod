@@ -15,7 +15,7 @@ class Page extends CI_Controller{
 
   function admin(){
     //Allowing access to Admin only
-    if($this->session->userdata('section')==='System Administrator'){
+    if($this->session->userdata('section')==='System Administrator' && $this->session->userdata('secGroup')==='SGOD'){
 		$this->load_admin_dashboard('dashboard_admin');
     }else{
         echo "Access Denied";
@@ -24,8 +24,29 @@ class Page extends CI_Controller{
 
   function cid_admin(){
     //Allowing access to CID Admin only
-    if($this->session->userdata('section')==='CID Admin'){
+    if($this->session->userdata('section')==='System Administrator' && $this->session->userdata('secGroup')==='CID'){
 		$this->load_admin_dashboard('dashboard_cid_admin');
+    }else{
+        echo "Access Denied";
+    }
+  }
+
+  function osds_admin(){
+    //Allowing access to OSDS Admin only
+    if($this->session->userdata('section')==='System Administrator' && $this->session->userdata('secGroup')==='OSDS'){
+		$this->load_admin_dashboard('dashboard_osds_admin');
+    }else{
+        echo "Access Denied";
+    }
+  }
+
+  function super_admin(){
+    if($this->session->userdata('section')==='Super Admin'){
+		$result['data']=$this->SGODModel->count_table_row('sgod_users');
+		$result['data1']=$this->SGODModel->count_table_row('sgod_sections');
+		$result['data2']=$this->SGODModel->count_table_row('sgod_accomplishments');
+		$result['data3']=$this->SGODModel->count_table_row('schools');
+		$this->load->view('dashboard_admin',$result);
     }else{
         echo "Access Denied";
     }
@@ -33,9 +54,9 @@ class Page extends CI_Controller{
 
   private function load_admin_dashboard($view){
 	$param=$this->session->userdata('secGroup');
-	$result['data']=$this->SGODModel->count_table_row('sgod_users');
+	$result['data']=$this->SGODModel->count_sec_users('sgod_users',$param);
 	$result['data1']=$this->SGODModel->count_sections('sgod_sections',$param);
-	$result['data2']=$this->SGODModel->count_table_row('sgod_accomplishments');
+	$result['data2']=$this->SGODModel->count_sec_accomplishments('sgod_accomplishments',$param);
 	$result['data3']=$this->SGODModel->count_table_row('schools');
 	$this->load->view($view,$result);
   }
@@ -198,6 +219,108 @@ class Page extends CI_Controller{
     }
   }
 
+  function user_dashboard(){
+    $this->auto_migrate_whereabouts_table();
+    $section=$this->session->userdata('section');
+    $secGroup=$this->session->userdata('secGroup');
+    $username=$this->session->userdata('username');
+    $result['data']=$this->SGODModel->aSectionAccomplishments($section);
+    $result['whereabouts']=$this->SGODModel->get_user_whereabouts($username);
+    $this->load->view('dashboard_user',$result);
+  }
+
+  function whereabouts(){
+    $this->auto_migrate_whereabouts_table();
+
+    $username=$this->session->userdata('username');
+    $section=$this->session->userdata('section');
+    $secGroup=$this->session->userdata('secGroup');
+    $fName=$this->session->userdata('fName');
+    $lName=$this->session->userdata('lName');
+
+    if($this->input->post('submit')){
+      $date=$this->input->post('date');
+      $location=$this->input->post('location');
+      $activity=$this->input->post('activity');
+      $status=$this->input->post('status');
+      $notes=$this->input->post('notes');
+      $now=date('Y-m-d H:i:s');
+
+      $this->db->query("INSERT INTO sgod_employee_whereabouts (username, fName, lName, section, secGroup, date, location, activity, status, notes, created_at, updated_at) VALUES ('$username','$fName','$lName','$section','$secGroup','$date','$location','$activity','$status','$notes','$now','$now')");
+      $this->session->set_flashdata('success', 'Whereabouts posted successfully!');
+      redirect('Page/user_dashboard');
+    }
+
+    $this->load->view('whereabouts');
+  }
+
+  function update_whereabouts(){
+    $id=$this->input->get('id');
+    $result['data']=$this->SGODModel->get_whereabouts_by_id($id);
+    $this->load->view('whereabouts_update',$result);
+
+    if($this->input->post('update')){
+      $id=$this->input->post('id');
+      $date=$this->input->post('date');
+      $location=$this->input->post('location');
+      $activity=$this->input->post('activity');
+      $status=$this->input->post('status');
+      $notes=$this->input->post('notes');
+      $now=date('Y-m-d H:i:s');
+
+      $this->db->query("UPDATE sgod_employee_whereabouts SET date='$date', location='$location', activity='$activity', status='$status', notes='$notes', updated_at='$now' WHERE id='$id'");
+      $this->session->set_flashdata('success', 'Whereabouts updated successfully!');
+      redirect('Page/user_dashboard');
+    }
+  }
+
+  function delete_whereabouts(){
+    $id=$this->input->get('id');
+    $this->db->query("DELETE FROM sgod_employee_whereabouts WHERE id='$id'");
+    $this->session->set_flashdata('success', 'Whereabouts deleted successfully!');
+    redirect('Page/user_dashboard');
+  }
+
+  function public_whereabouts(){
+    $this->auto_migrate_whereabouts_table();
+    $manilaNow = new DateTime('now', new DateTimeZone('Asia/Manila'));
+    $date=$this->input->get('date', TRUE);
+    if (empty($date) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+      $date=$manilaNow->format('Y-m-d');
+    }
+    $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    $this->output->set_header('Cache-Control: post-check=0, pre-check=0', FALSE);
+    $this->output->set_header('Pragma: no-cache');
+    $this->output->set_header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
+    $result['data']=$this->SGODModel->get_all_whereabouts_by_date($date);
+    $result['selectedDate']=$date;
+    $this->load->view('public_whereabouts',$result);
+  }
+
+  function search_whereabouts(){
+    $search=$this->input->get('search');
+    $result['data']=$this->SGODModel->search_whereabouts($search);
+    $this->load->view('public_whereabouts',$result);
+  }
+
+  function whereabouts_ajax(){
+    $this->auto_migrate_whereabouts_table();
+    $username=$this->session->userdata('username');
+    $section=$this->session->userdata('section');
+    $secGroup=$this->session->userdata('secGroup');
+    $fName=$this->session->userdata('fName');
+    $lName=$this->session->userdata('lName');
+    $date=$this->input->post('date');
+    $location=$this->input->post('location');
+    $activity=$this->input->post('activity');
+    $status=$this->input->post('status');
+    $notes=$this->input->post('notes');
+    $now=date('Y-m-d H:i:s');
+
+    $this->db->query("INSERT INTO sgod_employee_whereabouts (username, fName, lName, section, secGroup, date, location, activity, status, notes, created_at, updated_at) VALUES ('$username','$fName','$lName','$section','$secGroup','$date','$location','$activity','$status','$notes','$now','$now')");
+
+    echo json_encode(['success' => true]);
+  }
 
   function app(){
 	$result['data']=$this->SGODModel->get_all('app_school');
@@ -272,92 +395,89 @@ class Page extends CI_Controller{
 //   tyrone
 
 public function memo() {
+	$secGroup = $this->session->userdata('secGroup');
+
+	if ($this->input->post('submit')) {
+		$mn = trim((string) $this->input->post('memoNo'));
+		$check = $this->SGODModel->memo_exists_in_group($mn, $secGroup);
+
+		if($check->num_rows() > 0){
+			$this->session->set_flashdata('danger', 'Duplicate Memo Number.');
+			redirect(base_url().'Page/memo');
+			return;
+		}
+
+		$config['allowed_types'] = 'pdf';
+		$config['upload_path'] = './upload/memo/';
+		$this->load->library('upload', $config);
+
+		if(!empty($_FILES['file']['name'])){
+			if(!$this->upload->do_upload('file')){
+				$this->session->set_flashdata('danger', strip_tags($this->upload->display_errors()));
+				redirect(base_url().'Page/memo');
+				return;
+			}
+		}
+
+		$this->SGODModel->insert_memo();
+		$this->session->set_flashdata('success', 'Successfully saved.');
+		redirect(base_url().'Page/memo');
+		return;
+	}
+
 	$data['title'] = "Memo List";
 	$data['m_title'] = "Add New Memo";
 	$data['e_title'] = "Update Memo";
 	$data['add_action'] = "memo";
-	
-	$data['page'] = $this->SGODModel->get_all_orderby('sgod_memo','id','DESC');
-	$data['ln'] = $this->SGODModel->get_last_record('sgod_memo');
-	
-	// Calculate next memo number
-	if ($data['ln']) {
-		$lastMemoNo = $data['ln']->memoNo;
-		preg_match('/SGOD-(\d{4})/', $lastMemoNo, $yearMatches);
-		preg_match('/(\d+)$/', $lastMemoNo, $numMatches);
-
-		if (isset($yearMatches[1]) && isset($numMatches[1])) {
-			$lastYear = intval($yearMatches[1]);
-			$currentYear = date('Y');
-			$lastNum = intval($numMatches[1]);
-
-			if ($currentYear > $lastYear) {
-				$data['next_memo_no'] = 'Memo_SGOD-' . $currentYear . '-001';
-			} else {
-				$nextNum = $lastNum + 1;
-				$nextNumPadded = str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-				$nextMemoNo = preg_replace('/\d+$/', $nextNumPadded, $lastMemoNo);
-				$data['next_memo_no'] = $nextMemoNo;
-			}
-		} else {
-			$data['next_memo_no'] = '';
-		}
-	} else {
-		$data['next_memo_no'] = 'Memo_SGOD-' . date('Y') . '-001';
-	}
-
-	$id = $this->input->post('id');
-	
-	if ($id) {
-		$data['data'] = $this->SGODModel->get_memo_by_id($id);
-	}
+	$data['identifier'] = $secGroup;
+	$data['page'] = $this->SGODModel->get_memos_by_group($secGroup);
+	$data['ln'] = $this->SGODModel->get_last_memo_record_by_group($secGroup);
+	$data['next_memo_no'] = $this->build_next_memo_no($secGroup, $data['ln']);
 
 	$this->load->view('sgod_memo', $data);
-	
-	if ($this->input->post('submit')) {
-		$mn = $this->input->post('memoNo');
-		$check = $this->SGODModel->one_cond_count('sgod_memo','memoNo',$mn);
-
-		if($check->num_rows() <= 0){
-		$config['allowed_types'] = 'pdf';
-		$config['upload_path'] = './upload/sgod_memo/';
-		$this->load->library('upload', $config);
-		$this->upload->do_upload('file');
-		$this->SGODModel->insert_memo();
-		$this->session->set_flashdata('success', 'Successfully saved.');
-		redirect(base_url().'Page/memo');
-		}else{
-			$this->session->set_flashdata('danger', 'Duplicate Memo Number.');
-			redirect(base_url().'Page/memo');	
-		}
-
-	}
 }
 
 public function memo_update() {
-	$data['title'] = "Memo List";
-	$data['add_action'] = "memo_update";
-	
-	$data['data'] = $this->SGODModel->one_cond_row('sgod_memo','id',$this->uri->segment(3));
+	$id = $this->uri->segment(3);
+	$memo = $this->get_group_memo($id);
 
-	$this->load->view('memo_edit', $data);
-	
+	if(!$this->can_manage_memo($memo)){
+		$this->session->set_flashdata('danger', 'You can only edit your own memo under your department.');
+		redirect(base_url().'Page/memo');
+		return;
+	}
+
 	if ($this->input->post('submit')) {
+		$memoNo = trim((string) $this->input->post('memoNo'));
+		$duplicate = $this->SGODModel->memo_exists_in_group($memoNo, $this->session->userdata('secGroup'), $id);
+		if($duplicate->num_rows() > 0){
+			$this->session->set_flashdata('danger', 'Duplicate Memo Number.');
+			redirect(base_url().'Page/memo_update/'.$id);
+			return;
+		}
+
 		$this->SGODModel->memo_update();
 		$this->session->set_flashdata('success', 'Successfully saved.');
 		redirect(base_url().'Page/memo');
-
+		return;
 	}
+
+	$data['title'] = "Memo List";
+	$data['add_action'] = "memo_update";
+	$data['data'] = $memo;
+
+	$this->load->view('memo_edit', $data);
 }
 
 public function memo_file_update() {
-	$data['title'] = "Memo List";
-	$data['m_title'] = "Add New Memo";
-	$data['e_title'] = "Update Memo";
-	$data['add_action'] = "memo_file_update";
+	$id = $this->uri->segment(3);
+	$memo = $this->get_group_memo($id);
 
-	$data['data'] = $this->SGODModel->one_cond_row('sgod_memo','id',$this->uri->segment(3));
-	$this->load->view('memo_file_edit', $data);
+	if(!$this->can_manage_memo($memo)){
+		$this->session->set_flashdata('danger', 'You can only update your own memo file under your department.');
+		redirect(base_url().'Page/memo');
+		return;
+	}
 
 	if ($this->input->post('submit')) {
 		$config['allowed_types'] = 'pdf';
@@ -368,18 +488,25 @@ public function memo_file_update() {
 			$this->SGODModel->mfu();
 			$this->session->set_flashdata('success', 'Successfully saved.');
 			redirect(base_url().'Page/memo');
-		}else{
-			$this->session->set_flashdata('danger', $this->upload->display_errors());
-			redirect(base_url().'Page/memo');
+			return;
 		}
+
+		$this->session->set_flashdata('danger', strip_tags($this->upload->display_errors()));
+		redirect(base_url().'Page/memo_file_update/'.$id);
+		return;
 	}
+
+	$data['title'] = "Memo List";
+	$data['m_title'] = "Add New Memo";
+	$data['e_title'] = "Update Memo";
+	$data['add_action'] = "memo_file_update";
+	$data['data'] = $memo;
+	$this->load->view('memo_file_edit', $data);
 }
 
 public function memo_delete(){
-	$id = $this->input->get('id');
-	$this->SGODModel->delete(3,'id','sgod_memo');
-	$this->session->set_flashdata('success', 'Deleted successfully!');
-	redirect("Page/memo");
+	$id = $this->uri->segment(3);
+	$this->delete_memo_record($id);
 }
 
 
@@ -399,12 +526,65 @@ public function memo_delete(){
 
 
   public function memo_del($param){
-	$result['memo']=$this->SGODModel->get_single_table_by_id('id', 'sgod_memo', $param);
-	$filename = $result['memo']['file'];
-	$this->SGODModel->delete_group($param, $filename,'sgod_memo','sgod_memo');
-	// $this->session->set_flashdata('sgod_memo', 'Record deleted successfully');
-	redirect(base_url().'Page/memo');
+	$this->delete_memo_record($param);
 	
+  }
+
+  private function get_group_memo($id){
+	return $this->SGODModel->get_memo_by_group_and_id($id, $this->session->userdata('secGroup'));
+  }
+
+  private function can_manage_memo($memo){
+	if(!$memo){
+		return FALSE;
+	}
+
+	if($memo->secGroup !== $this->session->userdata('secGroup')){
+		return FALSE;
+	}
+
+	return $memo->added_by === $this->session->userdata('username');
+  }
+
+  private function delete_memo_record($id){
+	$memo = $this->get_group_memo($id);
+	if(!$this->can_manage_memo($memo)){
+		$this->session->set_flashdata('danger', 'You can only delete your own memo under your department.');
+		redirect(base_url().'Page/memo');
+		return;
+	}
+
+	$filePath = FCPATH . 'upload/memo/' . $memo->fileName;
+	if(!empty($memo->fileName) && file_exists($filePath)){
+		unlink($filePath);
+	}
+
+	$this->db->where('id', $id);
+	$this->db->where('secGroup', $this->session->userdata('secGroup'));
+	$this->db->delete('sgod_memo');
+	$this->session->set_flashdata('success', 'Deleted successfully!');
+	redirect(base_url().'Page/memo');
+  }
+
+  private function build_next_memo_no($secGroup, $lastMemo){
+	$prefix = strtoupper(trim((string) $secGroup));
+	$currentYear = date('Y');
+
+	if(!$lastMemo || empty($lastMemo->memoNo)){
+		return $prefix . '-' . $currentYear . '-001';
+	}
+
+	$lastMemoNo = trim((string) $lastMemo->memoNo);
+	if(preg_match('/^([A-Z]+)-(\d{4})-(\d+)$/', $lastMemoNo, $matches)){
+		$lastYear = (int) $matches[2];
+		$lastNum = (int) $matches[3];
+
+		if($lastYear === (int) $currentYear){
+			return $prefix . '-' . $currentYear . '-' . str_pad($lastNum + 1, 3, '0', STR_PAD_LEFT);
+		}
+	}
+
+	return $prefix . '-' . $currentYear . '-001';
   }
 
   function settings_pillar(){
@@ -645,6 +825,10 @@ public function memo_delete(){
 
 	function sections_edit(){
 		$result['data']=$this->SGODModel->one_cond_row('sgod_sections','id',$this->uri->segment(3));
+		if(!$result['data'] || $result['data']->secGroup !== $this->session->userdata('secGroup')){
+			$this->session->set_flashdata('danger', 'You can only manage sections under your department.');
+			redirect('Page/sections');
+		}
 		$this->load->view('sections_edit',$result);
 
 		if($this->input->post('submit')){
@@ -669,7 +853,9 @@ public function memo_delete(){
 
 	public function delete_sec(){
 		$id = $this->input->get('id');
-		$this->db->query("delete  from sgod_sections where id='".$id."'");
+		$this->db->where('id', $id);
+		$this->db->where('secGroup', $this->session->userdata('secGroup'));
+		$this->db->delete('sgod_sections');
 		$this->session->set_flashdata('success', 'Deleted successfully!');
 		redirect('Page/sections');
 	}
@@ -1534,7 +1720,9 @@ function addAccomplishments(){
 
 function usersList(){
 	$param=$this->session->userdata('secGroup');
-	$result['data']=$this->SGODModel->get_all_by_row('secGroup','sgod_users', $param);
+	$this->db->where('secGroup', $param);
+	$this->db->where_not_in('section', ['System Administrator', 'Super Admin']);
+	$result['data']=$this->db->get('sgod_users')->result();
 	$result['data1']=$this->SGODModel->get_all_by_row('secGroup','sgod_sections', $param);
     $this->load->view('users',$result); 
 	
@@ -1547,12 +1735,52 @@ function usersList(){
 	$lName=$this->input->post('lName');
 	$email=$this->input->post('email');
 	$section=$this->input->post('section');
+
+	if(!$this->is_valid_section_for_current_user($section)){
+		$this->session->set_flashdata('danger', 'You can only add users to sections under your department.');
+		redirect('Page/usersList');
+	}
  
 	$que=$this->db->query("insert into sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','$section','$param')");
 	$this->session->set_flashdata('msg', '<div class="alert alert-success text-center"><b>New account has been created successfully.</b></div>');
 	redirect('Page/usersList');
 	}			
 
+  }
+
+  function super_admin_users(){
+	if($this->session->userdata('section')!=='Super Admin'){
+		echo "Access Denied";
+		return;
+	}
+
+	$result['data']=$this->SGODModel->one_cond_orderby('sgod_users','section','System Administrator','secGroup','ASC');
+	$result['adminGroups']=$this->get_managed_admin_groups();
+    $this->load->view('users_super_admin',$result);
+
+	if($this->input->post('submit'))
+	{
+		$username=$this->input->post('email');
+		$password=sha1($this->input->post('password'));
+		$fName=$this->input->post('fName');
+		$lName=$this->input->post('lName');
+		$email=$this->input->post('email');
+		$secGroup=$this->input->post('secGroup');
+
+		if(!in_array($secGroup, $this->get_managed_admin_groups(), true)){
+			$this->session->set_flashdata('danger', 'Invalid admin identifier selected.');
+			redirect('Page/super_admin_users');
+		}
+
+		if($this->SGODModel->get_single_by_id('username', 'sgod_users', $username)){
+			$this->session->set_flashdata('danger', 'Username already exists.');
+			redirect('Page/super_admin_users');
+		}
+
+		$que=$this->db->query("insert into sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','System Administrator','$secGroup')");
+		$this->session->set_flashdata('success', 'Admin account created successfully.');
+		redirect('Page/super_admin_users');
+	}
   }
 
   function usersListv2(){
@@ -1572,6 +1800,11 @@ function usersList(){
 	$lName=$this->input->post('lName');
 	$email=$this->input->post('email');
 	$section=$this->input->post('section');
+
+	if(!$this->is_valid_section_for_current_user($section)){
+		$this->session->set_flashdata('danger', 'You can only add users to your section.');
+		redirect('Page/usersListv2');
+	}
  
 	$que=$this->db->query("insert into sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','$section','$param')");
 	$this->session->set_flashdata('msg', '<div class="alert alert-success text-center"><b>New account has been created successfully.</b></div>');
@@ -1582,9 +1815,20 @@ function usersList(){
 
   public function delete_account(){
 	$id = $this->input->get('id');
+
+	if($this->session->userdata('section')==='Super Admin' && !$this->is_super_admin_managed_account($id)){
+		$this->session->set_flashdata('danger', 'Super Admin can only manage CID, SGOD, and OSDS admin accounts.');
+		redirect($this->get_users_redirect_route());
+	}
+
+	if($this->session->userdata('section')!=='Super Admin' && !$this->can_manage_user($id)){
+		$this->session->set_flashdata('danger', 'You can only manage users under your department.');
+		redirect($this->get_users_redirect_route());
+	}
+
 	$this->db->query("delete  from sgod_users where username='".$id."'");
 	$this->session->set_flashdata('success', 'Deleted successfully!');
-	redirect('Page/usersListv2');
+	redirect($this->get_users_redirect_route());
 }
 
 public function update_user(){
@@ -1607,15 +1851,92 @@ public function update_user(){
 		$data['password'] = sha1($password);
 	}
 
+	if($this->session->userdata('section')==='Super Admin'){
+		if(!$this->is_super_admin_managed_account($username)){
+			$this->session->set_flashdata('danger', 'Super Admin can only manage CID, SGOD, and OSDS admin accounts.');
+			redirect($this->get_users_redirect_route());
+		}
+
+		$secGroup = $this->input->post('secGroup');
+		if(!in_array($secGroup, $this->get_managed_admin_groups(), true)){
+			$this->session->set_flashdata('danger', 'Invalid admin identifier selected.');
+			redirect($this->get_users_redirect_route());
+		}
+
+		$data['section'] = 'System Administrator';
+		$data['secGroup'] = $secGroup;
+	}else{
+		if(!$this->can_manage_user($username)){
+			$this->session->set_flashdata('danger', 'You can only manage users under your department.');
+			redirect($this->get_users_redirect_route());
+		}
+
+		if(!$this->is_valid_section_for_current_user($section)){
+			$this->session->set_flashdata('danger', 'You can only assign sections under your department.');
+			redirect($this->get_users_redirect_route());
+		}
+	}
+
 	$this->db->where('username', $username);
 	$this->db->update('sgod_users', $data);
 	$this->session->set_flashdata('success', 'User updated successfully!');
-	redirect('Page/usersList');
+	redirect($this->get_users_redirect_route());
+}
+
+public function change_user_password(){
+	$username = $this->input->post('username');
+	$newPassword = trim((string) $this->input->post('new_password'));
+	$confirmPassword = trim((string) $this->input->post('confirm_password'));
+
+	if(empty($username)){
+		$this->session->set_flashdata('danger', 'User account not found.');
+		redirect($this->get_users_redirect_route());
+	}
+
+	if($this->session->userdata('section')==='Super Admin' && !$this->is_super_admin_managed_account($username)){
+		$this->session->set_flashdata('danger', 'Super Admin can only manage CID, SGOD, and OSDS admin accounts.');
+		redirect($this->get_users_redirect_route());
+	}
+
+	if($this->session->userdata('section')!=='Super Admin' && !$this->can_manage_user($username)){
+		$this->session->set_flashdata('danger', 'You can only manage users under your department.');
+		redirect($this->get_users_redirect_route());
+	}
+
+	if($newPassword === '' || $confirmPassword === ''){
+		$this->session->set_flashdata('danger', 'Please enter and confirm the new password.');
+		redirect($this->get_users_redirect_route());
+	}
+
+	if(strlen($newPassword) < 8){
+		$this->session->set_flashdata('danger', 'New password must be at least 8 characters long.');
+		redirect($this->get_users_redirect_route());
+	}
+
+	if($newPassword !== $confirmPassword){
+		$this->session->set_flashdata('danger', 'New password and confirmation password do not match.');
+		redirect($this->get_users_redirect_route());
+	}
+
+	$this->db->where('username', $username);
+	$this->db->update('sgod_users', array('password' => sha1($newPassword)));
+	$this->session->set_flashdata('success', 'Password changed successfully!');
+	redirect($this->get_users_redirect_route());
 }
 
 public function reset_password(){
 	$username = $this->input->get('username');
 	$new_password = '123456'; // Default password
+
+	if($this->session->userdata('section')==='Super Admin' && !$this->is_super_admin_managed_account($username)){
+		$this->session->set_flashdata('danger', 'Super Admin can only manage CID, SGOD, and OSDS admin accounts.');
+		redirect($this->get_users_redirect_route());
+	}
+
+	if($this->session->userdata('section')!=='Super Admin' && !$this->can_manage_user($username)){
+		$this->session->set_flashdata('danger', 'You can only manage users under your department.');
+		redirect($this->get_users_redirect_route());
+	}
 
 	$data = array(
 		'password' => sha1($new_password)
@@ -1624,12 +1945,22 @@ public function reset_password(){
 	$this->db->where('username', $username);
 	$this->db->update('sgod_users', $data);
 	$this->session->set_flashdata('success', 'Password reset successfully! Default password: 123456');
-	redirect('Page/usersList');
+	redirect($this->get_users_redirect_route());
 }
 
 public function deactivate_user(){
 	$username = $this->input->get('username');
 	$status = $this->input->get('status');
+
+	if($this->session->userdata('section')==='Super Admin' && !$this->is_super_admin_managed_account($username)){
+		$this->session->set_flashdata('danger', 'Super Admin can only manage CID, SGOD, and OSDS admin accounts.');
+		redirect($this->get_users_redirect_route());
+	}
+
+	if($this->session->userdata('section')!=='Super Admin' && !$this->can_manage_user($username)){
+		$this->session->set_flashdata('danger', 'You can only manage users under your department.');
+		redirect($this->get_users_redirect_route());
+	}
 
 	$data = array(
 		'acctStat' => $status
@@ -1638,7 +1969,135 @@ public function deactivate_user(){
 	$this->db->where('username', $username);
 	$this->db->update('sgod_users', $data);
 	$this->session->set_flashdata('success', 'User status updated successfully!');
-	redirect('Page/usersList');
+	redirect($this->get_users_redirect_route());
+}
+
+private function get_users_redirect_route(){
+	if($this->session->userdata('section')==='Super Admin'){
+		return 'Page/super_admin_users';
+	}
+
+	if($this->session->userdata('section')==='System Administrator' || $this->session->userdata('section')==='Chief - SGOD'){
+		return 'Page/usersList';
+	}
+
+	return 'Page/usersListv2';
+}
+
+private function get_managed_admin_groups(){
+	return ['CID', 'OSDS', 'SGOD'];
+}
+
+private function auto_migrate_whereabouts_table(){
+	$this->load->dbforge();
+
+	$fields = array(
+		'id' => array(
+			'type' => 'INT',
+			'constraint' => 11,
+			'unsigned' => TRUE,
+			'auto_increment' => TRUE
+		),
+		'username' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 100
+		),
+		'fName' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 100
+		),
+		'lName' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 100
+		),
+		'section' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'secGroup' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 50
+		),
+		'date' => array(
+			'type' => 'DATE'
+		),
+		'location' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'activity' => array(
+			'type' => 'TEXT'
+		),
+		'status' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 50,
+			'default' => 'In Office'
+		),
+		'notes' => array(
+			'type' => 'TEXT',
+			'null' => TRUE
+		),
+		'created_at' => array(
+			'type' => 'DATETIME'
+		),
+		'updated_at' => array(
+			'type' => 'DATETIME'
+		)
+	);
+
+	$this->dbforge->add_field($fields);
+	$this->dbforge->add_key('id', TRUE);
+	$this->dbforge->create_table('sgod_employee_whereabouts', TRUE);
+}
+
+private function is_valid_section_for_current_user($section){
+	$currentSection = $this->session->userdata('section');
+	$currentGroup = $this->session->userdata('secGroup');
+
+	if($currentSection === 'Super Admin'){
+		return $section === 'System Administrator';
+	}
+
+	if(in_array($currentSection, ['System Administrator', 'Chief - SGOD'], true)){
+		return (bool) $this->SGODModel->two_cond_row('sgod_sections', 'sectionName', $section, 'secGroup', $currentGroup);
+	}
+
+	return $section === $currentSection;
+}
+
+private function can_manage_user($username){
+	$user = $this->SGODModel->get_single_by_id('username', 'sgod_users', $username);
+
+	if(!$user){
+		return FALSE;
+	}
+
+	$currentSection = $this->session->userdata('section');
+	$currentGroup = $this->session->userdata('secGroup');
+
+	if($user->secGroup !== $currentGroup){
+		return FALSE;
+	}
+
+	if(in_array($user->section, ['System Administrator', 'Super Admin'], true)){
+		return FALSE;
+	}
+
+	if(in_array($currentSection, ['System Administrator', 'Chief - SGOD'], true)){
+		return TRUE;
+	}
+
+	return $user->section === $currentSection;
+}
+
+private function is_super_admin_managed_account($username){
+	$user = $this->SGODModel->get_single_by_id('username', 'sgod_users', $username);
+
+	if(!$user){
+		return FALSE;
+	}
+
+	return $user->section === 'System Administrator' && in_array($user->secGroup, $this->get_managed_admin_groups(), true);
 }
 
 
@@ -1650,39 +2109,42 @@ public function deactivate_user(){
   function update_password(){
 
 		$this->form_validation->set_rules('currentpassword', 'Current Password', 'required|trim|callback__validate_currentpassword');
-		$this->form_validation->set_rules('newpassword', 'New Password', 'required|trim|min_length[8]|alpha_numeric');
+		$this->form_validation->set_rules('newpassword', 'New Password', 'required|trim|min_length[8]');
 		$this->form_validation->set_rules('cnewpassword', 'Confirm New Password', 'required|trim|matches[newpassword]');
 		
 		$this->form_validation->set_message('required',"Please fill-up the form completely!");
 		if($this->form_validation->run()){
 
-      $username=$this->session->userdata('username');
-		  $newpass= sha1($this->input->post('newpassword'));
-			if($this->PayrollModel->reset_userpassword($username, $newpass)){
-				$this->session->set_flashdata('msg', '<div class="alert alert-success text-center">Succesfully changed password</div>');
-				$this->load->view('change_pass');
+      	$username=$this->session->userdata('username');
+		  	$newpass= sha1($this->input->post('newpassword'));
 
-        } 
-        else{
-					echo "Error";
-				}	
+			$this->db->where('username', $username);
+			$isUpdated = $this->db->update('sgod_users', array('password' => $newpass));
+
+			if($isUpdated){
+				$this->session->set_flashdata('success', 'Password changed successfully.');
+				redirect('Page/changepassword');
+	        } 
+	        else{
+				$this->session->set_flashdata('danger', 'Unable to change password right now.');
+				$this->load->view('change_pass');
+			}	
 				
 		}else{
-			$this->session->set_flashdata('msg','');
 			$this->load->view('change_pass');	
 		}	
   }
 
 	function _validate_currentpassword(){
 		$username=$this->session->userdata('username');
-			$currentpass= sha1($this->input->post('currentpassword'));
-		if($this->PayrollModel->is_current_password($username, $currentpass)){
-		return TRUE;
-		} 
-		else {
+		$currentpass= sha1($this->input->post('currentpassword'));
+		$user = $this->SGODModel->get_single_by_id('username', 'sgod_users', $username);
+		if($user && $user->password === $currentpass){
+			return TRUE;
+		}
+
 		$this->form_validation->set_message('_validate_currentpassword', 'Wrong Current Password');
 		return FALSE;
-		}
 		
 	}
   

@@ -126,7 +126,7 @@
                                                         <td><?= $row->fy; ?></td> 
                                                         <td><?= $row->remarks; ?></td> 
                                                         <td>
-                                                        <?php if(in_array($this->session->section, ['System Administrator', 'CID Admin'], true)){ ?>
+                                                        <?php if($this->session->section == "System Administrator"){ ?>
                                                             <a href="<?= base_url(); ?>Page/aip_track/<?= $row->id; ?>" class="btn btn-warning">View Status</a> &nbsp;
                                                             <?php if($row->status != 1){ ?>
                                                                 <a href="aip_admin/<?= $row->school_id.'/'.$row->fy.'/'.$row->b_code.'/'.$row->id; ?>" class="btn btn-success">Evaluate AIP</a> &nbsp;

@@ -88,16 +88,22 @@ function registration(){
             'email'     => $email,
             'section'     => $section,
             'secGroup'     => $secGroup,
+            'identifier'     => $secGroup,
             'logged_in' => TRUE
         );
         $this->session->set_userdata($user_data);
         //  access login for admin
-        if($section === 'System Administrator'){
+        if($section === 'Super Admin'){
+            redirect('page/super_admin');
+
+        }elseif($section === 'System Administrator'){
+            if($secGroup === 'CID'){
+                redirect('page/cid_admin');
+            }elseif($secGroup === 'OSDS'){
+                redirect('page/osds_admin');
+            }
             redirect('page/admin');
 
-        }elseif($section === 'CID Admin'){
-            redirect('page/cid_admin');
- 
        //  access login for Section User
         }elseif($section === 'Chief - SGOD'){
             redirect('page/sgod');
@@ -119,8 +125,8 @@ function registration(){
             redirect('page/YFP');
 
         //  access login for Physical Education and Schools Sports
-    }elseif($section === 'Physical Education and Schools Sports'){
-        redirect('page/PESS');
+        }elseif($section === 'Physical Education and Schools Sports'){
+            redirect('page/PESS');
 
             //  access login for SHNS
         }elseif($section === 'School Health and Nutrition Section'){
@@ -135,23 +141,23 @@ function registration(){
             redirect('page/HRD');
 
     //  access login for HRD
-}elseif($section === 'Education Facilities Section'){
-    redirect('page/EFS');
+        }elseif($section === 'Education Facilities Section'){
+            redirect('page/EFS');
 
         //  access login for HRD
-}elseif($section === 'Social Mobilization and Networking'){
-    redirect('page/SMN');
-
-
-
+        }elseif($section === 'Social Mobilization and Networking'){
+            redirect('page/SMN');
 
         // access for the school
         }elseif($section === 'School'){
             redirect('page/School');
 
+        // access for regular section users
+        }else{
+            redirect('page/user_dashboard');
+        }
 
-
-}} else {
+} else {
     echo $this->session->set_flashdata('msg', 'The username or password is incorrect!');
     redirect('Login/');
 }

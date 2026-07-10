@@ -28,17 +28,68 @@ class SGODModel extends CI_Model
 	}
 
 	public function viewSections($param){
-		$query=$this->db->query("select * from sgod_sections where secGroup='".$param."' order by sectionName");
+		$this->db->where('secGroup', trim((string) $param));
+		$this->db->order_by('sectionName');
+		$query = $this->db->get('sgod_sections');
 		return $query->result();
 	}
 	public function viewSectionsChecking($param){
-		$query=$this->db->query("select * from sgod_sections where secGroup='".$param."' and sectionName !='Chief - SGOD' order by sectionName");
+		$this->db->where('secGroup', trim((string) $param));
+		$this->db->where('sectionName !=', 'Chief - SGOD');
+		$this->db->order_by('sectionName');
+		$query = $this->db->get('sgod_sections');
 		return $query->result();
 	}
 
 	function accombyid($id){
 		$this->db->where('id', $id);
 		$result = $this->db->get('sgod_accomplishments');
+		return $result->result();
+	}
+
+	function get_user_whereabouts($username){
+		$this->db->where('username', $username);
+		$this->db->order_by('date', 'DESC');
+		$this->db->limit(10);
+		$result = $this->db->get('sgod_employee_whereabouts');
+		return $result->result();
+	}
+
+	function get_whereabouts_by_id($id){
+		$this->db->where('id', $id);
+		$result = $this->db->get('sgod_employee_whereabouts');
+		return $result->result();
+	}
+
+	function get_all_whereabouts_by_date($date){
+		$latestPerEmployee = $this->db
+			->select('MAX(w_latest.id) AS latest_id')
+			->from('sgod_employee_whereabouts w_latest')
+			->where('w_latest.date', $date)
+			->group_by('w_latest.username')
+			->get_compiled_select();
+
+		$this->db->select("w.*, COALESCE(NULLIF(u.avatar, ''), 'avatar.png') AS userAvatar");
+		$this->db->from('sgod_employee_whereabouts w');
+		$this->db->join('sgod_users u', 'u.username = w.username', 'left');
+		$this->db->where("w.id IN ($latestPerEmployee)", NULL, FALSE);
+		$this->db->order_by('w.section', 'ASC');
+		$this->db->order_by('w.lName', 'ASC');
+		$result = $this->db->get();
+		return $result->result();
+	}
+
+	function search_whereabouts($search){
+		$this->db->select("w.*, COALESCE(NULLIF(u.avatar, ''), 'avatar.png') AS userAvatar");
+		$this->db->from('sgod_employee_whereabouts w');
+		$this->db->join('sgod_users u', 'u.username = w.username', 'left');
+		$this->db->group_start();
+		$this->db->like('w.fName', $search);
+		$this->db->or_like('w.lName', $search);
+		$this->db->or_like('w.section', $search);
+		$this->db->group_end();
+		$this->db->order_by('w.date', 'DESC');
+		$result = $this->db->get();
 		return $result->result();
 	}
 
@@ -449,6 +500,37 @@ class SGODModel extends CI_Model
 		$this->db->order_by('id','DESC')->limit(1);
 		$result = $this->db->get($table);
 		return $result->row();
+	}
+
+	public function get_memos_by_group($secGroup){
+		$this->db->where('secGroup', trim((string) $secGroup));
+		$this->db->order_by('id', 'DESC');
+		$result = $this->db->get('sgod_memo');
+		return $result->result();
+	}
+
+	public function get_last_memo_record_by_group($secGroup){
+		$this->db->where('secGroup', trim((string) $secGroup));
+		$this->db->order_by('id', 'DESC');
+		$this->db->limit(1);
+		$result = $this->db->get('sgod_memo');
+		return $result->row();
+	}
+
+	public function get_memo_by_group_and_id($id, $secGroup){
+		$this->db->where('id', $id);
+		$this->db->where('secGroup', trim((string) $secGroup));
+		$result = $this->db->get('sgod_memo');
+		return $result->row();
+	}
+
+	public function memo_exists_in_group($memoNo, $secGroup, $excludeId = NULL){
+		$this->db->where('memoNo', $memoNo);
+		$this->db->where('secGroup', trim((string) $secGroup));
+		if($excludeId !== NULL){
+			$this->db->where('id !=', $excludeId);
+		}
+		return $this->db->get('sgod_memo');
 	}
 
 	public function get_paginated($table, $order_col, $order_val, $limit, $offset){
@@ -989,13 +1071,14 @@ class SGODModel extends CI_Model
 	// configured by tyrone
 	public function insert_memo(){
         $file = $this->upload->data();
-        $filename = $file['file_name'];
+        $filename = isset($file['file_name']) ? $file['file_name'] : '';
 
         $data = array(
             'fileName' => $filename,
             'title' => $this->input->post('title'),
             'memoNo' => $this->input->post('memoNo'),
-			'added_by' => $this->session->username
+			'added_by' => $this->session->username,
+			'secGroup' => $this->session->userdata('secGroup')
         ); 
 
         return $this->db->insert('sgod_memo', $data);
@@ -1006,7 +1089,8 @@ class SGODModel extends CI_Model
         $data = array(
             'title' => $this->input->post('title'),
             'memoNo' => $this->input->post('memoNo'),
-			'added_by' => $this->session->username
+			'added_by' => $this->session->username,
+			'secGroup' => $this->session->userdata('secGroup')
         ); 
 
 		$this->db->where('id', $this->input->post('id'));
@@ -1015,11 +1099,12 @@ class SGODModel extends CI_Model
 
 	public function mfu(){
 		$file = $this->upload->data();
-        $filename = $file['file_name'];
+        $filename = isset($file['file_name']) ? $file['file_name'] : '';
 
         $data = array(
             'fileName' => $filename,
-			'added_by' => $this->session->username
+			'added_by' => $this->session->username,
+			'secGroup' => $this->session->userdata('secGroup')
         ); 
 		
 		$this->db->where('id', $this->input->post('id'));
@@ -1094,7 +1179,7 @@ class SGODModel extends CI_Model
 		'sectionName' => $this->input->post('sectionName'), 
 		'sectionHead' => $this->input->post('sectionHead'), 
 		'sectionHeadPosition' => $this->input->post('sectionHeadPosition'), 
-		'secGroup' => $this->input->post('secGroup'), 
+		'secGroup' => $this->session->userdata('secGroup'), 
 		'member' => $this->input->post('member')
 		); 
 
@@ -1106,7 +1191,7 @@ class SGODModel extends CI_Model
 		'sectionName' => $this->input->post('sectionName'), 
 		'sectionHead' => $this->input->post('sectionHead'), 
 		'sectionHeadPosition' => $this->input->post('sectionHeadPosition'), 
-		'secGroup' => $this->input->post('secGroup'), 
+		'secGroup' => $this->session->userdata('secGroup'), 
 		'member' => $this->input->post('member')
 		); 
 
@@ -1119,9 +1204,4 @@ class SGODModel extends CI_Model
 
 
 }
-
-
-
-
-
 
