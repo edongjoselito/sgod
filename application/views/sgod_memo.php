@@ -642,7 +642,7 @@
                                                     <i class="mdi mdi-file-document-outline"></i>
                                                     Department Memorandum Registry
                                                 </span>
-                                                <h1 class="memo-title">Keep department memos organized in a cleaner workspace.</h1>
+                                                <h1 class="memo-title">Manage Memos</h1>
                                                 <button type="button" class="hero-add-btn" data-toggle="modal" data-target="#addMemoDialog">
                                                     <i class="mdi mdi-plus-circle-outline"></i>
                                                     Add New Memo

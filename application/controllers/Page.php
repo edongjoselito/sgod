@@ -53,12 +53,318 @@ class Page extends CI_Controller{
   }
 
   private function load_admin_dashboard($view){
-	$param=$this->session->userdata('secGroup');
-	$result['data']=$this->SGODModel->count_sec_users('sgod_users',$param);
-	$result['data1']=$this->SGODModel->count_sections('sgod_sections',$param);
-	$result['data2']=$this->SGODModel->count_sec_accomplishments('sgod_accomplishments',$param);
-	$result['data3']=$this->SGODModel->count_table_row('schools');
-	$this->load->view($view,$result);
+		$param=$this->session->userdata('secGroup');
+		$result['data']=$this->SGODModel->count_sec_users('sgod_users',$param);
+		$result['data1']=$this->SGODModel->count_sections('sgod_sections',$param);
+		$result['data2']=$this->SGODModel->count_sec_accomplishments('sgod_accomplishments',$param);
+		$result['data3']=$this->SGODModel->count_table_row('schools');
+		$this->load->view($view,$result);
+  }
+
+  private function ensure_accomplishment_report_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS sgod_accomplishment_reports (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		acc_id INT UNSIGNED NOT NULL,
+		document_name VARCHAR(255) NOT NULL DEFAULT '',
+		original_name VARCHAR(255) NOT NULL,
+		stored_name VARCHAR(255) NOT NULL,
+		uploaded_at DATETIME NOT NULL,
+		PRIMARY KEY (id),
+		KEY idx_acc_id (acc_id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	if(!$this->db->field_exists('document_name', 'sgod_accomplishment_reports')){
+		$this->db->query("ALTER TABLE sgod_accomplishment_reports ADD COLUMN document_name VARCHAR(255) NOT NULL DEFAULT '' AFTER acc_id");
+	}
+  }
+
+  private function ensure_accomplishment_scope_column(){
+	if(!$this->db->field_exists('accomplishmentScope', 'sgod_accomplishments')){
+		$this->db->query("ALTER TABLE sgod_accomplishments ADD COLUMN accomplishmentScope VARCHAR(20) NOT NULL DEFAULT 'section' AFTER encoder");
+	}
+
+	$this->db->query("UPDATE sgod_accomplishments SET accomplishmentScope = 'section' WHERE accomplishmentScope IS NULL OR TRIM(accomplishmentScope) = ''");
+  }
+
+  private function upload_accomplishment_report($fieldName = 'attachment_file'){
+	if(empty($_FILES[$fieldName]['name'])){
+		return array(
+			'success' => TRUE,
+			'uploaded' => FALSE
+		);
+	}
+
+	$uploadPath = FCPATH . 'upload/accomplishment_reports/';
+	if(!is_dir($uploadPath)){
+		mkdir($uploadPath, 0775, TRUE);
+	}
+
+	$config['upload_path'] = $uploadPath;
+	$config['allowed_types'] = 'pdf';
+	$config['max_size'] = 15360;
+	$config['encrypt_name'] = TRUE;
+	$config['remove_spaces'] = TRUE;
+
+	$this->load->library('upload');
+	$this->upload->initialize($config);
+
+	if(!$this->upload->do_upload($fieldName)){
+		return array(
+			'success' => FALSE,
+			'uploaded' => FALSE,
+			'message' => trim(strip_tags($this->upload->display_errors('', '')))
+		);
+	}
+
+	return array(
+		'success' => TRUE,
+		'uploaded' => TRUE,
+		'data' => $this->upload->data()
+	);
+  }
+
+  private function delete_accomplishment_reports($accomplishmentId){
+	$this->ensure_accomplishment_report_table();
+	$reports = $this->SGODModel->get_accomplishment_reports($accomplishmentId);
+
+	foreach($reports as $report){
+		$filePath = FCPATH . 'upload/accomplishment_reports/' . $report->stored_name;
+		if(!empty($report->stored_name) && file_exists($filePath)){
+			@unlink($filePath);
+		}
+	}
+
+	$this->SGODModel->delete_accomplishment_reports($accomplishmentId);
+  }
+
+  private function get_owned_accomplishment($accomplishmentId){
+	$section = $this->session->userdata('section');
+	$secGroup = $this->session->userdata('secGroup');
+
+	return $this->SGODModel->three_cond_row(
+		'sgod_accomplishments',
+		'id',
+		(int) $accomplishmentId,
+		'section',
+		$section,
+		'secGroup',
+		$secGroup
+	);
+  }
+
+  private function normalize_activity_date($value){
+	$value = trim((string) $value);
+	if($value === ''){
+		return '';
+	}
+
+	$date = DateTime::createFromFormat('Y-m-d', $value);
+	if(!$date || $date->format('Y-m-d') !== $value){
+		return '';
+	}
+
+	return $date->format('Y-m-d');
+  }
+
+  private function get_quarter_from_date($dateValue){
+	$monthNumber = (int) date('n', strtotime($dateValue));
+	if($monthNumber >= 1 && $monthNumber <= 3){
+		return '1st';
+	}
+	if($monthNumber >= 4 && $monthNumber <= 6){
+		return '2nd';
+	}
+	if($monthNumber >= 7 && $monthNumber <= 9){
+		return '3rd';
+	}
+	return '4th';
+  }
+
+  private function format_activity_date_range($fromDate, $toDate){
+	$fromLabel = date('F j, Y', strtotime($fromDate));
+	$toLabel = date('F j, Y', strtotime($toDate));
+
+	if($fromDate === $toDate){
+		return $fromLabel;
+	}
+
+	return $fromLabel . ' to ' . $toLabel;
+  }
+
+  private function normalize_accomplishment_scope($value){
+	$value = strtolower(trim((string) $value));
+	return $value === 'personal' ? 'personal' : 'section';
+  }
+
+  private function extract_section_member_idnumber($value){
+	$value = trim(preg_replace('/\s+/', ' ', (string) $value));
+	if($value === ''){
+		return '';
+	}
+
+	if(preg_match('/\(([^()]+)\)\s*$/', $value, $matches)){
+		return trim((string) $matches[1]);
+	}
+
+	return $value;
+  }
+
+  private function collect_section_account_candidates($sectionHead, $members){
+	$candidates = array();
+	$candidateIndex = array();
+
+	$appendCandidate = function($value) use (&$candidates, &$candidateIndex){
+		$value = trim((string) $value);
+		if($value === ''){
+			return;
+		}
+
+		$key = strtolower($value);
+		if(isset($candidateIndex[$key])){
+			return;
+		}
+
+		$candidateIndex[$key] = TRUE;
+		$candidates[] = $value;
+	};
+
+	$appendCandidate($sectionHead);
+
+	foreach((array) $members as $memberValue){
+		$appendCandidate($this->extract_section_member_idnumber($memberValue));
+	}
+
+	return $candidates;
+  }
+
+  private function provision_section_user_accounts($sectionName, $sectionHead, $members, $secGroup){
+	$sectionName = trim((string) $sectionName);
+	$secGroup = trim((string) $secGroup);
+	$result = array(
+		'created' => 0,
+		'existing' => 0,
+		'skipped' => 0
+	);
+
+	foreach($this->collect_section_account_candidates($sectionHead, $members) as $idNumber){
+		$staff = $this->SGODModel->get_single_by_id('IDNumber', 'hris_staff', $idNumber);
+		if(!$staff){
+			$result['skipped']++;
+			continue;
+		}
+
+		$username = trim((string) $staff->IDNumber);
+		if($username === ''){
+			$result['skipped']++;
+			continue;
+		}
+
+		if($this->SGODModel->get_single_by_id('username', 'sgod_users', $username)){
+			$result['existing']++;
+			continue;
+		}
+
+		$lastName = trim((string) $staff->LastName);
+		$nameExtension = trim((string) $staff->NameExtn);
+		if($nameExtension !== ''){
+			$lastName = trim($lastName . ' ' . $nameExtension);
+		}
+
+		$isInserted = $this->db->insert('sgod_users', array(
+			'username' => $username,
+			'password' => sha1($username),
+			'fName' => trim((string) $staff->FirstName),
+			'mName' => trim((string) $staff->MiddleName),
+			'lName' => $lastName,
+			'avatar' => 'avatar.png',
+			'email' => '',
+			'acctStat' => 'Active',
+			'section' => $sectionName,
+			'secGroup' => $secGroup
+		));
+
+		if($isInserted){
+			$result['created']++;
+		}else{
+			$result['skipped']++;
+		}
+	}
+
+	return $result;
+  }
+
+  private function build_section_provision_message($baseMessage, $provisionResult){
+	$message = trim((string) $baseMessage);
+	if(!is_array($provisionResult)){
+		return $message;
+	}
+
+	if(!empty($provisionResult['created'])){
+		$message .= ' ' . $provisionResult['created'] . ' user account(s) were created automatically using the IDNumber as the default username and password.';
+	}
+
+	if(!empty($provisionResult['skipped'])){
+		$message .= ' ' . $provisionResult['skipped'] . ' selected entry/entries were skipped because no matching HRIS record was found.';
+	}
+
+	return $message;
+  }
+
+  private function get_section_head_record_for_user($username, $section, $secGroup){
+	$username = trim((string) $username);
+	$section = trim((string) $section);
+	$secGroup = trim((string) $secGroup);
+
+	if($username === '' || $secGroup === ''){
+		return NULL;
+	}
+
+	$sectionRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $username, 'secGroup', $secGroup);
+	if(!$sectionRecord){
+		return NULL;
+	}
+
+	if($section !== '' && trim((string) $sectionRecord->sectionName) !== $section){
+		return NULL;
+	}
+
+	return $sectionRecord;
+  }
+
+  private function get_current_section_head_record(){
+	return $this->get_section_head_record_for_user(
+		$this->session->userdata('username'),
+		$this->session->userdata('section'),
+		$this->session->userdata('secGroup')
+	);
+  }
+
+  private function get_current_user_profile_state(){
+	$username = $this->session->userdata('username');
+	$user = $this->SGODModel->get_single_by_id('username', 'sgod_users', $username);
+	$currentAvatar = 'avatar.png';
+
+	if($user && !empty($user->avatar)){
+		$currentAvatar = $user->avatar;
+	}
+
+	if($this->session->userdata('avatar') !== $currentAvatar){
+		$this->session->set_userdata('avatar', $currentAvatar);
+	}
+
+	return array(
+		'currentAvatar' => $currentAvatar,
+		'shouldPromptAvatarUpdate' => strtolower(basename((string) $currentAvatar)) === 'avatar.png'
+	);
+  }
+
+  private function redirect_section_head_dashboard_if_needed(){
+	if($this->get_current_section_head_record()){
+		redirect('Page/section_head_dashboard');
+		return TRUE;
+	}
+
+	return FALSE;
   }
 
   function sgod(){
@@ -88,6 +394,10 @@ class Page extends CI_Controller{
     }
   }
   function SMME(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='School Management Monitoring and Evaluation'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -102,6 +412,10 @@ class Page extends CI_Controller{
 
 
   function PESS(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='Physical Education and Schools Sports'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -115,6 +429,10 @@ class Page extends CI_Controller{
   }
 
   function DRRM(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='Disaster Risk Reduction Management (DRRM) Section'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -128,6 +446,10 @@ class Page extends CI_Controller{
   }
 
   function SHNS(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='School Health and Nutrition Section'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -142,6 +464,10 @@ class Page extends CI_Controller{
 
 
   function HRD(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='Human Resource Development Section'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -155,6 +481,10 @@ class Page extends CI_Controller{
   }
 
   function EFS(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='Education Facilities Section'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -168,6 +498,10 @@ class Page extends CI_Controller{
   }
 
   function SMN(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='Social Mobilization and Networking'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -181,6 +515,10 @@ class Page extends CI_Controller{
   }
 
   function Planning(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='Planning'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -194,6 +532,10 @@ class Page extends CI_Controller{
   }
 
   function Research(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='Research'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -207,6 +549,10 @@ class Page extends CI_Controller{
   }
 
   function YFP(){
+    if($this->redirect_section_head_dashboard_if_needed()){
+		return;
+	}
+
     if($this->session->userdata('section')==='Youth Formation Program'){
 		$section=$this->session->userdata('section'); 
 		$result['data']=$this->SGODModel->cPublic();
@@ -219,14 +565,100 @@ class Page extends CI_Controller{
     }
   }
 
+  function section_head_dashboard(){
+	$sectionRecord = $this->get_current_section_head_record();
+	if(!$sectionRecord){
+		redirect('Page/user_dashboard');
+		return;
+	}
+
+	$section = $this->session->userdata('section');
+	$profileState = $this->get_current_user_profile_state();
+	$result['data'] = $this->SGODModel->cPublic();
+	$result['data1'] = $this->SGODModel->cPrivate();
+	$result['data2'] = $this->SGODModel->aSectionAccomplishments($section);
+	$result['data3'] = $this->SGODModel->totalSectionUsers($section);
+	$result['sectionRecord'] = $sectionRecord;
+	$result['currentAvatar'] = $profileState['currentAvatar'];
+	$result['shouldPromptAvatarUpdate'] = $profileState['shouldPromptAvatarUpdate'];
+	$this->load->view('dashboard_section_head', $result);
+  }
+
   function user_dashboard(){
     $this->auto_migrate_whereabouts_table();
     $section=$this->session->userdata('section');
-    $secGroup=$this->session->userdata('secGroup');
     $username=$this->session->userdata('username');
+    $openProfilePicture = trim((string) $this->input->get('open_profile_picture'));
+    $sectionHeadRecord = $this->get_current_section_head_record();
+    if($openProfilePicture !== '1' && $sectionHeadRecord){
+      redirect('Page/section_head_dashboard');
+      return;
+    }
+
+    $profileState = $this->get_current_user_profile_state();
     $result['data']=$this->SGODModel->aSectionAccomplishments($section);
     $result['whereabouts']=$this->SGODModel->get_user_whereabouts($username);
+    $result['currentAvatar']=$profileState['currentAvatar'];
+    $result['shouldPromptAvatarUpdate']=$profileState['shouldPromptAvatarUpdate'];
     $this->load->view('dashboard_user',$result);
+  }
+
+  public function upload_user_profile_picture(){
+    $this->output->set_content_type('application/json');
+
+    $username=$this->session->userdata('username');
+    if(empty($username)){
+      $this->output->set_status_header(401);
+      $this->output->set_output(json_encode(array(
+        'success' => FALSE,
+        'message' => 'Your session has expired. Please log in again.'
+      )));
+      return;
+    }
+
+    $config['upload_path']='./upload/profile/';
+    $config['allowed_types']='jpg|jpeg|png|gif';
+    $config['max_size']=2048;
+    $config['encrypt_name']=TRUE;
+    $config['remove_spaces']=TRUE;
+
+    $this->load->library('upload');
+    $this->upload->initialize($config);
+
+    if(!$this->upload->do_upload('avatar')){
+      $this->output->set_status_header(400);
+      $this->output->set_output(json_encode(array(
+        'success' => FALSE,
+        'message' => trim(strip_tags($this->upload->display_errors('', '')))
+      )));
+      return;
+    }
+
+    $uploadData=$this->upload->data();
+    $filename=$uploadData['file_name'];
+
+    $this->db->where('username', $username);
+    $updated=$this->db->update('sgod_users', array('avatar' => $filename));
+
+    if(!$updated){
+      if(!empty($uploadData['full_path']) && file_exists($uploadData['full_path'])){
+        @unlink($uploadData['full_path']);
+      }
+
+      $this->output->set_status_header(500);
+      $this->output->set_output(json_encode(array(
+        'success' => FALSE,
+        'message' => 'Unable to save your new profile picture right now.'
+      )));
+      return;
+    }
+
+    $this->session->set_userdata('avatar', $filename);
+    $this->output->set_output(json_encode(array(
+      'success' => TRUE,
+      'message' => 'Profile picture updated successfully.',
+      'filename' => $filename
+    )));
   }
 
   function whereabouts(){
@@ -305,21 +737,127 @@ class Page extends CI_Controller{
 
   function whereabouts_ajax(){
     $this->auto_migrate_whereabouts_table();
+    $this->output->set_content_type('application/json');
     $username=$this->session->userdata('username');
     $section=$this->session->userdata('section');
     $secGroup=$this->session->userdata('secGroup');
     $fName=$this->session->userdata('fName');
     $lName=$this->session->userdata('lName');
-    $date=$this->input->post('date');
-    $location=$this->input->post('location');
-    $activity=$this->input->post('activity');
-    $status=$this->input->post('status');
-    $notes=$this->input->post('notes');
+    $rawDates=$this->input->post('dates');
+    $rawEntries=$this->input->post('entries');
+    $dates=is_string($rawDates) ? json_decode($rawDates, TRUE) : array();
+    $entries=is_string($rawEntries) ? json_decode($rawEntries, TRUE) : array();
+
+    if(!is_array($dates) || empty($dates)){
+      $singleDate=trim((string) $this->input->post('date'));
+      if($singleDate !== ''){
+        $dates=array($singleDate);
+      }
+    }
+
+    if(!is_array($entries) || empty($entries)){
+      $entries=array(array(
+        'status' => $this->input->post('status'),
+        'location' => $this->input->post('location'),
+        'activity' => $this->input->post('activity'),
+        'notes' => $this->input->post('notes')
+      ));
+    }
+
+    $cleanDates=array();
+    foreach($dates as $date){
+      $date=trim((string) $date);
+      if($date !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)){
+        $cleanDates[]=$date;
+      }
+    }
+
+    if(empty($cleanDates)){
+      $this->output->set_status_header(400);
+      $this->output->set_output(json_encode(array(
+        'success' => FALSE,
+        'message' => 'Please select at least one valid date.'
+      )));
+      return;
+    }
+
+    $cleanEntries=array();
+    foreach($entries as $entry){
+      if(!is_array($entry)){
+        continue;
+      }
+
+      $status=trim((string) (isset($entry['status']) ? $entry['status'] : ''));
+      $location=trim((string) (isset($entry['location']) ? $entry['location'] : ''));
+      $activity=trim((string) (isset($entry['activity']) ? $entry['activity'] : ''));
+      $notes=trim((string) (isset($entry['notes']) ? $entry['notes'] : ''));
+
+      if($location === '' || $activity === ''){
+        continue;
+      }
+
+      if($status === ''){
+        $status='In Office';
+      }
+
+      $cleanEntries[]=array(
+        'status' => $status,
+        'location' => $location,
+        'activity' => $activity,
+        'notes' => $notes
+      );
+    }
+
+    if(empty($cleanEntries)){
+      $this->output->set_status_header(400);
+      $this->output->set_output(json_encode(array(
+        'success' => FALSE,
+        'message' => 'Please add at least one activity or event with a location and activity description.'
+      )));
+      return;
+    }
+
     $now=date('Y-m-d H:i:s');
+    $inserted=0;
 
-    $this->db->query("INSERT INTO sgod_employee_whereabouts (username, fName, lName, section, secGroup, date, location, activity, status, notes, created_at, updated_at) VALUES ('$username','$fName','$lName','$section','$secGroup','$date','$location','$activity','$status','$notes','$now','$now')");
+    foreach($cleanDates as $date){
+      foreach($cleanEntries as $entry){
+        $saved=$this->db->insert('sgod_employee_whereabouts', array(
+          'username' => $username,
+          'fName' => $fName,
+          'lName' => $lName,
+          'section' => $section,
+          'secGroup' => $secGroup,
+          'date' => $date,
+          'location' => $entry['location'],
+          'activity' => $entry['activity'],
+          'status' => $entry['status'],
+          'notes' => $entry['notes'],
+          'created_at' => $now,
+          'updated_at' => $now
+        ));
 
-    echo json_encode(['success' => true]);
+        if($saved){
+          $inserted++;
+        }
+      }
+    }
+
+    if($inserted === 0){
+      $this->output->set_status_header(500);
+      $this->output->set_output(json_encode(array(
+        'success' => FALSE,
+        'message' => 'No activities were saved. Please try again.'
+      )));
+      return;
+    }
+
+    $this->output->set_output(json_encode(array(
+      'success' => TRUE,
+      'inserted' => $inserted,
+      'dates_saved' => count($cleanDates),
+      'entries_saved' => count($cleanEntries)
+    )));
   }
 
   function app(){
@@ -813,11 +1351,21 @@ public function memo_delete(){
 	function sections(){
 		$param=$this->session->userdata('secGroup');
 		$result['data']=$this->SGODModel->viewSections($param);
+		$result['staffOptions']=$this->SGODModel->get_hris_staff_options();
 		$this->load->view('sections',$result);
 
 		if($this->input->post('submit')){
-			$this->SGODModel->insert_sections();
-			$this->session->set_flashdata('success', ' Added Successfully!');
+			if($this->SGODModel->insert_sections()){
+				$provisionResult = $this->provision_section_user_accounts(
+					$this->input->post('sectionName'),
+					$this->input->post('sectionHead'),
+					$this->input->post('member'),
+					$param
+				);
+				$this->session->set_flashdata('success', $this->build_section_provision_message('Added Successfully!', $provisionResult));
+			}else{
+				$this->session->set_flashdata('danger', 'Unable to save the section right now. Please try again.');
+			}
 			redirect('Page/sections');
 		}
 		
@@ -825,6 +1373,7 @@ public function memo_delete(){
 
 	function sections_edit(){
 		$result['data']=$this->SGODModel->one_cond_row('sgod_sections','id',$this->uri->segment(3));
+		$result['staffOptions']=$this->SGODModel->get_hris_staff_options();
 		if(!$result['data'] || $result['data']->secGroup !== $this->session->userdata('secGroup')){
 			$this->session->set_flashdata('danger', 'You can only manage sections under your department.');
 			redirect('Page/sections');
@@ -832,8 +1381,17 @@ public function memo_delete(){
 		$this->load->view('sections_edit',$result);
 
 		if($this->input->post('submit')){
-			$this->SGODModel->update_sections();
-			$this->session->set_flashdata('success', ' Updated Successfully!');
+			if($this->SGODModel->update_sections()){
+				$provisionResult = $this->provision_section_user_accounts(
+					$this->input->post('sectionName'),
+					$this->input->post('sectionHead'),
+					$this->input->post('member'),
+					$this->session->userdata('secGroup')
+				);
+				$this->session->set_flashdata('success', $this->build_section_provision_message('Updated Successfully!', $provisionResult));
+			}else{
+				$this->session->set_flashdata('danger', 'Unable to update the section right now. Please try again.');
+			}
 			redirect('Page/sections');
 		}
 		
@@ -864,25 +1422,103 @@ public function memo_delete(){
 	function viewSecAccomplishments(){
 		$secGroup=$this->session->userdata('secGroup');
 		$section=$this->session->userdata('section');
+		$username=$this->session->userdata('username');
+		$this->ensure_accomplishment_scope_column();
+		$scope=strtolower(trim((string) $this->input->post('scope')));
+		if($scope !== 'personal'){
+			$scope='section';
+		}
+		$this->ensure_accomplishment_report_table();
+		$result['selectedScope']=$scope;
 
 		if($this->input->post('submit')){
 			$month = $this->input->post('month');
-			$week = $this->input->post('week');
 			$year = $this->input->post('year');
 			$secGroup=$this->session->userdata('secGroup');
 			$section=$this->session->userdata('section');
 
-			$result['data']=$this->SGODModel->get_accomplishment_by_date($year, $month, $week,$section,$secGroup);
+			$result['data']=$this->SGODModel->get_accomplishment_by_date($year, $month, $section, $secGroup, $scope, $username);
 
 		}else{
-			$result['data']=$this->SGODModel->viewSecAccomplishments($section,$secGroup);
+			$result['data']=$this->SGODModel->viewSecAccomplishments($section,$secGroup, $scope, $username);
 
 		}
+
+		$accomplishmentIds = array();
+		if(!empty($result['data'])){
+			foreach($result['data'] as $accomplishmentRow){
+				$accomplishmentIds[] = (int) $accomplishmentRow->id;
+			}
+		}
+
+		$result['reportGroups'] = $this->SGODModel->get_accomplishment_report_groups($accomplishmentIds);
 
 		$this->load->view('sect_accomplishments',$result);
 	}
 
+	function addAccomplishmentAttachment(){
+		$this->ensure_accomplishment_report_table();
+
+		$accomplishmentId = (int) $this->input->post('acc_id');
+		$documentName = trim((string) $this->input->post('document_name'));
+		$accomplishment = $this->get_owned_accomplishment($accomplishmentId);
+
+		if(!$accomplishment){
+			$this->session->set_flashdata('danger', 'The selected accomplishment could not be found.');
+			redirect('Page/viewSecAccomplishments');
+			return;
+		}
+
+		if($documentName === ''){
+			$this->session->set_flashdata('danger', 'Document Name is required.');
+			$this->session->set_flashdata('attachment_modal_acc_id', $accomplishmentId);
+			redirect('Page/viewSecAccomplishments');
+			return;
+		}
+
+		$reportUpload = $this->upload_accomplishment_report('attachment_file');
+		if(!$reportUpload['success']){
+			$this->session->set_flashdata('danger', $reportUpload['message']);
+			$this->session->set_flashdata('attachment_modal_acc_id', $accomplishmentId);
+			$this->session->set_flashdata('attachment_document_name', $documentName);
+			redirect('Page/viewSecAccomplishments');
+			return;
+		}
+
+		if(empty($reportUpload['uploaded'])){
+			$this->session->set_flashdata('danger', 'Please upload a PDF attachment.');
+			$this->session->set_flashdata('attachment_modal_acc_id', $accomplishmentId);
+			$this->session->set_flashdata('attachment_document_name', $documentName);
+			redirect('Page/viewSecAccomplishments');
+			return;
+		}
+
+		$saved = $this->db->insert('sgod_accomplishment_reports', array(
+			'acc_id' => $accomplishmentId,
+			'document_name' => $documentName,
+			'original_name' => (string) $reportUpload['data']['client_name'],
+			'stored_name' => (string) $reportUpload['data']['file_name'],
+			'uploaded_at' => date('Y-m-d H:i:s')
+		));
+
+		if(!$saved){
+			if(!empty($reportUpload['data']['full_path']) && file_exists($reportUpload['data']['full_path'])){
+				@unlink($reportUpload['data']['full_path']);
+			}
+
+			$this->session->set_flashdata('danger', 'Unable to save the attachment right now. Please try again.');
+			$this->session->set_flashdata('attachment_modal_acc_id', $accomplishmentId);
+			$this->session->set_flashdata('attachment_document_name', $documentName);
+			redirect('Page/viewSecAccomplishments');
+			return;
+		}
+
+		$this->session->set_flashdata('success', 'PDF attachment added successfully.');
+		redirect('Page/viewSecAccomplishments');
+	}
+
 	function copy_acc($param){
+		$this->ensure_accomplishment_scope_column();
 		$this->SGODModel->copy_row($param);
 		redirect('Page/viewSecAccomplishments');
 	}
@@ -1593,46 +2229,91 @@ public function memo_delete(){
 	}
 		
 	
-function addAccomplishments(){
-	$this->load->view('sect_accomplishments_add');
+	function addAccomplishments(){
+		$result = array();
+		$this->ensure_accomplishment_scope_column();
 
-	if($this->input->post('submit'))
-  {
-  //get data from the form
+		if($this->input->post('submit'))
+	  {
+	  $activityDateFrom = $this->normalize_activity_date($this->input->post('activityDateFrom'));
+	  $activityDateTo = $this->normalize_activity_date($this->input->post('activityDateTo'));
+	  if($activityDateFrom === '' || $activityDateTo === ''){
+		$result['uploadError'] = 'Please provide valid activity dates for both From and To.';
+		$this->load->view('sect_accomplishments_add', $result);
+		return;
+	  }
 
- 
-  $quarter=$this->input->post('quarter'); 
-  $year=$this->input->post('year');
-  $monthAcc=$this->input->post('monthAcc');
-  $weekAcc=$this->input->post('weekAcc');
-  $section=$this->session->userdata('section'); 
-  $activity=addslashes($this->input->post('activity')); 
-  $particulars=addslashes($this->input->post('particulars'));	 
-  $activityCategory=$this->input->post('activityCategory');
-  $venue=addslashes($this->input->post('venue'));
-  $targetDate=$this->input->post('targetDate');
-  $dateConducted=$this->input->post('dateConducted');
-  $resources=addslashes($this->input->post('resources'));
-  $notes=addslashes($this->input->post('notes'));
-  $remarks=addslashes($this->input->post('remarks'));
-  $encoder=$this->session->userdata('username');
-  $secGroup=$this->session->userdata('secGroup');
+	  if(strtotime($activityDateTo) < strtotime($activityDateFrom)){
+		$result['uploadError'] = 'The Activity Date To must be on or after the Activity Date From.';
+		$this->load->view('sect_accomplishments_add', $result);
+		return;
+	  }
 
-  $perIndicators=$this->input->post('perIndicators');
-  $target=$this->input->post('target');
-  $achieved=$this->input->post('achieved');
-  $percentageAccom=$this->input->post('percentageAccom');
+	  $quarter=$this->get_quarter_from_date($activityDateFrom); 
+	  $year=date('Y', strtotime($activityDateFrom));
+	  $monthAcc=date('F', strtotime($activityDateFrom));
+	  $weekAcc='';
+	  $section=$this->session->userdata('section'); 
+	  $activity=trim((string) $this->input->post('activity')); 
+	  $particulars=trim((string) $this->input->post('particulars'));	 
+	  $activityCategory=trim((string) $this->input->post('activityCategory'));
+	  $venue=trim((string) $this->input->post('venue'));
+	  $targetDate=$activityDateFrom;
+	  $dateConducted=$this->format_activity_date_range($activityDateFrom, $activityDateTo);
+	  $resources=trim((string) $this->input->post('resources'));
+	  $notes=trim((string) $this->input->post('notes'));
+	  $remarks=trim((string) $this->input->post('remarks'));
+	  $encoder=$this->session->userdata('username');
+	  $secGroup=$this->session->userdata('secGroup');
+	  $accomplishmentScope=$this->normalize_accomplishment_scope($this->input->post('accomplishmentScope'));
 
-  
-  $que=$this->db->query("insert into sgod_accomplishments (quarter, year, monthAcc, weekAcc, section, activity, particulars, activityCategory, venue, targetDate, dateConducted, encoder, resources, notes, perIndicators, target, achieved, percentageAccom, remarks, secGroup) values('$quarter','$year','$monthAcc','$weekAcc','$section','$activity','$particulars','$activityCategory','$venue','$targetDate','$dateConducted','$encoder','$resources','$notes','$perIndicators','$target','$achieved','$percentageAccom','$remarks','$secGroup')");
-  $this->session->set_flashdata('success', ' Add Successfully!');
-  redirect('Page/viewSecAccomplishments');
-  }
-  
-  }
+	  $perIndicators=trim((string) $this->input->post('perIndicators'));
+	  $target=trim((string) $this->input->post('target'));
+	  $achieved=trim((string) $this->input->post('achieved'));
+	  $percentageAccom=trim((string) $this->input->post('percentageAccom'));
+
+	  $accomplishmentData = array(
+		'quarter' => $quarter,
+		'year' => $year,
+		'monthAcc' => $monthAcc,
+		'weekAcc' => $weekAcc,
+		'section' => $section,
+		'activity' => $activity,
+		'particulars' => $particulars,
+		'activityCategory' => $activityCategory,
+		'venue' => $venue,
+		'targetDate' => $targetDate,
+		'dateConducted' => $dateConducted,
+		'encoder' => $encoder,
+		'accomplishmentScope' => $accomplishmentScope,
+		'resources' => $resources,
+		'notes' => $notes,
+		'perIndicators' => $perIndicators,
+		'target' => $target,
+		'achieved' => $achieved,
+		'percentageAccom' => $percentageAccom,
+		'remarks' => $remarks,
+		'secGroup' => $secGroup
+	  );
+
+	  $saved = $this->db->insert('sgod_accomplishments', $accomplishmentData);
+	  if(!$saved){
+		$result['uploadError'] = 'Unable to save the accomplishment entry right now. Please try again.';
+		$this->load->view('sect_accomplishments_add', $result);
+		return;
+	  }
+
+	  $this->session->set_flashdata('success', ' Add Successfully!');
+	  redirect('Page/viewSecAccomplishments');
+	  return;
+	  }
+	  
+	  $this->load->view('sect_accomplishments_add', $result);
+	  }
   
   function updateAccomplishments(){
 	$id=$this->input->get('id');
+	$this->ensure_accomplishment_scope_column();
 	$result['data']=$this->SGODModel->accombyid($id);
 	$this->load->view('sect_accom_update',$result);
  
@@ -1668,18 +2349,18 @@ function addAccomplishments(){
   
   }	
   
-  function deleteAccomplishment(){
-	$id=$this->input->get('id');
-	
-	$que=$this->db->query("delete from sgod_accomplishments where id='".$id."'");
-	$this->session->set_flashdata('danger', ' Deleted successfully.');
-	redirect('Page/viewSecAccomplishments');
+	function deleteAccomplishment(){
+		$id=$this->input->get('id');
+		$this->delete_accomplishment_reports($id);
+		
+		$que=$this->db->query("delete from sgod_accomplishments where id='".$id."'");
+		$this->session->set_flashdata('danger', ' Deleted successfully.');
+		redirect('Page/viewSecAccomplishments');
 	}	
 
 
   function schools(){
-	  $type=$this->input->get('type');
-	  $result['data']=$this->SGODModel->schools($type);
+	  $result['data']=$this->SGODModel->schools();
 	$this->load->view('schools',$result);
 	}
 

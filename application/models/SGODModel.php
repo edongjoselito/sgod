@@ -41,6 +41,15 @@ class SGODModel extends CI_Model
 		return $query->result();
 	}
 
+	public function get_hris_staff_options(){
+		$this->db->select('IDNumber, FirstName, MiddleName, LastName, NameExtn, empPosition, jobTitle');
+		$this->db->where('IDNumber !=', '');
+		$this->db->order_by('LastName', 'ASC');
+		$this->db->order_by('FirstName', 'ASC');
+		$query = $this->db->get('hris_staff');
+		return $query->result();
+	}
+
 	function accombyid($id){
 		$this->db->where('id', $id);
 		$result = $this->db->get('sgod_accomplishments');
@@ -106,9 +115,20 @@ class SGODModel extends CI_Model
 		return $result->result();
 	}
 
-	function viewSecAccomplishments($section, $secGroup){
+	private function apply_accomplishment_scope($section, $secGroup, $scope = 'section', $username = ''){
 		$this->db->where('section', $section);
 		$this->db->where('secGroup', $secGroup);
+		if($scope === 'personal' && trim((string) $username) !== ''){
+			$this->db->where('accomplishmentScope', 'personal');
+			$this->db->where('encoder', trim((string) $username));
+		}else{
+			$this->db->where('accomplishmentScope', 'section');
+		}
+	}
+
+	function viewSecAccomplishments($section, $secGroup, $scope = 'section', $username = ''){
+		$this->apply_accomplishment_scope($section, $secGroup, $scope, $username);
+		$this->db->order_by('id', 'DESC');
 		$result = $this->db->get('sgod_accomplishments');
 		return $result->result();
 	}
@@ -117,6 +137,43 @@ class SGODModel extends CI_Model
 		$this->db->where('acc_id', $id);
 		$result = $this->db->get($table);
 		return $result->result();
+	}
+
+	function get_accomplishment_reports($accId){
+		$this->db->where('acc_id', (int) $accId);
+		$this->db->order_by('uploaded_at', 'DESC');
+		$this->db->order_by('id', 'DESC');
+		$result = $this->db->get('sgod_accomplishment_reports');
+		return $result->result();
+	}
+
+	function get_accomplishment_report_groups($accIds){
+		$cleanIds = array_values(array_filter(array_map('intval', (array) $accIds)));
+		if(empty($cleanIds)){
+			return array();
+		}
+
+		$this->db->where_in('acc_id', $cleanIds);
+		$this->db->order_by('uploaded_at', 'DESC');
+		$this->db->order_by('id', 'DESC');
+		$result = $this->db->get('sgod_accomplishment_reports')->result();
+
+		$reportGroups = array();
+		foreach($cleanIds as $accId){
+			$reportGroups[$accId] = array();
+		}
+
+		foreach($result as $row){
+			$accId = (int) $row->acc_id;
+			$reportGroups[$accId][] = $row;
+		}
+
+		return $reportGroups;
+	}
+
+	function delete_accomplishment_reports($accId){
+		$this->db->where('acc_id', (int) $accId);
+		return $this->db->delete('sgod_accomplishment_reports');
 	}
 
 	public function get_accomplishment(){
@@ -1062,8 +1119,11 @@ class SGODModel extends CI_Model
 	// }
 
 
-	function schools($type){
-		$this->db->where('schoolType', $type);
+	function schools($type = null){
+		$type = trim((string) $type);
+		if ($type !== '' && in_array(strtolower($type), array('public', 'private'), true)) {
+			$this->db->where('schoolType', ucfirst(strtolower($type)));
+		}
 		$this->db->order_by('schoolName');
 		$result = $this->db->get('schools');
 		return $result->result();
@@ -1147,18 +1207,17 @@ class SGODModel extends CI_Model
 
 	function copy_row($param){
         $query=$this->db->query("INSERT INTO sgod_accomplishments
-		(quarter, year, monthAcc, weekAcc, section, activity, activityCategory, particulars, venue, targetDate, dateConducted, encoder, resources, notes, perIndicators, target, achieved, percentageAccom, remarks, secGroup)
-		SELECT quarter, year, monthAcc, weekAcc, section, activity, activityCategory, particulars, venue, targetDate, dateConducted, encoder, resources, notes, perIndicators, target, achieved, percentageAccom, remarks, secGroup
+		(quarter, year, monthAcc, weekAcc, section, activity, activityCategory, particulars, venue, targetDate, dateConducted, encoder, accomplishmentScope, resources, notes, perIndicators, target, achieved, percentageAccom, remarks, secGroup)
+		SELECT quarter, year, monthAcc, weekAcc, section, activity, activityCategory, particulars, venue, targetDate, dateConducted, encoder, accomplishmentScope, resources, notes, perIndicators, target, achieved, percentageAccom, remarks, secGroup
 		FROM sgod_accomplishments
 		WHERE id = '{$param}'");
     }
 
-	public function get_accomplishment_by_date($year, $month, $week,$section,$secGroup){
+	public function get_accomplishment_by_date($year, $month, $section, $secGroup, $scope = 'section', $username = ''){
 		$this->db->where("year", $year);
 		$this->db->where("monthAcc", $month);
-		$this->db->where("weekAcc", $week);
-		$this->db->where('section', $section);
-		$this->db->where('secGroup', $secGroup);
+		$this->apply_accomplishment_scope($section, $secGroup, $scope, $username);
+		$this->db->order_by('id', 'DESC');
 		$result = $this->db->get('sgod_accomplishments');
 
 		return $result->result();
@@ -1175,29 +1234,69 @@ class SGODModel extends CI_Model
 	}
 
 
+	private function normalize_section_members($members){
+		if(is_array($members)){
+			$rawMembers = $members;
+		}else{
+			$memberValue = trim((string) $members);
+			$rawMembers = $memberValue === '' ? array() : preg_split('/\s*;\s*/', $memberValue);
+		}
+
+		$normalizedMembers = array();
+		$memberIndex = array();
+
+		foreach($rawMembers as $member){
+			$member = trim(preg_replace('/\s+/', ' ', (string) $member));
+			if($member === ''){
+				continue;
+			}
+
+			$memberKey = strtolower($member);
+			if(isset($memberIndex[$memberKey])){
+				continue;
+			}
+
+			$memberIndex[$memberKey] = TRUE;
+			$normalizedMembers[] = $member;
+		}
+
+		return implode('; ', $normalizedMembers);
+	}
+
 	public function insert_sections(){
 		$data = array(
-		'sectionName' => $this->input->post('sectionName'), 
-		'sectionHead' => $this->input->post('sectionHead'), 
-		'sectionHeadPosition' => $this->input->post('sectionHeadPosition'), 
+		'sectionName' => trim((string) $this->input->post('sectionName')), 
+		'sectionHead' => trim((string) $this->input->post('sectionHead')), 
+		'sectionHeadPosition' => trim((string) $this->input->post('sectionHeadPosition')), 
 		'secGroup' => $this->session->userdata('secGroup'), 
-		'member' => $this->input->post('member')
+		'member' => $this->normalize_section_members($this->input->post('member'))
 		); 
 
 		return $this->db->insert('sgod_sections', $data);	
 	}
 
 	public function update_sections(){
+		// Get old section name before updating
+		$oldSection = $this->db->get_where('sgod_sections', ['id' => $this->input->post('id')])->row()->sectionName;
+
 		$data = array(
-		'sectionName' => $this->input->post('sectionName'), 
-		'sectionHead' => $this->input->post('sectionHead'), 
-		'sectionHeadPosition' => $this->input->post('sectionHeadPosition'), 
-		'secGroup' => $this->session->userdata('secGroup'), 
-		'member' => $this->input->post('member')
-		); 
+		'sectionName' => trim((string) $this->input->post('sectionName')),
+		'sectionHead' => trim((string) $this->input->post('sectionHead')),
+		'sectionHeadPosition' => trim((string) $this->input->post('sectionHeadPosition')),
+		'secGroup' => $this->session->userdata('secGroup'),
+		'member' => $this->normalize_section_members($this->input->post('member'))
+		);
 
 		$this->db->where('id', $this->input->post('id'));
-		return $this->db->update('sgod_sections', $data);	
+		$updateResult = $this->db->update('sgod_sections', $data);
+
+		// Update sgod_users table if section name changed
+		if ($updateResult && $oldSection !== trim((string) $this->input->post('sectionName'))) {
+			$this->db->where('section', $oldSection);
+			$this->db->update('sgod_users', ['section' => trim((string) $this->input->post('sectionName'))]);
+		}
+
+		return $updateResult;
 	}
 
 	

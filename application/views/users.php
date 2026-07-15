@@ -421,63 +421,61 @@ $metrics = array(
                 color: #4e54d4;
             }
 
-            .manage-actions {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                flex-wrap: wrap;
-            }
-
-            .action-btn {
+            .manage-combo {
                 display: inline-flex;
                 align-items: center;
-                gap: 8px;
-                padding: 9px 14px;
-                border: none;
-                border-radius: 999px;
-                cursor: pointer;
-                font-weight: 700;
+                justify-content: center;
+            }
+
+            .manage-select-wrap {
+                position: relative;
+                min-width: 220px;
+            }
+
+            .manage-select-icon {
+                position: absolute;
+                top: 50%;
+                left: 14px;
+                transform: translateY(-50%);
+                color: var(--users-blue);
+                font-size: 1rem;
+                pointer-events: none;
+            }
+
+            .manage-select {
+                width: 100%;
+                min-height: 44px;
+                padding: 10px 38px 10px 40px;
+                border-radius: 14px;
+                border: 1px solid rgba(60, 64, 198, 0.14);
+                background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+                color: var(--users-ink);
                 font-size: 0.85rem;
-                line-height: 1.2;
-                text-decoration: none;
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
-                background: transparent;
+                font-weight: 700;
+                box-shadow: none;
+                cursor: pointer;
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
             }
 
-            .action-btn:hover {
-                text-decoration: none;
-                transform: translateY(-2px);
+            .manage-select:hover,
+            .manage-select:focus {
+                outline: none;
+                border-color: rgba(60, 64, 198, 0.3);
+                box-shadow: 0 0 0 0.18rem rgba(60, 64, 198, 0.10);
+                transform: translateY(-1px);
             }
 
-            .action-toggle-off {
-                color: #4e54d4;
-                background: rgba(122, 128, 255, 0.18);
-            }
-
-            .action-toggle-on {
-                color: #3136a5;
-                background: rgba(60, 64, 198, 0.12);
-            }
-
-            .action-reset {
-                color: #3c40c6;
-                background: rgba(60, 64, 198, 0.12);
-            }
-
-            .action-password {
-                color: #565de8;
-                background: rgba(86, 93, 232, 0.12);
-            }
-
-            .action-edit {
-                color: #272b8c;
-                background: rgba(60, 64, 198, 0.12);
-            }
-
-            .action-delete {
-                color: var(--users-rose);
-                background: rgba(207, 73, 100, 0.12);
+            .manage-select-arrow {
+                position: absolute;
+                top: 50%;
+                right: 14px;
+                transform: translateY(-50%);
+                color: var(--users-muted);
+                font-size: 1rem;
+                pointer-events: none;
             }
 
             .empty-state {
@@ -784,6 +782,11 @@ $metrics = array(
                                                             $section = trim((string) $row->section) !== '' ? (string) $row->section : 'Unassigned';
                                                             $accountStatus = strtolower((string) $row->acctStat) === 'active' ? 'Active' : 'Inactive';
                                                             $statusClass = $accountStatus === 'Active' ? 'status-active' : 'status-inactive';
+                                                            $toggleStatus = $accountStatus === 'Active' ? 'Inactive' : 'Active';
+                                                            $toggleLabel = $accountStatus === 'Active' ? 'Deactivate user' : 'Activate user';
+                                                            $toggleUrl = base_url() . 'Page/deactivate_user?username=' . rawurlencode($username) . '&status=' . rawurlencode($toggleStatus);
+                                                            $resetUrl = base_url() . 'Page/reset_password?username=' . rawurlencode($username);
+                                                            $deleteUrl = base_url() . 'Page/delete_account?id=' . rawurlencode($username);
                                                             ?>
                                                             <tr>
                                                                 <td>
@@ -811,38 +814,27 @@ $metrics = array(
                                                                     </span>
                                                                 </td>
                                                                 <td class="text-center">
-                                                                    <div class="manage-actions">
-                                                                        <?php if ($accountStatus === 'Active') : ?>
-                                                                            <a href="<?= base_url(); ?>Page/deactivate_user?username=<?= urlencode($username); ?>&status=Inactive" class="action-btn action-toggle-off" onclick="return confirm('Are you sure you want to deactivate this user?')">
-                                                                                <i class="mdi mdi-account-off-outline"></i>
-                                                                                Deactivate
-                                                                            </a>
-                                                                        <?php else : ?>
-                                                                            <a href="<?= base_url(); ?>Page/deactivate_user?username=<?= urlencode($username); ?>&status=Active" class="action-btn action-toggle-on" onclick="return confirm('Are you sure you want to activate this user?')">
-                                                                                <i class="mdi mdi-account-check-outline"></i>
-                                                                                Activate
-                                                                            </a>
-                                                                        <?php endif; ?>
-
-                                                                        <a href="<?= base_url(); ?>Page/reset_password?username=<?= urlencode($username); ?>" class="action-btn action-reset" onclick="return confirm('Are you sure you want to reset password to default (123456)?')">
-                                                                            <i class="mdi mdi-lock-reset"></i>
-                                                                            Reset
-                                                                        </a>
-
-                                                                        <button type="button" class="action-btn action-password" data-toggle="modal" data-target="#changePasswordModal<?= $index; ?>">
-                                                                            <i class="mdi mdi-form-textbox-password"></i>
-                                                                            Password
-                                                                        </button>
-
-                                                                        <button type="button" class="action-btn action-edit" data-toggle="modal" data-target="#editModal<?= $index; ?>">
-                                                                            <i class="mdi mdi-square-edit-outline"></i>
-                                                                            Edit
-                                                                        </button>
-
-                                                                        <a href="<?= base_url(); ?>Page/delete_account?id=<?= urlencode($username); ?>" class="action-btn action-delete" onclick="return confirm('Are you sure you want to delete this account?')">
-                                                                            <i class="mdi mdi-trash-can-outline"></i>
-                                                                            Delete
-                                                                        </a>
+                                                                    <div class="manage-combo">
+                                                                        <div class="manage-select-wrap">
+                                                                            <i class="mdi mdi-tune-variant manage-select-icon"></i>
+                                                                            <select
+                                                                                class="manage-select js-manage-select"
+                                                                                data-username="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>"
+                                                                                data-toggle-url="<?= htmlspecialchars($toggleUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                                                                                data-reset-url="<?= htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                                                                                data-delete-url="<?= htmlspecialchars($deleteUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                                                                                data-edit-target="#editModal<?= $index; ?>"
+                                                                                data-password-target="#changePasswordModal<?= $index; ?>"
+                                                                            >
+                                                                                <option value="">Manage user...</option>
+                                                                                <option value="toggle"><?= htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?></option>
+                                                                                <option value="reset">Reset password</option>
+                                                                                <option value="password">Change password</option>
+                                                                                <option value="edit">Edit profile</option>
+                                                                                <option value="delete">Delete account</option>
+                                                                            </select>
+                                                                            <i class="mdi mdi-chevron-down manage-select-arrow"></i>
+                                                                        </div>
                                                                     </div>
                                                                 </td>
                                                             </tr>
@@ -1082,6 +1074,57 @@ $metrics = array(
                 });
 
                 $('#datatable_filter input').attr('placeholder', 'Search users');
+
+                $(document).on('change', '.js-manage-select', function () {
+                    const $select = $(this);
+                    const action = $select.val();
+                    const username = $select.data('username');
+                    const toggleUrl = $select.data('toggle-url');
+                    const resetUrl = $select.data('reset-url');
+                    const deleteUrl = $select.data('delete-url');
+                    const editTarget = $select.data('edit-target');
+                    const passwordTarget = $select.data('password-target');
+
+                    const resetSelect = function () {
+                        $select.prop('selectedIndex', 0);
+                    };
+
+                    if (!action) {
+                        return;
+                    }
+
+                    if (action === 'toggle') {
+                        const toggleLabel = $select.find('option:selected').text();
+                        if (window.confirm('Are you sure you want to ' + toggleLabel.toLowerCase() + ' for ' + username + '?')) {
+                            window.location.href = toggleUrl;
+                            return;
+                        }
+                    }
+
+                    if (action === 'reset') {
+                        if (window.confirm('Are you sure you want to reset password to default (123456) for ' + username + '?')) {
+                            window.location.href = resetUrl;
+                            return;
+                        }
+                    }
+
+                    if (action === 'password') {
+                        $(passwordTarget).modal('show');
+                    }
+
+                    if (action === 'edit') {
+                        $(editTarget).modal('show');
+                    }
+
+                    if (action === 'delete') {
+                        if (window.confirm('Are you sure you want to delete the account for ' + username + '?')) {
+                            window.location.href = deleteUrl;
+                            return;
+                        }
+                    }
+
+                    resetSelect();
+                });
             });
         </script>
     </body>

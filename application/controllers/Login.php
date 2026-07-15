@@ -4,6 +4,39 @@ class Login extends CI_Controller{
     parent::__construct();
     $this->load->model('Login_model');
 	 $this->load->model('SettingsModel');
+	 $this->load->model('SGODModel');
+  }
+
+  private function get_section_head_record($username, $section, $secGroup){
+	$username = trim((string) $username);
+	$section = trim((string) $section);
+	$secGroup = trim((string) $secGroup);
+
+	if($username === '' || $secGroup === ''){
+		return NULL;
+	}
+
+	// Try matching by username first
+	$sectionRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $username, 'secGroup', $secGroup);
+
+	// If not found by username, try by IDNumber
+	// Get the user's IDNumber from the users table
+	if(!$sectionRecord){
+		$user = $this->SGODModel->one_cond_row('users', 'username', $username);
+		if($user && isset($user->IDNumber)){
+			$sectionRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $user->IDNumber, 'secGroup', $secGroup);
+		}
+	}
+
+	if(!$sectionRecord){
+		return NULL;
+	}
+
+	if($section !== '' && trim((string) $sectionRecord->sectionName) !== $section){
+		return NULL;
+	}
+
+	return $sectionRecord;
   }
  
   function index(){
@@ -105,8 +138,34 @@ function registration(){
             redirect('page/admin');
 
        //  access login for Section User
-        }elseif($section === 'Chief - SGOD'){
+       }elseif($section === 'Chief - SGOD'){
             redirect('page/sgod');
+
+        }elseif($this->get_section_head_record($username, $section, $secGroup)){
+            // Section Head - redirect to section-specific dashboard
+            if($section === 'School Management Monitoring and Evaluation'){
+                redirect('page/SMME');
+            }elseif($section === 'Planning'){
+                redirect('page/Planning');
+            }elseif($section === 'Research'){
+                redirect('page/Research');
+            }elseif($section === 'Youth Formation Program'){
+                redirect('page/YFP');
+            }elseif($section === 'Physical Education and Schools Sports'){
+                redirect('page/PESS');
+            }elseif($section === 'School Health and Nutrition Section'){
+                redirect('page/SHNS');
+            }elseif($section === 'Disaster Risk Reduction Management (DRRM) Section'){
+                redirect('page/DRRM');
+            }elseif($section === 'Human Resource Development Section'){
+                redirect('page/HRD');
+            }elseif($section === 'Education Facilities Section'){
+                redirect('page/EFS');
+            }elseif($section === 'Social Mobilization and Networking'){
+                redirect('page/SMN');
+            }else{
+                redirect('page/section_head_dashboard');
+            }
 
          //  access login for Section User
         }elseif($section === 'School Management Monitoring and Evaluation'){

@@ -1,6 +1,36 @@
 <div class="left-side-menu">
 
     <div class="slimscroll-menu">
+        <?php
+            $currentSidebarSection = trim((string) $this->session->userdata('section'));
+            $currentSidebarSecGroup = trim((string) $this->session->userdata('secGroup'));
+            $currentSidebarUsername = trim((string) $this->session->userdata('username'));
+            $sectionDashboardRoutes = array(
+                'School Management Monitoring and Evaluation' => 'Page/SMME',
+                'Planning' => 'Page/planning',
+                'Research' => 'Page/research',
+                'Disaster Risk Reduction Management (DRRM) Section' => 'Page/DRRM',
+                'Human Resource Development Section' => 'Page/HRD',
+                'School Health and Nutrition Section' => 'Page/shns',
+                'Physical Education and Schools Sports' => 'Page/pess',
+                'Social Mobilization and Networking' => 'Page/SMN',
+                'Youth Formation Program' => 'Page/yfp',
+            );
+            $sectionDashboardRoute = $sectionDashboardRoutes[$currentSidebarSection] ?? 'Page/user_dashboard';
+            $isSectionHeadDashboardUser = FALSE;
+
+            if (
+                $currentSidebarUsername !== '' &&
+                $currentSidebarSecGroup !== '' &&
+                !in_array($currentSidebarSection, array('Super Admin', 'System Administrator', 'Chief - SGOD', 'School'), TRUE)
+            ) {
+                $sidebarSectionHeadRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $currentSidebarUsername, 'secGroup', $currentSidebarSecGroup);
+                if ($sidebarSectionHeadRecord && trim((string) $sidebarSectionHeadRecord->sectionName) === $currentSidebarSection) {
+                    $isSectionHeadDashboardUser = TRUE;
+                    $sectionDashboardRoute = 'Page/section_head_dashboard';
+                }
+            }
+        ?>
 
         <!--- Sidemenu -->
         <!-- Super Admin -->
@@ -122,16 +152,10 @@
 
 
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
 
@@ -193,7 +217,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/SMME" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -221,16 +245,10 @@
 
 
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
                     <li>
@@ -302,7 +320,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/planning" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -323,16 +341,10 @@
                     <li>
 
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
                     <li>
@@ -354,7 +366,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/research" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -379,16 +391,10 @@
                         </a>
                     </li>
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
                     <li>
@@ -410,7 +416,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/DRRM" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -435,16 +441,10 @@
                         </a>
                     </li>
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
                     <li>
@@ -466,7 +466,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/HRD" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -491,16 +491,10 @@
                         </a>
                     </li>
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
                     <li>
@@ -522,7 +516,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/shns" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -547,16 +541,10 @@
                         </a>
                     </li>
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
                     <li>
@@ -578,7 +566,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/pess" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -603,16 +591,10 @@
                         </a>
                     </li>
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
                     <li>
@@ -634,7 +616,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/SMN" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -660,16 +642,10 @@
                     </li>
 
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
                     <li>
@@ -690,7 +666,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/yfp" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -715,16 +691,10 @@
                         </a>
                     </li>
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
-                            <span class="menu-arrow"></span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Public">Public</a></li>
-                            <li><a href="<?= base_url(); ?>Page/schools?type=Private">Private</a></li>
-
-                        </ul>
                     </li>
 
                     <li>
@@ -746,7 +716,7 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
-                        <a href="<?= base_url(); ?>Page/user_dashboard" class="waves-effect">
+                        <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
                         </a>
@@ -770,6 +740,22 @@
                             <span> Memo </span>
                         </a>
                     </li>
+
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                        <li>
+                            <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
+                                <i class="mdi mdi-office-building"></i>
+                                <span> Schools </span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="<?= base_url(); ?>Page/usersListv2" class="waves-effect">
+                                <i class="mdi mdi-account-multiple-outline"></i>
+                                <span> Manage Users </span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
                 </ul>
             </div>

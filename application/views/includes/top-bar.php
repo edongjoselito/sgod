@@ -1,3 +1,21 @@
+<?php
+$topbarFullName = trim($this->session->userdata('fName') . ' ' . $this->session->userdata('lName'));
+$topbarProfileRoute = base_url() . 'Page/user_dashboard?open_profile_picture=1';
+$topbarSection = trim((string) $this->session->userdata('section'));
+$topbarSecGroup = trim((string) $this->session->userdata('secGroup'));
+$topbarUsername = trim((string) $this->session->userdata('username'));
+
+if (
+    $topbarUsername !== '' &&
+    $topbarSecGroup !== '' &&
+    !in_array($topbarSection, array('Super Admin', 'System Administrator', 'Chief - SGOD', 'School'), TRUE)
+) {
+    $topbarSectionHeadRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $topbarUsername, 'secGroup', $topbarSecGroup);
+    if ($topbarSectionHeadRecord && trim((string) $topbarSectionHeadRecord->sectionName) === $topbarSection) {
+        $topbarProfileRoute = base_url() . 'Page/section_head_dashboard?open_profile_picture=1';
+    }
+}
+?>
 <div class="navbar-custom">
                 <ul class="list-unstyled topnav-menu float-right mb-0">
 
@@ -5,13 +23,16 @@
                         <a class="nav-link dropdown-toggle nav-user mr-0 waves-effect" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
                             <img src="<?= base_url(); ?>upload/profile/<?php echo $this->session->userdata('avatar');?>" alt="user-image" class="rounded-circle">
                             <span class="pro-user-name ml-1">
-                            <?php echo $this->session->userdata('fName').' '.$this->session->userdata('lName');?>   <i class="mdi mdi-chevron-down"></i> 
+                            <?= htmlspecialchars($topbarFullName, ENT_QUOTES, 'UTF-8'); ?>   <i class="mdi mdi-chevron-down"></i> 
                             </span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right profile-dropdown ">
                             <!-- item-->
                             <div class="dropdown-header noti-title">
-                                <h6 class="text-overflow m-0">Welcome !</h6>
+                                <h6 class="text-overflow m-0"><?= htmlspecialchars($topbarFullName, ENT_QUOTES, 'UTF-8'); ?></h6>
+                                <a href="<?= htmlspecialchars($topbarProfileRoute, ENT_QUOTES, 'UTF-8'); ?>" class="d-inline-block mt-2 js-change-profile-picture" style="font-size: 0.82rem; font-weight: 600;">
+                                    Change Profile Picture
+                                </a>
                             </div>
 
                             <!-- item-->

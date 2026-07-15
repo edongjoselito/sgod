@@ -10,6 +10,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
         <link href="<?= base_url(); ?>assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+        <link href="<?= base_url(); ?>assets/libs/select2/select2.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" id="bootstrap-stylesheet" />
         <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-stylesheet" />
@@ -126,6 +127,65 @@
                 color: var(--sections-muted);
             }
 
+            .select2-container {
+                width: 100% !important;
+            }
+
+            .select2-container--default .select2-selection--single {
+                min-height: 48px;
+                border-radius: 14px;
+                border: 1px solid rgba(22, 50, 79, 0.14);
+                padding: 9px 14px;
+            }
+
+            .select2-container--default .select2-selection--multiple {
+                min-height: 48px;
+                border-radius: 14px;
+                border: 1px solid rgba(22, 50, 79, 0.14);
+                padding: 6px 10px;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 28px;
+                padding-left: 0;
+                color: var(--sections-ink);
+            }
+
+            .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 0;
+            }
+
+            .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                margin-top: 0;
+                border: none;
+                border-radius: 999px;
+                padding: 5px 10px;
+                background: rgba(45, 127, 249, 0.12);
+                color: var(--sections-ink);
+                font-weight: 600;
+            }
+
+            .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field {
+                margin-top: 0;
+                min-height: 28px;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 46px;
+                right: 10px;
+            }
+
+            .select2-container--default.select2-container--focus .select2-selection--single,
+            .select2-container--default.select2-container--focus .select2-selection--multiple,
+            .select2-container--default.select2-container--open .select2-selection--multiple,
+            .select2-container--default.select2-container--open .select2-selection--single {
+                border-color: var(--sections-blue);
+                box-shadow: 0 0 0 0.18rem rgba(45, 127, 249, 0.14);
+            }
+
             .btn-gradient-primary {
                 color: #ffffff;
                 border: none;
@@ -165,6 +225,87 @@
 
         <?php
             $identifier = $data->secGroup ?? 'SGOD';
+            $staffOptions = isset($staffOptions) && is_array($staffOptions) ? $staffOptions : [];
+            $staffDirectory = [];
+            $currentSectionHead = trim((string) $data->sectionHead);
+            $staffMemberLookup = [];
+            $parseSectionMembers = static function ($memberValue) {
+                $memberValue = trim((string) $memberValue);
+                if ($memberValue === '') {
+                    return [];
+                }
+
+                if (strpos($memberValue, ';') !== false) {
+                    $rawMembers = explode(';', $memberValue);
+                } elseif (preg_match('/\R/', $memberValue)) {
+                    $rawMembers = preg_split('/\R+/', $memberValue);
+                } else {
+                    $rawMembers = [$memberValue];
+                }
+
+                $members = [];
+                $memberIndex = [];
+
+                foreach ($rawMembers as $rawMember) {
+                    $normalizedMember = trim(preg_replace('/\s+/', ' ', (string) $rawMember));
+                    if ($normalizedMember === '') {
+                        continue;
+                    }
+
+                    $memberKey = strtolower($normalizedMember);
+                    if (isset($memberIndex[$memberKey])) {
+                        continue;
+                    }
+
+                    $memberIndex[$memberKey] = true;
+                    $members[] = $normalizedMember;
+                }
+
+                return $members;
+            };
+            $currentMembers = $parseSectionMembers($data->member);
+            $currentMembersLookup = [];
+
+            foreach ($currentMembers as $currentMember) {
+                $currentMembersLookup[$currentMember] = true;
+            }
+
+            foreach ($staffOptions as $staffRow) {
+                $staffId = trim((string) $staffRow->IDNumber);
+                if ($staffId === '') {
+                    continue;
+                }
+
+                $displayName = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
+                    trim((string) $staffRow->LastName) !== '' ? trim((string) $staffRow->LastName) . ',' : '',
+                    trim((string) $staffRow->FirstName),
+                    trim((string) $staffRow->MiddleName),
+                    trim((string) $staffRow->NameExtn),
+                ]))));
+                $memberLabel = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
+                    trim((string) $staffRow->FirstName),
+                    trim((string) $staffRow->MiddleName),
+                    trim((string) $staffRow->LastName),
+                    trim((string) $staffRow->NameExtn),
+                ]))));
+
+                if ($memberLabel === '') {
+                    $memberLabel = str_replace(',', '', $displayName);
+                }
+
+                if ($memberLabel === '') {
+                    $memberLabel = $staffId;
+                }
+
+                $memberLabel .= ' (' . $staffId . ')';
+
+                $staffDirectory[$staffId] = [
+                    'name' => $displayName,
+                    'position' => trim((string) ($staffRow->empPosition !== '' ? $staffRow->empPosition : $staffRow->jobTitle)),
+                    'member_label' => $memberLabel,
+                ];
+                $staffMemberLookup[$memberLabel] = true;
+            }
         ?>
 
         <div id="wrapper">
@@ -198,12 +339,25 @@
                                         </div>
                                         <div class="form-group">
                                             <label class="modern-label">Section Head</label>
-                                            <input type="text" class="form-control modern-input" name="sectionHead" value="<?= htmlspecialchars($data->sectionHead, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <select class="form-control modern-input" id="sectionHeadSelectEdit" name="sectionHead">
+                                                <option value="">Select section head</option>
+                                                <?php foreach ($staffDirectory as $staffId => $staffProfile) { ?>
+                                                    <?php $staffIdValue = (string) $staffId; ?>
+                                                    <option value="<?= htmlspecialchars($staffIdValue, ENT_QUOTES, 'UTF-8'); ?>" data-position="<?= htmlspecialchars($staffProfile['position'], ENT_QUOTES, 'UTF-8'); ?>" <?= $currentSectionHead === $staffIdValue ? 'selected' : ''; ?>>
+                                                        <?= htmlspecialchars($staffProfile['name'] . ' (' . $staffIdValue . ')', ENT_QUOTES, 'UTF-8'); ?>
+                                                    </option>
+                                                <?php } ?>
+                                                <?php if ($currentSectionHead !== '' && !isset($staffDirectory[$currentSectionHead])) { ?>
+                                                    <option value="<?= htmlspecialchars($currentSectionHead, ENT_QUOTES, 'UTF-8'); ?>" selected>
+                                                        <?= htmlspecialchars($currentSectionHead, ENT_QUOTES, 'UTF-8'); ?>
+                                                    </option>
+                                                <?php } ?>
+                                            </select>
                                         </div>
 
                                         <div class="form-group">
                                             <label class="modern-label">Position</label>
-                                            <input type="text" class="form-control modern-input" name="sectionHeadPosition" value="<?= htmlspecialchars($data->sectionHeadPosition, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <input type="text" class="form-control modern-input" id="sectionHeadPositionInputEdit" name="sectionHeadPosition" value="<?= htmlspecialchars($data->sectionHeadPosition, ENT_QUOTES, 'UTF-8'); ?>">
                                         </div>
 
                                         <div class="form-group">
@@ -213,8 +367,21 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <label class="modern-label">Members <span class="text-danger">*</span></label>
-                                            <input type="text" required class="form-control modern-input" name="member" value="<?= htmlspecialchars($data->member, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <label class="modern-label">Members</label>
+                                            <select class="form-control modern-input" id="sectionMembersSelectEdit" name="member[]" multiple>
+                                                <?php foreach ($staffDirectory as $staffProfile) { ?>
+                                                    <option value="<?= htmlspecialchars($staffProfile['member_label'], ENT_QUOTES, 'UTF-8'); ?>" <?= isset($currentMembersLookup[$staffProfile['member_label']]) ? 'selected' : ''; ?>>
+                                                        <?= htmlspecialchars($staffProfile['member_label'], ENT_QUOTES, 'UTF-8'); ?>
+                                                    </option>
+                                                <?php } ?>
+                                                <?php foreach ($currentMembers as $currentMember) { ?>
+                                                    <?php if (!isset($staffMemberLookup[$currentMember])) { ?>
+                                                        <option value="<?= htmlspecialchars($currentMember, ENT_QUOTES, 'UTF-8'); ?>" selected>
+                                                            <?= htmlspecialchars($currentMember, ENT_QUOTES, 'UTF-8'); ?>
+                                                        </option>
+                                                    <?php } ?>
+                                                <?php } ?>
+                                            </select>
                                             <input type="hidden" required class="form-control" name="id" value="<?= $data->id; ?>">
                                         </div>
 
@@ -234,7 +401,37 @@
         </div>
 
         <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
+        <script src="<?= base_url(); ?>assets/libs/select2/select2.min.js"></script>
         <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
+        <script>
+            $(function () {
+                const sectionHeadSelect = $('#sectionHeadSelectEdit');
+                const sectionHeadPositionInput = $('#sectionHeadPositionInputEdit');
+                const sectionMembersSelect = $('#sectionMembersSelectEdit');
+
+                sectionHeadSelect.select2({
+                    placeholder: 'Select section head',
+                    width: '100%'
+                });
+
+                sectionMembersSelect.select2({
+                    placeholder: 'Select or add members',
+                    width: '100%',
+                    closeOnSelect: false,
+                    tags: true
+                });
+
+                sectionHeadSelect.on('change', function () {
+                    const selectedOption = sectionHeadSelect.find('option:selected');
+                    const selectedPosition = selectedOption.data('position') || '';
+                    if (selectedPosition !== '') {
+                        sectionHeadPositionInput.val(selectedPosition);
+                    }
+                });
+
+                sectionHeadSelect.trigger('change');
+            });
+        </script>
 
     </body>
 </html>
