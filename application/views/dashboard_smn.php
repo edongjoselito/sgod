@@ -350,6 +350,7 @@ $quickLinks = array(
                     </div>
                 </div>
 
+                <?php include('includes/whereabouts_widget.php'); ?>
                 <?php include('includes/footer.php'); ?>
             </div>
         </div>

@@ -24,26 +24,22 @@ if (!empty($sectionRecord->member)) {
 
 $quickLinks = array(
     array(
-        'title' => 'School directory',
-        'copy' => 'Browse one school directory and filter public or private records inside the page.',
+        'title' => 'Schools',
         'href' => base_url() . 'Page/schools',
         'icon' => 'mdi-office-building-outline'
     ),
     array(
-        'title' => 'Section accomplishments',
-        'copy' => 'Review accomplishment entries submitted by your section.',
+        'title' => 'Reports',
         'href' => base_url() . 'Page/viewSecAccomplishments',
         'icon' => 'mdi-file-document-outline'
     ),
     array(
-        'title' => 'Add accomplishment',
-        'copy' => 'Open the streamlined accomplishment form and post a new record.',
+        'title' => 'Add Report',
         'href' => base_url() . 'Page/addAccomplishments',
         'icon' => 'mdi-plus-circle-outline'
     ),
     array(
-        'title' => 'Manage users',
-        'copy' => 'Check section user accounts and keep the team list up to date.',
+        'title' => 'Users',
         'href' => base_url() . 'Page/usersListv2',
         'icon' => 'mdi-account-multiple-outline'
     )
@@ -69,310 +65,422 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
 
         <style>
             :root {
-                --head-navy: #272b8c;
-                --head-blue: #3c40c6;
-                --head-teal: #565de8;
-                --head-ink: #23275d;
-                --head-muted: #7b7fa7;
-                --head-border: rgba(60, 64, 198, 0.12);
-                --head-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+                --dash-primary: #3c40c6;
+                --dash-dark: #25296f;
+                --dash-text: #24294d;
+                --dash-muted: #7a809f;
+                --dash-border: #e5e8f5;
+                --dash-surface: #ffffff;
+                --dash-bg: #f4f6fb;
+                --dash-shadow: 0 8px 24px rgba(35, 39, 93, 0.08);
             }
 
             body {
-                background:
-                    radial-gradient(circle at top left, rgba(60, 64, 198, 0.10), transparent 24%),
-                    linear-gradient(180deg, #f4f8fc 0%, #eef4fa 100%);
+                background: var(--dash-bg);
             }
 
             .content-page {
                 background: transparent;
             }
 
-            .head-shell {
-                position: relative;
-                padding-bottom: 28px;
+            .dashboard-shell {
+                padding-top: 14px;
+                padding-bottom: 18px;
             }
 
-            .head-shell::before {
-                content: "";
-                position: absolute;
-                inset: 24px 0 auto;
-                height: 260px;
-                border-radius: 30px;
-                background: linear-gradient(135deg, rgba(45, 127, 249, 0.09), rgba(15, 159, 154, 0.08));
-                z-index: 0;
-            }
-
-            .head-shell > * {
-                position: relative;
-                z-index: 1;
-            }
-
-            .dashboard-hero {
-                margin-top: 20px;
-                margin-bottom: 24px;
-                border-radius: 28px;
-                overflow: hidden;
-                color: #ffffff;
-                box-shadow: var(--head-shadow);
-                background:
-                    radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 32%),
-                    linear-gradient(135deg, #272b8c 0%, #3c40c6 58%, #6f74ff 100%);
-            }
-
-            .dashboard-hero-body {
-                padding: 34px;
+            .dashboard-header {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                gap: 24px;
-                flex-wrap: wrap;
-            }
-
-            .hero-copy-wrap {
-                flex: 1 1 420px;
-                max-width: 680px;
-            }
-
-            .hero-eyebrow {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                padding: 8px 14px;
-                border-radius: 999px;
-                background: rgba(255, 255, 255, 0.12);
-                border: 1px solid rgba(255, 255, 255, 0.18);
-                font-size: 0.8rem;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-            }
-
-            .hero-title {
-                margin: 18px 0 12px;
-                color: #ffffff;
-                font-size: clamp(2rem, 3vw, 2.8rem);
-                line-height: 1.05;
-                font-weight: 700;
-                letter-spacing: -0.03em;
-                font-family: "Avenir Next", "Segoe UI", sans-serif;
-            }
-
-            .hero-copy {
-                color: rgba(255, 255, 255, 0.84);
-                line-height: 1.7;
-                margin-bottom: 0;
-            }
-
-            .hero-meta-card {
-                min-width: 280px;
-                max-width: 340px;
-                border-radius: 22px;
-                padding: 24px;
-                background: rgba(255, 255, 255, 0.12);
-                border: 1px solid rgba(255, 255, 255, 0.18);
-                backdrop-filter: blur(14px);
-            }
-
-            .hero-meta-label {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                color: rgba(255, 255, 255, 0.76);
-                font-size: 0.78rem;
-                font-weight: 700;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-                margin-bottom: 12px;
-            }
-
-            .hero-meta-name {
-                color: #ffffff;
-                font-size: 1.2rem;
-                font-weight: 700;
-                line-height: 1.3;
-                margin-bottom: 8px;
-            }
-
-            .hero-meta-copy {
-                color: rgba(255, 255, 255, 0.78);
-                font-size: 0.92rem;
-                line-height: 1.6;
-                margin-bottom: 0;
-            }
-
-            .panel-card {
-                height: 100%;
-                border-radius: 24px;
-                border: 1px solid rgba(60, 64, 198, 0.08);
-                background: rgba(255, 255, 255, 0.95);
-                box-shadow: var(--head-shadow);
-                padding: 28px;
-            }
-
-            .panel-kicker {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                padding: 8px 14px;
-                border-radius: 999px;
-                background: rgba(60, 64, 198, 0.08);
-                color: var(--head-blue);
-                font-size: 0.76rem;
-                font-weight: 700;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-            }
-
-            .panel-title {
-                margin: 18px 0 10px;
-                color: var(--head-ink);
-                font-size: 1.45rem;
-                font-weight: 700;
-                line-height: 1.2;
-            }
-
-            .panel-copy {
-                color: var(--head-muted);
-                font-size: 0.95rem;
-                line-height: 1.7;
-                margin-bottom: 0;
-            }
-
-            .overview-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
                 gap: 16px;
-                margin-top: 24px;
+                min-height: 72px;
+                margin-bottom: 14px;
+                padding: 14px 18px;
+                border-radius: 16px;
+                color: #ffffff;
+                background: linear-gradient(135deg, var(--dash-dark), var(--dash-primary));
+                box-shadow: var(--dash-shadow);
             }
 
-            .overview-stat {
-                border-radius: 20px;
-                background: linear-gradient(180deg, #f8faff 0%, #eef4ff 100%);
-                border: 1px solid rgba(60, 64, 198, 0.08);
-                padding: 20px;
+            .dashboard-heading {
+                display: flex;
+                align-items: center;
+                min-width: 0;
+                gap: 12px;
             }
 
-            .overview-stat-label {
-                display: block;
-                color: var(--head-muted);
-                font-size: 0.82rem;
+            .dashboard-heading-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 42px;
+                height: 42px;
+                flex: 0 0 42px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.14);
+                font-size: 1.35rem;
+            }
+
+            .dashboard-title {
+                margin: 0;
+                color: #ffffff;
+                font-size: 1.3rem;
+                line-height: 1.2;
                 font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.06em;
-                margin-bottom: 10px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
-            .overview-stat-value {
+            .dashboard-subtitle {
+                margin: 3px 0 0;
+                color: rgba(255, 255, 255, 0.72);
+                font-size: 0.82rem;
+            }
+
+            .head-user {
+                min-width: 0;
+                text-align: right;
+            }
+
+            .head-user strong,
+            .head-user span {
                 display: block;
-                color: var(--head-ink);
-                font-size: 2rem;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .head-user strong {
+                font-size: 0.9rem;
+                color: #ffffff;
+            }
+
+            .head-user span {
+                margin-top: 2px;
+                color: rgba(255, 255, 255, 0.68);
+                font-size: 0.76rem;
+            }
+
+            .dashboard-main-row {
+                margin-right: -7px;
+                margin-left: -7px;
+            }
+
+            .dashboard-main-row > [class*="col-"] {
+                padding-right: 7px;
+                padding-left: 7px;
+            }
+
+            .compact-card,
+            .calendar-panel {
+                border: 1px solid var(--dash-border);
+                border-radius: 16px;
+                background: var(--dash-surface);
+                box-shadow: var(--dash-shadow);
+            }
+
+            .compact-card {
+                margin-bottom: 14px;
+                padding: 14px;
+            }
+
+            .compact-card-title,
+            .calendar-panel-title {
+                margin: 0;
+                color: var(--dash-text);
+                font-size: 0.9rem;
+                font-weight: 700;
+            }
+
+            .stat-list {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                margin-top: 12px;
+            }
+
+            .stat-item {
+                min-width: 0;
+                padding: 12px 8px;
+                border: 1px solid #eceef8;
+                border-radius: 12px;
+                text-align: center;
+                background: #f8f9fe;
+            }
+
+            .stat-item strong {
+                display: block;
+                color: var(--dash-primary);
+                font-size: 1.45rem;
                 line-height: 1;
                 font-weight: 700;
-                margin-bottom: 8px;
             }
 
-            .overview-stat-note {
+            .stat-item span {
                 display: block;
-                color: var(--head-muted);
-                font-size: 0.88rem;
-                line-height: 1.5;
+                margin-top: 6px;
+                color: var(--dash-muted);
+                font-size: 0.7rem;
+                line-height: 1.2;
+                font-weight: 600;
             }
 
-            .action-stack {
+            .quick-grid {
                 display: grid;
-                gap: 14px;
-                margin-top: 24px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+                margin-top: 12px;
             }
 
-            .action-tile {
+            .quick-link {
                 display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                gap: 14px;
-                padding: 18px 20px;
-                border-radius: 18px;
-                border: 1px solid rgba(60, 64, 198, 0.08);
-                background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-                text-decoration: none;
-                transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+                align-items: center;
+                min-width: 0;
+                gap: 9px;
+                min-height: 52px;
+                padding: 10px;
+                border: 1px solid #e8eaf6;
+                border-radius: 12px;
+                color: var(--dash-text);
+                background: #ffffff;
+                transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
             }
 
-            .action-tile:hover,
-            .action-tile:focus {
+            .quick-link:hover,
+            .quick-link:focus {
+                color: var(--dash-primary);
                 text-decoration: none;
+                border-color: rgba(60, 64, 198, 0.28);
+                background: #f7f7ff;
                 transform: translateY(-1px);
-                border-color: rgba(60, 64, 198, 0.16);
-                box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
             }
 
-            .action-tile-title {
-                color: var(--head-ink);
-                font-size: 0.98rem;
+            .quick-link-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                flex: 0 0 30px;
+                border-radius: 9px;
+                color: var(--dash-primary);
+                background: rgba(60, 64, 198, 0.09);
+                font-size: 1rem;
+            }
+
+            .quick-link span {
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 0.78rem;
                 font-weight: 700;
-                margin-bottom: 6px;
             }
 
-            .action-tile-copy {
-                color: var(--head-muted);
-                font-size: 0.88rem;
-                line-height: 1.55;
+            .member-summary {
                 margin: 0;
             }
 
-            .action-tile-icon {
-                color: var(--head-blue);
-                font-size: 1.25rem;
-                flex-shrink: 0;
+            .member-summary summary {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                color: var(--dash-text);
+                cursor: pointer;
+                list-style: none;
+                font-size: 0.84rem;
+                font-weight: 700;
+            }
+
+            .member-summary summary::-webkit-details-marker {
+                display: none;
+            }
+
+            .member-count {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 25px;
+                height: 25px;
+                padding: 0 7px;
+                border-radius: 999px;
+                color: var(--dash-primary);
+                background: rgba(60, 64, 198, 0.09);
+                font-size: 0.72rem;
             }
 
             .member-pill-list {
                 display: flex;
                 flex-wrap: wrap;
-                gap: 10px;
-                margin-top: 22px;
+                gap: 6px;
+                max-height: 116px;
+                margin-top: 12px;
+                overflow-y: auto;
             }
 
             .member-pill {
                 display: inline-flex;
                 align-items: center;
-                padding: 8px 12px;
+                padding: 5px 8px;
                 border-radius: 999px;
-                background: rgba(60, 64, 198, 0.08);
-                color: var(--head-ink);
-                font-size: 0.86rem;
+                color: #4f557b;
+                background: #f0f2fa;
+                font-size: 0.72rem;
                 font-weight: 600;
             }
 
-            @media (max-width: 991.98px) {
-                .dashboard-hero-body {
-                    padding: 28px;
+            .calendar-panel {
+                min-height: calc(100vh - 145px);
+                overflow: hidden;
+            }
+
+            .calendar-panel-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                min-height: 48px;
+                padding: 10px 14px;
+                border-bottom: 1px solid var(--dash-border);
+            }
+
+            .calendar-panel-caption {
+                color: var(--dash-muted);
+                font-size: 0.72rem;
+                white-space: nowrap;
+            }
+
+            .calendar-zone {
+                min-height: calc(100vh - 194px);
+                padding: 10px;
+                overflow: visible;
+            }
+
+            /* Neutralize excess spacing from the included whereabouts/calendar view. */
+            .calendar-zone > .container,
+            .calendar-zone > .container-fluid,
+            .calendar-zone .container,
+            .calendar-zone .container-fluid {
+                width: 100%;
+                max-width: none;
+                padding-right: 0 !important;
+                padding-left: 0 !important;
+            }
+
+            .calendar-zone .row {
+                margin-right: -5px;
+                margin-left: -5px;
+            }
+
+            .calendar-zone .row > [class*="col-"] {
+                padding-right: 5px;
+                padding-left: 5px;
+            }
+
+            .calendar-zone .card,
+            .calendar-zone .panel,
+            .calendar-zone .box {
+                margin-bottom: 10px !important;
+                border-radius: 12px !important;
+                box-shadow: none !important;
+            }
+
+            .calendar-zone .card-body,
+            .calendar-zone .panel-body,
+            .calendar-zone .box-body {
+                padding: 10px !important;
+            }
+
+            .calendar-zone .fc-toolbar,
+            .calendar-zone .fc-header-toolbar {
+                margin-bottom: 10px !important;
+            }
+
+            .calendar-zone .fc-toolbar h2,
+            .calendar-zone .fc .fc-toolbar-title {
+                color: var(--dash-text);
+                font-size: 1.05rem !important;
+                font-weight: 700;
+            }
+
+            .calendar-zone .fc-button,
+            .calendar-zone .fc .fc-button {
+                padding: 0.3rem 0.55rem !important;
+                font-size: 0.74rem !important;
+                line-height: 1.25 !important;
+            }
+
+            .calendar-zone .fc-day-header,
+            .calendar-zone .fc-col-header-cell-cushion,
+            .calendar-zone .fc-daygrid-day-number {
+                font-size: 0.74rem !important;
+            }
+
+            .calendar-zone .fc-event,
+            .calendar-zone .fc-day-grid-event,
+            .calendar-zone .fc-daygrid-event {
+                font-size: 0.7rem !important;
+            }
+
+            @media (max-width: 1199.98px) {
+                .calendar-panel {
+                    min-height: auto;
                 }
 
-                .hero-meta-card {
-                    max-width: none;
-                    width: 100%;
+                .calendar-zone {
+                    min-height: 620px;
                 }
             }
 
             @media (max-width: 767.98px) {
-                .head-shell::before {
-                    left: 12px;
-                    right: 12px;
-                    inset-block-start: 18px;
-                    height: 210px;
+                .dashboard-shell {
+                    padding-top: 10px;
                 }
 
-                .dashboard-hero {
-                    border-radius: 22px;
+                .dashboard-header {
+                    align-items: flex-start;
+                    min-height: auto;
+                    padding: 12px 14px;
                 }
 
-                .dashboard-hero-body,
-                .panel-card {
-                    padding: 22px;
+                .dashboard-title {
+                    font-size: 1.05rem;
+                    white-space: normal;
                 }
 
-                .hero-title {
-                    font-size: 2rem;
+                .dashboard-subtitle,
+                .head-user {
+                    display: none;
+                }
+
+                .stat-list {
+                    grid-template-columns: repeat(3, minmax(82px, 1fr));
+                    overflow-x: auto;
+                }
+
+                .calendar-panel-header {
+                    align-items: flex-start;
+                }
+
+                .calendar-panel-caption {
+                    display: none;
+                }
+
+                .calendar-zone {
+                    min-height: 560px;
+                    padding: 6px;
+                }
+
+                .calendar-zone .fc-toolbar,
+                .calendar-zone .fc-header-toolbar {
+                    gap: 6px;
+                }
+
+                .calendar-zone .fc-toolbar h2,
+                .calendar-zone .fc .fc-toolbar-title {
+                    font-size: 0.92rem !important;
                 }
             }
         </style>
@@ -388,85 +496,90 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
 
             <div class="content-page">
                 <div class="content">
-                    <div class="container-fluid head-shell">
-                        <div class="dashboard-hero">
-                            <div class="dashboard-hero-body">
-                                <div class="hero-copy-wrap">
-                                    <span class="hero-eyebrow">
-                                        <i class="mdi mdi-account-tie-outline"></i>
-                                        Section Head Dashboard
-                                    </span>
-                                    <h1 class="hero-title"><?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></h1>
-                                    <p class="hero-copy">
-                                        Use this cleaner dashboard to monitor your section's accomplishments, active team,
-                                        and day-to-day access points without jumping through multiple pages first.
-                                    </p>
+                    <div class="container-fluid dashboard-shell">
+                        <header class="dashboard-header">
+                            <div class="dashboard-heading">
+                                <span class="dashboard-heading-icon">
+                                    <i class="mdi mdi-view-dashboard-outline"></i>
+                                </span>
+                                <div>
+                                    <h1 class="dashboard-title"><?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></h1>
+                                    <p class="dashboard-subtitle">Section Head Dashboard</p>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-xl-7 mb-4">
-                                <div class="panel-card">
-                                    <div class="panel-kicker">Overview</div>
-                                    <h4 class="panel-title">A cleaner section summary for <?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></h4>
-                                    <p class="panel-copy">Keep an eye on the shared counts that usually matter first when you open your section workspace.</p>
-                                    <div class="overview-grid">
-                                        <div class="overview-stat">
-                                            <span class="overview-stat-label">Total schools</span>
-                                            <strong class="overview-stat-value"><?= number_format($totalSchools); ?></strong>
-                                            <span class="overview-stat-note">Combined public and private schools available in the shared directory.</span>
+                            <?php if ($sectionHeadName !== '') { ?>
+                                <div class="head-user">
+                                    <strong><?= htmlspecialchars($sectionHeadName, ENT_QUOTES, 'UTF-8'); ?></strong>
+                                    <span><?= htmlspecialchars($sectionHeadPosition, ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                            <?php } ?>
+                        </header>
+
+                        <div class="row dashboard-main-row">
+                            <div class="col-xl-3 col-lg-4">
+                                <section class="compact-card">
+                                    <h2 class="compact-card-title">Overview</h2>
+                                    <div class="stat-list">
+                                        <div class="stat-item" title="Total schools">
+                                            <strong><?= number_format($totalSchools); ?></strong>
+                                            <span>Schools</span>
                                         </div>
-                                        <div class="overview-stat">
-                                            <span class="overview-stat-label">Accomplishments</span>
-                                            <strong class="overview-stat-value"><?= number_format($accomplishmentCount); ?></strong>
-                                            <span class="overview-stat-note">Reported accomplishment entries currently linked to your section.</span>
+                                        <div class="stat-item" title="Section accomplishments">
+                                            <strong><?= number_format($accomplishmentCount); ?></strong>
+                                            <span>Reports</span>
                                         </div>
-                                        <div class="overview-stat">
-                                            <span class="overview-stat-label">Active team</span>
-                                            <strong class="overview-stat-value"><?= number_format($sectionUserCount); ?></strong>
-                                            <span class="overview-stat-note">User accounts that can currently access this section area.</span>
+                                        <div class="stat-item" title="Active section users">
+                                            <strong><?= number_format($sectionUserCount); ?></strong>
+                                            <span>Users</span>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </section>
 
-                            <div class="col-xl-5 mb-4">
-                                <div class="panel-card">
-                                    <div class="panel-kicker">Quick Access</div>
-                                    <h4 class="panel-title">Open your most-used section pages</h4>
-                                    <p class="panel-copy">Jump straight into the pages section heads usually need during routine monitoring and reporting.</p>
-                                    <div class="action-stack">
+                                <section class="compact-card">
+                                    <h2 class="compact-card-title">Quick Access</h2>
+                                    <div class="quick-grid">
                                         <?php foreach ($quickLinks as $quickLink) { ?>
-                                            <a href="<?= htmlspecialchars($quickLink['href'], ENT_QUOTES, 'UTF-8'); ?>" class="action-tile">
-                                                <div>
-                                                    <div class="action-tile-title"><?= htmlspecialchars($quickLink['title'], ENT_QUOTES, 'UTF-8'); ?></div>
-                                                    <p class="action-tile-copy"><?= htmlspecialchars($quickLink['copy'], ENT_QUOTES, 'UTF-8'); ?></p>
-                                                </div>
-                                                <i class="mdi <?= htmlspecialchars($quickLink['icon'], ENT_QUOTES, 'UTF-8'); ?> action-tile-icon"></i>
+                                            <a href="<?= htmlspecialchars($quickLink['href'], ENT_QUOTES, 'UTF-8'); ?>" class="quick-link">
+                                                <i class="mdi <?= htmlspecialchars($quickLink['icon'], ENT_QUOTES, 'UTF-8'); ?> quick-link-icon"></i>
+                                                <span><?= htmlspecialchars($quickLink['title'], ENT_QUOTES, 'UTF-8'); ?></span>
                                             </a>
                                         <?php } ?>
                                     </div>
-                                </div>
+                                </section>
+
+                                <?php if (!empty($listedMembers)) { ?>
+                                    <section class="compact-card">
+                                        <details class="member-summary">
+                                            <summary>
+                                                <span>Section Members</span>
+                                                <span class="member-count"><?= number_format(count($listedMembers)); ?></span>
+                                            </summary>
+                                            <div class="member-pill-list">
+                                                <?php foreach ($listedMembers as $listedMember) { ?>
+                                                    <span class="member-pill"><?= htmlspecialchars($listedMember, ENT_QUOTES, 'UTF-8'); ?></span>
+                                                <?php } ?>
+                                            </div>
+                                        </details>
+                                    </section>
+                                <?php } ?>
+                            </div>
+
+                            <div class="col-xl-9 col-lg-8">
+                                <section class="calendar-panel">
+                                    <div class="calendar-panel-header">
+                                        <h2 class="calendar-panel-title">
+                                            <i class="mdi mdi-calendar-month-outline mr-1"></i>
+                                            Calendar
+                                        </h2>
+                                        <span class="calendar-panel-caption">Schedule and whereabouts</span>
+                                    </div>
+                                    <div class="calendar-zone">
+                                        <?php include('includes/whereabouts_widget.php'); ?>
+                                    </div>
+                                </section>
                             </div>
                         </div>
-
-                        <?php if (!empty($listedMembers)) { ?>
-                            <div class="row">
-                                <div class="col-12 mb-4">
-                                    <div class="panel-card">
-                                        <div class="panel-kicker">Listed Members</div>
-                                        <h4 class="panel-title">People currently recorded under this section</h4>
-                                        <p class="panel-copy">These are the member entries saved in the section record and shown across the section registry.</p>
-                                        <div class="member-pill-list">
-                                            <?php foreach ($listedMembers as $listedMember) { ?>
-                                                <span class="member-pill"><?= htmlspecialchars($listedMember, ENT_QUOTES, 'UTF-8'); ?></span>
-                                            <?php } ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php } ?>
                     </div>
                 </div>
 
@@ -600,6 +713,25 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
                 if (shouldPromptAvatarUpdate) {
                     window.setTimeout(showDefaultAvatarReminder, 500);
                 }
+
+                function resizeDashboardCalendar() {
+                    window.dispatchEvent(new Event('resize'));
+
+                    if (window.jQuery) {
+                        const $calendar = window.jQuery('#calendar');
+                        if ($calendar.length && typeof $calendar.fullCalendar === 'function') {
+                            try {
+                                $calendar.fullCalendar('option', 'height', 'parent');
+                                $calendar.fullCalendar('updateSize');
+                            } catch (error) {
+                                // The calendar may use a different FullCalendar version.
+                            }
+                        }
+                    }
+                }
+
+                window.setTimeout(resizeDashboardCalendar, 250);
+                window.setTimeout(resizeDashboardCalendar, 900);
             })();
         </script>
 

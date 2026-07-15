@@ -2669,7 +2669,7 @@ private function get_managed_admin_groups(){
 	return ['CID', 'OSDS', 'SGOD'];
 }
 
-private function auto_migrate_whereabouts_table(){
+public function auto_migrate_whereabouts_table(){
 	$this->load->dbforge();
 
 	$fields = array(
