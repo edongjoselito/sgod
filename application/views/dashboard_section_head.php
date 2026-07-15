@@ -11,40 +11,50 @@ $privateSchoolCount = !empty($data1) && isset($data1[0]->schoolCounts) ? (int) $
 $accomplishmentCount = !empty($data2) && isset($data2[0]->Counts) ? (int) $data2[0]->Counts : 0;
 $sectionUserCount = !empty($data3) && isset($data3[0]->Counts) ? (int) $data3[0]->Counts : 0;
 $totalSchools = $publicSchoolCount + $privateSchoolCount;
-$listedMembers = array();
+$publicShare = $totalSchools > 0 ? (int) round(($publicSchoolCount / $totalSchools) * 100) : 0;
+$privateShare = $totalSchools > 0 ? 100 - $publicShare : 0;
 
-if (!empty($sectionRecord->member)) {
-    foreach (preg_split('/\s*;\s*/', (string) $sectionRecord->member) as $memberEntry) {
-        $memberEntry = trim(preg_replace('/\s+/', ' ', (string) $memberEntry));
-        if ($memberEntry !== '') {
-            $listedMembers[] = $memberEntry;
-        }
-    }
-}
-
-$quickLinks = array(
+$summaryCards = array(
     array(
-        'title' => 'Schools',
-        'href' => base_url() . 'Page/schools',
-        'icon' => 'mdi-office-building-outline'
+        'value' => $totalSchools,
+        'label' => 'Total Schools',
+        'context' => number_format($publicSchoolCount) . ' public · ' . number_format($privateSchoolCount) . ' private',
+        'icon' => 'mdi-school-outline',
+        'href' => base_url() . 'Page/schools'
     ),
     array(
-        'title' => 'Reports',
-        'href' => base_url() . 'Page/viewSecAccomplishments',
-        'icon' => 'mdi-file-document-outline'
+        'value' => $publicSchoolCount,
+        'label' => 'Public Schools',
+        'context' => $totalSchools > 0 ? $publicShare . '% of total' : 'No schools yet',
+        'icon' => 'mdi-domain',
+        'href' => base_url() . 'Page/schools'
     ),
     array(
-        'title' => 'Add Report',
-        'href' => base_url() . 'Page/addAccomplishments',
-        'icon' => 'mdi-plus-circle-outline'
+        'value' => $privateSchoolCount,
+        'label' => 'Private Schools',
+        'context' => $totalSchools > 0 ? $privateShare . '% of total' : 'No schools yet',
+        'icon' => 'mdi-home-city-outline',
+        'href' => base_url() . 'Page/schools'
     ),
     array(
-        'title' => 'Users',
-        'href' => base_url() . 'Page/usersListv2',
-        'icon' => 'mdi-account-multiple-outline'
+        'value' => $accomplishmentCount,
+        'label' => 'Accomplishments',
+        'context' => 'View submitted reports',
+        'icon' => 'mdi-file-check-outline',
+        'href' => base_url() . 'Page/viewSecAccomplishments'
     )
 );
 
+$nameParts = $sectionHeadName !== '' ? preg_split('/\s+/', $sectionHeadName) : array();
+$sectionHeadInitials = '';
+if (!empty($nameParts)) {
+    $sectionHeadInitials .= strtoupper(substr($nameParts[0], 0, 1));
+    if (count($nameParts) > 1) {
+        $sectionHeadInitials .= strtoupper(substr($nameParts[count($nameParts) - 1], 0, 1));
+    }
+}
+$sectionHeadInitials = $sectionHeadInitials !== '' ? $sectionHeadInitials : 'SH';
+$dashboardDate = date('l, F j, Y');
 $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
 ?>
 <!DOCTYPE html>
@@ -65,18 +75,22 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
 
         <style>
             :root {
-                --dash-primary: #3c40c6;
-                --dash-dark: #25296f;
-                --dash-text: #24294d;
-                --dash-muted: #7a809f;
-                --dash-border: #e5e8f5;
-                --dash-surface: #ffffff;
-                --dash-bg: #f4f6fb;
-                --dash-shadow: 0 8px 24px rgba(35, 39, 93, 0.08);
+                --dashboard-primary: #3c40c6;
+                --dashboard-primary-dark: #272b8c;
+                --dashboard-primary-soft: #eef0ff;
+                --dashboard-ink: #23264a;
+                --dashboard-muted: #737894;
+                --dashboard-border: #e7e9f3;
+                --dashboard-surface: #ffffff;
+                --dashboard-background: #f4f6fb;
+                --dashboard-shadow: 0 12px 30px rgba(35, 38, 74, 0.08);
+                --dashboard-shadow-hover: 0 18px 38px rgba(35, 38, 74, 0.13);
             }
 
             body {
-                background: var(--dash-bg);
+                background:
+                    radial-gradient(circle at 12% 0%, rgba(60, 64, 198, 0.08), transparent 26%),
+                    var(--dashboard-background);
             }
 
             .content-page {
@@ -84,281 +98,434 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
             }
 
             .dashboard-shell {
-                padding-top: 14px;
-                padding-bottom: 18px;
+                padding-top: 20px;
+                padding-bottom: 28px;
             }
 
-            .dashboard-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 16px;
-                min-height: 72px;
-                margin-bottom: 14px;
-                padding: 14px 18px;
-                border-radius: 16px;
+            .dashboard-hero {
+                position: relative;
+                min-height: 154px;
+                margin-bottom: 0;
+                padding: 28px 30px 52px;
+                overflow: hidden;
+                border-radius: 24px;
                 color: #ffffff;
-                background: linear-gradient(135deg, var(--dash-dark), var(--dash-primary));
-                box-shadow: var(--dash-shadow);
+                background:
+                    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.23), transparent 26%),
+                    linear-gradient(135deg, var(--dashboard-primary-dark) 0%, var(--dashboard-primary) 62%, #6c70ef 100%);
+                box-shadow: 0 20px 45px rgba(39, 43, 140, 0.20);
             }
 
-            .dashboard-heading {
+            .dashboard-hero::after {
+                content: "";
+                position: absolute;
+                right: -70px;
+                bottom: -110px;
+                width: 260px;
+                height: 260px;
+                border: 45px solid rgba(255, 255, 255, 0.07);
+                border-radius: 50%;
+            }
+
+            .hero-content,
+            .hero-profile {
+                position: relative;
+                z-index: 1;
+            }
+
+            .hero-eyebrow {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                margin-bottom: 10px;
+                color: rgba(255, 255, 255, 0.76);
+                font-size: 0.78rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .hero-title {
+                margin: 0;
+                color: #ffffff;
+                font-size: clamp(1.75rem, 3vw, 2.35rem);
+                line-height: 1.15;
+                font-weight: 700;
+                letter-spacing: -0.025em;
+            }
+
+            .hero-subtitle {
+                max-width: 600px;
+                margin: 9px 0 0;
+                color: rgba(255, 255, 255, 0.78);
+                font-size: 0.94rem;
+                line-height: 1.55;
+            }
+
+            .hero-profile {
                 display: flex;
                 align-items: center;
-                min-width: 0;
-                gap: 12px;
+                justify-content: flex-end;
+                gap: 13px;
+                min-width: 250px;
+                padding: 13px 15px;
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 16px;
+                background: rgba(255, 255, 255, 0.10);
+                backdrop-filter: blur(12px);
             }
 
-            .dashboard-heading-icon {
+            .hero-avatar {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 42px;
-                height: 42px;
-                flex: 0 0 42px;
-                border-radius: 12px;
-                background: rgba(255, 255, 255, 0.14);
-                font-size: 1.35rem;
-            }
-
-            .dashboard-title {
-                margin: 0;
+                width: 46px;
+                height: 46px;
+                flex: 0 0 46px;
+                border: 2px solid rgba(255, 255, 255, 0.22);
+                border-radius: 15px;
                 color: #ffffff;
-                font-size: 1.3rem;
-                line-height: 1.2;
-                font-weight: 700;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+                background: rgba(255, 255, 255, 0.16);
+                font-size: 0.95rem;
+                font-weight: 800;
+                letter-spacing: 0.04em;
             }
 
-            .dashboard-subtitle {
-                margin: 3px 0 0;
-                color: rgba(255, 255, 255, 0.72);
-                font-size: 0.82rem;
-            }
-
-            .head-user {
+            .hero-profile-copy {
                 min-width: 0;
-                text-align: right;
+                text-align: left;
             }
 
-            .head-user strong,
-            .head-user span {
+            .hero-profile-copy strong,
+            .hero-profile-copy span {
                 display: block;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
-            .head-user strong {
-                font-size: 0.9rem;
+            .hero-profile-copy strong {
                 color: #ffffff;
+                font-size: 0.92rem;
             }
 
-            .head-user span {
-                margin-top: 2px;
-                color: rgba(255, 255, 255, 0.68);
-                font-size: 0.76rem;
+            .hero-profile-copy span {
+                margin-top: 3px;
+                color: rgba(255, 255, 255, 0.69);
+                font-size: 0.78rem;
             }
 
-            .dashboard-main-row {
-                margin-right: -7px;
-                margin-left: -7px;
+            .summary-row {
+                position: relative;
+                z-index: 2;
+                margin-top: -33px;
+                margin-right: 0;
+                margin-left: 0;
+                padding: 0 15px;
             }
 
-            .dashboard-main-row > [class*="col-"] {
+            .summary-row > [class*="col-"] {
                 padding-right: 7px;
                 padding-left: 7px;
             }
 
-            .compact-card,
-            .calendar-panel {
-                border: 1px solid var(--dash-border);
-                border-radius: 16px;
-                background: var(--dash-surface);
-                box-shadow: var(--dash-shadow);
-            }
-
-            .compact-card {
-                margin-bottom: 14px;
-                padding: 14px;
-            }
-
-            .compact-card-title,
-            .calendar-panel-title {
-                margin: 0;
-                color: var(--dash-text);
-                font-size: 0.9rem;
-                font-weight: 700;
-            }
-
-            .stat-list {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 8px;
-                margin-top: 12px;
-            }
-
-            .stat-item {
-                min-width: 0;
-                padding: 12px 8px;
-                border: 1px solid #eceef8;
-                border-radius: 12px;
-                text-align: center;
-                background: #f8f9fe;
-            }
-
-            .stat-item strong {
-                display: block;
-                color: var(--dash-primary);
-                font-size: 1.45rem;
-                line-height: 1;
-                font-weight: 700;
-            }
-
-            .stat-item span {
-                display: block;
-                margin-top: 6px;
-                color: var(--dash-muted);
-                font-size: 0.7rem;
-                line-height: 1.2;
-                font-weight: 600;
-            }
-
-            .quick-grid {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 8px;
-                margin-top: 12px;
-            }
-
-            .quick-link {
+            .summary-card {
+                position: relative;
                 display: flex;
                 align-items: center;
-                min-width: 0;
-                gap: 9px;
-                min-height: 52px;
-                padding: 10px;
-                border: 1px solid #e8eaf6;
-                border-radius: 12px;
-                color: var(--dash-text);
-                background: #ffffff;
-                transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
-            }
-
-            .quick-link:hover,
-            .quick-link:focus {
-                color: var(--dash-primary);
+                gap: 13px;
+                min-height: 94px;
+                height: 100%;
+                padding: 17px 34px 17px 18px;
+                border: 1px solid rgba(231, 233, 243, 0.95);
+                border-radius: 17px;
+                background: rgba(255, 255, 255, 0.98);
+                box-shadow: var(--dashboard-shadow);
                 text-decoration: none;
-                border-color: rgba(60, 64, 198, 0.28);
-                background: #f7f7ff;
-                transform: translateY(-1px);
+                transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
             }
 
-            .quick-link-icon {
+            .summary-card:hover,
+            .summary-card:focus {
+                text-decoration: none;
+                transform: translateY(-3px);
+                border-color: rgba(60, 64, 198, 0.24);
+                box-shadow: var(--dashboard-shadow-hover);
+            }
+
+            .summary-icon {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 30px;
-                height: 30px;
-                flex: 0 0 30px;
-                border-radius: 9px;
-                color: var(--dash-primary);
-                background: rgba(60, 64, 198, 0.09);
-                font-size: 1rem;
+                width: 46px;
+                height: 46px;
+                flex: 0 0 46px;
+                border-radius: 14px;
+                color: var(--dashboard-primary);
+                background: var(--dashboard-primary-soft);
+                font-size: 1.35rem;
+                transition: background 0.2s ease, color 0.2s ease;
             }
 
-            .quick-link span {
+            .summary-card:hover .summary-icon,
+            .summary-card:focus .summary-icon {
+                color: #ffffff;
+                background: var(--dashboard-primary);
+            }
+
+            .summary-copy {
                 min-width: 0;
+            }
+
+            .summary-value {
+                display: block;
+                margin-bottom: 4px;
+                color: var(--dashboard-ink);
+                font-size: 1.55rem;
+                line-height: 1;
+                font-weight: 750;
+            }
+
+            .summary-label {
+                display: block;
+                color: var(--dashboard-ink);
+                font-size: 0.82rem;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+
+            .summary-context {
+                display: block;
+                margin-top: 3px;
                 overflow: hidden;
+                color: var(--dashboard-muted);
+                font-size: 0.72rem;
+                font-weight: 600;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                font-size: 0.78rem;
-                font-weight: 700;
             }
 
-            .member-summary {
+            .summary-arrow {
+                position: absolute;
+                top: 50%;
+                right: 12px;
+                color: #c2c5d8;
+                font-size: 1.1rem;
+                transform: translateY(-50%) translateX(-3px);
+                opacity: 0;
+                transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
+            }
+
+            .summary-card:hover .summary-arrow,
+            .summary-card:focus .summary-arrow {
+                color: var(--dashboard-primary);
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+
+            .distribution-card {
+                display: flex;
+                flex-wrap: nowrap;
+                align-items: center;
+                gap: 12px 22px;
+                height: 100%;
                 margin: 0;
+                padding: 16px 20px;
+                border: 1px solid var(--dashboard-border);
+                border-radius: 17px;
+                background: var(--dashboard-surface);
+                box-shadow: var(--dashboard-shadow);
             }
 
-            .member-summary summary {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 10px;
-                color: var(--dash-text);
-                cursor: pointer;
-                list-style: none;
-                font-size: 0.84rem;
-                font-weight: 700;
+            .dashboard-insights-row {
+                margin: 14px 7px 0;
             }
 
-            .member-summary summary::-webkit-details-marker {
-                display: none;
+            .dashboard-insights-row > [class*="col-"] {
+                padding-right: 8px;
+                padding-left: 8px;
             }
 
-            .member-count {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 25px;
-                height: 25px;
-                padding: 0 7px;
-                border-radius: 999px;
-                color: var(--dash-primary);
-                background: rgba(60, 64, 198, 0.09);
-                font-size: 0.72rem;
-            }
-
-            .member-pill-list {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-                max-height: 116px;
-                margin-top: 12px;
-                overflow-y: auto;
-            }
-
-            .member-pill {
-                display: inline-flex;
-                align-items: center;
-                padding: 5px 8px;
-                border-radius: 999px;
-                color: #4f557b;
-                background: #f0f2fa;
-                font-size: 0.72rem;
-                font-weight: 600;
-            }
-
-            .calendar-panel {
-                min-height: calc(100vh - 145px);
-                overflow: hidden;
-            }
-
-            .calendar-panel-header {
+            .distribution-head {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 gap: 12px;
-                min-height: 48px;
-                padding: 10px 14px;
-                border-bottom: 1px solid var(--dash-border);
+                flex: 1 1 200px;
             }
 
-            .calendar-panel-caption {
-                color: var(--dash-muted);
-                font-size: 0.72rem;
+            .distribution-title {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--dashboard-ink);
+                font-size: 0.9rem;
+                font-weight: 750;
+            }
+
+            .distribution-title .mdi {
+                color: var(--dashboard-primary);
+                font-size: 1.1rem;
+            }
+
+            .distribution-total {
+                color: var(--dashboard-muted);
+                font-size: 0.78rem;
+                font-weight: 650;
+                white-space: nowrap;
+            }
+
+            .distribution-bar {
+                display: flex;
+                flex: 2 1 260px;
+                height: 12px;
+                overflow: hidden;
+                border-radius: 999px;
+                background: var(--dashboard-primary-soft);
+            }
+
+            .distribution-segment {
+                height: 100%;
+                transition: width 0.6s ease;
+            }
+
+            .distribution-segment.is-public {
+                background: linear-gradient(135deg, var(--dashboard-primary), #6c70ef);
+            }
+
+            .distribution-segment.is-private {
+                background: linear-gradient(135deg, #26c6a5, #34d3a8);
+            }
+
+            .distribution-legend {
+                display: flex;
+                gap: 18px;
+                flex: 1 1 auto;
+                flex-wrap: wrap;
+            }
+
+            .legend-item {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                color: var(--dashboard-muted);
+                font-size: 0.78rem;
+                font-weight: 600;
+            }
+
+            .legend-item strong {
+                color: var(--dashboard-ink);
+                font-weight: 750;
+            }
+
+            .legend-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+
+            .legend-dot.is-public {
+                background: var(--dashboard-primary);
+            }
+
+            .legend-dot.is-private {
+                background: #26c6a5;
+            }
+
+            .legend-pct {
+                padding: 1px 7px;
+                border-radius: 999px;
+                background: var(--dashboard-primary-soft);
+                color: var(--dashboard-primary);
+                font-size: 0.7rem;
+                font-weight: 750;
+            }
+
+            .dashboard-main-row {
+                margin-top: 18px;
+                margin-right: -8px;
+                margin-left: -8px;
+            }
+
+            .dashboard-main-row > [class*="col-"] {
+                padding-right: 8px;
+                padding-left: 8px;
+            }
+
+            .dashboard-card {
+                border: 1px solid var(--dashboard-border);
+                border-radius: 20px;
+                background: var(--dashboard-surface);
+                box-shadow: var(--dashboard-shadow);
+            }
+
+            .calendar-card {
+                min-height: 690px;
+                overflow: hidden;
+            }
+
+            .card-heading {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                min-height: 68px;
+                padding: 16px 20px;
+                border-bottom: 1px solid var(--dashboard-border);
+            }
+
+            .heading-group {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                min-width: 0;
+            }
+
+            .heading-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                flex: 0 0 38px;
+                border-radius: 12px;
+                color: var(--dashboard-primary);
+                background: var(--dashboard-primary-soft);
+                font-size: 1.15rem;
+            }
+
+            .card-title {
+                margin: 0;
+                color: var(--dashboard-ink);
+                font-size: 1rem;
+                font-weight: 750;
+            }
+
+            .card-caption {
+                margin: 3px 0 0;
+                color: var(--dashboard-muted);
+                font-size: 0.77rem;
+            }
+
+            .today-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                padding: 7px 11px;
+                border-radius: 999px;
+                color: var(--dashboard-primary);
+                background: var(--dashboard-primary-soft);
+                font-size: 0.75rem;
+                font-weight: 700;
                 white-space: nowrap;
             }
 
             .calendar-zone {
-                min-height: calc(100vh - 194px);
-                padding: 10px;
-                overflow: visible;
+                width: 100%;
+                min-height: 620px;
+                padding: 16px 14px 20px;
             }
 
-            /* Neutralize excess spacing from the included whereabouts/calendar view. */
             .calendar-zone > .container,
             .calendar-zone > .container-fluid,
             .calendar-zone .container,
@@ -370,62 +537,84 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
             }
 
             .calendar-zone .row {
-                margin-right: -5px;
-                margin-left: -5px;
+                margin-right: -6px;
+                margin-left: -6px;
             }
 
             .calendar-zone .row > [class*="col-"] {
-                padding-right: 5px;
-                padding-left: 5px;
+                padding-right: 6px;
+                padding-left: 6px;
             }
 
             .calendar-zone .card,
             .calendar-zone .panel,
             .calendar-zone .box {
-                margin-bottom: 10px !important;
-                border-radius: 12px !important;
+                margin-bottom: 12px !important;
+                border: 1px solid var(--dashboard-border) !important;
+                border-radius: 15px !important;
                 box-shadow: none !important;
             }
 
             .calendar-zone .card-body,
             .calendar-zone .panel-body,
             .calendar-zone .box-body {
-                padding: 10px !important;
+                padding: 14px !important;
             }
 
             .calendar-zone .fc-toolbar,
             .calendar-zone .fc-header-toolbar {
-                margin-bottom: 10px !important;
+                margin-bottom: 15px !important;
             }
 
             .calendar-zone .fc-toolbar h2,
             .calendar-zone .fc .fc-toolbar-title {
-                color: var(--dash-text);
-                font-size: 1.05rem !important;
-                font-weight: 700;
+                color: var(--dashboard-ink);
+                font-size: 1.15rem !important;
+                font-weight: 750;
             }
 
             .calendar-zone .fc-button,
             .calendar-zone .fc .fc-button {
-                padding: 0.3rem 0.55rem !important;
-                font-size: 0.74rem !important;
+                padding: 0.42rem 0.72rem !important;
+                border-radius: 8px !important;
+                font-size: 0.78rem !important;
                 line-height: 1.25 !important;
             }
 
             .calendar-zone .fc-day-header,
             .calendar-zone .fc-col-header-cell-cushion,
             .calendar-zone .fc-daygrid-day-number {
-                font-size: 0.74rem !important;
+                font-size: 0.84rem !important;
+            }
+
+            .calendar-zone .fc-view,
+            .calendar-zone .fc-view-container,
+            .calendar-zone .fc-scrollgrid,
+            .calendar-zone table {
+                width: 100% !important;
+            }
+
+            .calendar-zone .fc-basic-view .fc-body .fc-row {
+                min-height: 88px;
+            }
+
+            .calendar-zone .fc-daygrid-day-frame {
+                min-height: 88px;
             }
 
             .calendar-zone .fc-event,
             .calendar-zone .fc-day-grid-event,
             .calendar-zone .fc-daygrid-event {
-                font-size: 0.7rem !important;
+                border-radius: 6px !important;
+                font-size: 0.78rem !important;
             }
 
             @media (max-width: 1199.98px) {
-                .calendar-panel {
+                .summary-row {
+                    row-gap: 14px;
+                }
+
+                .calendar-card {
                     min-height: auto;
                 }
 
@@ -434,54 +623,96 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
                 }
             }
 
+            @media (max-width: 991.98px) {
+                .hero-profile {
+                    justify-content: flex-start;
+                    margin-top: 18px;
+                }
+
+            }
+
             @media (max-width: 767.98px) {
                 .dashboard-shell {
-                    padding-top: 10px;
+                    padding-top: 12px;
                 }
 
-                .dashboard-header {
-                    align-items: flex-start;
+                .dashboard-hero {
                     min-height: auto;
-                    padding: 12px 14px;
+                    padding: 22px 20px 48px;
+                    border-radius: 20px;
                 }
 
-                .dashboard-title {
-                    font-size: 1.05rem;
-                    white-space: normal;
+                .hero-title {
+                    font-size: 1.55rem;
                 }
 
-                .dashboard-subtitle,
-                .head-user {
-                    display: none;
+                .hero-subtitle {
+                    font-size: 0.85rem;
                 }
 
-                .stat-list {
-                    grid-template-columns: repeat(3, minmax(82px, 1fr));
-                    overflow-x: auto;
+                .hero-profile {
+                    min-width: 0;
+                    width: 100%;
                 }
 
-                .calendar-panel-header {
+                .summary-row {
+                    margin-top: -28px;
+                    padding: 0 9px;
+                }
+
+                .summary-card {
+                    min-height: 82px;
+                    padding: 14px;
+                }
+
+                .summary-icon {
+                    width: 40px;
+                    height: 40px;
+                    flex-basis: 40px;
+                }
+
+                .summary-value {
+                    font-size: 1.32rem;
+                }
+
+                .dashboard-insights-row > [class*="col-"] + [class*="col-"] {
+                    margin-top: 8px;
+                }
+
+                .distribution-card {
+                    flex-wrap: wrap;
+                }
+
+                .card-heading {
                     align-items: flex-start;
+                    min-height: 62px;
+                    padding: 14px 15px;
                 }
 
-                .calendar-panel-caption {
+                .today-badge {
                     display: none;
                 }
 
                 .calendar-zone {
                     min-height: 560px;
-                    padding: 6px;
+                    padding: 10px;
+                }
+
+                .calendar-zone .fc-basic-view .fc-body .fc-row,
+                .calendar-zone .fc-daygrid-day-frame {
+                    min-height: 68px;
                 }
 
                 .calendar-zone .fc-toolbar,
                 .calendar-zone .fc-header-toolbar {
-                    gap: 6px;
+                    gap: 7px;
                 }
 
                 .calendar-zone .fc-toolbar h2,
                 .calendar-zone .fc .fc-toolbar-title {
-                    font-size: 0.92rem !important;
+                    font-size: 0.98rem !important;
                 }
+
             }
         </style>
     </head>
@@ -497,82 +728,104 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
             <div class="content-page">
                 <div class="content">
                     <div class="container-fluid dashboard-shell">
-                        <header class="dashboard-header">
-                            <div class="dashboard-heading">
-                                <span class="dashboard-heading-icon">
-                                    <i class="mdi mdi-view-dashboard-outline"></i>
-                                </span>
-                                <div>
-                                    <h1 class="dashboard-title"><?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></h1>
-                                    <p class="dashboard-subtitle">Section Head Dashboard</p>
+                        <section class="dashboard-hero">
+                            <div class="row align-items-center">
+                                <div class="col-lg-8">
+                                    <div class="hero-content">
+                                        <span class="hero-eyebrow">
+                                            <i class="mdi mdi-view-dashboard-outline"></i>
+                                            Section Head Dashboard
+                                        </span>
+                                        <h1 class="hero-title"><?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></h1>
+                                        <p class="hero-subtitle">Monitor schedules, schools, accomplishments, and section activity from one workspace.</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <div class="hero-profile">
+                                        <span class="hero-avatar"><?= htmlspecialchars($sectionHeadInitials, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <div class="hero-profile-copy">
+                                            <strong><?= htmlspecialchars($sectionHeadName !== '' ? $sectionHeadName : 'Section Head', ENT_QUOTES, 'UTF-8'); ?></strong>
+                                            <span><?= htmlspecialchars($sectionHeadPosition, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        </section>
 
-                            <?php if ($sectionHeadName !== '') { ?>
-                                <div class="head-user">
-                                    <strong><?= htmlspecialchars($sectionHeadName, ENT_QUOTES, 'UTF-8'); ?></strong>
-                                    <span><?= htmlspecialchars($sectionHeadPosition, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <div class="row summary-row">
+                            <?php foreach ($summaryCards as $summaryCard) { ?>
+                                <div class="col-xl col-md-4 col-sm-6 mb-2">
+                                    <a href="<?= htmlspecialchars($summaryCard['href'], ENT_QUOTES, 'UTF-8'); ?>" class="summary-card">
+                                        <span class="summary-icon"><i class="mdi <?= htmlspecialchars($summaryCard['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i></span>
+                                        <div class="summary-copy">
+                                            <strong class="summary-value" data-count="<?= (int) $summaryCard['value']; ?>"><?= number_format((int) $summaryCard['value']); ?></strong>
+                                            <span class="summary-label"><?= htmlspecialchars($summaryCard['label'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <span class="summary-context"><?= htmlspecialchars($summaryCard['context'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                        </div>
+                                        <i class="mdi mdi-chevron-right summary-arrow"></i>
+                                    </a>
                                 </div>
                             <?php } ?>
-                        </header>
+                        </div>
 
-                        <div class="row dashboard-main-row">
-                            <div class="col-xl-3 col-lg-4">
-                                <section class="compact-card">
-                                    <h2 class="compact-card-title">Overview</h2>
-                                    <div class="stat-list">
-                                        <div class="stat-item" title="Total schools">
-                                            <strong><?= number_format($totalSchools); ?></strong>
-                                            <span>Schools</span>
-                                        </div>
-                                        <div class="stat-item" title="Section accomplishments">
-                                            <strong><?= number_format($accomplishmentCount); ?></strong>
-                                            <span>Reports</span>
-                                        </div>
-                                        <div class="stat-item" title="Active section users">
-                                            <strong><?= number_format($sectionUserCount); ?></strong>
-                                            <span>Users</span>
-                                        </div>
+                        <div class="row dashboard-insights-row">
+                            <div class="col-lg-9 mb-2">
+                                <div class="distribution-card">
+                                    <div class="distribution-head">
+                                        <span class="distribution-title">
+                                            <i class="mdi mdi-chart-donut"></i>
+                                            School Distribution
+                                        </span>
+                                        <span class="distribution-total"><?= number_format($totalSchools); ?> schools</span>
                                     </div>
-                                </section>
-
-                                <section class="compact-card">
-                                    <h2 class="compact-card-title">Quick Access</h2>
-                                    <div class="quick-grid">
-                                        <?php foreach ($quickLinks as $quickLink) { ?>
-                                            <a href="<?= htmlspecialchars($quickLink['href'], ENT_QUOTES, 'UTF-8'); ?>" class="quick-link">
-                                                <i class="mdi <?= htmlspecialchars($quickLink['icon'], ENT_QUOTES, 'UTF-8'); ?> quick-link-icon"></i>
-                                                <span><?= htmlspecialchars($quickLink['title'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                            </a>
-                                        <?php } ?>
+                                    <div class="distribution-bar" role="img" aria-label="Public schools <?= $publicShare; ?>%, private schools <?= $privateShare; ?>%">
+                                        <span class="distribution-segment is-public" style="width: <?= $publicShare; ?>%;"></span>
+                                        <span class="distribution-segment is-private" style="width: <?= $privateShare; ?>%;"></span>
                                     </div>
-                                </section>
-
-                                <?php if (!empty($listedMembers)) { ?>
-                                    <section class="compact-card">
-                                        <details class="member-summary">
-                                            <summary>
-                                                <span>Section Members</span>
-                                                <span class="member-count"><?= number_format(count($listedMembers)); ?></span>
-                                            </summary>
-                                            <div class="member-pill-list">
-                                                <?php foreach ($listedMembers as $listedMember) { ?>
-                                                    <span class="member-pill"><?= htmlspecialchars($listedMember, ENT_QUOTES, 'UTF-8'); ?></span>
-                                                <?php } ?>
-                                            </div>
-                                        </details>
-                                    </section>
-                                <?php } ?>
+                                    <div class="distribution-legend">
+                                        <span class="legend-item">
+                                            <span class="legend-dot is-public"></span>
+                                            Public <strong><?= number_format($publicSchoolCount); ?></strong>
+                                            <span class="legend-pct"><?= $publicShare; ?>%</span>
+                                        </span>
+                                        <span class="legend-item">
+                                            <span class="legend-dot is-private"></span>
+                                            Private <strong><?= number_format($privateSchoolCount); ?></strong>
+                                            <span class="legend-pct"><?= $privateShare; ?>%</span>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="col-xl-9 col-lg-8">
-                                <section class="calendar-panel">
-                                    <div class="calendar-panel-header">
-                                        <h2 class="calendar-panel-title">
-                                            <i class="mdi mdi-calendar-month-outline mr-1"></i>
-                                            Calendar
-                                        </h2>
-                                        <span class="calendar-panel-caption">Schedule and whereabouts</span>
+                            <div class="col-lg-3 mb-2">
+                                <a href="<?= base_url(); ?>Page/usersListv2" class="summary-card">
+                                    <span class="summary-icon"><i class="mdi mdi-account-group-outline"></i></span>
+                                    <div class="summary-copy">
+                                        <strong class="summary-value" data-count="<?= (int) $sectionUserCount; ?>"><?= number_format($sectionUserCount); ?></strong>
+                                        <span class="summary-label">Active Users</span>
+                                        <span class="summary-context">Manage section accounts</span>
+                                    </div>
+                                    <i class="mdi mdi-chevron-right summary-arrow"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="row dashboard-main-row">
+                            <div class="col-12">
+                                <section class="dashboard-card calendar-card">
+                                    <div class="card-heading">
+                                        <div class="heading-group">
+                                            <span class="heading-icon"><i class="mdi mdi-calendar-month-outline"></i></span>
+                                            <div>
+                                                <h2 class="card-title">Section Calendar</h2>
+                                                <p class="card-caption">Schedules and staff whereabouts</p>
+                                            </div>
+                                        </div>
+                                        <span class="today-badge">
+                                            <i class="mdi mdi-calendar-today-outline"></i>
+                                            <?= htmlspecialchars($dashboardDate, ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
                                     </div>
                                     <div class="calendar-zone">
                                         <?php include('includes/whereabouts_widget.php'); ?>
@@ -702,6 +955,8 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
                     });
                 });
 
+                animateCountUp();
+
                 const url = new URL(window.location.href);
                 if (url.searchParams.get('open_profile_picture') === '1') {
                     url.searchParams.delete('open_profile_picture');
@@ -712,6 +967,34 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
 
                 if (shouldPromptAvatarUpdate) {
                     window.setTimeout(showDefaultAvatarReminder, 500);
+                }
+
+                function animateCountUp() {
+                    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                        return;
+                    }
+
+                    document.querySelectorAll('.summary-value[data-count]').forEach(function(el) {
+                        const target = parseInt(el.getAttribute('data-count'), 10) || 0;
+                        if (target <= 0) {
+                            return;
+                        }
+
+                        const duration = 900;
+                        const start = performance.now();
+
+                        function tick(now) {
+                            const progress = Math.min((now - start) / duration, 1);
+                            const eased = 1 - Math.pow(1 - progress, 3);
+                            el.textContent = Math.round(target * eased).toLocaleString();
+                            if (progress < 1) {
+                                requestAnimationFrame(tick);
+                            }
+                        }
+
+                        el.textContent = '0';
+                        requestAnimationFrame(tick);
+                    });
                 }
 
                 function resizeDashboardCalendar() {
