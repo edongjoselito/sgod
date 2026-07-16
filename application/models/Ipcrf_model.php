@@ -125,6 +125,7 @@ class Ipcrf_model extends CI_Model
                 category VARCHAR(80) NOT NULL,
                 name VARCHAR(180) NOT NULL,
                 indicators_json LONGTEXT NOT NULL,
+                rating TINYINT UNSIGNED NOT NULL DEFAULT 0,
                 employee_rating TINYINT UNSIGNED NOT NULL DEFAULT 0,
                 rater_rating TINYINT UNSIGNED NOT NULL DEFAULT 0,
                 final_rating TINYINT UNSIGNED NOT NULL DEFAULT 0,
@@ -161,6 +162,14 @@ class Ipcrf_model extends CI_Model
 
         foreach ($statements as $statement) {
             $this->db->query($statement);
+        }
+
+        // Older installations stored three stage-specific competency ratings. Keep
+        // those columns for compatibility, but migrate their latest value into the
+        // single rating used by the editor, validation workflow and printed report.
+        if (!$this->db->field_exists('rating', 'ipcrf_competencies')) {
+            $this->db->query("ALTER TABLE ipcrf_competencies ADD rating TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER indicators_json");
+            $this->db->query("UPDATE ipcrf_competencies SET rating = CASE WHEN final_rating BETWEEN 1 AND 5 THEN final_rating WHEN rater_rating BETWEEN 1 AND 5 THEN rater_rating WHEN employee_rating BETWEEN 1 AND 5 THEN employee_rating ELSE 0 END");
         }
 
         if ((int) $this->db->count_all('ipcrf_templates') === 0) {
@@ -324,6 +333,25 @@ class Ipcrf_model extends CI_Model
         return $this->format_employee($row);
     }
 
+    public function resolve_employee_id($username)
+    {
+        $username = trim((string) $username);
+        if ($username === '') {
+            return '';
+        }
+        if ($this->get_employee($username)) {
+            return $username;
+        }
+        if ($this->db->table_exists('users') && $this->db->field_exists('IDNumber', 'users')) {
+            $user = $this->db->select('IDNumber')->where('username', $username)->get('users', 1)->row_array();
+            $employeeId = $user ? trim((string) $user['IDNumber']) : '';
+            if ($employeeId !== '' && $this->get_employee($employeeId)) {
+                return $employeeId;
+            }
+        }
+        return $username;
+    }
+
     public function format_employee($row)
     {
         $middle = trim((string) $row['MiddleName']);
@@ -399,20 +427,27 @@ class Ipcrf_model extends CI_Model
         return $id;
     }
 
-    public function recent_forms($actor, $isPmt)
+    public function personal_forms($employeeId)
     {
         $this->db->select('id, employee_id, employee_name, position, office, period_start, period_end, status, rater_id, rater_name, created_by, updated_at');
         $this->db->from('ipcrf_forms');
-        if (!$this->is_admin() && !$isPmt) {
-            $this->db->group_start();
-            $this->db->where('employee_id', $actor);
-            $this->db->or_where('rater_id', $actor);
-            $this->db->or_where('created_by', $actor);
-            $this->db->group_end();
-        }
+        $this->db->where('employee_id', trim((string) $employeeId));
         $this->db->order_by('updated_at', 'DESC');
         $this->db->limit(30);
         return $this->db->get()->result_array();
+    }
+
+    public function submitted_rater_forms($raterId)
+    {
+        return $this->db
+            ->select('id, employee_id, employee_name, position, office, period_start, period_end, status, rater_id, rater_name, submitted_at, updated_at')
+            ->from('ipcrf_forms')
+            ->where('rater_id', trim((string) $raterId))
+            ->where('status', self::STATUS_SUBMITTED_RATER)
+            ->order_by('submitted_at', 'ASC')
+            ->order_by('updated_at', 'ASC')
+            ->get()
+            ->result_array();
     }
 
     public function load_template_into_form($formId, $templateId, $actor)
@@ -450,8 +485,9 @@ class Ipcrf_model extends CI_Model
         foreach ($competencies as $competency) {
             $this->db->insert('ipcrf_competencies', array(
                 'form_id' => $formId, 'category' => $competency['category'], 'name' => $competency['name'],
-                'indicators_json' => $competency['indicators_json'], 'employee_rating' => 0, 'rater_rating' => 0,
-                'final_rating' => 0, 'sort_order' => $competency['sort_order'], 'is_deleted' => 0
+                'indicators_json' => $competency['indicators_json'], 'rating' => 0,
+                'employee_rating' => 0, 'rater_rating' => 0, 'final_rating' => 0,
+                'sort_order' => $competency['sort_order'], 'is_deleted' => 0
             ));
         }
         $this->db->where('id', (int) $formId)->update('ipcrf_forms', array('template_id' => (int) $templateId, 'updated_by' => $actor, 'updated_at' => date('Y-m-d H:i:s')));
@@ -496,7 +532,7 @@ class Ipcrf_model extends CI_Model
         $competencies = $this->db->where('form_id', (int) $formId)->where('is_deleted', 0)->order_by('sort_order')->get('ipcrf_competencies')->result_array();
         foreach ($competencies as &$competency) {
             $competency['indicators'] = $this->decode_json($competency['indicators_json']);
-            unset($competency['indicators_json']);
+            unset($competency['indicators_json'], $competency['employee_rating'], $competency['rater_rating'], $competency['final_rating']);
         }
         unset($competency);
 
@@ -567,13 +603,10 @@ class Ipcrf_model extends CI_Model
                         'sort_order' => $objectiveOrder + 1, 'is_deleted' => 0
                     );
                     if ($objectiveId > 0 && $this->row_belongs('ipcrf_objectives', $objectiveId, $formId)) {
-                        // Objective ratings belong to the rater stage, not to the employee/editor stage.
-                        unset($objectiveData['quality_rating'], $objectiveData['efficiency_rating'], $objectiveData['timeliness_rating']);
+                        // The owner proposes Q/E/T ratings in Draft. They remain provisional until
+                        // the assigned rater reviews them and moves the form to Rater Approved.
                         $this->db->where('id', $objectiveId)->update('ipcrf_objectives', $objectiveData);
                     } else {
-                        $objectiveData['quality_rating'] = 0;
-                        $objectiveData['efficiency_rating'] = 0;
-                        $objectiveData['timeliness_rating'] = 0;
                         $this->db->insert('ipcrf_objectives', $objectiveData);
                     }
                 }
@@ -587,43 +620,17 @@ class Ipcrf_model extends CI_Model
                     'form_id' => $formId, 'category' => trim((string) (isset($competency['category']) ? $competency['category'] : 'Core Behavioral Competency')),
                     'name' => trim((string) (isset($competency['name']) ? $competency['name'] : '')),
                     'indicators_json' => json_encode(array_values(array_filter(array_map('trim', (array) (isset($competency['indicators']) ? $competency['indicators'] : array())), 'strlen'))),
-                    'employee_rating' => (int) $this->safe_rating(isset($competency['employee_rating']) ? $competency['employee_rating'] : 0),
-                    'rater_rating' => (int) $this->safe_rating(isset($competency['rater_rating']) ? $competency['rater_rating'] : 0),
-                    'final_rating' => (int) $this->safe_rating(isset($competency['final_rating']) ? $competency['final_rating'] : 0),
+                    'rating' => (int) $this->safe_rating(isset($competency['rating']) ? $competency['rating'] : 0),
                     'sort_order' => $order + 1, 'is_deleted' => 0
                 );
                 if ($competencyId > 0 && $this->row_belongs('ipcrf_competencies', $competencyId, $formId)) {
-                    // Employee editing cannot overwrite ratings assigned by the rater or PMT.
-                    unset($competencyData['rater_rating'], $competencyData['final_rating']);
                     $this->db->where('id', $competencyId)->update('ipcrf_competencies', $competencyData);
                 } else {
-                    $competencyData['rater_rating'] = 0;
-                    $competencyData['final_rating'] = 0;
                     $this->db->insert('ipcrf_competencies', $competencyData);
                 }
             }
 
-            $this->db->where('form_id', (int) $formId)->update('ipcrf_development_plans', array('is_deleted' => 1));
-            $development = isset($payload['development']) && is_array($payload['development']) ? $payload['development'] : array();
-            foreach ($development as $order => $plan) {
-                $planId = isset($plan['id']) ? (int) $plan['id'] : 0;
-                $planData = array(
-                    'form_id' => $formId,
-                    'strengths' => trim((string) (isset($plan['strengths']) ? $plan['strengths'] : '')),
-                    'improvement_needs' => trim((string) (isset($plan['improvement_needs']) ? $plan['improvement_needs'] : '')),
-                    'learning_objectives' => trim((string) (isset($plan['learning_objectives']) ? $plan['learning_objectives'] : '')),
-                    'interventions' => trim((string) (isset($plan['interventions']) ? $plan['interventions'] : '')),
-                    'target_timeline' => trim((string) (isset($plan['target_timeline']) ? $plan['target_timeline'] : '')),
-                    'responsible_person' => trim((string) (isset($plan['responsible_person']) ? $plan['responsible_person'] : '')),
-                    'status_remarks' => trim((string) (isset($plan['status_remarks']) ? $plan['status_remarks'] : '')),
-                    'sort_order' => $order + 1, 'is_deleted' => 0
-                );
-                if ($planId > 0 && $this->row_belongs('ipcrf_development_plans', $planId, $formId)) {
-                    $this->db->where('id', $planId)->update('ipcrf_development_plans', $planData);
-                } else {
-                    $this->db->insert('ipcrf_development_plans', $planData);
-                }
-            }
+            $this->save_development_plans($formId, isset($payload['development']) ? $payload['development'] : array());
         } elseif ($scope === 'rater') {
             foreach ((array) (isset($payload['kras']) ? $payload['kras'] : array()) as $kra) {
                 foreach ((array) (isset($kra['objectives']) ? $kra['objectives'] : array()) as $objective) {
@@ -640,15 +647,18 @@ class Ipcrf_model extends CI_Model
             foreach ((array) (isset($payload['competencies']) ? $payload['competencies'] : array()) as $competency) {
                 $competencyId = isset($competency['id']) ? (int) $competency['id'] : 0;
                 if ($competencyId && $this->row_belongs('ipcrf_competencies', $competencyId, $formId)) {
-                    $this->db->where('id', $competencyId)->update('ipcrf_competencies', array('rater_rating' => (int) $this->safe_rating(isset($competency['rater_rating']) ? $competency['rater_rating'] : 0)));
+                    $this->db->where('id', $competencyId)->update('ipcrf_competencies', array('rating' => (int) $this->safe_rating(isset($competency['rating']) ? $competency['rating'] : 0)));
                 }
             }
+            // The assigned rater may complete or revise the Development Plan while
+            // reviewing the scores, without receiving access to owner-only KRA data.
+            $this->save_development_plans($formId, isset($payload['development']) ? $payload['development'] : array());
             $this->db->where('id', (int) $formId)->update('ipcrf_forms', array('updated_by' => $actor, 'updated_at' => $now));
         } elseif ($scope === 'pmt') {
             foreach ((array) (isset($payload['competencies']) ? $payload['competencies'] : array()) as $competency) {
                 $competencyId = isset($competency['id']) ? (int) $competency['id'] : 0;
                 if ($competencyId && $this->row_belongs('ipcrf_competencies', $competencyId, $formId)) {
-                    $this->db->where('id', $competencyId)->update('ipcrf_competencies', array('final_rating' => (int) $this->safe_rating(isset($competency['final_rating']) ? $competency['final_rating'] : 0)));
+                    $this->db->where('id', $competencyId)->update('ipcrf_competencies', array('rating' => (int) $this->safe_rating(isset($competency['rating']) ? $competency['rating'] : 0)));
                 }
             }
             $this->db->where('id', (int) $formId)->update('ipcrf_forms', array('updated_by' => $actor, 'updated_at' => $now));
@@ -656,6 +666,31 @@ class Ipcrf_model extends CI_Model
 
         $this->db->trans_complete();
         return $this->db->trans_status();
+    }
+
+    private function save_development_plans($formId, $development)
+    {
+        $this->db->where('form_id', (int) $formId)->update('ipcrf_development_plans', array('is_deleted' => 1));
+        foreach ((array) $development as $order => $plan) {
+            $planId = isset($plan['id']) ? (int) $plan['id'] : 0;
+            $planData = array(
+                'form_id' => $formId,
+                'strengths' => trim((string) (isset($plan['strengths']) ? $plan['strengths'] : '')),
+                'improvement_needs' => trim((string) (isset($plan['improvement_needs']) ? $plan['improvement_needs'] : '')),
+                'learning_objectives' => trim((string) (isset($plan['learning_objectives']) ? $plan['learning_objectives'] : '')),
+                'interventions' => trim((string) (isset($plan['interventions']) ? $plan['interventions'] : '')),
+                'target_timeline' => trim((string) (isset($plan['target_timeline']) ? $plan['target_timeline'] : '')),
+                'responsible_person' => trim((string) (isset($plan['responsible_person']) ? $plan['responsible_person'] : '')),
+                'status_remarks' => trim((string) (isset($plan['status_remarks']) ? $plan['status_remarks'] : '')),
+                'sort_order' => $order + 1,
+                'is_deleted' => 0
+            );
+            if ($planId > 0 && $this->row_belongs('ipcrf_development_plans', $planId, $formId)) {
+                $this->db->where('id', $planId)->update('ipcrf_development_plans', $planData);
+            } else {
+                $this->db->insert('ipcrf_development_plans', $planData);
+            }
+        }
     }
 
     private function row_belongs($table, $id, $formId)
@@ -733,7 +768,7 @@ class Ipcrf_model extends CI_Model
         $needsEmployee = in_array($stage, array('submit_rater', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_DRAFT, self::STATUS_RETURNED), TRUE));
         $needsRater = in_array($stage, array('rater_approve', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_SUBMITTED_RATER, self::STATUS_RATER_APPROVED), TRUE));
         $needsFinal = in_array($stage, array('pmt_validate', 'lock', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_SUBMITTED_PMT, self::STATUS_PMT_VALIDATED, self::STATUS_LOCKED), TRUE));
-        if ($needsEmployee && $accomplishmentMissing) {
+        if (($needsEmployee || $needsRater) && $accomplishmentMissing) {
             $errors[] = $accomplishmentMissing . ' objective accomplishment(s) are blank.';
         }
         if ($needsRater && $ratingMissing) {
@@ -742,23 +777,33 @@ class Ipcrf_model extends CI_Model
         if (empty($bundle['competencies'])) {
             $errors[] = 'At least one competency is required.';
         }
+        $needsCompetencyRating = $needsEmployee || $needsRater || $needsFinal;
         $competencyMissing = 0;
         foreach ($bundle['competencies'] as $competency) {
             if (trim($competency['name']) === '' || empty($competency['indicators'])) {
                 $competencyMissing++;
             }
-            if ($needsEmployee && (int) $competency['employee_rating'] < 1) {
-                $competencyMissing++;
-            }
-            if ($needsRater && (int) $competency['rater_rating'] < 1) {
-                $competencyMissing++;
-            }
-            if ($needsFinal && (int) $competency['final_rating'] < 1) {
+            if ($needsCompetencyRating && (int) $competency['rating'] < 1) {
                 $competencyMissing++;
             }
         }
         if ($competencyMissing) {
-            $errors[] = $competencyMissing . ' competency field(s) or stage rating(s) are incomplete.';
+            $errors[] = $competencyMissing . ' competency name, indicator, or rating field(s) are incomplete.';
+        }
+        if (empty($bundle['development'])) {
+            $errors[] = 'At least one Development Plan entry is required.';
+        } else {
+            $developmentMissing = 0;
+            foreach ($bundle['development'] as $plan) {
+                foreach (array('strengths', 'improvement_needs', 'learning_objectives', 'interventions', 'target_timeline', 'responsible_person') as $field) {
+                    if (trim((string) $plan[$field]) === '') {
+                        $developmentMissing++;
+                    }
+                }
+            }
+            if ($developmentMissing) {
+                $errors[] = $developmentMissing . ' Development Plan field(s) are incomplete.';
+            }
         }
         return $errors;
     }
@@ -810,7 +855,10 @@ class Ipcrf_model extends CI_Model
 
     public function can_view($form, $actor)
     {
-        return $this->is_pmt() || $this->is_admin() || $form['employee_id'] === $actor || $form['rater_id'] === $actor || $form['created_by'] === $actor;
+        if ($form['employee_id'] === $actor || $form['rater_id'] === $actor || $this->is_admin()) {
+            return TRUE;
+        }
+        return $this->is_pmt() && in_array($form['status'], array(self::STATUS_SUBMITTED_PMT, self::STATUS_PMT_VALIDATED, self::STATUS_LOCKED), TRUE);
     }
 
     public function edit_scope($form, $actor)
@@ -818,7 +866,7 @@ class Ipcrf_model extends CI_Model
         if ($this->is_admin() && in_array($form['status'], array(self::STATUS_DRAFT, self::STATUS_RETURNED), TRUE)) {
             return 'full';
         }
-        if (in_array($form['status'], array(self::STATUS_DRAFT, self::STATUS_RETURNED), TRUE) && ($form['employee_id'] === $actor || $form['created_by'] === $actor)) {
+        if (in_array($form['status'], array(self::STATUS_DRAFT, self::STATUS_RETURNED), TRUE) && $form['employee_id'] === $actor) {
             return 'full';
         }
         if ($form['status'] === self::STATUS_SUBMITTED_RATER && ($form['rater_id'] === $actor || $this->is_admin())) {

@@ -9,6 +9,24 @@
     var pendingSave = false;
     var dirty = false;
     var activeSave = null;
+    var reviewWarnings = config.reviewWarnings || [];
+
+    function setSaveState(status, message) {
+        var icons = {
+            pending: 'mdi-circle-edit-outline',
+            saving: 'mdi-loading mdi-spin',
+            saved: 'mdi-check-circle-outline',
+            error: 'mdi-alert-circle-outline'
+        };
+        $('#saveState')
+            .removeClass('is-pending is-saving is-saved is-error')
+            .addClass('is-' + status)
+            .html('<i class="mdi ' + icons[status] + '"></i><span>' + escapeHtml(message) + '</span>');
+    }
+
+    function showSavedNotice() {
+        toastr.success('Your latest changes are safely stored.', 'Changes saved');
+    }
 
     function escapeHtml(value) {
         return $('<div>').text(value == null ? '' : String(value)).html();
@@ -45,8 +63,7 @@
     }
 
     function initLanding() {
-        $('#startEmployee').select2(employeeSelectOptions('Search employee name or ID'));
-        $('#startRater').select2(employeeSelectOptions('Search assigned rater (optional)'));
+        $('#startRater').select2(employeeSelectOptions('Search assigned rater'));
         $('#startIpcrfForm').on('submit', function (event) {
             event.preventDefault();
             var $button = $(this).find('button[type="submit"]');
@@ -71,7 +88,7 @@
     }
 
     function newCompetency() {
-        return { id: 0, category: 'Core Behavioral Competency', name: '', indicators: [''], employee_rating: 0, rater_rating: 0, final_rating: 0 };
+        return { id: 0, category: 'Core Behavioral Competency', name: '', indicators: [], rating: 0 };
     }
 
     function newPlan() {
@@ -79,7 +96,15 @@
     }
 
     function isFull() { return scope === 'full'; }
-    function disabledUnlessFull() { return isFull() ? '' : ' disabled'; }
+    function canEditDevelopment() { return scope === 'full' || scope === 'rater'; }
+    function canEnterObjectiveRatings() { return scope === 'full' || scope === 'rater'; }
+    function ratingsAreApproved() {
+        return ['Rater Approved', 'Submitted to PMT', 'PMT Validated', 'Locked'].indexOf(state.form.status) !== -1;
+    }
+    function disabledUnlessDevelopmentEditor() { return canEditDevelopment() ? '' : ' disabled'; }
+    function editableAttribute(field, singleLine) {
+        return isFull() ? ' contenteditable="true" spellcheck="true" class="objective-inline-field js-objective-inline' + (singleLine ? ' single-line' : '') + '" data-field="' + field + '"' : ' class="objective-inline-field"';
+    }
 
     function ratingOptions(value, enabled) {
         var labels = { 0: '—', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5' };
@@ -90,6 +115,19 @@
         return html + '</select>';
     }
 
+    function competencyRatingOptions(value, enabled) {
+        var labels = { 0: '— Select rating —', 1: '1 — Rarely Demonstrates', 2: '2 — Sometimes Demonstrates', 3: '3 — Most of the Time', 4: '4 — Consistently Demonstrates', 5: '5 — Role Model' };
+        var html = '<select class="form-control ipcrf-input"' + (enabled ? '' : ' disabled') + '>';
+        Object.keys(labels).forEach(function (number) {
+            html += '<option value="' + number + '"' + (Number(value) === Number(number) ? ' selected' : '') + '>' + labels[number] + '</option>';
+        });
+        return html + '</select>';
+    }
+
+    function competencyEditableAttribute(field, singleLine) {
+        return isFull() ? ' contenteditable="true" spellcheck="true" class="competency-inline-field js-competency-inline' + (singleLine ? ' single-line' : '') + '" data-field="' + field + '"' : ' class="competency-inline-field"';
+    }
+
     function objectiveAverage(objective) {
         var q = Number(objective.quality_rating || 0);
         var e = Number(objective.efficiency_rating || 0);
@@ -97,17 +135,17 @@
         return q > 0 && e > 0 && t > 0 ? (q + e + t) / 3 : 0;
     }
 
-    function renderStandards(kraIndex, objectiveIndex, objective) {
-        var html = '<details class="standards-box"><summary>Quality, Efficiency and Timeliness Standards</summary><div class="standards-grid">';
-        html += '<div class="standard-head">Rate</div><div class="standard-head">Quality</div><div class="standard-head">Efficiency</div><div class="standard-head">Timeliness</div>';
-        ['5', '4', '3', '2', '1'].forEach(function (level) {
-            html += '<div class="scale-level">' + level + '</div>';
-            ['quality', 'efficiency', 'timeliness'].forEach(function (dimension) {
-                var value = objective[dimension] && objective[dimension][level] ? objective[dimension][level] : '';
-                html += '<div><textarea class="js-standard" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-dimension="' + dimension + '" data-level="' + level + '"' + disabledUnlessFull() + '>' + escapeHtml(value) + '</textarea></div>';
-            });
-        });
-        return html + '</div></details>';
+    function standardCompletion(objective, dimension) {
+        return ['5', '4', '3', '2', '1'].filter(function (level) {
+            return objective[dimension] && String(objective[dimension][level] || '').trim();
+        }).length;
+    }
+
+    function renderStandardCell(kraIndex, objectiveIndex, objective, dimension) {
+        var completed = standardCompletion(objective, dimension);
+        var statusClass = completed === 5 ? ' complete' : (completed > 0 ? ' partial' : ' empty');
+        var label = dimension.charAt(0).toUpperCase() + dimension.slice(1);
+        return '<div class="objective-standard-cell" data-label="' + label + '"><button type="button" class="standard-cell-button js-action' + statusClass + '" data-action="open-standards" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-dimension="' + dimension + '"><strong>Open 5 levels</strong><span class="standard-count">' + completed + ' / 5 complete</span><em>' + (isFull() ? 'View / Edit modal' : 'View modal') + '</em></button></div>';
     }
 
     function renderEvidence(kraIndex, objectiveIndex, objective) {
@@ -127,35 +165,47 @@
 
     function renderObjective(kraIndex, objectiveIndex, objective) {
         var average = objectiveAverage(objective);
-        var weighted = average * Number(objective.weight || 0) / 100;
-        var html = '<details class="objective-card">';
-        html += '<summary><span class="objective-code">' + escapeHtml(objective.code || (kraIndex + 1) + '.' + (objectiveIndex + 1)) + '</span><span class="objective-summary-text">' + escapeHtml(objective.objective || 'New objective') + '</span><span class="objective-timeline">' + escapeHtml(objective.timeline || 'No timeline') + '</span><span class="weight-chip">' + Number(objective.weight || 0).toFixed(2) + '%</span>';
+        var approved = ratingsAreApproved();
+        var weighted = approved ? average * Number(objective.weight || 0) / 100 : 0;
+        var html = '<div class="objective-row" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">';
+        html += '<div class="objective-code" data-label="Code"><div' + editableAttribute('code', true) + ' data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-placeholder="Code">' + escapeHtml(objective.code || (kraIndex + 1) + '.' + (objectiveIndex + 1)) + '</div></div>';
+        html += '<div class="objective-summary-cell" data-label="Objective"><div' + editableAttribute('objective', false) + ' data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-placeholder="Click to enter the objective">' + escapeHtml(objective.objective || '') + '</div>';
         if (isFull()) {
-            html += '<span class="icon-actions action-buttons"><button type="button" class="action-text-btn js-action" data-action="edit-objective" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Edit Details</button><button type="button" class="action-text-btn js-action" data-action="duplicate-objective" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Copy</button><button type="button" class="action-text-btn move js-action" data-action="objective-up" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" title="Move up">↑</button><button type="button" class="action-text-btn move js-action" data-action="objective-down" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" title="Move down">↓</button><button type="button" class="action-text-btn danger js-action" data-action="delete-objective" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Delete</button></span>';
-        } else {
-            html += '<span class="icon-actions action-buttons"><span class="ipcrf-muted">Open row for details</span></span>';
+            html += '<div class="dropdown objective-more-menu"><button type="button" class="row-more-button js-row-menu-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="More objective options">•••</button><div class="dropdown-menu dropdown-menu-right"><button type="button" class="dropdown-item js-action" data-action="duplicate-objective" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Copy objective</button><button type="button" class="dropdown-item js-action" data-action="objective-up" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Move up</button><button type="button" class="dropdown-item js-action" data-action="objective-down" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Move down</button><div class="dropdown-divider"></div><button type="button" class="dropdown-item text-danger js-action" data-action="delete-objective" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Delete objective</button></div></div>';
         }
-        html += '</summary><div class="objective-content"><div class="objective-detail-heading"><div><strong>Performance Standards and Results</strong><span>Complete the indicators, actual results, evidence and ratings below.</span></div>' + (isFull() ? '<button type="button" class="action-text-btn js-action" data-action="edit-objective" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Edit Objective Details</button>' : '') + '</div>' + renderStandards(kraIndex, objectiveIndex, objective);
-        html += '<div class="result-grid"><div><label class="ipcrf-label">Actual Results / Accomplishments</label><textarea rows="3" class="form-control ipcrf-input js-objective-field" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-field="accomplishment"' + disabledUnlessFull() + '>' + escapeHtml(objective.accomplishment) + '</textarea>' + renderEvidence(kraIndex, objectiveIndex, objective) + '</div>';
-        html += '<div><label class="ipcrf-label">Rater Q–E–T Rating</label><div class="rating-row">';
-        ['quality_rating', 'efficiency_rating', 'timeliness_rating'].forEach(function (field, index) {
-            html += '<div class="rating-cell"><span>' + ['QUALITY', 'EFFICIENCY', 'TIMELINESS'][index] + '</span><span class="js-objective-rating-wrap" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-field="' + field + '">' + ratingOptions(objective[field], scope === 'rater') + '</span></div>';
+        html += '</div>';
+        html += '<div class="objective-timeline" data-label="Timeline"><div' + editableAttribute('timeline', true) + ' data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-placeholder="Timeline">' + escapeHtml(objective.timeline || '') + '</div></div>';
+        html += '<div class="weight-chip" data-label="Weight"><div' + editableAttribute('weight', true) + ' data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-placeholder="0.00">' + Number(objective.weight || 0).toFixed(2) + '</div><span>%</span></div>';
+        ['quality', 'efficiency', 'timeliness'].forEach(function (dimension) {
+            html += renderStandardCell(kraIndex, objectiveIndex, objective, dimension);
         });
-        html += '</div><div class="objective-score">Average ' + average.toFixed(2) + ' · Weighted ' + weighted.toFixed(3) + '</div></div></div></div></details>';
-        return html;
+        html += '<div class="objective-actual-cell" data-label="Actual Result / Evidence"><div' + editableAttribute('accomplishment', false) + ' data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-placeholder="Click to enter the actual result / accomplishment">' + escapeHtml(objective.accomplishment || '') + '</div>' + renderEvidence(kraIndex, objectiveIndex, objective) + '</div>';
+        ['quality_rating', 'efficiency_rating', 'timeliness_rating'].forEach(function (field, ratingIndex) {
+            var ratingLabel = ['Q Rating', 'E Rating', 'T Rating'][ratingIndex];
+            html += '<div class="objective-rating-cell" data-label="' + ratingLabel + '" title="' + (scope === 'full' ? 'Owner proposed rating; the rater reviews this after submission.' : '') + '"><span class="js-objective-rating-wrap" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-field="' + field + '">' + ratingOptions(objective[field], canEnterObjectiveRatings()) + '</span></div>';
+        });
+        html += '<div class="objective-score-cell ' + (approved ? 'approved' : 'pending') + '" data-label="Rating / Score"><span>' + (approved ? 'Approved Average' : 'Proposed Average') + '</span><strong class="js-average-score">' + (average > 0 ? average.toFixed(2) : '—') + '</strong><small class="js-score-caption">' + (approved ? 'Weighted <b class="js-weighted-score">' + weighted.toFixed(3) + '</b>' : 'Pending rater approval<b class="js-weighted-score">0.000</b>') + '</small></div>';
+        return html + '</div>';
     }
 
     function renderKras() {
         var html = '';
         (state.kras || []).forEach(function (kra, kraIndex) {
             var weight = (kra.objectives || []).reduce(function (sum, objective) { return sum + Number(objective.weight || 0); }, 0);
-            html += '<details class="kra-card" id="kra-' + kraIndex + '"' + (kraIndex === 0 ? ' open' : '') + '><summary>';
-            html += '<span class="kra-pdf-label">Key Result Area</span><strong class="kra-title-display">' + escapeHtml(kra.title || 'Untitled KRA') + '</strong><span class="kra-meta">' + (kra.objectives || []).length + ' objective(s) · ' + weight.toFixed(2) + '%</span>';
+            var isOpen = kraIndex === 0;
+            html += '<details class="kra-card" id="kra-' + kraIndex + '"' + (isOpen ? ' open' : '') + '><summary>';
+            html += '<span class="kra-pdf-label">Key Result Area</span><strong class="kra-title-display js-kra-title" data-kra="' + kraIndex + '"' + (isFull() ? ' contenteditable="true" spellcheck="true" data-placeholder="KRA title"' : '') + '>' + escapeHtml(kra.title || '') + '</strong><span class="kra-meta">' + (kra.objectives || []).length + ' objective(s) · ' + weight.toFixed(2) + '%</span>';
+            html += '<span class="icon-actions action-buttons">';
             if (isFull()) {
-                html += '<span class="icon-actions action-buttons"><button type="button" class="action-text-btn js-action" data-action="edit-kra" data-kra="' + kraIndex + '">Edit KRA</button><button type="button" class="action-text-btn add js-action" data-action="add-objective" data-kra="' + kraIndex + '">+ Add Objective</button><button type="button" class="action-text-btn js-action" data-action="duplicate-kra" data-kra="' + kraIndex + '">Copy KRA</button><button type="button" class="action-text-btn move js-action" data-action="kra-up" data-kra="' + kraIndex + '" title="Move up">↑</button><button type="button" class="action-text-btn move js-action" data-action="kra-down" data-kra="' + kraIndex + '" title="Move down">↓</button><button type="button" class="action-text-btn danger js-action" data-action="delete-kra" data-kra="' + kraIndex + '">Delete</button></span>';
+                html += '<button type="button" class="action-text-btn add js-action" data-action="add-objective" data-kra="' + kraIndex + '">+ Add Objective</button><span class="dropdown"><button type="button" class="action-text-btn js-row-menu-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More •••</button><span class="dropdown-menu dropdown-menu-right"><button type="button" class="dropdown-item js-action" data-action="duplicate-kra" data-kra="' + kraIndex + '">Copy KRA</button><button type="button" class="dropdown-item js-action" data-action="kra-up" data-kra="' + kraIndex + '">Move KRA up</button><button type="button" class="dropdown-item js-action" data-action="kra-down" data-kra="' + kraIndex + '">Move KRA down</button><span class="dropdown-divider"></span><button type="button" class="dropdown-item text-danger js-action" data-action="delete-kra" data-kra="' + kraIndex + '">Delete KRA</button></span></span>';
             }
-            html += '</summary><div class="kra-content"><div class="kra-content-guide"><span><strong>Objectives in this KRA.</strong> Click a row to open its performance standards and results.</span>' + (isFull() ? '<button type="button" class="action-text-btn add js-action" data-action="add-objective" data-kra="' + kraIndex + '">+ Add Objective to this KRA</button>' : '') + '</div><div class="pdf-objective-header"><span>Code</span><span>Objectives</span><span>Timeline</span><span>Weight</span><span>Actions</span></div>';
-            (kra.objectives || []).forEach(function (objective, objectiveIndex) { html += renderObjective(kraIndex, objectiveIndex, objective); });
+            html += '<button type="button" class="action-text-btn details-toggle-button js-details-toggle" aria-expanded="' + (isOpen ? 'true' : 'false') + '" aria-controls="kra-content-' + kraIndex + '" title="' + (isOpen ? 'Fold this KRA table' : 'Open this KRA table') + '"><i class="mdi ' + (isOpen ? 'mdi-chevron-up' : 'mdi-chevron-down') + '"></i><span class="js-details-toggle-label">' + (isOpen ? 'Fold Table' : 'Open Table') + '</span></button></span>';
+            html += '</summary><div class="kra-content" id="kra-content-' + kraIndex + '"><div class="kra-content-guide"><span><strong>One objective per row.</strong> Click a Quality, Efficiency or Timeliness cell to view all five standard levels.</span>' + (isFull() ? '<button type="button" class="action-text-btn add js-action" data-action="add-objective" data-kra="' + kraIndex + '">+ Add Objective to this KRA</button>' : '') + '</div>';
+            if ((kra.objectives || []).length) {
+                html += '<div class="objective-table-scroll"><div class="objective-table-grid"><div class="pdf-objective-header"><span>Code</span><span>Objectives</span><span>Timeline</span><span>Weight</span><span>Quality</span><span>Efficiency</span><span>Timeliness</span><span>Actual Result / Evidence</span><span title="Owner proposal / rater review">Q Rating</span><span title="Owner proposal / rater review">E Rating</span><span title="Owner proposal / rater review">T Rating</span><span>Rating / Score</span></div>';
+                (kra.objectives || []).forEach(function (objective, objectiveIndex) { html += renderObjective(kraIndex, objectiveIndex, objective); });
+                html += '</div></div>';
+            }
             if (!(kra.objectives || []).length) html += '<div class="kra-empty-objectives">No objectives yet. Use <strong>+ Add Objective to this KRA</strong> above.</div>';
             if (isFull()) html += '<button class="add-dashed js-action" data-action="add-objective" data-kra="' + kraIndex + '" type="button"><i class="mdi mdi-plus mr-1"></i>Add Another Objective to ' + escapeHtml(kra.title || 'this KRA') + '</button>';
             html += '</div></details>';
@@ -164,19 +214,44 @@
         $('#kraContainer').html(html);
     }
 
+    function renderCompetencyRow(index, competency) {
+        var categories = ['Core Behavioral Competency', 'Core Skill', 'Leadership Competency'];
+        var html = '<div class="competency-table-row" data-competency="' + index + '">';
+        html += '<div class="competency-name-cell"><div' + competencyEditableAttribute('name', true) + ' data-competency="' + index + '" data-placeholder="Click to enter the competency name">' + escapeHtml(competency.name || '') + '</div>';
+        if (isFull()) {
+            html += '<div class="dropdown competency-more-menu"><button type="button" class="row-more-button js-row-menu-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="More competency options">•••</button><div class="dropdown-menu dropdown-menu-right"><button type="button" class="dropdown-item js-action" data-action="duplicate-competency" data-competency="' + index + '">Copy competency</button><button type="button" class="dropdown-item js-action" data-action="competency-up" data-competency="' + index + '">Move up</button><button type="button" class="dropdown-item js-action" data-action="competency-down" data-competency="' + index + '">Move down</button><div class="dropdown-divider"></div>';
+            categories.forEach(function (category) {
+                if (category !== competency.category) html += '<button type="button" class="dropdown-item js-action" data-action="competency-category" data-category="' + escapeAttr(category) + '" data-competency="' + index + '">Move to ' + escapeHtml(category) + '</button>';
+            });
+            html += '<div class="dropdown-divider"></div><button type="button" class="dropdown-item text-danger js-action" data-action="delete-competency" data-competency="' + index + '">Delete competency</button></div></div>';
+        }
+        html += '</div>';
+        html += '<div class="competency-indicators-cell"><div' + competencyEditableAttribute('indicators', false) + ' data-competency="' + index + '" data-placeholder="Click to enter behavioral indicators, one per line">' + escapeHtml((competency.indicators || []).join('\n')) + '</div></div>';
+        html += '<div class="competency-rating-cell"><span class="js-competency-rating-wrap" data-competency="' + index + '" data-field="rating">' + competencyRatingOptions(competency.rating, scope !== 'none') + '</span></div>';
+        return html + '</div>';
+    }
+
     function renderCompetencies() {
         var html = '';
-        (state.competencies || []).forEach(function (competency, index) {
-            html += '<div class="competency-card"><div class="competency-head">';
-            html += '<select class="form-control ipcrf-input js-competency-field" data-competency="' + index + '" data-field="category"' + disabledUnlessFull() + '><option' + (competency.category === 'Core Behavioral Competency' ? ' selected' : '') + '>Core Behavioral Competency</option><option' + (competency.category === 'Core Skill' ? ' selected' : '') + '>Core Skill</option><option' + (competency.category === 'Leadership Competency' ? ' selected' : '') + '>Leadership Competency</option></select>';
-            html += '<input class="form-control ipcrf-input js-competency-field" data-competency="' + index + '" data-field="name" value="' + escapeAttr(competency.name) + '" placeholder="Competency name"' + disabledUnlessFull() + '>';
-            if (isFull()) html += '<button class="btn-icon danger js-action" data-action="delete-competency" data-competency="' + index + '" title="Delete"><i class="mdi mdi-delete-outline"></i></button>';
-            html += '</div><div class="competency-body"><div><label class="ipcrf-label">Indicators (one per line)</label><textarea rows="5" class="form-control ipcrf-input js-competency-indicators" data-competency="' + index + '"' + disabledUnlessFull() + '>' + escapeHtml((competency.indicators || []).join('\n')) + '</textarea></div>';
-            html += '<div><label class="ipcrf-label">Ratings</label><div class="competency-ratings">';
-            [['employee_rating', 'Employee', scope === 'full'], ['rater_rating', 'Rater', scope === 'rater'], ['final_rating', 'Final', scope === 'pmt']].forEach(function (rating) {
-                html += '<div class="rating-cell"><span>' + rating[1].toUpperCase() + '</span><span class="js-competency-rating-wrap" data-competency="' + index + '" data-field="' + rating[0] + '">' + ratingOptions(competency[rating[0]], rating[2]) + '</span></div>';
+        var categories = ['Core Behavioral Competency', 'Core Skill', 'Leadership Competency'];
+        (state.competencies || []).forEach(function (competency) {
+            if (categories.indexOf(competency.category) === -1) categories.push(competency.category || 'Other Competency');
+        });
+        categories.forEach(function (category, categoryIndex) {
+            var rows = [];
+            (state.competencies || []).forEach(function (competency, index) {
+                if ((competency.category || 'Other Competency') === category) rows.push({ competency: competency, index: index });
             });
-            html += '</div></div></div></div>';
+            if (!rows.length) return;
+            var groupTitle = category === 'Core Behavioral Competency' ? 'Core Behavioral Competencies' : (category === 'Core Skill' ? 'Core Skills' : (category === 'Leadership Competency' ? 'Leadership Competencies' : category));
+            html += '<details class="competency-group-card" open><summary><span class="competency-group-label">Competency Group</span><strong>' + escapeHtml(groupTitle) + '</strong><span class="competency-group-count">' + rows.length + ' competency item(s)</span><span class="competency-group-actions">';
+            if (isFull()) html += '<button type="button" class="action-text-btn add js-action" data-action="add-competency" data-category="' + escapeAttr(category) + '">+ Add Competency</button>';
+            html += '<button type="button" class="action-text-btn details-toggle-button js-details-toggle" aria-expanded="true" aria-controls="competency-group-content-' + categoryIndex + '" title="Fold this competency table"><i class="mdi mdi-chevron-up"></i><span class="js-details-toggle-label">Fold Table</span></button></span>';
+            html += '</summary><div class="competency-group-content" id="competency-group-content-' + categoryIndex + '"><div class="competency-content-guide"><span><strong>Click text to edit.</strong> Enter one behavioral indicator per line and choose one Rating.</span></div><div class="competency-table-scroll"><div class="competency-table-grid"><div class="competency-table-header"><span>Competency</span><span>Behavioral Indicators</span><span>Rating</span></div>';
+            rows.forEach(function (row) { html += renderCompetencyRow(row.index, row.competency); });
+            html += '</div></div>';
+            if (isFull()) html += '<button type="button" class="add-dashed js-action" data-action="add-competency" data-category="' + escapeAttr(category) + '"><i class="mdi mdi-plus mr-1"></i>Add Another Competency to ' + escapeHtml(groupTitle) + '</button>';
+            html += '</div></details>';
         });
         if (!html) html = '<div class="text-center py-4 ipcrf-muted">No competencies yet. Load the preset or add a competency.</div>';
         $('#competencyContainer').html(html);
@@ -187,69 +262,53 @@
         (state.development || []).forEach(function (plan, index) {
             html += '<tr>';
             ['strengths', 'improvement_needs', 'learning_objectives', 'interventions'].forEach(function (field) {
-                html += '<td><textarea class="js-plan-field" data-plan="' + index + '" data-field="' + field + '"' + disabledUnlessFull() + '>' + escapeHtml(plan[field]) + '</textarea></td>';
+                html += '<td><textarea class="js-plan-field" data-plan="' + index + '" data-field="' + field + '"' + disabledUnlessDevelopmentEditor() + '>' + escapeHtml(plan[field]) + '</textarea></td>';
             });
             ['target_timeline', 'responsible_person'].forEach(function (field) {
-                html += '<td><input class="js-plan-field" data-plan="' + index + '" data-field="' + field + '" value="' + escapeAttr(plan[field]) + '"' + disabledUnlessFull() + '></td>';
+                html += '<td><input class="js-plan-field" data-plan="' + index + '" data-field="' + field + '" value="' + escapeAttr(plan[field]) + '"' + disabledUnlessDevelopmentEditor() + '></td>';
             });
-            html += '<td><textarea class="js-plan-field" data-plan="' + index + '" data-field="status_remarks"' + disabledUnlessFull() + '>' + escapeHtml(plan.status_remarks) + '</textarea></td>';
-            html += '<td>' + (isFull() ? '<button type="button" class="btn-icon danger js-action" data-action="delete-plan" data-plan="' + index + '"><i class="mdi mdi-delete-outline"></i></button>' : '') + '</td></tr>';
+            html += '<td><textarea class="js-plan-field" data-plan="' + index + '" data-field="status_remarks"' + disabledUnlessDevelopmentEditor() + '>' + escapeHtml(plan.status_remarks) + '</textarea></td>';
+            html += '<td>' + (canEditDevelopment() ? '<button type="button" class="btn-icon danger js-action" data-action="delete-plan" data-plan="' + index + '" title="Delete development entry"><i class="mdi mdi-delete-outline"></i></button>' : '') + '</td></tr>';
         });
         if (!html) html = '<tr><td colspan="8" class="text-center ipcrf-muted py-4">No development plan rows yet.</td></tr>';
         $('#developmentContainer').html(html);
     }
 
-    function calculateSummary() {
-        var weight = 0, score = 0, ratedWeight = 0, objectiveCount = 0, accomplishments = 0, standardGaps = 0;
-        (state.kras || []).forEach(function (kra) {
-            (kra.objectives || []).forEach(function (objective) {
-                objectiveCount++;
-                var objectiveWeight = Number(objective.weight || 0);
-                var average = objectiveAverage(objective);
-                weight += objectiveWeight;
-                if (String(objective.accomplishment || '').trim()) accomplishments++;
-                ['quality', 'efficiency', 'timeliness'].forEach(function (dimension) {
-                    ['5', '4', '3', '2', '1'].forEach(function (level) {
-                        if (!objective[dimension] || !String(objective[dimension][level] || '').trim()) standardGaps++;
-                    });
-                });
-                if (average > 0) { score += average * objectiveWeight / 100; ratedWeight += objectiveWeight; }
-            });
-        });
-        var overall = ratedWeight > 0 ? score / (ratedWeight / 100) : 0;
-        var adjectival = 'Not yet rated';
-        if (overall >= 4.5) adjectival = 'Outstanding';
-        else if (overall >= 3.5) adjectival = 'Very Satisfactory';
-        else if (overall >= 2.5) adjectival = 'Satisfactory';
-        else if (overall >= 1.5) adjectival = 'Unsatisfactory';
-        else if (overall >= 1) adjectival = 'Poor';
-        return { weight: weight, score: score, ratedWeight: ratedWeight, overall: overall, adjectival: adjectival, objectiveCount: objectiveCount, accomplishments: accomplishments, standardGaps: standardGaps };
+    function renderTrackingHistory() {
+        var historyItems = state.history || [];
+        $('#historyCurrentStatus').text(state.form.status);
+        $('#historyEntryCount').text(historyItems.length + ' recorded transition' + (historyItems.length === 1 ? '' : 's'));
+        $('#historyList').html(historyItems.map(function (history) {
+            var fromStatus = history.from_status || 'Started';
+            var toStatus = history.to_status || state.form.status;
+            var actor = history.acted_by_name || history.acted_by || 'System';
+            var html = '<div class="history-item"><strong>' + escapeHtml(toStatus) + '</strong>';
+            html += '<span class="history-transition">' + escapeHtml(fromStatus) + ' <i class="mdi mdi-arrow-right"></i> ' + escapeHtml(toStatus) + '</span>';
+            html += '<span>' + escapeHtml(actor) + ' · ' + escapeHtml(history.acted_at) + '</span>';
+            if (history.remarks) html += '<span class="history-remarks">' + escapeHtml(history.remarks) + '</span>';
+            return html + '</div>';
+        }).join('') || '<div class="tracking-empty"><i class="mdi mdi-timeline-clock-outline"></i><strong>No transitions recorded yet</strong><span>This IPCRF is still in its initial ' + escapeHtml(state.form.status) + ' stage.</span></div>');
     }
 
-    function renderSummary() {
-        var summary = calculateSummary();
-        var clamped = Math.max(0, Math.min(100, summary.weight));
-        var ringColor = Math.abs(summary.weight - 100) < 0.01 ? '#0f9f8f' : (summary.weight > 100 ? '#d84a4a' : '#f5b942');
-        $('#weightRing').css('background', 'conic-gradient(' + ringColor + ' ' + (clamped * 3.6) + 'deg, #e8edf5 0deg)');
-        $('#weightTotal').text(summary.weight.toFixed(2) + '%');
-        $('#toolbarWeight').text('Weight ' + summary.weight.toFixed(2) + '%');
-        $('#openSummaryBtn').toggleClass('weight-ready', Math.abs(summary.weight - 100) < .01).toggleClass('weight-warning', Math.abs(summary.weight - 100) >= .01);
-        var variance = summary.weight - 100;
-        $('#weightVariance').text((variance > 0 ? '+' : variance < 0 ? '−' : '') + Math.abs(variance).toFixed(2) + '%').css('color', Math.abs(variance) < .01 ? '#0f9f8f' : '#d84a4a');
-        $('#weightedScore').text(summary.score.toFixed(3));
-        $('#overallRating').text(summary.overall.toFixed(3));
-        $('#adjectivalRating').text(summary.adjectival);
-        var employeeRatings = (state.competencies || []).filter(function (c) { return Number(c.employee_rating) > 0; }).length;
-        var checks = [
-            { valid: Math.abs(summary.weight - 100) < .01, label: 'Total weight is exactly 100%' },
-            { valid: summary.objectiveCount > 0 && summary.standardGaps === 0, label: summary.standardGaps ? summary.standardGaps + ' performance indicator field(s) incomplete' : 'All performance indicators are complete' },
-            { valid: summary.objectiveCount > 0 && summary.accomplishments === summary.objectiveCount, label: summary.accomplishments + ' of ' + summary.objectiveCount + ' accomplishments entered' },
-            { valid: state.competencies && state.competencies.length > 0 && employeeRatings === state.competencies.length, label: employeeRatings + ' of ' + (state.competencies || []).length + ' employee competency ratings entered' }
-        ];
-        $('#validationSummary').html(checks.map(function (check) { return '<li class="' + (check.valid ? 'valid' : '') + '"><i class="mdi ' + (check.valid ? 'mdi-check-circle' : 'mdi-alert-circle-outline') + '"></i><span>' + escapeHtml(check.label) + '</span></li>'; }).join(''));
-        $('#historyList').html((state.history || []).map(function (history) {
-            return '<div class="history-item"><strong>' + escapeHtml(history.to_status) + '</strong><span>' + escapeHtml(history.acted_by_name || history.acted_by) + ' · ' + escapeHtml(history.acted_at) + '</span>' + (history.remarks ? '<span>' + escapeHtml(history.remarks) + '</span>' : '') + '</div>';
-        }).join('') || '<span class="ipcrf-muted">No workflow activity yet.</span>');
+    function renderMissingItems() {
+        var count = (reviewWarnings || []).length;
+        $('#missingItemsCount').text(count);
+        $('#missingItemsBtn').prop('hidden', count === 0).toggle(count > 0);
+    }
+
+    function showMissingItems() {
+        if (!(reviewWarnings || []).length) {
+            renderMissingItems();
+            return;
+        }
+        var items = reviewWarnings.map(function (warning) { return '<li>' + escapeHtml(warning) + '</li>'; }).join('');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Incomplete items found',
+            html: '<p class="submission-warning-intro">These items are still incomplete. They are warnings and will not prevent employee submission or rater approval.</p><ul class="submission-warning-list">' + items + '</ul>',
+            confirmButtonText: 'Return to Form',
+            confirmButtonColor: '#3157c8'
+        });
     }
 
     function actionButton(action, label, icon, style) {
@@ -263,7 +322,7 @@
         if ((status === 'Draft' || status === 'Returned for Revision') && scope === 'full') {
             html = actionButton('submit_rater', 'Submit to Rater', 'mdi-send-outline', 'btn-success');
         } else if (status === 'Submitted to Rater' && (form.rater_id === config.actor || config.isAdmin)) {
-            html = actionButton('rater_approve', 'Rater Approve', 'mdi-check-decagram', 'btn-success') + actionButton('return_revision', 'Return', 'mdi-undo-variant', 'btn-soft-danger ml-2');
+            html = actionButton('rater_approve', 'Approve IPCRF', 'mdi-check-decagram', 'btn-success') + actionButton('return_revision', 'Return with Remarks', 'mdi-undo-variant', 'btn-soft-danger ml-2');
         } else if (status === 'Rater Approved' && (form.rater_id === config.actor || config.isAdmin)) {
             html = actionButton('submit_pmt', 'Submit to PMT', 'mdi-send-check-outline', 'btn-success');
         } else if (status === 'Submitted to PMT' && config.isPmt) {
@@ -281,17 +340,17 @@
         renderKras();
         renderCompetencies();
         renderDevelopment();
-        renderSummary();
+        renderTrackingHistory();
+        renderMissingItems();
         renderWorkflow();
     }
 
     function markDirty() {
         if (scope === 'none') return;
         dirty = true;
-        $('#saveState').text('Unsaved changes').css('color', '#b77b08');
+        setSaveState('pending', 'Changes waiting to save');
         clearTimeout(saveTimer);
         saveTimer = setTimeout(function () { saveDraft(false); }, 1100);
-        renderSummary();
     }
 
     function mergeServerIds(bundle) {
@@ -326,9 +385,10 @@
         }
         saving = true;
         var failed = false;
+        var hadChanges = dirty;
         dirty = false;
         pendingSave = false;
-        $('#saveState').text('Saving…').css('color', '#3157c8');
+        setSaveState('saving', 'Saving changes…');
         $('#saveDraftBtn').prop('disabled', true);
         activeSave = $.ajax({
             url: config.urls.save,
@@ -338,12 +398,18 @@
             data: JSON.stringify(state)
         }).done(function (response) {
             mergeServerIds(response.bundle);
-            $('#saveState').text('Saved ' + response.saved_at).css('color', '#0f9f8f');
-            if (showToast) toastr.success(response.message || 'Changes saved.');
+            reviewWarnings = response.review_warnings || [];
+            renderMissingItems();
+            if (pendingSave || dirty) {
+                setSaveState('saving', 'Saving latest changes…');
+            } else {
+                setSaveState('saved', 'Saved ' + response.saved_at);
+                if (hadChanges || showToast) showSavedNotice();
+            }
         }).fail(function (xhr) {
             failed = true;
             dirty = true;
-            $('#saveState').text('Save failed').css('color', '#d84a4a');
+            setSaveState('error', 'Save failed — changes retained');
             showError(xhr, 'The draft could not be saved.');
         }).always(function () {
             saving = false;
@@ -365,27 +431,37 @@
         items.splice(to, 0, items.splice(from, 1)[0]);
     }
 
+    function moveCompetency(index, direction) {
+        var category = state.competencies[index].category;
+        var indexes = [];
+        state.competencies.forEach(function (competency, competencyIndex) {
+            if (competency.category === category) indexes.push(competencyIndex);
+        });
+        var position = indexes.indexOf(index);
+        var target = indexes[position + direction];
+        if (typeof target === 'undefined') return;
+        var current = state.competencies[index];
+        state.competencies[index] = state.competencies[target];
+        state.competencies[target] = current;
+    }
+
     function defaultTimeline() {
         var year = state.form && state.form.period_start ? String(state.form.period_start).substring(0, 4) : String(new Date().getFullYear());
         return 'January to December ' + year;
     }
 
     function openKraEditor(index) {
-        var isNew = index < 0;
         $('#kraEditorIndex').val(index);
-        $('#kraEditorName').val(isNew ? '' : state.kras[index].title);
-        $('#kraEditorTitle').text(isNew ? 'Add New KRA' : 'Edit KRA');
+        $('#kraEditorName').val('');
+        $('#kraEditorTitle').text('Add New KRA');
         $('#kraEditorModal').modal('show');
         setTimeout(function () { $('#kraEditorName').trigger('focus'); }, 250);
     }
 
     function openObjectiveEditor(kraIndex, objectiveIndex) {
-        var isNew = objectiveIndex < 0;
-        var objective = isNew ? newObjective() : state.kras[kraIndex].objectives[objectiveIndex];
-        if (isNew) {
-            objective.code = (kraIndex + 1) + '.' + ((state.kras[kraIndex].objectives || []).length + 1);
-            objective.timeline = defaultTimeline();
-        }
+        var objective = newObjective();
+        objective.code = (kraIndex + 1) + '.' + ((state.kras[kraIndex].objectives || []).length + 1);
+        objective.timeline = defaultTimeline();
         $('#objectiveEditorKra').val(kraIndex);
         $('#objectiveEditorIndex').val(objectiveIndex);
         $('#objectiveEditorCode').val(objective.code || '');
@@ -393,9 +469,63 @@
         $('#objectiveEditorTimeline').val(objective.timeline || defaultTimeline());
         $('#objectiveEditorWeight').val(Number(objective.weight || 0));
         $('#objectiveKraLabel').text(state.kras[kraIndex].title || 'Objective');
-        $('#objectiveEditorTitle').text(isNew ? 'Add New Objective' : 'Edit Objective Details');
+        $('#objectiveEditorTitle').text('Add New Objective');
         $('#objectiveEditorModal').modal('show');
         setTimeout(function () { $('#objectiveEditorText').trigger('focus'); }, 250);
+    }
+
+    function openCompetencyEditor(category) {
+        $('#competencyEditorCategory').val(category || 'Core Behavioral Competency');
+        $('#competencyEditorName').val('');
+        $('#competencyEditorIndicators').val('');
+        $('#competencyEditorModal').modal('show');
+        setTimeout(function () { $('#competencyEditorName').trigger('focus'); }, 250);
+    }
+
+    function openDevelopmentEditor() {
+        $('#developmentEditorForm')[0].reset();
+        $('#developmentEditorModal').modal('show');
+        setTimeout(function () { $('#developmentStrengths').trigger('focus'); }, 250);
+    }
+
+    function openStandardsEditor(kraIndex, objectiveIndex, focusDimension) {
+        var objective = state.kras[kraIndex].objectives[objectiveIndex];
+        $('#standardsEditorKra').val(kraIndex);
+        $('#standardsEditorObjective').val(objectiveIndex);
+        $('#standardsObjectiveLabel').text((objective.code || (kraIndex + 1) + '.' + (objectiveIndex + 1)) + ' · ' + (objective.objective || 'Objective'));
+        $('.js-standard-modal-input').each(function () {
+            var dimension = String($(this).data('dimension'));
+            var level = String($(this).data('level'));
+            $(this).val(objective[dimension] && objective[dimension][level] ? objective[dimension][level] : '').prop('disabled', !isFull());
+        });
+        $('#standardsSaveBtn').toggle(isFull());
+        $('#standardsCancelBtn').text(isFull() ? 'Cancel' : 'Close');
+        $('#standardsEditorModal').removeClass('focus-quality focus-efficiency focus-timeliness').addClass('focus-' + focusDimension).modal('show');
+        $('#standardsEditorModal').one('shown.bs.modal', function () {
+            if (isFull()) $('.js-standard-modal-input[data-dimension="' + focusDimension + '"][data-level="5"]').trigger('focus');
+        });
+    }
+
+    function updateStandardsCells(kraIndex, objectiveIndex) {
+        var objective = state.kras[kraIndex].objectives[objectiveIndex];
+        var $row = $('.objective-row[data-kra="' + kraIndex + '"][data-objective="' + objectiveIndex + '"]');
+        ['quality', 'efficiency', 'timeliness'].forEach(function (dimension) {
+            var completed = standardCompletion(objective, dimension);
+            var $button = $row.find('[data-action="open-standards"][data-dimension="' + dimension + '"]');
+            $button.removeClass('complete partial empty').addClass(completed === 5 ? 'complete' : (completed > 0 ? 'partial' : 'empty'));
+            $button.find('.standard-count').text(completed + ' / 5 complete');
+        });
+    }
+
+    function updateObjectiveScore(kraIndex, objectiveIndex) {
+        var objective = state.kras[kraIndex].objectives[objectiveIndex];
+        var average = objectiveAverage(objective);
+        var approved = ratingsAreApproved();
+        var weighted = approved ? average * Number(objective.weight || 0) / 100 : 0;
+        var $row = $('.objective-row[data-kra="' + kraIndex + '"][data-objective="' + objectiveIndex + '"]');
+        $row.find('.js-average-score').text(average > 0 ? average.toFixed(2) : '—');
+        $row.find('.js-weighted-score').text(weighted.toFixed(3));
+        $row.find('.js-score-caption').html(approved ? 'Weighted <b class="js-weighted-score">' + weighted.toFixed(3) + '</b>' : 'Pending rater approval<b class="js-weighted-score">0.000</b>');
     }
 
     function focusObjective(kraIndex, objectiveIndex) {
@@ -403,10 +533,11 @@
             var kra = document.getElementById('kra-' + kraIndex);
             if (!kra) return;
             kra.open = true;
-            var objectives = kra.querySelectorAll('.objective-card');
+            var objectives = kra.querySelectorAll('.objective-row');
             if (objectives[objectiveIndex]) {
-                objectives[objectiveIndex].open = true;
+                objectives[objectiveIndex].classList.add('objective-row-highlight');
                 objectives[objectiveIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(function () { objectives[objectiveIndex].classList.remove('objective-row-highlight'); }, 1800);
             }
         }, 180);
     }
@@ -421,6 +552,15 @@
         $modal.modal('hide');
     }
 
+    function syncDetailsToggle(details) {
+        var isOpen = Boolean(details.open);
+        var $button = $(details).children('summary').find('.js-details-toggle').first();
+        $button.attr('aria-expanded', isOpen ? 'true' : 'false')
+            .attr('title', isOpen ? 'Fold this table' : 'Open this table');
+        $button.find('.js-details-toggle-label').text(isOpen ? 'Fold Table' : 'Open Table');
+        $button.find('i').removeClass('mdi-chevron-up mdi-chevron-down').addClass(isOpen ? 'mdi-chevron-up' : 'mdi-chevron-down');
+    }
+
     function handleAction(action, $button) {
         var k = Number($button.data('kra'));
         var o = Number($button.data('objective'));
@@ -429,11 +569,11 @@
         if (action === 'add-objective') {
             openObjectiveEditor(k, -1);
             return;
-        } else if (action === 'edit-objective') {
-            openObjectiveEditor(k, o);
+        } else if (action === 'add-competency') {
+            openCompetencyEditor(String($button.data('category') || 'Core Behavioral Competency'));
             return;
-        } else if (action === 'edit-kra') {
-            openKraEditor(k);
+        } else if (action === 'open-standards') {
+            openStandardsEditor(k, o, String($button.data('dimension')));
             return;
         } else if (action === 'duplicate-objective') {
             var objectiveCopy = JSON.parse(JSON.stringify(state.kras[k].objectives[o]));
@@ -451,6 +591,14 @@
         } else if (action === 'delete-kra') state.kras.splice(k, 1);
         else if (action === 'kra-up') moveItem(state.kras, k, k - 1);
         else if (action === 'kra-down') moveItem(state.kras, k, k + 1);
+        else if (action === 'duplicate-competency') {
+            var competencyCopy = JSON.parse(JSON.stringify(state.competencies[c]));
+            competencyCopy.id = 0;
+            state.competencies.splice(c + 1, 0, competencyCopy);
+        }
+        else if (action === 'competency-up') moveCompetency(c, -1);
+        else if (action === 'competency-down') moveCompetency(c, 1);
+        else if (action === 'competency-category') state.competencies[c].category = String($button.data('category'));
         else if (action === 'delete-competency') state.competencies.splice(c, 1);
         else if (action === 'delete-plan') state.development.splice(p, 1);
         structuralChange();
@@ -476,14 +624,47 @@
             var action = $button.data('action');
             if (String(action).indexOf('delete-') === 0) {
                 var itemLabel = action === 'delete-kra' ? 'this KRA and all of its objectives' : (action === 'delete-objective' ? 'this objective' : 'this item');
-                Swal.fire({ icon: 'warning', title: 'Delete ' + itemLabel + '?', text: 'This change will be saved to the Draft.', showCancelButton: true, confirmButtonText: 'Yes, delete it', confirmButtonColor: '#c44949' }).then(function (result) {
+                Swal.fire({ icon: 'warning', title: 'Delete ' + itemLabel + '?', text: 'This change will be saved to the IPCRF.', showCancelButton: true, confirmButtonText: 'Yes, delete it', confirmButtonColor: '#c44949' }).then(function (result) {
                     if (result.value) handleAction(action, $button);
                 });
                 return;
             }
             handleAction(action, $button);
         });
-        $(document).on('input', '.js-kra-title', function () { state.kras[Number($(this).data('kra'))].title = this.value; markDirty(); });
+        $(document).on('click', '.js-details-toggle', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var details = $(this).closest('details')[0];
+            if (details) details.open = !details.open;
+        });
+        document.addEventListener('toggle', function (event) {
+            if ($(event.target).is('.kra-card, .competency-group-card')) syncDetailsToggle(event.target);
+        }, true);
+        $(document).on('click', '.js-kra-title, .js-row-menu-toggle', function (event) { event.stopPropagation(); });
+        $(document).on('keydown', '.js-kra-title, .js-objective-inline.single-line, .js-competency-inline.single-line', function (event) {
+            if (event.key === 'Enter') { event.preventDefault(); this.blur(); }
+        });
+        $(document).on('input', '.js-kra-title', function () {
+            state.kras[Number($(this).data('kra'))].title = String(this.innerText || this.textContent || '').replace(/\u00a0/g, ' ');
+            markDirty();
+        });
+        $(document).on('input', '.js-objective-inline', function () {
+            var kraIndex = Number($(this).data('kra'));
+            var objectiveIndex = Number($(this).data('objective'));
+            var field = String($(this).data('field'));
+            var value = String(this.innerText || this.textContent || '').replace(/\u00a0/g, ' ');
+            state.kras[kraIndex].objectives[objectiveIndex][field] = field === 'weight' ? Math.max(0, Math.min(100, Number(value.replace(/[^0-9.]/g, '')) || 0)) : value;
+            if (field === 'weight') {
+                updateObjectiveScore(kraIndex, objectiveIndex);
+                var kraWeight = (state.kras[kraIndex].objectives || []).reduce(function (sum, objective) { return sum + Number(objective.weight || 0); }, 0);
+                $('#kra-' + kraIndex + ' .kra-meta').first().text((state.kras[kraIndex].objectives || []).length + ' objective(s) · ' + kraWeight.toFixed(2) + '%');
+            }
+            markDirty();
+        });
+        $(document).on('blur', '.js-objective-inline[data-field="weight"]', function () {
+            var objective = state.kras[Number($(this).data('kra'))].objectives[Number($(this).data('objective'))];
+            $(this).text(Number(objective.weight || 0).toFixed(2));
+        });
         $(document).on('input change', '.js-objective-field', function () {
             var objective = state.kras[Number($(this).data('kra'))].objectives[Number($(this).data('objective'))];
             objective[$(this).data('field')] = $(this).data('field') === 'weight' ? Number(this.value || 0) : this.value;
@@ -496,11 +677,19 @@
         });
         $(document).on('change', '.js-objective-rating-wrap select', function () {
             var $wrap = $(this).closest('.js-objective-rating-wrap');
-            state.kras[Number($wrap.data('kra'))].objectives[Number($wrap.data('objective'))][$wrap.data('field')] = Number(this.value);
+            var kraIndex = Number($wrap.data('kra'));
+            var objectiveIndex = Number($wrap.data('objective'));
+            state.kras[kraIndex].objectives[objectiveIndex][$wrap.data('field')] = Number(this.value);
+            updateObjectiveScore(kraIndex, objectiveIndex);
             markDirty();
         });
-        $(document).on('input change', '.js-competency-field', function () { state.competencies[Number($(this).data('competency'))][$(this).data('field')] = this.value; markDirty(); });
-        $(document).on('input', '.js-competency-indicators', function () { state.competencies[Number($(this).data('competency'))].indicators = this.value.split(/\r?\n/); markDirty(); });
+        $(document).on('input', '.js-competency-inline', function () {
+            var competency = state.competencies[Number($(this).data('competency'))];
+            var field = String($(this).data('field'));
+            var value = String(this.innerText || this.textContent || '').replace(/\u00a0/g, ' ');
+            competency[field] = field === 'indicators' ? value.split(/\r?\n/) : value;
+            markDirty();
+        });
         $(document).on('change', '.js-competency-rating-wrap select', function () {
             var $wrap = $(this).closest('.js-competency-rating-wrap');
             state.competencies[Number($wrap.data('competency'))][$wrap.data('field')] = Number(this.value);
@@ -510,9 +699,12 @@
         $(document).on('change', '.js-header-field', function () { state.form[$(this).data('field')] = this.value; markDirty(); });
 
         $('#addKraBtn').on('click', function () { openKraEditor(-1); });
-        $('#addCompetencyBtn').on('click', function () { state.competencies.push(newCompetency()); structuralChange(); });
-        $('#addPlanBtn').on('click', function () { state.development.push(newPlan()); structuralChange(); });
+        $('#addCompetencyBtn').on('click', function () { openCompetencyEditor('Core Behavioral Competency'); });
+        $('#addPlanBtn').on('click', openDevelopmentEditor);
         $('#saveDraftBtn').on('click', function () { saveDraft(true); });
+        $('#missingItemsBtn').on('click', function () {
+            saveDraft(false).then(showMissingItems);
+        });
 
         $('#kraEditorForm').on('submit', function (event) {
             event.preventDefault();
@@ -558,7 +750,79 @@
             hideModalThen($('#objectiveEditorModal'), function () {
                 structuralChange();
                 focusObjective(kraIndex, objectiveIndex);
-                toastr.success(isNew ? 'Objective added. Complete its indicators and results below.' : 'Objective details updated.');
+                toastr.success(isNew ? 'Objective added. Use the Q, E or T standards cells and enter the actual result in its row.' : 'Objective details updated.');
+            });
+        });
+
+        $('#standardsEditorForm').on('submit', function (event) {
+            event.preventDefault();
+            if (!isFull()) {
+                $('#standardsEditorModal').modal('hide');
+                return;
+            }
+            var kraIndex = Number($('#standardsEditorKra').val());
+            var objectiveIndex = Number($('#standardsEditorObjective').val());
+            var objective = state.kras[kraIndex].objectives[objectiveIndex];
+            $('.js-standard-modal-input').each(function () {
+                var dimension = String($(this).data('dimension'));
+                var level = String($(this).data('level'));
+                objective[dimension] = objective[dimension] || emptyStandards();
+                objective[dimension][level] = this.value;
+            });
+            hideModalThen($('#standardsEditorModal'), function () {
+                updateStandardsCells(kraIndex, objectiveIndex);
+                markDirty();
+                toastr.success('Quality, Efficiency and Timeliness standards updated.');
+            });
+        });
+
+        $('#competencyEditorForm').on('submit', function (event) {
+            event.preventDefault();
+            var name = String($('#competencyEditorName').val() || '').trim();
+            var indicators = String($('#competencyEditorIndicators').val() || '').split(/\r?\n/).map(function (indicator) { return indicator.trim(); }).filter(Boolean);
+            if (!name) { $('#competencyEditorName').trigger('focus'); return; }
+            if (!indicators.length) { $('#competencyEditorIndicators').trigger('focus'); return; }
+            var competency = newCompetency();
+            competency.category = String($('#competencyEditorCategory').val() || 'Core Behavioral Competency');
+            competency.name = name;
+            competency.indicators = indicators;
+            var competencyIndex = state.competencies.length;
+            state.competencies.push(competency);
+            hideModalThen($('#competencyEditorModal'), function () {
+                structuralChange();
+                setTimeout(function () {
+                    var row = document.querySelector('.competency-table-row[data-competency="' + competencyIndex + '"]');
+                    if (row) {
+                        row.classList.add('competency-row-highlight');
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(function () { row.classList.remove('competency-row-highlight'); }, 1800);
+                    }
+                }, 180);
+                toastr.success('Competency added. Choose its Rating when ready.');
+            });
+        });
+
+        $('#developmentEditorForm').on('submit', function (event) {
+            event.preventDefault();
+            var plan = newPlan();
+            plan.strengths = String($('#developmentStrengths').val() || '').trim();
+            plan.improvement_needs = String($('#developmentNeeds').val() || '').trim();
+            plan.learning_objectives = String($('#developmentObjectives').val() || '').trim();
+            plan.interventions = String($('#developmentInterventions').val() || '').trim();
+            plan.target_timeline = String($('#developmentTimeline').val() || '').trim();
+            plan.responsible_person = String($('#developmentResponsible').val() || '').trim();
+            plan.status_remarks = String($('#developmentRemarks').val() || '').trim();
+            var hasContent = Object.keys(plan).some(function (field) { return field !== 'id' && String(plan[field] || '').trim(); });
+            if (!hasContent) {
+                $('#developmentStrengths').trigger('focus');
+                toastr.warning('Enter at least one Development Plan detail before adding the entry.');
+                return;
+            }
+            state.development.push(plan);
+            hideModalThen($('#developmentEditorModal'), function () {
+                structuralChange();
+                document.getElementById('developmentSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                toastr.success('Development Plan entry added. You can continue editing it in the table.');
             });
         });
 
@@ -568,18 +832,8 @@
             Swal.fire({ title: 'Load IPCRF preset', text: 'The preset is copied into this employee form and replaces its current KRAs and competencies.', input: 'select', inputOptions: options, showCancelButton: true, confirmButtonText: 'Load Preset', confirmButtonColor: '#3157c8' }).then(function (result) {
                 if (!result.value) return;
                 $.post(config.urls.loadPreset, { template_id: result.value }, null, 'json').done(function (response) {
-                    state = response.bundle; renderAll(); toastr.success(response.message);
+                    state = response.bundle; reviewWarnings = response.review_warnings || []; renderAll(); toastr.success(response.message);
                 }).fail(function (xhr) { showError(xhr, 'The preset could not be loaded.'); });
-            });
-        });
-
-        $('#validateBtn, #modalValidateBtn').on('click', function () {
-            $('#summaryModal').modal('hide');
-            var proceed = scope === 'none' ? $.Deferred().resolve().promise() : saveDraft(false);
-            proceed.then(function () {
-                $.getJSON(config.urls.validate).done(function (response) {
-                    Swal.fire({ icon: 'success', title: 'Validation passed', text: response.message, confirmButtonColor: '#3157c8' });
-                }).fail(function (xhr) { showError(xhr, 'Validation found incomplete requirements.'); });
             });
         });
 
@@ -587,13 +841,39 @@
             var action = $(this).data('action');
             var needsRemarks = action === 'return_revision' || action === 'reopen';
             var labels = { submit_rater: 'Submit this IPCRF to the assigned rater?', rater_approve: 'Approve this IPCRF as rater?', submit_pmt: 'Submit this approved IPCRF to the PMT?', pmt_validate: 'Validate this IPCRF as PMT?', lock: 'Lock this validated IPCRF?', return_revision: 'Return this IPCRF for revision?', reopen: 'Reopen this IPCRF for revision?' };
-            Swal.fire({ title: labels[action], input: needsRemarks ? 'textarea' : undefined, inputPlaceholder: needsRemarks ? 'Required remarks / reason' : undefined, showCancelButton: true, confirmButtonText: 'Continue', confirmButtonColor: '#3157c8', inputValidator: needsRemarks ? function (value) { return value && value.trim() ? undefined : 'Remarks are required.'; } : undefined }).then(function (result) {
+            function sendWorkflow(remarks, confirmWarnings) {
+                $.post(config.urls.workflow, { action: action, remarks: remarks, confirm_warnings: confirmWarnings ? 1 : 0 }, null, 'json').done(function (response) {
+                    toastr.success(response.message); window.location.href = response.reload;
+                }).fail(function (xhr) {
+                    var response = xhr && xhr.responseJSON ? xhr.responseJSON : {};
+                    if ((action === 'submit_rater' || action === 'rater_approve') && response.warning_only) {
+                        reviewWarnings = response.errors || [];
+                        renderMissingItems();
+                        var warningItems = (response.errors || []).map(function (warning) { return '<li>' + escapeHtml(warning) + '</li>'; }).join('');
+                        var approving = action === 'rater_approve';
+                        Swal.fire({
+                            icon: 'warning',
+                            title: approving ? 'Approve with incomplete items?' : 'Incomplete information found',
+                            html: '<p class="submission-warning-intro">' + (approving ? 'You may review the form, use Return with Remarks, or approve it anyway.' : 'You may return to the form and complete these items, or submit the IPCRF to the rater anyway.') + '</p><ul class="submission-warning-list">' + warningItems + '</ul>',
+                            showCancelButton: true,
+                            confirmButtonText: approving ? 'Approve Anyway' : 'Submit Anyway',
+                            cancelButtonText: approving ? 'Review / Return' : 'Review Form',
+                            confirmButtonColor: '#b7791f',
+                            focusCancel: true
+                        }).then(function (warningResult) {
+                            if (warningResult.value) sendWorkflow(remarks, true);
+                        });
+                        return;
+                    }
+                    showError(xhr, 'The workflow status could not be changed.');
+                });
+            }
+            var confirmText = action === 'submit_rater' ? 'Check and Submit' : (action === 'rater_approve' ? 'Check and Approve' : (action === 'return_revision' ? 'Return to Employee' : 'Continue'));
+            Swal.fire({ title: labels[action], input: needsRemarks ? 'textarea' : undefined, inputPlaceholder: needsRemarks ? 'Required remarks / reason' : undefined, showCancelButton: true, confirmButtonText: confirmText, confirmButtonColor: action === 'return_revision' ? '#b34b4b' : '#3157c8', inputValidator: needsRemarks ? function (value) { return value && value.trim() ? undefined : 'Remarks are required.'; } : undefined }).then(function (result) {
                 if (!result.value && result.dismiss) return;
                 var proceed = scope === 'none' ? $.Deferred().resolve().promise() : saveDraft(false);
                 proceed.then(function () {
-                    $.post(config.urls.workflow, { action: action, remarks: needsRemarks ? result.value : '' }, null, 'json').done(function (response) {
-                        toastr.success(response.message); window.location.href = response.reload;
-                    }).fail(function (xhr) { showError(xhr, 'The workflow status could not be changed.'); });
+                    sendWorkflow(needsRemarks ? result.value : '', false);
                 });
             });
         });
@@ -623,12 +903,13 @@
     }
 
     $(function () {
-        toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-bottom-right', timeOut: 2800 };
+        toastr.options = { closeButton: false, newestOnTop: true, preventDuplicates: false, progressBar: false, positionClass: 'toast-bottom-right', timeOut: 1900, extendedTimeOut: 500 };
         if (!config.hasForm) { initLanding(); return; }
         state.kras = state.kras || [];
         state.competencies = state.competencies || [];
         state.development = state.development || [];
         state.history = state.history || [];
+        setSaveState('saved', 'All changes saved');
         renderAll();
         bindEditorEvents();
     });

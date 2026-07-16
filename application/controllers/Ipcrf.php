@@ -3,6 +3,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Ipcrf extends CI_Controller
 {
+    private $employeeId = '';
+
     public function __construct()
     {
         parent::__construct();
@@ -15,22 +17,24 @@ class Ipcrf extends CI_Controller
             redirect('login');
         }
         $this->Ipcrf_model->ensure_schema();
+        $this->employeeId = $this->Ipcrf_model->resolve_employee_id($this->actor());
     }
 
     public function index($id = 0)
     {
         $id = $id ? (int) $id : (int) $this->input->get('id');
         $actor = $this->actor();
+        $viewerId = $this->employeeId;
         $bundle = NULL;
         $scope = 'none';
         if ($id > 0) {
             $form = $this->Ipcrf_model->get_form($id);
-            if (!$form || !$this->Ipcrf_model->can_view($form, $actor)) {
+            if (!$form || !$this->Ipcrf_model->can_view($form, $viewerId)) {
                 show_error('You are not authorized to view this IPCRF.', 403);
                 return;
             }
             $bundle = $this->Ipcrf_model->get_bundle($id);
-            $scope = $this->Ipcrf_model->edit_scope($form, $actor);
+            $scope = $this->Ipcrf_model->edit_scope($form, $viewerId);
             // Empty first-time records receive their own editable copy of the active preset.
             // Checking template_id prevents an intentionally cleared, previously initialized form
             // from being repopulated on every page load.
@@ -52,13 +56,25 @@ class Ipcrf extends CI_Controller
         $data = array(
             'bundle' => $bundle,
             'edit_scope' => $scope,
+            'review_warnings' => $bundle ? $this->review_warnings($bundle, $scope) : array(),
             'templates' => $this->Ipcrf_model->get_templates(),
-            'recent_forms' => $this->Ipcrf_model->recent_forms($actor, $this->Ipcrf_model->is_pmt()),
-            'actor' => $actor,
+            'recent_forms' => $this->Ipcrf_model->personal_forms($viewerId),
+            'current_employee' => $this->Ipcrf_model->get_employee($viewerId),
+            'actor' => $viewerId,
             'is_admin' => $this->Ipcrf_model->is_admin(),
             'is_pmt' => $this->Ipcrf_model->is_pmt()
         );
         $this->load->view('ipcrf/editor', $data);
+    }
+
+    public function rater_queue()
+    {
+        $employee = $this->Ipcrf_model->get_employee($this->employeeId);
+        $forms = $employee ? $this->Ipcrf_model->submitted_rater_forms($this->employeeId) : array();
+        $this->load->view('ipcrf/rater_queue', array(
+            'current_employee' => $employee,
+            'forms' => $forms
+        ));
     }
 
     public function employee_search()
@@ -89,10 +105,9 @@ class Ipcrf extends CI_Controller
 
     public function create()
     {
-        $employeeId = trim((string) $this->input->post('employee_id', TRUE));
-        $employee = $this->Ipcrf_model->get_employee($employeeId);
+        $employee = $this->Ipcrf_model->get_employee($this->employeeId);
         if (!$employee) {
-            $this->json(array('success' => FALSE, 'message' => 'Select a valid employee from HRIS.'), 422);
+            $this->json(array('success' => FALSE, 'message' => 'Your signed-in account is not linked to an active HRIS employee profile.'), 422);
             return;
         }
         $periodStart = $this->Ipcrf_model->valid_date($this->input->post('period_start', TRUE));
@@ -104,20 +119,24 @@ class Ipcrf extends CI_Controller
 
         $raterId = trim((string) $this->input->post('rater_id', TRUE));
         $rater = $raterId !== '' ? $this->Ipcrf_model->get_employee($raterId) : NULL;
+        if (!$rater) {
+            $this->json(array('success' => FALSE, 'message' => 'Select a valid assigned rater from HRIS.'), 422);
+            return;
+        }
         $data = array(
             'period_start' => $periodStart,
             'period_end' => $periodEnd,
-            'rater_id' => $rater ? $rater['id'] : '',
-            'rater_name' => $rater ? $rater['name'] : $employee['direct_head'],
-            'rater_position' => $rater ? $rater['position'] : $employee['direct_head_position']
+            'rater_id' => $rater['id'],
+            'rater_name' => $rater['name'],
+            'rater_position' => $rater['position']
         );
         $id = $this->Ipcrf_model->create_form($employee, $data, $this->actor());
         $openedForm = $this->Ipcrf_model->get_form($id);
-        if (!$openedForm || !$this->Ipcrf_model->can_view($openedForm, $this->actor())) {
-            $this->json(array('success' => FALSE, 'message' => 'An IPCRF already exists for that employee and period, but you are not authorized to open it.'), 403);
+        if (!$openedForm || !$this->Ipcrf_model->can_view($openedForm, $this->employeeId)) {
+            $this->json(array('success' => FALSE, 'message' => 'Your IPCRF could not be opened.'), 403);
             return;
         }
-        if (empty($openedForm['template_id']) && $this->Ipcrf_model->edit_scope($openedForm, $this->actor()) === 'full') {
+        if (empty($openedForm['template_id']) && $this->Ipcrf_model->edit_scope($openedForm, $this->employeeId) === 'full') {
             $defaultTemplate = $this->Ipcrf_model->get_default_template();
             if ($defaultTemplate) {
                 $this->Ipcrf_model->load_template_into_form($id, $defaultTemplate['id'], $this->actor());
@@ -135,7 +154,7 @@ class Ipcrf extends CI_Controller
         $this->json(array(
             'success' => TRUE,
             'bundle' => $this->Ipcrf_model->get_bundle($id),
-            'edit_scope' => $this->Ipcrf_model->edit_scope($form, $this->actor())
+            'edit_scope' => $this->Ipcrf_model->edit_scope($form, $this->employeeId)
         ));
     }
 
@@ -145,7 +164,7 @@ class Ipcrf extends CI_Controller
         if (!$form) {
             return;
         }
-        if ($this->Ipcrf_model->edit_scope($form, $this->actor()) !== 'full') {
+        if ($this->Ipcrf_model->edit_scope($form, $this->employeeId) !== 'full') {
             $this->json(array('success' => FALSE, 'message' => 'This IPCRF is read-only at its current workflow stage.'), 403);
             return;
         }
@@ -154,7 +173,13 @@ class Ipcrf extends CI_Controller
             $this->json(array('success' => FALSE, 'message' => 'The selected preset could not be loaded.'), 422);
             return;
         }
-        $this->json(array('success' => TRUE, 'message' => 'Preset copied into the employee IPCRF.', 'bundle' => $this->Ipcrf_model->get_bundle($id)));
+        $bundle = $this->Ipcrf_model->get_bundle($id);
+        $this->json(array(
+            'success' => TRUE,
+            'message' => 'Preset copied into the employee IPCRF.',
+            'bundle' => $bundle,
+            'review_warnings' => $this->review_warnings($bundle, 'full')
+        ));
     }
 
     public function save($id)
@@ -163,7 +188,7 @@ class Ipcrf extends CI_Controller
         if (!$form) {
             return;
         }
-        $scope = $this->Ipcrf_model->edit_scope($form, $this->actor());
+        $scope = $this->Ipcrf_model->edit_scope($form, $this->employeeId);
         if ($scope === 'none') {
             $this->json(array('success' => FALSE, 'message' => 'This IPCRF is read-only at its current workflow stage.'), 403);
             return;
@@ -191,19 +216,34 @@ class Ipcrf extends CI_Controller
             $this->json(array('success' => FALSE, 'message' => 'The draft could not be saved.'), 500);
             return;
         }
-        $this->json(array('success' => TRUE, 'message' => 'Changes saved.', 'bundle' => $this->Ipcrf_model->get_bundle($id), 'saved_at' => date('g:i A')));
+        $savedBundle = $this->Ipcrf_model->get_bundle($id);
+        $this->json(array(
+            'success' => TRUE,
+            'message' => 'Changes saved.',
+            'bundle' => $savedBundle,
+            'review_warnings' => $this->review_warnings($savedBundle, $scope),
+            'saved_at' => date('g:i A')
+        ));
     }
 
     public function validate_form($id)
     {
-        if (!$this->authorized_form($id)) {
+        $form = $this->authorized_form($id);
+        if (!$form) {
+            return;
+        }
+        if (
+            $form['status'] !== Ipcrf_model::STATUS_SUBMITTED_RATER ||
+            $form['rater_id'] !== $this->employeeId
+        ) {
+            $this->json(array('success' => FALSE, 'message' => 'Validation is available only to the assigned rater during rater review.'), 403);
             return;
         }
         $bundle = $this->Ipcrf_model->get_bundle($id);
         $errors = $this->Ipcrf_model->validation_errors($bundle, 'current');
         $this->json(array(
             'success' => empty($errors),
-            'message' => empty($errors) ? 'All requirements for the current workflow stage are complete.' : 'Validation found items that need attention.',
+            'message' => empty($errors) ? 'The rater review is complete and ready for approval.' : 'Rater validation found items that need attention.',
             'errors' => $errors,
             'summary' => $this->summary($bundle)
         ), empty($errors) ? 200 : 422);
@@ -217,21 +257,23 @@ class Ipcrf extends CI_Controller
         }
         $action = trim((string) $this->input->post('action', TRUE));
         $remarks = trim((string) $this->input->post('remarks', TRUE));
+        $warningsConfirmed = (string) $this->input->post('confirm_warnings', TRUE) === '1';
         $actor = $this->actor();
+        $actorId = $this->employeeId;
         $allowed = FALSE;
         $target = '';
         $validationStage = '';
 
-        if ($action === 'submit_rater' && in_array($form['status'], array(Ipcrf_model::STATUS_DRAFT, Ipcrf_model::STATUS_RETURNED), TRUE) && $this->Ipcrf_model->edit_scope($form, $actor) === 'full') {
+        if ($action === 'submit_rater' && in_array($form['status'], array(Ipcrf_model::STATUS_DRAFT, Ipcrf_model::STATUS_RETURNED), TRUE) && $this->Ipcrf_model->edit_scope($form, $actorId) === 'full') {
             $allowed = TRUE; $target = Ipcrf_model::STATUS_SUBMITTED_RATER; $validationStage = 'submit_rater';
-        } elseif ($action === 'return_revision' && $form['status'] === Ipcrf_model::STATUS_SUBMITTED_RATER && ($form['rater_id'] === $actor || $this->Ipcrf_model->is_admin())) {
+        } elseif ($action === 'return_revision' && $form['status'] === Ipcrf_model::STATUS_SUBMITTED_RATER && ($form['rater_id'] === $actorId || $this->Ipcrf_model->is_admin())) {
             if ($remarks === '') {
                 $this->json(array('success' => FALSE, 'message' => 'Revision remarks are required.'), 422); return;
             }
             $allowed = TRUE; $target = Ipcrf_model::STATUS_RETURNED;
-        } elseif ($action === 'rater_approve' && $form['status'] === Ipcrf_model::STATUS_SUBMITTED_RATER && ($form['rater_id'] === $actor || $this->Ipcrf_model->is_admin())) {
+        } elseif ($action === 'rater_approve' && $form['status'] === Ipcrf_model::STATUS_SUBMITTED_RATER && ($form['rater_id'] === $actorId || $this->Ipcrf_model->is_admin())) {
             $allowed = TRUE; $target = Ipcrf_model::STATUS_RATER_APPROVED; $validationStage = 'rater_approve';
-        } elseif ($action === 'submit_pmt' && $form['status'] === Ipcrf_model::STATUS_RATER_APPROVED && ($form['rater_id'] === $actor || $this->Ipcrf_model->is_admin())) {
+        } elseif ($action === 'submit_pmt' && $form['status'] === Ipcrf_model::STATUS_RATER_APPROVED && ($form['rater_id'] === $actorId || $this->Ipcrf_model->is_admin())) {
             $allowed = TRUE; $target = Ipcrf_model::STATUS_SUBMITTED_PMT; $validationStage = 'rater_approve';
         } elseif ($action === 'pmt_validate' && $form['status'] === Ipcrf_model::STATUS_SUBMITTED_PMT && $this->Ipcrf_model->is_pmt()) {
             $allowed = TRUE; $target = Ipcrf_model::STATUS_PMT_VALIDATED; $validationStage = 'pmt_validate';
@@ -251,8 +293,23 @@ class Ipcrf extends CI_Controller
         if ($validationStage !== '') {
             $errors = $this->Ipcrf_model->validation_errors($this->Ipcrf_model->get_bundle($id), $validationStage);
             if ($errors) {
-                $this->json(array('success' => FALSE, 'message' => 'Complete the required fields before continuing.', 'errors' => $errors), 422);
-                return;
+                if (in_array($action, array('submit_rater', 'rater_approve'), TRUE)) {
+                    if (!$warningsConfirmed) {
+                        $this->json(array(
+                            'success' => FALSE,
+                            'warning_only' => TRUE,
+                            'message' => $action === 'rater_approve'
+                                ? 'Some review information is incomplete. Review the warnings, return the form, or approve anyway.'
+                                : 'Some IPCRF information is incomplete. Review the warnings or submit anyway.',
+                            'errors' => $errors
+                        ), 409);
+                        return;
+                    }
+                    $remarks = ($action === 'rater_approve' ? 'Rater approved' : 'Submitted') . ' after acknowledging ' . count($errors) . ' incomplete item warning(s).';
+                } else {
+                    $this->json(array('success' => FALSE, 'message' => 'Complete the required fields before continuing.', 'errors' => $errors), 422);
+                    return;
+                }
             }
         }
         $this->Ipcrf_model->workflow_transition($id, $target, $remarks, $actor);
@@ -265,7 +322,7 @@ class Ipcrf extends CI_Controller
         if (!$form) {
             return;
         }
-        if ($this->Ipcrf_model->edit_scope($form, $this->actor()) !== 'full') {
+        if ($this->Ipcrf_model->edit_scope($form, $this->employeeId) !== 'full') {
             $this->json(array('success' => FALSE, 'message' => 'Evidence can only be changed while the IPCRF is editable.'), 403);
             return;
         }
@@ -308,7 +365,7 @@ class Ipcrf extends CI_Controller
         if (!$form) {
             return;
         }
-        if ($this->Ipcrf_model->edit_scope($form, $this->actor()) !== 'full') {
+        if ($this->Ipcrf_model->edit_scope($form, $this->employeeId) !== 'full') {
             $this->json(array('success' => FALSE, 'message' => 'Evidence can only be changed while the IPCRF is editable.'), 403);
             return;
         }
@@ -363,6 +420,14 @@ class Ipcrf extends CI_Controller
         $weight = 0;
         $score = 0;
         $ratedWeight = 0;
+        $ratingComplete = 0;
+        $approvedStatuses = array(
+            Ipcrf_model::STATUS_RATER_APPROVED,
+            Ipcrf_model::STATUS_SUBMITTED_PMT,
+            Ipcrf_model::STATUS_PMT_VALIDATED,
+            Ipcrf_model::STATUS_LOCKED
+        );
+        $ratingsApproved = in_array($bundle['form']['status'], $approvedStatuses, TRUE);
         foreach ((array) $bundle['kras'] as $kra) {
             foreach ((array) $kra['objectives'] as $objective) {
                 $objectiveWeight = (float) $objective['weight'];
@@ -371,19 +436,22 @@ class Ipcrf extends CI_Controller
                 $e = (float) $objective['efficiency_rating'];
                 $t = (float) $objective['timeliness_rating'];
                 if ($q > 0 && $e > 0 && $t > 0) {
-                    $score += (($q + $e + $t) / 3) * ($objectiveWeight / 100);
-                    $ratedWeight += $objectiveWeight;
+                    $ratingComplete++;
+                    if ($ratingsApproved) {
+                        $score += (($q + $e + $t) / 3) * ($objectiveWeight / 100);
+                        $ratedWeight += $objectiveWeight;
+                    }
                 }
             }
         }
         $rating = $ratedWeight > 0 ? $score / ($ratedWeight / 100) : 0;
-        $adjectival = 'Not yet rated';
+        $adjectival = !$ratingsApproved && $ratingComplete > 0 ? 'Pending rater approval' : 'Not yet rated';
         if ($rating >= 4.5) $adjectival = 'Outstanding';
         elseif ($rating >= 3.5) $adjectival = 'Very Satisfactory';
         elseif ($rating >= 2.5) $adjectival = 'Satisfactory';
         elseif ($rating >= 1.5) $adjectival = 'Unsatisfactory';
         elseif ($rating >= 1) $adjectival = 'Poor';
-        return array('weight' => round($weight, 2), 'weighted_score' => round($score, 3), 'overall_rating' => round($rating, 3), 'rated_weight' => round($ratedWeight, 2), 'adjectival' => $adjectival);
+        return array('weight' => round($weight, 2), 'weighted_score' => round($score, 3), 'overall_rating' => round($rating, 3), 'rated_weight' => round($ratedWeight, 2), 'adjectival' => $adjectival, 'ratings_approved' => $ratingsApproved, 'rating_complete' => $ratingComplete);
     }
 
     private function authorized_form($id, $json = TRUE)
@@ -394,12 +462,20 @@ class Ipcrf extends CI_Controller
             else show_404();
             return FALSE;
         }
-        if (!$this->Ipcrf_model->can_view($form, $this->actor())) {
+        if (!$this->Ipcrf_model->can_view($form, $this->employeeId)) {
             if ($json) $this->json(array('success' => FALSE, 'message' => 'You are not authorized to access this IPCRF.'), 403);
             else show_error('You are not authorized to access this IPCRF.', 403);
             return FALSE;
         }
         return $form;
+    }
+
+    private function review_warnings($bundle, $scope)
+    {
+        if (!$bundle || empty($bundle['form']) || !in_array($scope, array('full', 'rater'), TRUE)) {
+            return array();
+        }
+        return $this->Ipcrf_model->validation_errors($bundle, $scope === 'rater' ? 'rater_approve' : 'submit_rater');
     }
 
     private function actor()

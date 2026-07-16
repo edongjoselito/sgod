@@ -18,6 +18,30 @@
             );
             $sectionDashboardRoute = $sectionDashboardRoutes[$currentSidebarSection] ?? 'Page/user_dashboard';
             $isSectionHeadDashboardUser = FALSE;
+            $ipcrfSidebarEmployeeId = $currentSidebarUsername;
+            $hasIpcrfRaterAssignments = FALSE;
+            $pendingIpcrfRaterReviews = 0;
+
+            if (
+                $currentSidebarUsername !== '' &&
+                $this->db->table_exists('users') &&
+                $this->db->field_exists('IDNumber', 'users')
+            ) {
+                $sidebarUserRecord = $this->db->select('IDNumber')->where('username', $currentSidebarUsername)->get('users', 1)->row_array();
+                if ($sidebarUserRecord && trim((string) $sidebarUserRecord['IDNumber']) !== '') {
+                    $ipcrfSidebarEmployeeId = trim((string) $sidebarUserRecord['IDNumber']);
+                }
+            }
+
+            if ($ipcrfSidebarEmployeeId !== '' && $this->db->table_exists('ipcrf_forms')) {
+                $hasIpcrfRaterAssignments = $this->db->where('rater_id', $ipcrfSidebarEmployeeId)->count_all_results('ipcrf_forms') > 0;
+                if ($hasIpcrfRaterAssignments) {
+                    $pendingIpcrfRaterReviews = (int) $this->db
+                        ->where('rater_id', $ipcrfSidebarEmployeeId)
+                        ->where('status', 'Submitted to Rater')
+                        ->count_all_results('ipcrf_forms');
+                }
+            }
 
             if (
                 $currentSidebarUsername !== '' &&
@@ -859,6 +883,26 @@
             </div>
             <!-- End Sidebar -->
 
+        <?php endif; ?>
+
+        <?php if ($hasIpcrfRaterAssignments): ?>
+        <script>
+        (function () {
+            var menu = document.getElementById('side-menu');
+            if (!menu) return;
+            var personalUrl = <?= json_encode(site_url('Ipcrf')); ?>;
+            var reviewUrl = <?= json_encode(site_url('Ipcrf/rater_queue')); ?>;
+            var personalLink = Array.prototype.find.call(menu.querySelectorAll('a'), function (link) {
+                return link.href.replace(/\/$/, '') === personalUrl.replace(/\/$/, '');
+            });
+            if (!personalLink || menu.querySelector('a[href="' + reviewUrl + '"]')) return;
+            var item = document.createElement('li');
+            item.className = 'ipcrf-rater-menu-item';
+            item.innerHTML = '<a href="' + reviewUrl + '" class="waves-effect"><i class="mdi mdi-account-check-outline"></i><span> IPCRF Rater Review </span>' +
+                <?= $pendingIpcrfRaterReviews > 0 ? json_encode('<span class="badge badge-warning badge-pill float-right">' . $pendingIpcrfRaterReviews . '</span>') : "''"; ?> + '</a>';
+            personalLink.closest('li').insertAdjacentElement('afterend', item);
+        })();
+        </script>
         <?php endif; ?>
 
 

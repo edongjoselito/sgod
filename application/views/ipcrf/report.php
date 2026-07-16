@@ -1,5 +1,6 @@
 <?php
 $form = $bundle['form'];
+$ratingsApproved = !empty($summary['ratings_approved']);
 $objectives = array();
 foreach ($bundle['kras'] as $kra) {
     foreach ($kra['objectives'] as $objective) {
@@ -25,9 +26,9 @@ $standardLines = function ($values) use ($e) {
     }
     return $html;
 };
-$competencyAverage = function ($field) use ($bundle) {
+$competencyAverage = function () use ($bundle) {
     $values = array();
-    foreach ($bundle['competencies'] as $competency) if ((int) $competency[$field] > 0) $values[] = (int) $competency[$field];
+    foreach ($bundle['competencies'] as $competency) if ((int) $competency['rating'] > 0) $values[] = (int) $competency['rating'];
     return $values ? array_sum($values) / count($values) : 0;
 };
 ?>
@@ -134,7 +135,7 @@ $competencyAverage = function ($field) use ($bundle) {
             <?php foreach ($pageObjectives as $objective):
                 $q = (float) $objective['quality_rating']; $ef = (float) $objective['efficiency_rating']; $t = (float) $objective['timeliness_rating'];
                 $rating = ($q > 0 && $ef > 0 && $t > 0) ? ($q + $ef + $t) / 3 : 0;
-                $score = $rating * ((float) $objective['weight'] / 100);
+                $score = $ratingsApproved ? $rating * ((float) $objective['weight'] / 100) : 0;
             ?>
                 <tr>
                     <td class="kra center"><?= $e($objective['kra_title']); ?></td>
@@ -149,13 +150,13 @@ $competencyAverage = function ($field) use ($bundle) {
                     <td class="center"><?= $ef > 0 ? number_format($ef, 0) : ''; ?></td>
                     <td class="center"><?= $t > 0 ? number_format($t, 0) : ''; ?></td>
                     <td class="center"><?= $rating > 0 ? number_format($rating, 2) : ''; ?></td>
-                    <td class="center"><?= $score > 0 ? number_format($score, 3) : ''; ?></td>
+                    <td class="center"><?= $score > 0 ? number_format($score, 3) : ($rating > 0 && !$ratingsApproved ? 'Pending' : ''); ?></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
         </table>
         <?php if ($pageIndex === 3): ?>
-            <table style="margin-top:2mm"><tr><td class="total-row">TOTAL WEIGHT: <?= number_format((float) $summary['weight'], 2); ?>%</td><td class="total-row" style="width:18%">WEIGHTED SCORE: <?= number_format((float) $summary['weighted_score'], 3); ?></td></tr></table>
+            <table style="margin-top:2mm"><tr><td class="total-row">TOTAL WEIGHT: <?= number_format((float) $summary['weight'], 2); ?>%</td><td class="total-row" style="width:22%">WEIGHTED SCORE: <?= $ratingsApproved ? number_format((float) $summary['weighted_score'], 3) : 'PENDING RATER APPROVAL'; ?></td></tr></table>
             <div class="signature-row"><div class="signature-line"><b><?= $e($form['employee_name']); ?></b><br>RATEE</div><div class="signature-line"><b><?= $e($form['rater_name']); ?></b><br>RATER</div><div class="signature-line"><b>APPROVING AUTHORITY</b><br>NAME AND SIGNATURE</div></div>
         <?php endif; ?>
         <span class="page-number">Page <?= $pageIndex + 1; ?> of 6</span>
@@ -172,13 +173,13 @@ $competencyAverage = function ($field) use ($bundle) {
             <div class="competency-group">
                 <h3><?= $e($category === 'Core Behavioral Competency' ? 'Core Behavioral Competencies' : ($category === 'Core Skill' ? 'Core Skills' : 'Leadership Competencies')); ?></h3>
                 <table class="competency-table">
-                    <colgroup><col style="width:70%"><col style="width:10%"><col style="width:10%"><col style="width:10%"></colgroup>
-                    <thead><tr><th>Competency and Indicators</th><th>Employee</th><th>Rater</th><th>Final</th></tr></thead>
+                    <colgroup><col style="width:88%"><col style="width:12%"></colgroup>
+                    <thead><tr><th>Competency and Indicators</th><th>Rating</th></tr></thead>
                     <tbody>
                     <?php foreach ($categoryRows as $competency): ?>
-                    <tr><td><span class="competency-name"><?= $e($competency['name']); ?></span><ol class="competency-indicators"><?php foreach ($competency['indicators'] as $indicator): ?><li><?= $e($indicator); ?></li><?php endforeach; ?></ol></td><td style="text-align:center;vertical-align:middle"><?= (int) $competency['employee_rating'] ?: ''; ?></td><td style="text-align:center;vertical-align:middle"><?= (int) $competency['rater_rating'] ?: ''; ?></td><td style="text-align:center;vertical-align:middle"><?= (int) $competency['final_rating'] ?: ''; ?></td></tr>
+                    <tr><td><span class="competency-name"><?= $e($competency['name']); ?></span><ol class="competency-indicators"><?php foreach ($competency['indicators'] as $indicator): ?><li><?= $e($indicator); ?></li><?php endforeach; ?></ol></td><td style="text-align:center;vertical-align:middle"><?= (int) $competency['rating'] ?: ''; ?></td></tr>
                     <?php endforeach; ?>
-                    <?php if (!$categoryRows): ?><tr><td colspan="4" class="empty-row">No competencies in this category.</td></tr><?php endif; ?>
+                    <?php if (!$categoryRows): ?><tr><td colspan="2" class="empty-row">No competencies in this category.</td></tr><?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -195,14 +196,12 @@ $competencyAverage = function ($field) use ($bundle) {
             <div>
                 <div class="summary-card"><h3>Performance Rating Summary</h3><table>
                     <tr><td>Total Weight</td><td><?= number_format((float) $summary['weight'], 2); ?>%</td></tr>
-                    <tr><td>Weighted Score</td><td><?= number_format((float) $summary['weighted_score'], 3); ?></td></tr>
-                    <tr><td>Overall Rating</td><td><?= number_format((float) $summary['overall_rating'], 3); ?></td></tr>
+                    <tr><td>Weighted Score</td><td><?= $ratingsApproved ? number_format((float) $summary['weighted_score'], 3) : 'Pending rater approval'; ?></td></tr>
+                    <tr><td>Overall Rating</td><td><?= $ratingsApproved ? number_format((float) $summary['overall_rating'], 3) : 'Pending rater approval'; ?></td></tr>
                     <tr><td>Adjectival Rating</td><td><?= $e($summary['adjectival']); ?></td></tr>
                 </table></div>
                 <div class="summary-card"><h3>Competency Rating Summary</h3><table>
-                    <tr><td>Employee Average</td><td><?= number_format($competencyAverage('employee_rating'), 2); ?></td></tr>
-                    <tr><td>Rater Average</td><td><?= number_format($competencyAverage('rater_rating'), 2); ?></td></tr>
-                    <tr><td>Final Average</td><td><?= number_format($competencyAverage('final_rating'), 2); ?></td></tr>
+                    <tr><td>Average Rating</td><td><?= number_format($competencyAverage(), 2); ?></td></tr>
                 </table></div>
                 <div class="summary-card"><h3>Adjectival Scale</h3><table>
                     <tr><td>Outstanding</td><td>4.500–5.000</td></tr><tr><td>Very Satisfactory</td><td>3.500–4.499</td></tr><tr><td>Satisfactory</td><td>2.500–3.499</td></tr><tr><td>Unsatisfactory</td><td>1.500–2.499</td></tr><tr><td>Poor</td><td>1.000–1.499</td></tr>

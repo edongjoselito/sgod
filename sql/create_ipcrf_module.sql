@@ -129,6 +129,8 @@ CREATE TABLE IF NOT EXISTS ipcrf_competencies (
     category VARCHAR(80) NOT NULL,
     name VARCHAR(180) NOT NULL,
     indicators_json LONGTEXT NOT NULL,
+    rating TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    -- Retained for compatibility with installations created before the single-rating design.
     employee_rating TINYINT UNSIGNED NOT NULL DEFAULT 0,
     rater_rating TINYINT UNSIGNED NOT NULL DEFAULT 0,
     final_rating TINYINT UNSIGNED NOT NULL DEFAULT 0,
