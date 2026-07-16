@@ -23,8 +23,9 @@
                     <div class="col-md-8 col-lg-6 col-xl-5">
                         <div class="card mt-4">
                             <div class="card-header p-4 bg-primary">
-                                <!-- <h4 class="text-white text-center mb-0 mt-0">DepEd Payroll System</h4> -->
-                                <h4 class="text-white text-center mb-0 mt-0"><img  width="100%" src="<?= base_url(); ?>assets/images/logo-light.png" alt=""></h4>
+                                <div class="text-center">
+                                    <img src="<?= base_url(); ?>assets/images/sgod.png" alt="DepEd ONE" style="display:block;height:auto;margin:0 auto;max-width:330px;width:100%;">
+                                </div>
                                 
                             </div>
                             <div class="card-body">

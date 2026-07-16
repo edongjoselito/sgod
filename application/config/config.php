@@ -23,7 +23,37 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/sgod/';
+$app_base_url = getenv('APP_BASE_URL');
+
+if (is_string($app_base_url) && trim($app_base_url) !== '')
+{
+	// Allows production to pin the canonical URL without changing this file.
+	$config['base_url'] = rtrim(trim($app_base_url), '/').'/';
+}
+else
+{
+	// Keep generated URLs on the same host/protocol as the current request.
+	// X-Forwarded-Proto covers HTTPS terminated by a reverse proxy.
+	$forwarded_protocol = isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+		? strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])[0]))
+		: '';
+	$is_https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '' && strtolower($_SERVER['HTTPS']) !== 'off')
+		|| $forwarded_protocol === 'https'
+		|| (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on')
+		|| (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
+
+	$host = isset($_SERVER['HTTP_HOST']) ? trim($_SERVER['HTTP_HOST']) : 'localhost';
+	if ($host === '' || preg_match('/[\r\n]/', $host) || ! preg_match('/\A(?:[a-z0-9.-]+|\[[a-f0-9:.]+\])(?::[0-9]{1,5})?\z/i', $host))
+	{
+		$host = 'localhost';
+	}
+
+	$script_name = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '/index.php';
+	$base_path = str_replace('\\', '/', dirname($script_name));
+	$base_path = ($base_path === '/' || $base_path === '.') ? '' : '/'.trim($base_path, '/');
+
+	$config['base_url'] = ($is_https ? 'https' : 'http').'://'.$host.$base_path.'/';
+}
 
 /*
 |--------------------------------------------------------------------------

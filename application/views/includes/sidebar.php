@@ -885,25 +885,90 @@
 
         <?php endif; ?>
 
-        <?php if ($hasIpcrfRaterAssignments): ?>
         <script>
         (function () {
             var menu = document.getElementById('side-menu');
             if (!menu) return;
             var personalUrl = <?= json_encode(site_url('Ipcrf')); ?>;
             var reviewUrl = <?= json_encode(site_url('Ipcrf/rater_queue')); ?>;
-            var personalLink = Array.prototype.find.call(menu.querySelectorAll('a'), function (link) {
-                return link.href.replace(/\/$/, '') === personalUrl.replace(/\/$/, '');
-            });
-            if (!personalLink || menu.querySelector('a[href="' + reviewUrl + '"]')) return;
-            var item = document.createElement('li');
-            item.className = 'ipcrf-rater-menu-item';
-            item.innerHTML = '<a href="' + reviewUrl + '" class="waves-effect"><i class="mdi mdi-account-check-outline"></i><span> IPCRF Rater Review </span>' +
-                <?= $pendingIpcrfRaterReviews > 0 ? json_encode('<span class="badge badge-warning badge-pill float-right">' . $pendingIpcrfRaterReviews . '</span>') : "''"; ?> + '</a>';
-            personalLink.closest('li').insertAdjacentElement('afterend', item);
+            var signatureUrl = <?= json_encode(site_url('Ipcrf/signature')); ?>;
+            var hasRaterAssignments = <?= $hasIpcrfRaterAssignments ? 'true' : 'false'; ?>;
+            var pendingReviews = <?= (int) $pendingIpcrfRaterReviews; ?>;
+            var links = menu.querySelectorAll('a');
+            var personalLink = null;
+            var dashboardLink = null;
+            var index;
+
+            for (index = 0; index < links.length; index++) {
+                if (links[index].href.replace(/\/$/, '') === personalUrl.replace(/\/$/, '')) {
+                    personalLink = links[index];
+                }
+                var label = links[index].querySelector('span');
+                if (label && label.textContent.trim() === 'Dashboard') {
+                    dashboardLink = links[index];
+                }
+            }
+            if (!personalLink || !dashboardLink || menu.querySelector('[data-ipcr-menu-group]')) return;
+
+            var group = document.createElement('li');
+            group.setAttribute('data-ipcr-menu-group', 'true');
+            var groupLink = document.createElement('a');
+            groupLink.href = 'javascript: void(0);';
+            groupLink.className = 'waves-effect';
+            groupLink.innerHTML = '<i class="mdi mdi-clipboard-text-outline"></i><span> IPCR </span><span class="menu-arrow"></span>';
+            var submenu = document.createElement('ul');
+            submenu.className = 'nav-second-level';
+            submenu.setAttribute('aria-expanded', 'false');
+
+            var currentPath = window.location.pathname.replace(/\/$/, '').toLowerCase();
+            var reviewPath = document.createElement('a');
+            reviewPath.href = reviewUrl;
+            reviewPath = reviewPath.pathname.replace(/\/$/, '').toLowerCase();
+            var signaturePath = document.createElement('a');
+            signaturePath.href = signatureUrl;
+            signaturePath = signaturePath.pathname.replace(/\/$/, '').toLowerCase();
+            var ipcrSectionActive = currentPath.indexOf('/ipcrf') !== -1;
+
+            function addSubmenuLink(url, text, isActive, badgeCount) {
+                var item = document.createElement('li');
+                var link = document.createElement('a');
+                link.href = url;
+                link.textContent = text;
+                if (isActive) {
+                    item.className = 'mm-active';
+                    link.className = 'active';
+                }
+                if (badgeCount > 0) {
+                    var badge = document.createElement('span');
+                    badge.className = 'badge badge-warning badge-pill float-right';
+                    badge.textContent = badgeCount;
+                    link.appendChild(badge);
+                }
+                item.appendChild(link);
+                submenu.appendChild(item);
+            }
+
+            addSubmenuLink(personalUrl, 'IPCRF', ipcrSectionActive && currentPath !== reviewPath && currentPath !== signaturePath, 0);
+            if (hasRaterAssignments) {
+                addSubmenuLink(reviewUrl, 'Rater Review', currentPath === reviewPath, pendingReviews);
+            }
+            addSubmenuLink(signatureUrl, 'My Signature', currentPath === signaturePath, 0);
+
+            if (ipcrSectionActive) {
+                group.className = 'mm-active';
+                groupLink.setAttribute('aria-expanded', 'true');
+                submenu.className += ' mm-show';
+                submenu.setAttribute('aria-expanded', 'true');
+            }
+            group.appendChild(groupLink);
+            group.appendChild(submenu);
+
+            var personalItem = personalLink.closest('li');
+            var dashboardItem = dashboardLink.closest('li');
+            personalItem.parentNode.removeChild(personalItem);
+            dashboardItem.insertAdjacentElement('afterend', group);
         })();
         </script>
-        <?php endif; ?>
 
 
         <div class="clearfix"></div>

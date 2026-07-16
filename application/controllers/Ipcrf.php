@@ -77,6 +77,141 @@ class Ipcrf extends CI_Controller
         ));
     }
 
+    public function signature()
+    {
+        $employee = $this->Ipcrf_model->get_employee($this->employeeId);
+        if (isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD']) === 'POST') {
+            if (!$employee) {
+                $this->session->set_flashdata('signature_error', 'Your account must be linked to an HRIS employee profile before you can upload a signature.');
+                redirect('Ipcrf/signature');
+                return;
+            }
+
+            $uploadPath = $this->signature_storage_path();
+            if (!is_dir($uploadPath) && !@mkdir($uploadPath, 0775, TRUE)) {
+                $this->session->set_flashdata('signature_error', 'Signature storage is not writable. Please contact the system administrator.');
+                redirect('Ipcrf/signature');
+                return;
+            }
+
+            $this->upload->initialize(array(
+                'upload_path' => $uploadPath,
+                'allowed_types' => 'png|jpg|jpeg',
+                'max_size' => 2048,
+                'max_width' => 3000,
+                'max_height' => 2000,
+                'encrypt_name' => TRUE,
+                'remove_spaces' => TRUE,
+                'detect_mime' => TRUE,
+                'mod_mime_fix' => TRUE
+            ));
+            if (!$this->upload->do_upload('signature')) {
+                $this->session->set_flashdata('signature_error', trim(strip_tags($this->upload->display_errors('', ''))));
+                redirect('Ipcrf/signature');
+                return;
+            }
+
+            $file = $this->upload->data();
+            $imageType = strtolower((string) $file['image_type']);
+            if (empty($file['is_image']) || !in_array($imageType, array('png', 'jpeg', 'jpg'), TRUE)) {
+                @unlink($uploadPath . basename($file['file_name']));
+                $this->session->set_flashdata('signature_error', 'The selected file is not a valid PNG or JPEG image.');
+                redirect('Ipcrf/signature');
+                return;
+            }
+
+            $existing = $this->Ipcrf_model->get_signature($this->employeeId);
+            $now = date('Y-m-d H:i:s');
+            $saved = $this->Ipcrf_model->save_signature($this->employeeId, array(
+                'original_name' => $file['orig_name'],
+                'stored_name' => $file['file_name'],
+                'mime_type' => $imageType === 'png' ? 'image/png' : 'image/jpeg',
+                'file_size' => (int) round($file['file_size'] * 1024),
+                'uploaded_by' => $this->actor(),
+                'uploaded_at' => $now,
+                'updated_at' => $now
+            ));
+            if (!$saved) {
+                @unlink($uploadPath . basename($file['file_name']));
+                $this->session->set_flashdata('signature_error', 'The signature could not be saved. Please try again.');
+                redirect('Ipcrf/signature');
+                return;
+            }
+
+            if ($existing && $existing['stored_name'] !== $file['file_name']) {
+                $oldPath = $uploadPath . basename($existing['stored_name']);
+                if (is_file($oldPath)) {
+                    @unlink($oldPath);
+                }
+            }
+            $this->session->set_flashdata('signature_success', 'Your signature has been saved and will appear on your IPCRF reports.');
+            redirect('Ipcrf/signature');
+            return;
+        }
+
+        $this->load->view('ipcrf/signature', array(
+            'current_employee' => $employee,
+            'signature' => $employee ? $this->Ipcrf_model->get_signature($this->employeeId) : NULL,
+            'success_message' => $this->session->flashdata('signature_success'),
+            'error_message' => $this->session->flashdata('signature_error')
+        ));
+    }
+
+    public function remove_signature()
+    {
+        if (!isset($_SERVER['REQUEST_METHOD']) || strtoupper($_SERVER['REQUEST_METHOD']) !== 'POST') {
+            show_error('Method not allowed.', 405);
+            return;
+        }
+        $signature = $this->Ipcrf_model->get_signature($this->employeeId);
+        if (!$signature) {
+            $this->session->set_flashdata('signature_error', 'No saved signature was found.');
+            redirect('Ipcrf/signature');
+            return;
+        }
+        if (!$this->Ipcrf_model->delete_signature($this->employeeId)) {
+            $this->session->set_flashdata('signature_error', 'The signature could not be removed. Please try again.');
+            redirect('Ipcrf/signature');
+            return;
+        }
+
+        $path = $this->signature_storage_path() . basename($signature['stored_name']);
+        if (is_file($path)) {
+            @unlink($path);
+        }
+        $this->session->set_flashdata('signature_success', 'Your saved signature has been removed.');
+        redirect('Ipcrf/signature');
+    }
+
+    public function signature_image($employeeId = '')
+    {
+        $employeeId = trim(rawurldecode((string) $employeeId));
+        if (!$this->Ipcrf_model->can_view_signature($employeeId, $this->employeeId)) {
+            show_error('You are not authorized to view this signature.', 403);
+            return;
+        }
+        $signature = $this->Ipcrf_model->get_signature($employeeId);
+        if (!$signature) {
+            show_404();
+            return;
+        }
+        $path = $this->signature_storage_path() . basename($signature['stored_name']);
+        if (!is_file($path)) {
+            show_404();
+            return;
+        }
+
+        $mimeType = in_array($signature['mime_type'], array('image/png', 'image/jpeg'), TRUE)
+            ? $signature['mime_type']
+            : 'application/octet-stream';
+        $contents = file_get_contents($path);
+        $this->output
+            ->set_content_type($mimeType)
+            ->set_header('Content-Length: ' . strlen($contents))
+            ->set_header('Cache-Control: private, max-age=300')
+            ->set_output($contents);
+    }
+
     public function employee_search()
     {
         $query = trim((string) $this->input->get('q', TRUE));
@@ -411,8 +546,28 @@ class Ipcrf extends CI_Controller
         $this->load->view('ipcrf/report', array(
             'bundle' => $bundle,
             'summary' => $this->summary($bundle),
-            'autoprint' => $this->input->get('autoprint') === '1'
+            'autoprint' => $this->input->get('autoprint') === '1',
+            'employee_signature' => $this->signature_data_uri($bundle['form']['employee_id']),
+            'rater_signature' => $this->signature_data_uri($bundle['form']['rater_id'])
         ));
+    }
+
+    private function signature_storage_path()
+    {
+        return APPPATH . 'uploads/ipcrf_signatures/';
+    }
+
+    private function signature_data_uri($employeeId)
+    {
+        $signature = $this->Ipcrf_model->get_signature($employeeId);
+        if (!$signature || !in_array($signature['mime_type'], array('image/png', 'image/jpeg'), TRUE)) {
+            return '';
+        }
+        $path = $this->signature_storage_path() . basename($signature['stored_name']);
+        if (!is_file($path)) {
+            return '';
+        }
+        return 'data:' . $signature['mime_type'] . ';base64,' . base64_encode(file_get_contents($path));
     }
 
     private function summary($bundle)
@@ -437,21 +592,18 @@ class Ipcrf extends CI_Controller
                 $t = (float) $objective['timeliness_rating'];
                 if ($q > 0 && $e > 0 && $t > 0) {
                     $ratingComplete++;
-                    if ($ratingsApproved) {
-                        $score += (($q + $e + $t) / 3) * ($objectiveWeight / 100);
-                        $ratedWeight += $objectiveWeight;
-                    }
+                    $score += (($q + $e + $t) / 3) * ($objectiveWeight / 100);
+                    $ratedWeight += $objectiveWeight;
                 }
             }
         }
-        $rating = $ratedWeight > 0 ? $score / ($ratedWeight / 100) : 0;
-        $adjectival = !$ratingsApproved && $ratingComplete > 0 ? 'Pending rater approval' : 'Not yet rated';
-        if ($rating >= 4.5) $adjectival = 'Outstanding';
-        elseif ($rating >= 3.5) $adjectival = 'Very Satisfactory';
-        elseif ($rating >= 2.5) $adjectival = 'Satisfactory';
-        elseif ($rating >= 1.5) $adjectival = 'Unsatisfactory';
-        elseif ($rating >= 1) $adjectival = 'Poor';
-        return array('weight' => round($weight, 2), 'weighted_score' => round($score, 3), 'overall_rating' => round($rating, 3), 'rated_weight' => round($ratedWeight, 2), 'adjectival' => $adjectival, 'ratings_approved' => $ratingsApproved, 'rating_complete' => $ratingComplete);
+        $adjectival = 'Not yet rated';
+        if ($score >= 4.5) $adjectival = 'Outstanding';
+        elseif ($score >= 3.5) $adjectival = 'Very Satisfactory';
+        elseif ($score >= 2.5) $adjectival = 'Satisfactory';
+        elseif ($score >= 1.5) $adjectival = 'Unsatisfactory';
+        elseif ($score >= 1) $adjectival = 'Poor';
+        return array('weight' => round($weight, 2), 'weighted_score' => round($score, 3), 'rated_weight' => round($ratedWeight, 2), 'adjectival' => $adjectival, 'ratings_approved' => $ratingsApproved, 'rating_complete' => $ratingComplete);
     }
 
     private function authorized_form($id, $json = TRUE)

@@ -147,6 +147,17 @@ class Ipcrf_model extends CI_Model
                 is_deleted TINYINT(1) NOT NULL DEFAULT 0,
                 PRIMARY KEY (id), KEY idx_ipcrf_development_form (form_id, is_deleted, sort_order)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            "CREATE TABLE IF NOT EXISTS ipcrf_signatures (
+                employee_id VARCHAR(25) NOT NULL,
+                original_name VARCHAR(255) NOT NULL,
+                stored_name VARCHAR(255) NOT NULL,
+                mime_type VARCHAR(80) NOT NULL,
+                file_size INT UNSIGNED NOT NULL DEFAULT 0,
+                uploaded_by VARCHAR(45) NOT NULL,
+                uploaded_at DATETIME NOT NULL,
+                updated_at DATETIME NOT NULL,
+                PRIMARY KEY (employee_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
             "CREATE TABLE IF NOT EXISTS ipcrf_workflow_history (
                 id INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 form_id INT UNSIGNED NOT NULL,
@@ -448,6 +459,70 @@ class Ipcrf_model extends CI_Model
             ->order_by('updated_at', 'ASC')
             ->get()
             ->result_array();
+    }
+
+    public function get_signature($employeeId)
+    {
+        return $this->db
+            ->where('employee_id', trim((string) $employeeId))
+            ->get('ipcrf_signatures', 1)
+            ->row_array();
+    }
+
+    public function save_signature($employeeId, $data)
+    {
+        $employeeId = trim((string) $employeeId);
+        if ($employeeId === '') {
+            return FALSE;
+        }
+
+        $record = array(
+            'employee_id' => $employeeId,
+            'original_name' => trim((string) $data['original_name']),
+            'stored_name' => trim((string) $data['stored_name']),
+            'mime_type' => trim((string) $data['mime_type']),
+            'file_size' => (int) $data['file_size'],
+            'uploaded_by' => trim((string) $data['uploaded_by']),
+            'uploaded_at' => $data['uploaded_at'],
+            'updated_at' => $data['updated_at']
+        );
+
+        if ($this->get_signature($employeeId)) {
+            unset($record['employee_id']);
+            return $this->db->where('employee_id', $employeeId)->update('ipcrf_signatures', $record);
+        }
+        return $this->db->insert('ipcrf_signatures', $record);
+    }
+
+    public function delete_signature($employeeId)
+    {
+        return $this->db
+            ->where('employee_id', trim((string) $employeeId))
+            ->delete('ipcrf_signatures');
+    }
+
+    public function can_view_signature($employeeId, $viewerId)
+    {
+        $employeeId = trim((string) $employeeId);
+        $viewerId = trim((string) $viewerId);
+        if ($employeeId === '' || $viewerId === '') {
+            return FALSE;
+        }
+        if ($employeeId === $viewerId || $this->is_admin() || $this->is_pmt()) {
+            return TRUE;
+        }
+
+        $viewerRatesEmployee = $this->db
+            ->where('employee_id', $employeeId)
+            ->where('rater_id', $viewerId)
+            ->count_all_results('ipcrf_forms') > 0;
+        if ($viewerRatesEmployee) {
+            return TRUE;
+        }
+        return $this->db
+            ->where('employee_id', $viewerId)
+            ->where('rater_id', $employeeId)
+            ->count_all_results('ipcrf_forms') > 0;
     }
 
     public function load_template_into_form($formId, $templateId, $actor)

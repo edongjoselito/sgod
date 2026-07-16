@@ -107,19 +107,33 @@
     }
 
     function ratingOptions(value, enabled) {
-        var labels = { 0: '—', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5' };
+        var options = [
+            { value: 0, label: '—' },
+            { value: 5, label: '5' },
+            { value: 4, label: '4' },
+            { value: 3, label: '3' },
+            { value: 2, label: '2' },
+            { value: 1, label: '1' }
+        ];
         var html = '<select class="form-control ipcrf-input"' + (enabled ? '' : ' disabled') + '>';
-        Object.keys(labels).forEach(function (number) {
-            html += '<option value="' + number + '"' + (Number(value) === Number(number) ? ' selected' : '') + '>' + labels[number] + '</option>';
+        options.forEach(function (option) {
+            html += '<option value="' + option.value + '"' + (Number(value) === option.value ? ' selected' : '') + '>' + option.label + '</option>';
         });
         return html + '</select>';
     }
 
     function competencyRatingOptions(value, enabled) {
-        var labels = { 0: '— Select rating —', 1: '1 — Rarely Demonstrates', 2: '2 — Sometimes Demonstrates', 3: '3 — Most of the Time', 4: '4 — Consistently Demonstrates', 5: '5 — Role Model' };
+        var options = [
+            { value: 0, label: '— Select rating —' },
+            { value: 5, label: '5 — Role Model' },
+            { value: 4, label: '4 — Consistently Demonstrates' },
+            { value: 3, label: '3 — Most of the Time' },
+            { value: 2, label: '2 — Sometimes Demonstrates' },
+            { value: 1, label: '1 — Rarely Demonstrates' }
+        ];
         var html = '<select class="form-control ipcrf-input"' + (enabled ? '' : ' disabled') + '>';
-        Object.keys(labels).forEach(function (number) {
-            html += '<option value="' + number + '"' + (Number(value) === Number(number) ? ' selected' : '') + '>' + labels[number] + '</option>';
+        options.forEach(function (option) {
+            html += '<option value="' + option.value + '"' + (Number(value) === option.value ? ' selected' : '') + '>' + option.label + '</option>';
         });
         return html + '</select>';
     }

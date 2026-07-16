@@ -36,6 +36,9 @@
  * @filesource
  */
 
+	// Use Philippine Standard Time for all application dates and timestamps.
+	date_default_timezone_set('Asia/Manila');
+
 /*
  *---------------------------------------------------------------
  * APPLICATION ENVIRONMENT

@@ -77,23 +77,23 @@ if (
                 <div class="logo-box">
                     <a href="#" class="logo text-center logo-dark">
                         <span class="logo-lg">
-                            <img src="<?= base_url(); ?>assets/images/logo-dark.png" alt="" height="18">
+                            <img src="<?= base_url(); ?>assets/images/sgod.png" alt="DepEd ONE" height="46">
                             <!-- <span class="logo-lg-text-dark">Velonic</span> -->
                         </span>
                         <span class="logo-sm">
                             <!-- <span class="logo-lg-text-dark">V</span> -->
-                            <img src="<?= base_url(); ?>assets/images/logo-sm.png" alt="" height="22">
+                            <img src="<?= base_url(); ?>assets/images/sgod.png" alt="DepEd ONE" height="22">
                         </span>
                     </a>
 
                     <a href="#" class="logo text-center logo-light">
                         <span class="logo-lg">
-                            <img src="<?= base_url(); ?>assets/images/logo-light.png" alt="" height="60">
+                            <img src="<?= base_url(); ?>assets/images/sgod.png" alt="DepEd ONE" height="46">
                             <!-- <span class="logo-lg-text-dark">Velonic</span> -->
                         </span>
                         <span class="logo-sm">
                             <!-- <span class="logo-lg-text-dark">V</span> -->
-                            <img src="<?= base_url(); ?>assets/images/logo-sm.png" alt="" height="22">
+                            <img src="<?= base_url(); ?>assets/images/sgod.png" alt="DepEd ONE" height="22">
                         </span>
                     </a>
                 </div>
