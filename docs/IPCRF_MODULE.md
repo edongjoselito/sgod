@@ -26,7 +26,7 @@ Submitting a Draft or Returned form to the rater is non-blocking. If required in
 
 Development Plan entries are created through a labeled modal and remain directly editable in the table. During **Submitted to Rater**, the assigned rater can add, edit, or remove Development Plan entries in addition to reviewing ratings. This does not grant the rater access to employee-owned KRA, objective, standard, accomplishment, evidence, period, or rater-assignment fields.
 
-The standalone **Validate Review** control has been removed. A **Missing Items** button appears only when the current server-side review finds incomplete information and opens the warning list. Employee submission and rater approval are non-blocking: either action can proceed after explicit acknowledgement. The rater can instead choose **Return with Remarks**; remarks are required and appear in Tracking History so the employee knows what to revise.
+The standalone **Validate Review** control has been removed. A **Missing Items** button appears only when the current server-side review finds incomplete information and opens the warning list. Employee submission and rater approval are non-blocking: either action can proceed after explicit acknowledgement. The rater can instead choose the red **Return Paper** action; remarks are mandatory and recorded in Tracking History. When the employee opens a returned record, the latest rater remarks, rater name, and return date appear in a prominent notice above the unlocked form so the requested corrections can be completed before resubmission.
 
 ## Workflow permissions
 
@@ -43,7 +43,7 @@ The standalone **Validate Review** control has been removed. A **Missing Items**
 
 Preview and Print PDF open a six-page, landscape, DepEd-style print view:
 
-1. Pages 1–4: employee/rater details, KRAs, objectives, standards, accomplishments and Q/E/T ratings
+1. Pages 1–4: employee/rater details, KRA-grouped objectives, standards, accomplishments and Q/E/T ratings. Each KRA is kept together where possible and printed once in a merged table cell; blank and placeholder KRAs are omitted.
 2. Page 5: competencies and their single recorded ratings
 3. Page 6: rating summary, development plan, workflow record and signature blocks
 

@@ -7,10 +7,20 @@ $jsonFlags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 $ipcrfCssVersion = @filemtime(FCPATH . 'assets/css/ipcrf.css') ?: time();
 $ipcrfJsVersion = @filemtime(FCPATH . 'assets/js/ipcrf.js') ?: time();
 $presetName = 'No preset loaded';
+$latestReturn = NULL;
+$isEmployeeOwner = $hasForm && (string) $form['employee_id'] === (string) $actor;
 if ($hasForm && !empty($form['template_id'])) {
     foreach ($templates as $template) {
         if ((int) $template['id'] === (int) $form['template_id']) {
             $presetName = $template['name'];
+            break;
+        }
+    }
+}
+if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
+    foreach ((array) $bundle['history'] as $historyEntry) {
+        if ($historyEntry['to_status'] === Ipcrf_model::STATUS_RETURNED) {
+            $latestReturn = $historyEntry;
             break;
         }
     }
@@ -64,6 +74,20 @@ if ($hasForm && !empty($form['template_id'])) {
                     <span class="toolbar-spacer"></span>
                     <span class="ipcrf-save-state is-saved" id="saveState" role="status" aria-live="polite"><i class="mdi mdi-check-circle-outline"></i><span>All changes saved</span></span>
                 </div>
+
+                <?php if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED): ?>
+                <section class="return-remarks-notice" role="alert" aria-labelledby="returnRemarksTitle">
+                    <span class="return-remarks-icon"><i class="mdi mdi-file-undo-outline"></i></span>
+                    <div class="return-remarks-content">
+                        <span class="return-remarks-kicker">Returned by the assigned rater</span>
+                        <h2 id="returnRemarksTitle">Revision is required before resubmission</h2>
+                        <blockquote><?= nl2br(htmlspecialchars($latestReturn && trim((string) $latestReturn['remarks']) !== '' ? $latestReturn['remarks'] : 'Please review the IPCRF and coordinate with the assigned rater for the required revisions.', ENT_QUOTES, 'UTF-8')); ?></blockquote>
+                        <small><strong><?= htmlspecialchars($latestReturn ? ($latestReturn['acted_by_name'] ?: $latestReturn['acted_by']) : ($form['rater_name'] ?: 'Assigned rater'), ENT_QUOTES, 'UTF-8'); ?></strong><?= $latestReturn ? ' · Returned ' . htmlspecialchars(date('M d, Y g:i A', strtotime($latestReturn['acted_at'])), ENT_QUOTES, 'UTF-8') : ''; ?></small>
+                        <p>Your IPCRF is unlocked. Edit the affected information below, save your changes, and submit it to the rater again when the remarks have been fulfilled.</p>
+                    </div>
+                    <a class="btn btn-danger return-remarks-action" href="#kraSection"><i class="mdi mdi-pencil-outline mr-1"></i>Review and Edit Form</a>
+                </section>
+                <?php endif; ?>
 
                 <div class="ipcrf-workspace">
                     <main class="ipcrf-main">
@@ -240,7 +264,7 @@ if ($hasForm && !empty($form['template_id'])) {
                     <div class="modal-dialog modal-lg modal-dialog-centered" role="document"><div class="modal-content ipcrf-editor-modal">
                         <div class="modal-header"><div><span class="modal-kicker">Help and Legend</span><h5 class="modal-title" id="editorGuideTitle">How to Complete the IPCRF</h5></div><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
                         <div class="modal-body guide-modal-body">
-                            <ol><li><strong>Employee Information:</strong> confirm the compact HRIS information, assigned rater and review period.</li><li><strong>KRAs:</strong> use Add New KRA when needed, then click an existing KRA title to revise it.</li><li><strong>Objectives and Results:</strong> add an objective inside the correct KRA. Existing code, objective, timeline, weight and actual result edit directly like document text.</li><li><strong>Standards:</strong> click Quality, Efficiency or Timeliness in an objective row to view or edit all five levels.</li><li><strong>Ratings:</strong> the owner proposes Q, E and T ratings in Draft. The assigned rater reviews them after submission.</li><li><strong>Competencies:</strong> click names or indicators to edit, choose the single Rating, and add another competency only when needed.</li><li><strong>Development Plan:</strong> Add Development Entry opens a guided dialog. Both the employee and assigned rater can add or edit plan entries.</li><li><strong>Missing Items:</strong> this button appears only while incomplete information exists and opens the current warning list.</li><li><strong>Return or approval:</strong> the rater can return the form with required remarks. Approval shows a warning for incomplete items but still permits Approve Anyway.</li></ol>
+                            <ol><li><strong>Employee Information:</strong> confirm the compact HRIS information, assigned rater and review period.</li><li><strong>KRAs:</strong> use Add New KRA when needed, then click an existing KRA title to revise it.</li><li><strong>Objectives and Results:</strong> add an objective inside the correct KRA. Existing code, objective, timeline, weight and actual result edit directly like document text.</li><li><strong>Standards:</strong> click Quality, Efficiency or Timeliness in an objective row to view or edit all five levels.</li><li><strong>Ratings:</strong> the owner proposes Q, E and T ratings in Draft. The assigned rater reviews them after submission.</li><li><strong>Competencies:</strong> click names or indicators to edit, choose the single Rating, and add another competency only when needed.</li><li><strong>Development Plan:</strong> Add Development Entry opens a guided dialog. Both the employee and assigned rater can add or edit plan entries.</li><li><strong>Missing Items:</strong> this button appears only while incomplete information exists and opens the current warning list.</li><li><strong>Return Paper:</strong> the assigned rater must explain the required corrections. A returned employee sees those remarks above the unlocked, editable form.</li><li><strong>Approval:</strong> incomplete items produce a warning but still permit Approve Anyway.</li></ol>
                             <div class="guide-note"><strong>Editing states:</strong> Draft and Returned records are editable by the employee. During rater review, ratings and the Development Plan are editable by the assigned rater. Validated and Locked records are read-only.</div>
                         </div>
                         <div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal">Got it</button></div>

@@ -1,20 +1,91 @@
 <?php
 $form = $bundle['form'];
 $ratingsApproved = !empty($summary['ratings_approved']);
-$objectives = array();
+$kraObjectiveGroups = array();
+$kraSequence = 0;
+$isPlaceholderKra = function ($title) {
+    $title = preg_replace('/\s+/u', ' ', trim((string) $title));
+    if ($title === '') return TRUE;
+    return (bool) preg_match('/^(?:new\s+key\s+result\s+area|new\s+kra|untitled\s+kra|key\s+result\s+area)(?:\s+\d+)?$/iu', $title);
+};
+$isEmptyObjective = function ($objective) {
+    return trim((string) $objective['code']) === ''
+        && trim((string) $objective['objective']) === ''
+        && trim((string) $objective['timeline']) === ''
+        && (float) $objective['weight'] <= 0
+        && trim((string) $objective['accomplishment']) === '';
+};
 foreach ($bundle['kras'] as $kra) {
+    $kraTitle = preg_replace('/\s+/u', ' ', trim((string) $kra['title']));
+    if ($isPlaceholderKra($kraTitle)) continue;
+    $kraSequence++;
+    $groupObjectives = array();
     foreach ($kra['objectives'] as $objective) {
-        $objective['kra_title'] = $kra['title'];
-        $objectives[] = $objective;
+        if ($isEmptyObjective($objective)) continue;
+        $objective['kra_title'] = $kraTitle;
+        $objective['kra_group_key'] = !empty($kra['id']) ? 'kra-' . (int) $kra['id'] : 'kra-sequence-' . $kraSequence;
+        $groupObjectives[] = $objective;
+    }
+    if ($groupObjectives) $kraObjectiveGroups[] = $groupObjectives;
+}
+
+// Keep every KRA intact while balancing the visible objectives across pages 1–4.
+// This prevents a KRA title from being repeated merely because an equal-row page
+// split landed in the middle of its objectives.
+$objectivePages = array();
+$groupCount = count($kraObjectiveGroups);
+$reportPageCount = min(4, $groupCount);
+$remainingObjectiveCount = 0;
+foreach ($kraObjectiveGroups as $groupObjectives) $remainingObjectiveCount += count($groupObjectives);
+$groupIndex = 0;
+for ($reportPage = 0; $reportPage < $reportPageCount; $reportPage++) {
+    $remainingPages = $reportPageCount - $reportPage;
+    $pageObjectives = array();
+    if ($remainingPages === 1) {
+        while ($groupIndex < $groupCount) {
+            $pageObjectives = array_merge($pageObjectives, $kraObjectiveGroups[$groupIndex]);
+            $groupIndex++;
+        }
+    } else {
+        $targetRows = (int) ceil($remainingObjectiveCount / $remainingPages);
+        $pageRowCount = 0;
+        while ($groupIndex < $groupCount) {
+            $groupObjectives = $kraObjectiveGroups[$groupIndex];
+            $groupRowCount = count($groupObjectives);
+            $groupsAfter = $groupCount - ($groupIndex + 1);
+            $pagesAfter = $remainingPages - 1;
+            if (
+                $pageRowCount > 0 &&
+                $groupsAfter >= $pagesAfter &&
+                abs($targetRows - ($pageRowCount + $groupRowCount)) > abs($targetRows - $pageRowCount)
+            ) {
+                break;
+            }
+            $pageObjectives = array_merge($pageObjectives, $groupObjectives);
+            $pageRowCount += $groupRowCount;
+            $remainingObjectiveCount -= $groupRowCount;
+            $groupIndex++;
+            if ($groupsAfter === $pagesAfter) break;
+        }
+    }
+    $objectivePages[] = $pageObjectives;
+}
+while (count($objectivePages) < 4) $objectivePages[] = array();
+foreach ($objectivePages as &$pageObjectives) {
+    $pageObjectiveCount = count($pageObjectives);
+    for ($objectiveIndex = 0; $objectiveIndex < $pageObjectiveCount; $objectiveIndex++) {
+        $groupKey = $pageObjectives[$objectiveIndex]['kra_group_key'];
+        $isGroupStart = $objectiveIndex === 0 || $pageObjectives[$objectiveIndex - 1]['kra_group_key'] !== $groupKey;
+        $pageObjectives[$objectiveIndex]['kra_group_start'] = $isGroupStart;
+        if (!$isGroupStart) continue;
+        $rowspan = 1;
+        while ($objectiveIndex + $rowspan < $pageObjectiveCount && $pageObjectives[$objectiveIndex + $rowspan]['kra_group_key'] === $groupKey) {
+            $rowspan++;
+        }
+        $pageObjectives[$objectiveIndex]['kra_rowspan'] = $rowspan;
     }
 }
-$perPage = max(1, (int) ceil(max(1, count($objectives)) / 4));
-$objectivePages = array_chunk($objectives, $perPage);
-while (count($objectivePages) < 4) $objectivePages[] = array();
-if (count($objectivePages) > 4) {
-    $objectivePages[3] = array_merge(...array_slice($objectivePages, 3));
-    $objectivePages = array_slice($objectivePages, 0, 4);
-}
+unset($pageObjectives);
 $e = function ($value) { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); };
 $formatPeriod = function ($start, $end) {
     return date('F Y', strtotime($start)) . ' to ' . date('F Y', strtotime($end));
@@ -56,7 +127,7 @@ $competencyAverage = function () use ($bundle) {
         th, td { border: .7px solid #111; padding: 1mm; vertical-align: top; }
         th { background: #eef1f5; font-size: 6.4pt; text-align: center; text-transform: uppercase; vertical-align: middle; }
         .performance-table { font-family: Georgia, 'Times New Roman', serif; font-size: 6pt; table-layout: fixed; }
-        .performance-table .kra { font-size: 6.4pt; font-weight: 800; text-align: center; }
+        .performance-table .kra { background: #e2e6ec; font-size: 6.6pt; font-weight: 800; letter-spacing: .025em; text-align: center; text-transform: uppercase; vertical-align: middle; }
         .performance-table .objective { font-size: 6.3pt; line-height: 1.17; }
         .performance-table .standards { font-size: 5.35pt; line-height: 1.14; padding: .7mm; }
         .performance-table .standards div { border-bottom: .4px solid #aaa; padding: .35mm 0; }
@@ -138,7 +209,7 @@ $competencyAverage = function () use ($bundle) {
                 $score = $ratingsApproved ? $rating * ((float) $objective['weight'] / 100) : 0;
             ?>
                 <tr>
-                    <td class="kra center"><?= $e($objective['kra_title']); ?></td>
+                    <?php if (!empty($objective['kra_group_start'])): ?><td class="kra center" rowspan="<?= (int) $objective['kra_rowspan']; ?>"><?= $e($objective['kra_title']); ?></td><?php endif; ?>
                     <td class="objective"><b><?= $e($objective['code']); ?></b> <?= nl2br($e($objective['objective'])); ?></td>
                     <td class="center"><?= $e($objective['timeline']); ?></td>
                     <td class="center"><b><?= number_format((float) $objective['weight'], 2); ?>%</b></td>

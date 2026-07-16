@@ -322,7 +322,7 @@
         if ((status === 'Draft' || status === 'Returned for Revision') && scope === 'full') {
             html = actionButton('submit_rater', 'Submit to Rater', 'mdi-send-outline', 'btn-success');
         } else if (status === 'Submitted to Rater' && (form.rater_id === config.actor || config.isAdmin)) {
-            html = actionButton('rater_approve', 'Approve IPCRF', 'mdi-check-decagram', 'btn-success') + actionButton('return_revision', 'Return with Remarks', 'mdi-undo-variant', 'btn-soft-danger ml-2');
+            html = actionButton('rater_approve', 'Approve IPCRF', 'mdi-check-decagram', 'btn-success') + actionButton('return_revision', 'Return Paper', 'mdi-file-undo-outline', 'btn-danger ml-2');
         } else if (status === 'Rater Approved' && (form.rater_id === config.actor || config.isAdmin)) {
             html = actionButton('submit_pmt', 'Submit to PMT', 'mdi-send-check-outline', 'btn-success');
         } else if (status === 'Submitted to PMT' && config.isPmt) {
@@ -840,7 +840,7 @@
         $(document).on('click', '.js-workflow', function () {
             var action = $(this).data('action');
             var needsRemarks = action === 'return_revision' || action === 'reopen';
-            var labels = { submit_rater: 'Submit this IPCRF to the assigned rater?', rater_approve: 'Approve this IPCRF as rater?', submit_pmt: 'Submit this approved IPCRF to the PMT?', pmt_validate: 'Validate this IPCRF as PMT?', lock: 'Lock this validated IPCRF?', return_revision: 'Return this IPCRF for revision?', reopen: 'Reopen this IPCRF for revision?' };
+            var labels = { submit_rater: 'Submit this IPCRF to the assigned rater?', rater_approve: 'Approve this IPCRF as rater?', submit_pmt: 'Submit this approved IPCRF to the PMT?', pmt_validate: 'Validate this IPCRF as PMT?', lock: 'Lock this validated IPCRF?', return_revision: 'Return IPCRF Paper to Employee', reopen: 'Reopen this IPCRF for revision?' };
             function sendWorkflow(remarks, confirmWarnings) {
                 $.post(config.urls.workflow, { action: action, remarks: remarks, confirm_warnings: confirmWarnings ? 1 : 0 }, null, 'json').done(function (response) {
                     toastr.success(response.message); window.location.href = response.reload;
@@ -854,7 +854,7 @@
                         Swal.fire({
                             icon: 'warning',
                             title: approving ? 'Approve with incomplete items?' : 'Incomplete information found',
-                            html: '<p class="submission-warning-intro">' + (approving ? 'You may review the form, use Return with Remarks, or approve it anyway.' : 'You may return to the form and complete these items, or submit the IPCRF to the rater anyway.') + '</p><ul class="submission-warning-list">' + warningItems + '</ul>',
+                            html: '<p class="submission-warning-intro">' + (approving ? 'You may review the form, use Return Paper with clear remarks, or approve it anyway.' : 'You may return to the form and complete these items, or submit the IPCRF to the rater anyway.') + '</p><ul class="submission-warning-list">' + warningItems + '</ul>',
                             showCancelButton: true,
                             confirmButtonText: approving ? 'Approve Anyway' : 'Submit Anyway',
                             cancelButtonText: approving ? 'Review / Return' : 'Review Form',
@@ -868,12 +868,24 @@
                     showError(xhr, 'The workflow status could not be changed.');
                 });
             }
-            var confirmText = action === 'submit_rater' ? 'Check and Submit' : (action === 'rater_approve' ? 'Check and Approve' : (action === 'return_revision' ? 'Return to Employee' : 'Continue'));
-            Swal.fire({ title: labels[action], input: needsRemarks ? 'textarea' : undefined, inputPlaceholder: needsRemarks ? 'Required remarks / reason' : undefined, showCancelButton: true, confirmButtonText: confirmText, confirmButtonColor: action === 'return_revision' ? '#b34b4b' : '#3157c8', inputValidator: needsRemarks ? function (value) { return value && value.trim() ? undefined : 'Remarks are required.'; } : undefined }).then(function (result) {
+            var returningPaper = action === 'return_revision';
+            var confirmText = action === 'submit_rater' ? 'Check and Submit' : (action === 'rater_approve' ? 'Check and Approve' : (returningPaper ? 'Return Paper' : 'Continue'));
+            Swal.fire({
+                icon: returningPaper ? 'warning' : undefined,
+                title: labels[action],
+                text: returningPaper ? 'Explain what is missing or needs correction. The employee will see these remarks above the editable form.' : undefined,
+                input: needsRemarks ? 'textarea' : undefined,
+                inputPlaceholder: returningPaper ? 'Required: describe the scores, fields, evidence, or other information the employee must complete.' : (needsRemarks ? 'Required remarks / reason' : undefined),
+                showCancelButton: true,
+                confirmButtonText: confirmText,
+                cancelButtonText: returningPaper ? 'Keep Reviewing' : 'Cancel',
+                confirmButtonColor: returningPaper ? '#b34b4b' : '#3157c8',
+                inputValidator: needsRemarks ? function (value) { return value && value.trim() ? undefined : 'Remarks are required so the employee knows what to revise.'; } : undefined
+            }).then(function (result) {
                 if (!result.value && result.dismiss) return;
                 var proceed = scope === 'none' ? $.Deferred().resolve().promise() : saveDraft(false);
                 proceed.then(function () {
-                    sendWorkflow(needsRemarks ? result.value : '', false);
+                    sendWorkflow(needsRemarks ? String(result.value || '').trim() : '', false);
                 });
             });
         });

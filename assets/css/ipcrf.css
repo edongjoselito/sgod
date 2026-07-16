@@ -191,6 +191,14 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
 .history-item .history-transition { color: #345a9d; font-weight: 700; margin: 2px 0; }
 .history-item .history-remarks { background: #f5f7fb; border-left: 3px solid #aebbd0; color: #536078; margin-top: 5px; padding: 5px 7px; }
 .scope-notice { background: #fff8e7; border: 1px solid #f1d58f; border-radius: 10px; color: #82621b; font-size: .72rem; margin-bottom: 13px; padding: 9px 11px; }
+.return-remarks-notice { align-items: center; background: #fff5f3; border: 1px solid #c96c62; border-left: 5px solid #b53f36; box-shadow: 0 5px 15px rgba(107,38,32,.07); display: grid; gap: 13px; grid-template-columns: auto minmax(0,1fr) auto; margin-bottom: 12px; padding: 13px 15px; }
+.return-remarks-icon { align-items: center; background: #b53f36; border-radius: 10px; color: #fff; display: flex; font-size: 1.35rem; height: 45px; justify-content: center; width: 45px; }
+.return-remarks-kicker { color: #9c352e; display: block; font-size: .58rem; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }
+.return-remarks-content h2 { color: #672b27; font-size: .9rem; font-weight: 800; margin: 2px 0 6px; }
+.return-remarks-content blockquote { background: #fff; border-left: 3px solid #d58b83; color: #4c3432; font-size: .74rem; line-height: 1.5; margin: 0 0 5px; padding: 7px 9px; }
+.return-remarks-content small { color: #78534f; display: block; font-size: .62rem; }
+.return-remarks-content p { color: #6f514e; font-size: .66rem; margin: 6px 0 0; }
+.return-remarks-action { font-size: .7rem; white-space: nowrap; }
 .ipcrf-page .select2-container--default .select2-selection--single { border-color: #d7e0ee; border-radius: 8px; height: 36px; }
 .ipcrf-page .select2-container--default .select2-selection--single .select2-selection__rendered { font-size: .78rem; line-height: 34px; }
 .ipcrf-page .select2-container--default .select2-selection--single .select2-selection__arrow { height: 34px; }
@@ -388,6 +396,8 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
     .tracking-current-state { grid-template-columns: 1fr; }
     .tracking-current-state > small { text-align: left; }
     .guide-step { border-bottom: 1px solid #c4cad3; border-right: 0; }
+    .return-remarks-notice { align-items: flex-start; grid-template-columns: auto 1fr; }
+    .return-remarks-action { grid-column: 1 / -1; width: 100%; }
     .guide-step:last-child { border-bottom: 0; }
 }
 
