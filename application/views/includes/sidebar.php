@@ -42,6 +42,13 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="<?= base_url(); ?>Page/super_admin" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
@@ -75,6 +82,13 @@
                 <ul class="metismenu" id="side-menu">
 
                     <li class="menu-title">Navigation</li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
 
                     <li>
                         <a href="<?= base_url(); ?><?= $adminDashboardRoute; ?>" class="waves-effect">
@@ -116,6 +130,13 @@
                 <ul class="metismenu" id="side-menu">
 
                     <li class="menu-title">Navigation</li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
 
                     <li>
                         <a href="<?= base_url(); ?>Page/sgod" class="waves-effect">
@@ -217,6 +238,13 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
@@ -270,6 +298,13 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="<?= base_url(); ?>Page/School" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
@@ -320,6 +355,13 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
@@ -364,6 +406,13 @@
                 <ul class="metismenu" id="side-menu">
 
                     <li class="menu-title">Navigation</li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -416,6 +465,13 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
@@ -464,6 +520,13 @@
                 <ul class="metismenu" id="side-menu">
 
                     <li class="menu-title">Navigation</li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -516,6 +579,13 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
@@ -564,6 +634,13 @@
                 <ul class="metismenu" id="side-menu">
 
                     <li class="menu-title">Navigation</li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -616,6 +693,13 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
@@ -666,6 +750,13 @@
                     <li class="menu-title">Navigation</li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
@@ -714,6 +805,13 @@
                 <ul class="metismenu" id="side-menu">
 
                     <li class="menu-title">Navigation</li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span> IPCRF Performance </span>
+                        </a>
+                    </li>
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
