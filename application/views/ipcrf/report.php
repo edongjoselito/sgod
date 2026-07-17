@@ -1,8 +1,10 @@
 <?php
 $form = $bundle['form'];
 $ratingsApproved = !empty($summary['ratings_approved']);
+$authorityApprovalComplete = in_array($form['status'], array(Ipcrf_model::STATUS_PMT_VALIDATED, Ipcrf_model::STATUS_LOCKED), TRUE);
 $employee_signature = isset($employee_signature) ? (string) $employee_signature : '';
 $rater_signature = ($ratingsApproved && isset($rater_signature)) ? (string) $rater_signature : '';
+$approving_authority_signature = ($authorityApprovalComplete && isset($approving_authority_signature)) ? (string) $approving_authority_signature : '';
 $kraObjectiveGroups = array();
 
 $isPlaceholderKra = function ($title) {
@@ -178,6 +180,8 @@ $overallCompetencyAverage = $averageRatings($bundle['competencies']);
         <div>
             <p><b>Name of Rater:</b> <?= $e($form['rater_name']); ?></p>
             <p><b>Position:</b> <?= $e($form['rater_position']); ?></p>
+            <p><b>Approving Authority:</b> <?= $e($form['approving_authority_name']); ?></p>
+            <p><b>Authority Position:</b> <?= $e($form['approving_authority_position']); ?></p>
             <p><b>Review Period:</b> <?= $e($formatPeriod($form['period_start'], $form['period_end'])); ?></p>
             <p><b>Status:</b> <?= $e($form['status']); ?></p>
         </div>
@@ -244,7 +248,7 @@ $overallCompetencyAverage = $averageRatings($bundle['competencies']);
         <div class="signature-row">
             <div class="signature-line"><?php if ($employee_signature !== ''): ?><img class="signature-image" src="<?= $e($employee_signature); ?>" alt="Ratee signature"><?php endif; ?><b><?= $e($form['employee_name']); ?></b><small>RATEE</small></div>
             <div class="signature-line"><?php if ($rater_signature !== ''): ?><img class="signature-image" src="<?= $e($rater_signature); ?>" alt="Rater signature"><?php endif; ?><b><?= $e($form['rater_name']); ?></b><small>RATER</small></div>
-            <div class="signature-line"><b>APPROVING AUTHORITY</b><small>NAME AND SIGNATURE</small></div>
+            <div class="signature-line"><?php if ($approving_authority_signature !== ''): ?><img class="signature-image" src="<?= $e($approving_authority_signature); ?>" alt="Approving authority signature"><?php endif; ?><b><?= $e($form['approving_authority_name'] ?: 'APPROVING AUTHORITY'); ?></b><small>APPROVING AUTHORITY</small></div>
         </div>
     </section>
 
@@ -338,7 +342,7 @@ $overallCompetencyAverage = $averageRatings($bundle['competencies']);
             <div class="signature-row">
                 <div class="signature-line"><?php if ($employee_signature !== ''): ?><img class="signature-image" src="<?= $e($employee_signature); ?>" alt="Ratee signature"><?php endif; ?><b><?= $e($form['employee_name']); ?></b><small>RATEE / DATE</small></div>
                 <div class="signature-line"><?php if ($rater_signature !== ''): ?><img class="signature-image" src="<?= $e($rater_signature); ?>" alt="Rater signature"><?php endif; ?><b><?= $e($form['rater_name']); ?></b><small>RATER / DATE</small></div>
-                <div class="signature-line"><b>APPROVING AUTHORITY / PMT</b><small>SIGNATURE / DATE</small></div>
+                <div class="signature-line"><?php if ($approving_authority_signature !== ''): ?><img class="signature-image" src="<?= $e($approving_authority_signature); ?>" alt="Approving authority signature"><?php endif; ?><b><?= $e($form['approving_authority_name'] ?: 'APPROVING AUTHORITY'); ?></b><small>APPROVING AUTHORITY / DATE</small></div>
             </div>
         </div>
     </section>

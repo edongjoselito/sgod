@@ -64,6 +64,9 @@ class Ipcrf_model extends CI_Model
                 rater_id VARCHAR(25) NOT NULL DEFAULT '',
                 rater_name VARCHAR(180) NOT NULL DEFAULT '',
                 rater_position VARCHAR(180) NOT NULL DEFAULT '',
+                approving_authority_id VARCHAR(25) NOT NULL DEFAULT '',
+                approving_authority_name VARCHAR(180) NOT NULL DEFAULT '',
+                approving_authority_position VARCHAR(180) NOT NULL DEFAULT '',
                 period_start DATE NOT NULL,
                 period_end DATE NOT NULL,
                 status VARCHAR(45) NOT NULL DEFAULT 'Draft',
@@ -181,6 +184,16 @@ class Ipcrf_model extends CI_Model
         if (!$this->db->field_exists('rating', 'ipcrf_competencies')) {
             $this->db->query("ALTER TABLE ipcrf_competencies ADD rating TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER indicators_json");
             $this->db->query("UPDATE ipcrf_competencies SET rating = CASE WHEN final_rating BETWEEN 1 AND 5 THEN final_rating WHEN rater_rating BETWEEN 1 AND 5 THEN rater_rating WHEN employee_rating BETWEEN 1 AND 5 THEN employee_rating ELSE 0 END");
+        }
+
+        if (!$this->db->field_exists('approving_authority_id', 'ipcrf_forms')) {
+            $this->db->query("ALTER TABLE ipcrf_forms ADD approving_authority_id VARCHAR(25) NOT NULL DEFAULT '' AFTER rater_position");
+        }
+        if (!$this->db->field_exists('approving_authority_name', 'ipcrf_forms')) {
+            $this->db->query("ALTER TABLE ipcrf_forms ADD approving_authority_name VARCHAR(180) NOT NULL DEFAULT '' AFTER approving_authority_id");
+        }
+        if (!$this->db->field_exists('approving_authority_position', 'ipcrf_forms')) {
+            $this->db->query("ALTER TABLE ipcrf_forms ADD approving_authority_position VARCHAR(180) NOT NULL DEFAULT '' AFTER approving_authority_name");
         }
 
         if ((int) $this->db->count_all('ipcrf_templates') === 0) {
@@ -425,6 +438,9 @@ class Ipcrf_model extends CI_Model
             'rater_id' => trim((string) $data['rater_id']),
             'rater_name' => trim((string) $data['rater_name']),
             'rater_position' => trim((string) $data['rater_position']),
+            'approving_authority_id' => trim((string) $data['approving_authority_id']),
+            'approving_authority_name' => trim((string) $data['approving_authority_name']),
+            'approving_authority_position' => trim((string) $data['approving_authority_position']),
             'period_start' => $data['period_start'],
             'period_end' => $data['period_end'],
             'status' => self::STATUS_DRAFT,
@@ -438,14 +454,139 @@ class Ipcrf_model extends CI_Model
         return $id;
     }
 
+    public function update_personal_form_setup($formId, $employeeId, $data, $actor)
+    {
+        $formId = (int) $formId;
+        $employeeId = trim((string) $employeeId);
+        $this->db->trans_begin();
+
+        $form = $this->db->query(
+            'SELECT id, employee_id, status FROM ipcrf_forms WHERE id = ? AND employee_id = ? FOR UPDATE',
+            array($formId, $employeeId)
+        )->row_array();
+        if (!$this->can_employee_manage_form($form, $employeeId)) {
+            $this->db->trans_rollback();
+            return FALSE;
+        }
+
+        $duplicate = $this->db
+            ->where('employee_id', $employeeId)
+            ->where('period_start', $data['period_start'])
+            ->where('period_end', $data['period_end'])
+            ->where('id !=', $formId)
+            ->count_all_results('ipcrf_forms') > 0;
+        if ($duplicate) {
+            $this->db->trans_rollback();
+            return FALSE;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $this->db->where('id', $formId)->where('employee_id', $employeeId)->update('ipcrf_forms', array(
+            'rater_id' => trim((string) $data['rater_id']),
+            'rater_name' => trim((string) $data['rater_name']),
+            'rater_position' => trim((string) $data['rater_position']),
+            'approving_authority_id' => trim((string) $data['approving_authority_id']),
+            'approving_authority_name' => trim((string) $data['approving_authority_name']),
+            'approving_authority_position' => trim((string) $data['approving_authority_position']),
+            'period_start' => $data['period_start'],
+            'period_end' => $data['period_end'],
+            'status' => self::STATUS_DRAFT,
+            'submitted_at' => NULL,
+            'validated_at' => NULL,
+            'locked_at' => NULL,
+            'updated_by' => $actor,
+            'updated_at' => $now
+        ));
+        $this->add_history(
+            $formId,
+            $form['status'],
+            self::STATUS_DRAFT,
+            'Rater, approving authority, or performance period updated. Saved as draft.',
+            $actor,
+            $this->actor_name()
+        );
+
+        if ($this->db->trans_status() === FALSE) {
+            $this->db->trans_rollback();
+            return FALSE;
+        }
+
+        $this->db->trans_commit();
+        return TRUE;
+    }
+
     public function personal_forms($employeeId)
     {
-        $this->db->select('id, employee_id, employee_name, position, office, period_start, period_end, status, rater_id, rater_name, created_by, updated_at');
+        $this->db->select('id, employee_id, employee_name, position, office, period_start, period_end, status, rater_id, rater_name, approving_authority_id, approving_authority_name, approving_authority_position, created_by, updated_at');
         $this->db->from('ipcrf_forms');
         $this->db->where('employee_id', trim((string) $employeeId));
         $this->db->order_by('updated_at', 'DESC');
         $this->db->limit(30);
         return $this->db->get()->result_array();
+    }
+
+    public function can_employee_manage_form($form, $employeeId)
+    {
+        if (!$form || (string) $form['employee_id'] !== trim((string) $employeeId)) {
+            return FALSE;
+        }
+
+        return in_array($form['status'], array(
+            self::STATUS_DRAFT,
+            self::STATUS_SUBMITTED_RATER,
+            self::STATUS_RETURNED
+        ), TRUE);
+    }
+
+    public function form_evidence_files($formId)
+    {
+        return $this->db
+            ->select('stored_name')
+            ->where('form_id', (int) $formId)
+            ->get('ipcrf_evidence')
+            ->result_array();
+    }
+
+    public function delete_personal_form($formId, $employeeId)
+    {
+        $formId = (int) $formId;
+        $employeeId = trim((string) $employeeId);
+        $manageableStatuses = array(
+            self::STATUS_DRAFT,
+            self::STATUS_SUBMITTED_RATER,
+            self::STATUS_RETURNED
+        );
+
+        $this->db->trans_begin();
+        $this->db
+            ->where('id', $formId)
+            ->where('employee_id', $employeeId)
+            ->where_in('status', $manageableStatuses)
+            ->delete('ipcrf_forms');
+
+        if ($this->db->affected_rows() !== 1) {
+            $this->db->trans_rollback();
+            return FALSE;
+        }
+
+        foreach (array(
+            'ipcrf_evidence',
+            'ipcrf_objectives',
+            'ipcrf_kras',
+            'ipcrf_competencies',
+            'ipcrf_development_plans',
+            'ipcrf_workflow_history'
+        ) as $table) {
+            $this->db->where('form_id', $formId)->delete($table);
+        }
+
+        if ($this->db->trans_status() === FALSE) {
+            $this->db->trans_rollback();
+            return FALSE;
+        }
+
+        $this->db->trans_commit();
+        return TRUE;
     }
 
     public function submitted_rater_forms($raterId)
@@ -457,6 +598,23 @@ class Ipcrf_model extends CI_Model
             ->where('status', self::STATUS_SUBMITTED_RATER)
             ->order_by('submitted_at', 'ASC')
             ->order_by('updated_at', 'ASC')
+            ->get()
+            ->result_array();
+    }
+
+    public function approved_rater_forms($raterId)
+    {
+        return $this->db
+            ->select('id, employee_id, employee_name, position, office, period_start, period_end, status, rater_id, rater_name, submitted_at, validated_at, locked_at, updated_at')
+            ->from('ipcrf_forms')
+            ->where('rater_id', trim((string) $raterId))
+            ->where_in('status', array(
+                self::STATUS_RATER_APPROVED,
+                self::STATUS_SUBMITTED_PMT,
+                self::STATUS_PMT_VALIDATED,
+                self::STATUS_LOCKED
+            ))
+            ->order_by('updated_at', 'DESC')
             ->get()
             ->result_array();
     }
@@ -519,9 +677,23 @@ class Ipcrf_model extends CI_Model
         if ($viewerRatesEmployee) {
             return TRUE;
         }
-        return $this->db
+        $viewerApprovesEmployee = $this->db
+            ->where('employee_id', $employeeId)
+            ->where('approving_authority_id', $viewerId)
+            ->count_all_results('ipcrf_forms') > 0;
+        if ($viewerApprovesEmployee) {
+            return TRUE;
+        }
+        $employeeReviewsViewer = $this->db
             ->where('employee_id', $viewerId)
             ->where('rater_id', $employeeId)
+            ->count_all_results('ipcrf_forms') > 0;
+        if ($employeeReviewsViewer) {
+            return TRUE;
+        }
+        return $this->db
+            ->where('employee_id', $viewerId)
+            ->where('approving_authority_id', $employeeId)
             ->count_all_results('ipcrf_forms') > 0;
     }
 
@@ -643,6 +815,9 @@ class Ipcrf_model extends CI_Model
                 'rater_id' => trim((string) (isset($header['rater_id']) ? $header['rater_id'] : '')),
                 'rater_name' => trim((string) (isset($header['rater_name']) ? $header['rater_name'] : '')),
                 'rater_position' => trim((string) (isset($header['rater_position']) ? $header['rater_position'] : '')),
+                'approving_authority_id' => trim((string) (isset($header['approving_authority_id']) ? $header['approving_authority_id'] : '')),
+                'approving_authority_name' => trim((string) (isset($header['approving_authority_name']) ? $header['approving_authority_name'] : '')),
+                'approving_authority_position' => trim((string) (isset($header['approving_authority_position']) ? $header['approving_authority_position'] : '')),
                 'period_start' => $this->valid_date(isset($header['period_start']) ? $header['period_start'] : '') ?: date('Y-01-01'),
                 'period_end' => $this->valid_date(isset($header['period_end']) ? $header['period_end'] : '') ?: date('Y-12-31'),
                 'updated_by' => $actor, 'updated_at' => $now
@@ -792,6 +967,9 @@ class Ipcrf_model extends CI_Model
         if (trim($form['rater_name']) === '') {
             $errors[] = 'An assigned rater is required.';
         }
+        if (trim((string) (isset($form['approving_authority_name']) ? $form['approving_authority_name'] : '')) === '') {
+            $errors[] = 'An approving authority is required.';
+        }
         if (!$this->valid_date($form['period_start']) || !$this->valid_date($form['period_end']) || $form['period_start'] > $form['period_end']) {
             $errors[] = 'The performance period is invalid.';
         }
@@ -930,7 +1108,8 @@ class Ipcrf_model extends CI_Model
 
     public function can_view($form, $actor)
     {
-        if ($form['employee_id'] === $actor || $form['rater_id'] === $actor || $this->is_admin()) {
+        $approvingAuthorityId = isset($form['approving_authority_id']) ? $form['approving_authority_id'] : '';
+        if ($form['employee_id'] === $actor || $form['rater_id'] === $actor || $approvingAuthorityId === $actor || $this->is_admin()) {
             return TRUE;
         }
         return $this->is_pmt() && in_array($form['status'], array(self::STATUS_SUBMITTED_PMT, self::STATUS_PMT_VALIDATED, self::STATUS_LOCKED), TRUE);

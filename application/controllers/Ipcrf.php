@@ -70,10 +70,12 @@ class Ipcrf extends CI_Controller
     public function rater_queue()
     {
         $employee = $this->Ipcrf_model->get_employee($this->employeeId);
-        $forms = $employee ? $this->Ipcrf_model->submitted_rater_forms($this->employeeId) : array();
+        $pendingForms = $employee ? $this->Ipcrf_model->submitted_rater_forms($this->employeeId) : array();
+        $approvedForms = $employee ? $this->Ipcrf_model->approved_rater_forms($this->employeeId) : array();
         $this->load->view('ipcrf/rater_queue', array(
             'current_employee' => $employee,
-            'forms' => $forms
+            'pending_forms' => $pendingForms,
+            'approved_forms' => $approvedForms
         ));
     }
 
@@ -258,14 +260,52 @@ class Ipcrf extends CI_Controller
             $this->json(array('success' => FALSE, 'message' => 'Select a valid assigned rater from HRIS.'), 422);
             return;
         }
+        $approvingAuthorityId = trim((string) $this->input->post('approving_authority_id', TRUE));
+        $approvingAuthority = $approvingAuthorityId !== '' ? $this->Ipcrf_model->get_employee($approvingAuthorityId) : NULL;
+        if (!$approvingAuthority) {
+            $this->json(array('success' => FALSE, 'message' => 'Select a valid approving authority from HRIS.'), 422);
+            return;
+        }
         $data = array(
             'period_start' => $periodStart,
             'period_end' => $periodEnd,
             'rater_id' => $rater['id'],
             'rater_name' => $rater['name'],
-            'rater_position' => $rater['position']
+            'rater_position' => $rater['position'],
+            'approving_authority_id' => $approvingAuthority['id'],
+            'approving_authority_name' => $approvingAuthority['name'],
+            'approving_authority_position' => $approvingAuthority['position']
         );
-        $id = $this->Ipcrf_model->create_form($employee, $data, $this->actor());
+        $requestedFormId = (int) $this->input->post('form_id');
+        $updatedExistingForm = FALSE;
+        if ($requestedFormId > 0) {
+            $requestedForm = $this->Ipcrf_model->get_form($requestedFormId);
+            if (!$requestedForm) {
+                $this->json(array('success' => FALSE, 'message' => 'The IPCRF record to update was not found.'), 404);
+                return;
+            }
+            if ((string) $requestedForm['employee_id'] !== (string) $this->employeeId) {
+                $this->json(array('success' => FALSE, 'message' => 'You can only update your own IPCRF records.'), 403);
+                return;
+            }
+            if (!$this->Ipcrf_model->can_employee_manage_form($requestedForm, $this->employeeId)) {
+                $this->json(array('success' => FALSE, 'message' => 'This IPCRF can no longer be updated because it has already been approved or validated.'), 409);
+                return;
+            }
+            $duplicate = $this->Ipcrf_model->find_period_form($this->employeeId, $periodStart, $periodEnd);
+            if ($duplicate && (int) $duplicate['id'] !== $requestedFormId) {
+                $this->json(array('success' => FALSE, 'message' => 'Another IPCRF already uses this performance period.'), 422);
+                return;
+            }
+            if (!$this->Ipcrf_model->update_personal_form_setup($requestedFormId, $this->employeeId, $data, $this->actor())) {
+                $this->json(array('success' => FALSE, 'message' => 'The IPCRF assignments could not be updated. Refresh the page and try again.'), 409);
+                return;
+            }
+            $id = $requestedFormId;
+            $updatedExistingForm = TRUE;
+        } else {
+            $id = $this->Ipcrf_model->create_form($employee, $data, $this->actor());
+        }
         $openedForm = $this->Ipcrf_model->get_form($id);
         if (!$openedForm || !$this->Ipcrf_model->can_view($openedForm, $this->employeeId)) {
             $this->json(array('success' => FALSE, 'message' => 'Your IPCRF could not be opened.'), 403);
@@ -277,7 +317,15 @@ class Ipcrf extends CI_Controller
                 $this->Ipcrf_model->load_template_into_form($id, $defaultTemplate['id'], $this->actor());
             }
         }
-        $this->json(array('success' => TRUE, 'id' => $id, 'url' => site_url('Ipcrf/index/' . $id)));
+        $this->json(array(
+            'success' => TRUE,
+            'id' => $id,
+            'status' => $openedForm['status'],
+            'message' => $updatedExistingForm
+                ? 'Reviewer assignments updated and saved as draft.'
+                : ($openedForm['status'] === Ipcrf_model::STATUS_DRAFT ? 'IPCRF draft saved.' : 'Existing IPCRF opened.'),
+            'url' => site_url('Ipcrf/index/' . $id)
+        ));
     }
 
     public function bundle($id)
@@ -517,6 +565,49 @@ class Ipcrf extends CI_Controller
         $this->json(array('success' => TRUE, 'message' => 'Evidence removed.'));
     }
 
+    public function delete_form($id)
+    {
+        if (!isset($_SERVER['REQUEST_METHOD']) || strtoupper($_SERVER['REQUEST_METHOD']) !== 'POST') {
+            $this->output->set_header('Allow: POST');
+            $this->json(array('success' => FALSE, 'message' => 'This action requires a POST request.'), 405);
+            return;
+        }
+
+        $form = $this->Ipcrf_model->get_form((int) $id);
+        if (!$form) {
+            $this->json(array('success' => FALSE, 'message' => 'IPCRF was not found.'), 404);
+            return;
+        }
+        if ((string) $form['employee_id'] !== (string) $this->employeeId) {
+            $this->json(array('success' => FALSE, 'message' => 'You can only delete your own IPCRF records.'), 403);
+            return;
+        }
+        if (!$this->Ipcrf_model->can_employee_manage_form($form, $this->employeeId)) {
+            $this->json(array('success' => FALSE, 'message' => 'This IPCRF can no longer be deleted because it has already been approved or validated.'), 409);
+            return;
+        }
+
+        $evidenceFiles = $this->Ipcrf_model->form_evidence_files($id);
+        if (!$this->Ipcrf_model->delete_personal_form($id, $this->employeeId)) {
+            $this->json(array('success' => FALSE, 'message' => 'The IPCRF changed before it could be deleted. Refresh the page and try again.'), 409);
+            return;
+        }
+
+        $uploadPath = FCPATH . 'upload/ipcrf_evidence/';
+        foreach ($evidenceFiles as $evidence) {
+            $path = $uploadPath . basename((string) $evidence['stored_name']);
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        $this->json(array(
+            'success' => TRUE,
+            'message' => 'IPCRF record deleted.',
+            'reload' => site_url('Ipcrf')
+        ));
+    }
+
     public function download_evidence($id, $evidenceId)
     {
         if (!$this->authorized_form($id, FALSE)) {
@@ -548,7 +639,8 @@ class Ipcrf extends CI_Controller
             'summary' => $this->summary($bundle),
             'autoprint' => $this->input->get('autoprint') === '1',
             'employee_signature' => $this->signature_data_uri($bundle['form']['employee_id']),
-            'rater_signature' => $this->signature_data_uri($bundle['form']['rater_id'])
+            'rater_signature' => $this->signature_data_uri($bundle['form']['rater_id']),
+            'approving_authority_signature' => $this->signature_data_uri($bundle['form']['approving_authority_id'])
         ));
     }
 

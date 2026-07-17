@@ -69,6 +69,20 @@ if (!empty($whereabouts)) {
 $statusCalendarStylesJson = json_encode($statusCalendarStyles, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 $calendarEntriesJson = json_encode($calendarEntriesByDate, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
+$dashboardUserName = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter(array(
+    $this->session->userdata('fName'),
+    $this->session->userdata('mName'),
+    $this->session->userdata('lName')
+)))));
+$dashboardUserNameParts = $dashboardUserName !== '' ? preg_split('/\s+/', $dashboardUserName) : array();
+$dashboardUserInitials = '';
+if (!empty($dashboardUserNameParts)) {
+    $dashboardUserInitials = strtoupper(substr($dashboardUserNameParts[0], 0, 1));
+    if (count($dashboardUserNameParts) > 1) {
+        $dashboardUserInitials .= strtoupper(substr($dashboardUserNameParts[count($dashboardUserNameParts) - 1], 0, 1));
+    }
+}
+$dashboardUserInitials = $dashboardUserInitials !== '' ? $dashboardUserInitials : 'SU';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -823,42 +837,62 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
                 }
             }
         </style>
+        <link href="<?= base_url(); ?>assets/css/dashboard-unified.css" rel="stylesheet" type="text/css" />
     </head>
 
-    <body>
+    <body class="dashboard-root-theme">
         <div id="wrapper">
             <?php include('includes/top-bar.php'); ?>
             <?php include('includes/sidebar.php') ?>
 
             <div class="content-page">
                 <div class="content">
-                    <div class="container-fluid user-shell">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="dashboard-hero">
-                                    <div class="dashboard-hero-body">
+                    <div class="container-fluid user-shell dashboard-shell">
+                        <section class="dashboard-hero">
+                            <div class="row align-items-center">
+                                <div class="col-lg-8">
+                                    <div class="hero-content">
                                         <span class="hero-eyebrow">
                                             <i class="mdi mdi-account-circle-outline"></i>
                                             Section User Dashboard
                                         </span>
                                         <h1 class="hero-title">Welcome, <?= htmlspecialchars($this->session->userdata('fName'), ENT_QUOTES, 'UTF-8'); ?>!</h1>
-                                        <p class="hero-copy">
+                                        <p class="hero-subtitle">
                                             Manage your accomplishments for <?= htmlspecialchars($section, ENT_QUOTES, 'UTF-8'); ?> under <?= htmlspecialchars($secGroup, ENT_QUOTES, 'UTF-8'); ?>.
                                         </p>
                                     </div>
                                 </div>
+
+                                <div class="col-lg-4">
+                                    <div class="hero-profile">
+                                        <span class="hero-avatar"><?= htmlspecialchars($dashboardUserInitials, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <div class="hero-profile-copy">
+                                            <strong><?= htmlspecialchars($dashboardUserName !== '' ? $dashboardUserName : 'Section User', ENT_QUOTES, 'UTF-8'); ?></strong>
+                                            <span><?= htmlspecialchars($section, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </section>
 
-                        <div class="row mt-4">
-                            <div class="col-xl-12 mb-4">
-                                <div class="panel-card">
-                                    <div class="panel-kicker">Whereabouts</div>
-                                    <h4 class="panel-title">Update Your Whereabouts</h4>
-                                    <p class="panel-copy">
-                                        Let others know where you are and what you're working on today.
-                                    </p>
+                        <div class="row dashboard-main-row">
+                            <div class="col-12">
+                                <section class="dashboard-card">
+                                    <div class="card-heading">
+                                        <div class="heading-group">
+                                            <span class="heading-icon"><i class="mdi mdi-calendar-month-outline"></i></span>
+                                            <div>
+                                                <h2 class="card-title">My Calendar</h2>
+                                                <p class="card-caption">Update your schedule and whereabouts</p>
+                                            </div>
+                                        </div>
+                                        <span class="today-badge">
+                                            <i class="mdi mdi-calendar-today-outline"></i>
+                                            <?= htmlspecialchars($manilaNow->format('l, F j, Y'), ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                    </div>
 
+                                    <div class="dashboard-card-body">
                                     <div class="calendar-app-shell">
                                         <div class="calendar-main">
                                             <div class="calendar-main-toolbar">
@@ -890,7 +924,8 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                    </div>
+                                </section>
                             </div>
                         </div>
                     </div>

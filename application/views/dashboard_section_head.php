@@ -715,9 +715,10 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
 
             }
         </style>
+        <link href="<?= base_url(); ?>assets/css/dashboard-unified.css" rel="stylesheet" type="text/css" />
     </head>
 
-    <body>
+    <body class="dashboard-root-theme">
 
         <div id="wrapper">
 

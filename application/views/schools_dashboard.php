@@ -118,20 +118,20 @@ if ($yearEstablished === '') {
 
         <style>
             :root {
-                --school-navy: #1f2a7c;
-                --school-blue: #3555d3;
-                --school-cyan: #00a9b8;
-                --school-ink: #222a57;
-                --school-muted: #7a829f;
-                --school-border: rgba(53, 85, 211, 0.12);
-                --school-surface: rgba(255, 255, 255, 0.96);
-                --school-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+                --school-navy: #272b8c;
+                --school-blue: #3c40c6;
+                --school-cyan: #6c70ef;
+                --school-ink: #23264a;
+                --school-muted: #737894;
+                --school-border: #e7e9f3;
+                --school-surface: #ffffff;
+                --school-shadow: 0 12px 30px rgba(35, 38, 74, 0.08);
             }
 
             body {
                 background:
-                    radial-gradient(circle at top left, rgba(53, 85, 211, 0.10), transparent 24%),
-                    linear-gradient(180deg, #f4f7fb 0%, #edf3fa 100%);
+                    radial-gradient(circle at 12% 0%, rgba(60, 64, 198, 0.08), transparent 26%),
+                    #f4f6fb;
             }
 
             .content-page {
@@ -140,6 +140,7 @@ if ($yearEstablished === '') {
 
             .school-page-shell {
                 position: relative;
+                padding-top: 20px;
                 padding-bottom: 28px;
             }
 
@@ -148,10 +149,10 @@ if ($yearEstablished === '') {
                 position: absolute;
                 left: 0;
                 right: 0;
-                top: 20px;
+                top: 10px;
                 height: 250px;
-                border-radius: 30px;
-                background: linear-gradient(135deg, rgba(53, 85, 211, 0.10), rgba(0, 169, 184, 0.08));
+                border-radius: 24px;
+                background: linear-gradient(135deg, rgba(60, 64, 198, 0.08), rgba(108, 112, 239, 0.06));
                 z-index: 0;
             }
 
@@ -161,19 +162,21 @@ if ($yearEstablished === '') {
             }
 
             .school-hero {
-                margin-top: 20px;
+                position: relative;
+                min-height: 154px;
+                margin-top: 0;
                 margin-bottom: 24px;
-                border-radius: 28px;
+                border-radius: 24px;
                 overflow: hidden;
-                box-shadow: var(--school-shadow);
+                box-shadow: 0 20px 45px rgba(39, 43, 140, 0.20);
                 background:
-                    radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 30%),
-                    linear-gradient(135deg, #1f2a7c 0%, #3555d3 58%, #59a7ff 100%);
+                    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.23), transparent 26%),
+                    linear-gradient(135deg, var(--school-navy) 0%, var(--school-blue) 62%, var(--school-cyan) 100%);
                 color: #ffffff;
             }
 
             .school-hero-body {
-                padding: 32px;
+                padding: 28px 30px;
                 display: flex;
                 flex-wrap: wrap;
                 justify-content: space-between;
@@ -195,10 +198,10 @@ if ($yearEstablished === '') {
             }
 
             .school-title {
-                margin: 18px 0 12px;
+                margin: 10px 0 9px;
                 color: #ffffff;
-                font-size: clamp(2rem, 3vw, 2.8rem);
-                line-height: 1.05;
+                font-size: clamp(1.75rem, 3vw, 2.35rem);
+                line-height: 1.15;
                 font-weight: 700;
                 letter-spacing: -0.03em;
                 font-family: "Avenir Next", "Segoe UI", sans-serif;

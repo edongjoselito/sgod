@@ -42,21 +42,21 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
     <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <link href="<?= base_url(); ?>assets/css/ipcrf.css?v=<?= $ipcrfCssVersion; ?>" rel="stylesheet" type="text/css" />
 </head>
-<body class="ipcrf-page">
+<body class="ipcrf-page<?= $hasForm ? '' : ' ipcrf-landing-page'; ?>">
 <div id="wrapper">
     <?php include(APPPATH . 'views/includes/top-bar.php'); ?>
     <?php include(APPPATH . 'views/includes/sidebar.php'); ?>
 
     <div class="content-page">
         <div class="content">
-            <div class="container-fluid ipcrf-shell">
-                <div class="ipcrf-title-row">
+            <div class="container-fluid ipcrf-shell<?= $hasForm ? '' : ' ipcrf-landing-shell'; ?>">
+                <div class="ipcrf-title-row<?= $hasForm ? '' : ' ipcrf-landing-hero'; ?>">
                     <div>
                         <span class="ipcrf-kicker">Performance Management</span>
-                        <h1>Individual Performance Commitment and Review</h1>
-                        <p>Build, rate, track and print the complete IPCRF from one screen.</p>
+                        <h1><?= $hasForm ? 'Individual Performance Commitment and Review' : 'My IPCRF Workspace'; ?></h1>
+                        <p><?= $hasForm ? 'Build, rate, track and print the complete IPCRF from one screen.' : 'Create a performance record, assign its reviewers, and return to active IPCRFs from one organized workspace.'; ?></p>
                     </div>
-                    <span class="ipcrf-status" id="formStatus"><?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span class="ipcrf-status" id="formStatus"><?= htmlspecialchars($hasForm ? $status : 'Ready to Start', ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
 
                 <?php if ($hasForm): ?>
@@ -115,6 +115,8 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                                     <div class="employee-pdf-column">
                                         <div class="employee-pdf-row employee-rater-row"><label>Name of Rater</label><select id="editorRater" class="form-control ipcrf-input"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><option value="<?= htmlspecialchars($form['rater_id'], ENT_QUOTES, 'UTF-8'); ?>" selected><?= htmlspecialchars($form['rater_name'] ?: 'Select rater', ENT_QUOTES, 'UTF-8'); ?></option></select></div>
                                         <div class="employee-pdf-row"><label>Position of Rater</label><strong id="raterPositionDisplay"><?= htmlspecialchars($form['rater_position'], ENT_QUOTES, 'UTF-8'); ?></strong></div>
+                                        <div class="employee-pdf-row employee-rater-row"><label>Approving Authority</label><select id="editorApprovingAuthority" class="form-control ipcrf-input"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><option value="<?= htmlspecialchars($form['approving_authority_id'], ENT_QUOTES, 'UTF-8'); ?>" selected><?= htmlspecialchars($form['approving_authority_name'] ?: 'Select approving authority', ENT_QUOTES, 'UTF-8'); ?></option></select></div>
+                                        <div class="employee-pdf-row"><label>Authority Position</label><strong id="approvingAuthorityPositionDisplay"><?= htmlspecialchars($form['approving_authority_position'], ENT_QUOTES, 'UTF-8'); ?></strong></div>
                                         <div class="employee-pdf-row period-row"><label>Review Period</label><span><input type="date" class="form-control ipcrf-input js-header-field" aria-label="Period start" data-field="period_start" value="<?= htmlspecialchars($form['period_start'], ENT_QUOTES, 'UTF-8'); ?>"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><em>to</em><input type="date" class="form-control ipcrf-input js-header-field" aria-label="Period end" data-field="period_end" value="<?= htmlspecialchars($form['period_end'], ENT_QUOTES, 'UTF-8'); ?>"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>></span></div>
                                         <div class="employee-pdf-row"><label>Current Status</label><strong><?= htmlspecialchars($form['status'], ENT_QUOTES, 'UTF-8'); ?></strong></div>
                                     </div>
@@ -137,7 +139,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                                 <div class="editing-legend">
                                     <span><b class="legend-edit">Click text</b> edits existing details like a document</span>
                                     <span><b class="legend-add">Add</b> creates a new item</span>
-                                    <span><b class="legend-open">Q / E / T</b> opens all five standard levels in a modal</span>
+                                    <span><b class="legend-open">Q / E / T</b> opens all five rating levels for review</span>
                                     <span><b class="legend-auto">Autosave</b> saves changes after a short pause</span>
                                     <span><b class="legend-warning">Submit warning</b> lists incomplete items without blocking submission</span>
                                 </div>
@@ -194,7 +196,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                                     <div><label class="ipcrf-label" for="objectiveEditorTimeline">Timeline</label><input type="text" class="form-control ipcrf-input" id="objectiveEditorTimeline" placeholder="January to December 2026" required><small class="form-text text-muted">Enter the target period or deadline.</small></div>
                                     <div><label class="ipcrf-label" for="objectiveEditorWeight">Weight Percentage</label><div class="input-group"><input type="number" min="0" max="100" step="0.01" class="form-control ipcrf-input" id="objectiveEditorWeight" value="0" required><div class="input-group-append"><span class="input-group-text">%</span></div></div><small class="form-text text-muted">The recommended total is 100%. Any difference appears in the submission warning.</small></div>
                                 </div>
-                                <div class="dialog-next-step"><i class="mdi mdi-information-outline"></i><span>After saving, click directly into the row to revise its details and actual result. Quality, Efficiency and Timeliness open their five standard levels in a modal.</span></div>
+                                <div class="dialog-next-step"><i class="mdi mdi-information-outline"></i><span>After saving, click directly into the row to revise its details and actual result. Select Quality, Efficiency or Timeliness to review its five rating levels.</span></div>
                             </div>
                             <div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="mdi mdi-check mr-1"></i>Save Objective</button></div>
                         </form>
@@ -285,23 +287,29 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                 <section class="ipcrf-panel ipcrf-personal-home">
                     <div class="personal-home-head">
                         <span class="personal-home-icon"><i class="mdi mdi-account-card-details-outline"></i></span>
-                        <div><span class="ipcrf-kicker">Personal Performance Workspace</span><h2>My IPCRF</h2><p>Your account is automatically linked to your HRIS employee profile. Only select the assigned rater and performance period.</p></div>
+                        <div><span class="ipcrf-kicker">Personal Performance Workspace</span><h2>Set up your performance review</h2><p>Your HRIS profile is already linked. Assign the rater and approving authority, then select the performance period.</p></div>
                     </div>
 
                     <?php if (!empty($current_employee)): ?>
-                    <div class="personal-employee-card">
+                    <!-- <div class="personal-employee-card">
                         <div class="personal-employee-avatar"><i class="mdi mdi-account-outline"></i></div>
                         <div class="personal-employee-primary"><span>Signed-in Employee</span><strong><?= htmlspecialchars($current_employee['name'], ENT_QUOTES, 'UTF-8'); ?></strong><small><?= htmlspecialchars($current_employee['id'], ENT_QUOTES, 'UTF-8'); ?></small></div>
                         <div class="personal-employee-detail"><span>Position</span><strong><?= htmlspecialchars($current_employee['position'] ?: 'Not recorded', ENT_QUOTES, 'UTF-8'); ?></strong></div>
                         <div class="personal-employee-detail"><span>Office / Section</span><strong><?= htmlspecialchars($current_employee['office'] ?: 'Not recorded', ENT_QUOTES, 'UTF-8'); ?></strong></div>
-                    </div>
+                    </div> -->
 
                     <div class="personal-start-panel">
-                        <div class="personal-start-copy"><h3>Start or open my IPCRF</h3><p>An existing form for the same period will open automatically instead of creating a duplicate.</p></div>
+                        <!-- <div class="personal-start-copy"><h3>Review assignments</h3><p>Choose both reviewing officials. An existing form for the same period opens automatically instead of creating a duplicate.</p></div> -->
+                        <div class="personal-update-notice" id="personalUpdateNotice" hidden>
+                            <div><i class="mdi mdi-pencil-outline"></i><span><strong>Updating reviewer assignments</strong><small id="personalUpdateRecordLabel"></small></span></div>
+                            <button type="button" class="btn" id="cancelPersonalUpdate"><i class="mdi mdi-close mr-1"></i>Cancel update</button>
+                        </div>
                         <form id="startIpcrfForm" class="ipcrf-start-form personal-start-form">
-                            <div><label class="ipcrf-label">Assigned Rater</label><select id="startRater" name="rater_id" required></select><small>Search the rater's name or employee ID.</small></div>
-                            <div><label class="ipcrf-label">Period Start</label><input type="date" class="form-control ipcrf-input" name="period_start" value="<?= $currentYear; ?>-01-01" required></div>
-                            <div><label class="ipcrf-label">Period End</label><input type="date" class="form-control ipcrf-input" name="period_end" value="<?= $currentYear; ?>-12-31" required></div>
+                            <input type="hidden" id="startFormId" name="form_id" value="">
+                            <div class="assignment-field"><span class="assignment-field-icon"><i class="mdi mdi-account-check-outline"></i></span><label class="ipcrf-label">Assigned Rater</label><select id="startRater" name="rater_id" required></select><small>Search by name or employee ID.</small></div>
+                            <div class="assignment-field"><span class="assignment-field-icon is-authority"><i class="mdi mdi-shield-account-outline"></i></span><label class="ipcrf-label">Approving Authority</label><select id="startApprovingAuthority" name="approving_authority_id" required></select><small>Select the official who will approve the IPCRF.</small></div>
+                            <div class="period-field"><label class="ipcrf-label">Period Start</label><input type="date" class="form-control ipcrf-input" name="period_start" value="<?= $currentYear; ?>-01-01" data-default-value="<?= $currentYear; ?>-01-01" required></div>
+                            <div class="period-field"><label class="ipcrf-label">Period End</label><input type="date" class="form-control ipcrf-input" name="period_end" value="<?= $currentYear; ?>-12-31" data-default-value="<?= $currentYear; ?>-12-31" required></div>
                             <button type="submit" class="btn btn-primary"><i class="mdi mdi-arrow-right mr-1"></i>Start / Open My IPCRF</button>
                         </form>
                     </div>
@@ -310,21 +318,39 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                     <?php endif; ?>
 
                     <div class="ipcrf-recent personal-form-list">
-                        <div class="personal-list-head"><div><h3>My IPCRF Records</h3><p>Only IPCRFs belonging to your employee profile appear here.</p></div><span><?= count((array) $recent_forms); ?> record<?= count((array) $recent_forms) === 1 ? '' : 's'; ?></span></div>
+                        <div class="personal-list-head"><div><h3>My IPCRF Records</h3><p>Update or delete your records before they are approved or validated.</p></div><span><?= count((array) $recent_forms); ?> record<?= count((array) $recent_forms) === 1 ? '' : 's'; ?></span></div>
                         <?php if (!empty($recent_forms)): ?>
                         <div class="ipcrf-recent-grid">
-                            <?php foreach ($recent_forms as $recent): ?>
-                            <a class="recent-card personal-form-card" href="<?= site_url('Ipcrf/index/' . (int) $recent['id']); ?>">
-                                <span class="personal-form-status"><?= htmlspecialchars($recent['status'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                <strong><?= htmlspecialchars(date('M d, Y', strtotime($recent['period_start'])) . ' – ' . date('M d, Y', strtotime($recent['period_end'])), ENT_QUOTES, 'UTF-8'); ?></strong>
-                                <span><i class="mdi mdi-account-check-outline mr-1"></i>Rater: <?= htmlspecialchars($recent['rater_name'] ?: 'Not assigned', ENT_QUOTES, 'UTF-8'); ?></span>
-                                <small>Last updated <?= htmlspecialchars(date('M d, Y g:i A', strtotime($recent['updated_at'])), ENT_QUOTES, 'UTF-8'); ?></small>
-                                <b>Open IPCRF <i class="mdi mdi-arrow-right"></i></b>
-                            </a>
+                            <?php foreach ($recent_forms as $recent):
+                                $canManageRecent = in_array($recent['status'], array(
+                                    Ipcrf_model::STATUS_DRAFT,
+                                    Ipcrf_model::STATUS_SUBMITTED_RATER,
+                                    Ipcrf_model::STATUS_RETURNED
+                                ), TRUE);
+                                $recentUrl = site_url('Ipcrf/index/' . (int) $recent['id']);
+                                $recentPeriod = date('M d, Y', strtotime($recent['period_start'])) . ' – ' . date('M d, Y', strtotime($recent['period_end']));
+                            ?>
+                            <article class="recent-card personal-form-card<?= $canManageRecent ? ' is-manageable' : ''; ?>" data-record-id="<?= (int) $recent['id']; ?>">
+                                <a class="personal-form-card-main" href="<?= $recentUrl; ?>">
+                                    <span class="personal-form-status"><?= htmlspecialchars($recent['status'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <strong><?= htmlspecialchars($recentPeriod, ENT_QUOTES, 'UTF-8'); ?></strong>
+                                    <span><i class="mdi mdi-account-check-outline mr-1"></i>Rater: <?= htmlspecialchars($recent['rater_name'] ?: 'Not assigned', ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span><i class="mdi mdi-shield-account-outline mr-1"></i>Approving Authority: <?= htmlspecialchars($recent['approving_authority_name'] ?: 'Not assigned', ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <small>Last updated <?= htmlspecialchars(date('M d, Y g:i A', strtotime($recent['updated_at'])), ENT_QUOTES, 'UTF-8'); ?></small>
+                                </a>
+                                <div class="personal-form-actions">
+                                    <?php if ($canManageRecent): ?>
+                                    <button type="button" class="btn personal-form-update js-update-ipcrf" data-id="<?= (int) $recent['id']; ?>" data-period="<?= htmlspecialchars($recentPeriod, ENT_QUOTES, 'UTF-8'); ?>" data-period-start="<?= htmlspecialchars($recent['period_start'], ENT_QUOTES, 'UTF-8'); ?>" data-period-end="<?= htmlspecialchars($recent['period_end'], ENT_QUOTES, 'UTF-8'); ?>" data-rater-id="<?= htmlspecialchars($recent['rater_id'], ENT_QUOTES, 'UTF-8'); ?>" data-rater-name="<?= htmlspecialchars($recent['rater_name'], ENT_QUOTES, 'UTF-8'); ?>" data-authority-id="<?= htmlspecialchars($recent['approving_authority_id'], ENT_QUOTES, 'UTF-8'); ?>" data-authority-name="<?= htmlspecialchars($recent['approving_authority_name'], ENT_QUOTES, 'UTF-8'); ?>"><i class="mdi mdi-account-edit-outline mr-1"></i>Update</button>
+                                    <button type="button" class="btn personal-form-delete js-delete-ipcrf" data-id="<?= (int) $recent['id']; ?>" data-period="<?= htmlspecialchars($recentPeriod, ENT_QUOTES, 'UTF-8'); ?>"><i class="mdi mdi-delete-outline mr-1"></i>Delete</button>
+                                    <?php else: ?>
+                                    <a class="personal-form-open" href="<?= $recentUrl; ?>">Open IPCRF <i class="mdi mdi-arrow-right"></i></a>
+                                    <?php endif; ?>
+                                </div>
+                            </article>
                             <?php endforeach; ?>
                         </div>
                         <?php else: ?>
-                        <div class="personal-record-empty"><i class="mdi mdi-file-document-outline"></i><strong>No IPCRF records yet</strong><span>Choose an assigned rater and performance period above to begin.</span></div>
+                        <div class="personal-record-empty"><i class="mdi mdi-file-document-outline"></i><strong>No IPCRF records yet</strong><span>Assign the rater and approving authority, then choose the performance period to begin.</span></div>
                         <?php endif; ?>
                     </div>
                 </section>
@@ -353,6 +379,7 @@ window.IPCRF_CONFIG = <?= json_encode(array(
     'urls' => array(
         'employeeSearch' => site_url('Ipcrf/employee_search'),
         'create' => site_url('Ipcrf/create'),
+        'deleteFormBase' => site_url('Ipcrf/delete_form'),
         'save' => $hasForm ? site_url('Ipcrf/save/' . (int) $form['id']) : '',
         'loadPreset' => $hasForm ? site_url('Ipcrf/load_preset/' . (int) $form['id']) : '',
         'workflow' => $hasForm ? site_url('Ipcrf/workflow/' . (int) $form['id']) : '',

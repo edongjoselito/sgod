@@ -63,15 +63,96 @@
     }
 
     function initLanding() {
-        $('#startRater').select2(employeeSelectOptions('Search assigned rater'));
+        var $startForm = $('#startIpcrfForm');
+        var $startRater = $('#startRater');
+        var $startApprovingAuthority = $('#startApprovingAuthority');
+        var $submitButton = $startForm.find('button[type="submit"]');
+
+        $startRater.select2(employeeSelectOptions('Search assigned rater'));
+        $startApprovingAuthority.select2(employeeSelectOptions('Search approving authority'));
+
+        function setLandingEmployee($select, id, name) {
+            $select.empty();
+            if (id) {
+                $select.append(new Option((name || id) + ' · ' + id, id, true, true));
+            }
+            $select.trigger('change');
+        }
+
+        function submitButtonHtml(loading) {
+            if (loading) {
+                return '<i class="mdi mdi-loading mdi-spin mr-1"></i>Saving Draft';
+            }
+            if (Number($('#startFormId').val()) > 0) {
+                return '<i class="mdi mdi-content-save-edit-outline mr-1"></i>Save Draft & Open IPCRF';
+            }
+            return '<i class="mdi mdi-arrow-right mr-1"></i>Start / Open My IPCRF';
+        }
+
+        function resetLandingUpdate() {
+            $('#startFormId').val('');
+            setLandingEmployee($startRater, '', '');
+            setLandingEmployee($startApprovingAuthority, '', '');
+            $startForm.find('input[type="date"]').each(function () { $(this).val($(this).data('default-value')); });
+            $('#personalUpdateNotice').prop('hidden', true);
+            $startForm.removeClass('is-updating');
+            $submitButton.html(submitButtonHtml(false));
+        }
+
+        $(document).on('click', '.js-update-ipcrf', function () {
+            var $button = $(this);
+            $('#startFormId').val(Number($button.data('id')));
+            setLandingEmployee($startRater, String($button.data('rater-id') || ''), String($button.data('rater-name') || ''));
+            setLandingEmployee($startApprovingAuthority, String($button.data('authority-id') || ''), String($button.data('authority-name') || ''));
+            $startForm.find('[name="period_start"]').val(String($button.data('period-start') || ''));
+            $startForm.find('[name="period_end"]').val(String($button.data('period-end') || ''));
+            $('#personalUpdateRecordLabel').text(String($button.data('period') || 'Selected IPCRF') + ' · changes will be saved as Draft');
+            $('#personalUpdateNotice').prop('hidden', false);
+            $startForm.addClass('is-updating');
+            $submitButton.html(submitButtonHtml(false));
+            document.getElementById('personalUpdateNotice').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        $('#cancelPersonalUpdate').on('click', resetLandingUpdate);
+
         $('#startIpcrfForm').on('submit', function (event) {
             event.preventDefault();
-            var $button = $(this).find('button[type="submit"]');
-            $button.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin mr-1"></i>Opening');
+            var $button = $submitButton;
+            $button.prop('disabled', true).html(submitButtonHtml(true));
             $.ajax({ url: config.urls.create, method: 'POST', data: $(this).serialize(), dataType: 'json' })
                 .done(function (response) { window.location.href = response.url; })
                 .fail(function (xhr) { showError(xhr, 'The IPCRF could not be opened.'); })
-                .always(function () { $button.prop('disabled', false).html('<i class="mdi mdi-arrow-right mr-1"></i>Start / Open'); });
+                .always(function () { $button.prop('disabled', false).html(submitButtonHtml(false)); });
+        });
+
+        $(document).on('click', '.js-delete-ipcrf', function () {
+            var $button = $(this);
+            var formId = Number($button.data('id'));
+            var period = String($button.data('period') || 'this performance period');
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Delete this IPCRF record?',
+                text: period + ' and all of its saved information will be permanently deleted.',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete record',
+                cancelButtonText: 'Keep record',
+                confirmButtonColor: '#c44949'
+            }).then(function (result) {
+                if (!result.value) { return; }
+                $button.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin mr-1"></i>Deleting');
+                $.ajax({
+                    url: config.urls.deleteFormBase + '/' + formId,
+                    method: 'POST',
+                    dataType: 'json'
+                }).done(function (response) {
+                    toastr.success(response.message);
+                    window.location.href = response.reload || window.location.href;
+                }).fail(function (xhr) {
+                    showError(xhr, 'The IPCRF record could not be deleted.');
+                    $button.prop('disabled', false).html('<i class="mdi mdi-delete-outline mr-1"></i>Delete');
+                });
+            });
         });
     }
 
@@ -159,7 +240,7 @@
         var completed = standardCompletion(objective, dimension);
         var statusClass = completed === 5 ? ' complete' : (completed > 0 ? ' partial' : ' empty');
         var label = dimension.charAt(0).toUpperCase() + dimension.slice(1);
-        return '<div class="objective-standard-cell" data-label="' + label + '"><button type="button" class="standard-cell-button js-action' + statusClass + '" data-action="open-standards" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-dimension="' + dimension + '"><strong>Open 5 levels</strong><span class="standard-count">' + completed + ' / 5 complete</span><em>' + (isFull() ? 'View / Edit modal' : 'View modal') + '</em></button></div>';
+        return '<div class="objective-standard-cell" data-label="' + label + '"><button type="button" class="standard-cell-button js-action' + statusClass + '" data-action="open-standards" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-dimension="' + dimension + '"><strong>Open 5 levels</strong><span class="standard-count">' + completed + ' / 5 complete</span><em>' + (isFull() ? 'View or edit details' : 'View details') + '</em></button></div>';
     }
 
     function renderEvidence(kraIndex, objectiveIndex, objective) {
@@ -373,6 +454,9 @@
             state.form.rater_id = bundle.form.rater_id;
             state.form.rater_name = bundle.form.rater_name;
             state.form.rater_position = bundle.form.rater_position;
+            state.form.approving_authority_id = bundle.form.approving_authority_id;
+            state.form.approving_authority_name = bundle.form.approving_authority_name;
+            state.form.approving_authority_position = bundle.form.approving_authority_position;
             state.form.period_start = bundle.form.period_start;
             state.form.period_end = bundle.form.period_end;
         }
@@ -629,6 +713,21 @@
             markDirty();
         }).on('select2:clear', function () {
             state.form.rater_id = ''; state.form.rater_name = ''; state.form.rater_position = ''; $('#raterPositionDisplay').text('—'); markDirty();
+        });
+
+        $('#editorApprovingAuthority').select2(employeeSelectOptions('Search approving authority')).on('select2:select', function (event) {
+            var employee = event.params.data.employee;
+            state.form.approving_authority_id = employee.id;
+            state.form.approving_authority_name = employee.name;
+            state.form.approving_authority_position = employee.position;
+            $('#approvingAuthorityPositionDisplay').text(employee.position || '—');
+            markDirty();
+        }).on('select2:clear', function () {
+            state.form.approving_authority_id = '';
+            state.form.approving_authority_name = '';
+            state.form.approving_authority_position = '';
+            $('#approvingAuthorityPositionDisplay').text('—');
+            markDirty();
         });
 
         $(document).on('click', '.js-action', function (event) {

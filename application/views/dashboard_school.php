@@ -1,177 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+$schoolAccountName = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter(array(
+    $this->session->userdata('fName'),
+    $this->session->userdata('mName'),
+    $this->session->userdata('lName')
+)))));
+$schoolName = trim((string) ($this->session->userdata('schoolName') ?: $schoolAccountName ?: 'School'));
+$schoolId = trim((string) $this->session->userdata('username'));
+$dashboardConfig = array(
+    'eyebrow' => 'School Dashboard',
+    'eyebrow_icon' => 'mdi-school-outline',
+    'title' => $schoolName,
+    'subtitle' => 'Monitor implementation plans, planning references, and daily school activity from one workspace.',
+    'profile_name' => $schoolName,
+    'profile_role' => $schoolId !== '' ? 'School ID ' . $schoolId : 'School Account',
+    'metrics' => array(
+        array('value' => $data->num_rows(), 'label' => 'AIP', 'context' => 'Annual implementation plans', 'icon' => 'mdi-clipboard-text-outline', 'href' => base_url() . 'Page/aip'),
+        array('value' => $pillar->num_rows(), 'label' => 'Pillars', 'context' => 'Planning pillars', 'icon' => 'mdi-view-column-outline'),
+        array('value' => $pias->num_rows(), 'label' => 'PIAs', 'context' => 'Priority improvement areas', 'icon' => 'mdi-target-account'),
+        array('value' => $domain->num_rows(), 'label' => 'Domains', 'context' => 'Planning domains', 'icon' => 'mdi-chart-donut')
+    ),
+    'quick_links_title' => 'School Tools',
+    'quick_links_caption' => 'Open frequently used planning and profile pages',
+    'quick_links' => array(
+        array('label' => 'School Profile', 'context' => 'Review the school information on record.', 'href' => base_url() . 'Page/school_profile/' . rawurlencode($schoolId), 'icon' => 'mdi-card-account-details-outline'),
+        array('label' => 'Annual Implementation Plan', 'context' => 'Open and manage the school AIP.', 'href' => base_url() . 'Page/aip', 'icon' => 'mdi-clipboard-text-outline'),
+        array('label' => 'School Operating Plan', 'context' => 'Open the school operating plan.', 'href' => base_url() . 'Page/sop', 'icon' => 'mdi-file-chart-outline'),
+        array('label' => 'Procurement Plan', 'context' => 'Open the annual procurement plan.', 'href' => base_url() . 'Page/view_app', 'icon' => 'mdi-cart-outline')
+    )
+);
 
-    <head>
-        <meta charset="utf-8" />
-        <?php include('includes/page-title.php'); ?>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="Responsive bootstrap 4 admin template" name="description" />
-        <meta content="Coderthemes" name="author" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <!-- App favicon -->
-        <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
-
-        <!-- Plugins css-->
-        <link href="<?= base_url(); ?>assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
-
-        <!-- App css -->
-        <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" id="bootstrap-stylesheet" />
-        <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-        <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-stylesheet" />
-
-    </head>
-
-    <body>
-
-        <!-- Begin page -->
-        <div id="wrapper">
-
-            
-            <!-- Topbar Start -->
-                <?php include('includes/top-bar.php'); ?>
-            <!-- end Topbar --> 
-
-<!-- ========== Left Sidebar Start ========== -->
-
-<?php include('includes/sidebar.php') ?>
-
-<!-- Left Sidebar End -->
-
-            <!-- ============================================================== -->
-            <!-- Start Page Content here -->
-            <!-- ============================================================== -->
-
-            <div class="content-page">
-                <div class="content">
-
-                    <!-- Start Content-->
-                    <div class="container-fluid">
-
-                        <!-- start page title -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="page-title-box">
-                                    <!-- <h4 class="page-title">Welcome !</h4> -->
-                                    <div class="page-title-right">
-                                        <ol class="breadcrumb p-0 m-0">
-                                            <!-- <li class="breadcrumb-item">SGOD Management System v1.0</li> -->
-                                        </ol>
-                                    </div>
-                                    <div class="clearfix"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end page title -->
-
-                        <div class="row">
-                            <div class="col-xl-3 col-sm-6">
-                                <div class="card bg-primary">
-                                    <div class="card-body widget-style-2">
-                                        <div class="text-white media">
-                                            <div class="media-body align-self-center">
-                                                <h2 class="my-0 text-white"><span data-plugin="counterup"><?= $data->num_rows(); ?></span></h2>
-                                                <p class="mb-0">AIP</p>
-                                            </div>
-                                            <i class="ion-md-eye"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-xl-3 col-sm-6">
-                                <div class="card bg-purple">
-                                    <div class="card-body widget-style-2">
-                                        <div class="text-white media">
-                                            <div class="media-body align-self-center">
-                                                <h2 class="my-0 text-white"><span data-plugin="counterup"><?= $pillar->num_rows(); ?></span></h2>
-                                                <p class="mb-0">Pillar</p>
-                                            </div>
-                                            <i class="ion-md-paper-plane"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-xl-3 col-sm-6">
-                                <div class="card bg-info">
-                                    <div class="card-body widget-style-2">
-                                        <div class="text-white media">
-                                            <div class="media-body align-self-center">
-                                                <h2 class="my-0 text-white"><span data-plugin="counterup"><?= $pias->num_rows();?></span></h2>
-                                                <p class="mb-0">PIAs</p>
-                                            </div>
-                                            <i class="ion-ios-pricetag"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-xl-3 col-sm-6">
-                                <div class="card bg-success">
-                                    <div class="card-body widget-style-2">
-                                        <div class="text-white media">
-                                            <div class="media-body align-self-center">
-                                                <h2 class="my-0 text-white"><span data-plugin="counterup"><?= $domain->num_rows();?></span></h2>
-                                                <p class="mb-0">Domain</p>
-                                            </div>
-                                            <i class="mdi mdi-comment-multiple"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        
-
-                    </div>
-                    <!-- end container-fluid -->
-
-                </div>
-                <!-- end content -->
-
-                
-
-                <!-- Footer Start -->
-                    <?php include('includes/whereabouts_widget.php'); ?>
-                    <?php include('includes/footer.php'); ?>
-                <!-- end Footer -->
-
-            </div>
-
-            <!-- ============================================================== -->
-            <!-- End Page content -->
-            <!-- ============================================================== -->
-
-        </div>
-        <!-- END wrapper -->
-
-        
-
-        <!-- Vendor js -->
-        <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
-
-        <script src="<?= base_url(); ?>assets/libs/moment/moment.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/jquery-scrollto/jquery.scrollTo.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/sweetalert2/sweetalert2.min.js"></script>
-
-        <!-- Chat app -->
-        <script src="<?= base_url(); ?>assets/js/pages/jquery.chat.js"></script>
-
-        <!-- Todo app -->
-        <script src="<?= base_url(); ?>assets/js/pages/jquery.todo.js"></script>
-
-        <!--Morris Chart-->
-        <script src="<?= base_url(); ?>assets/libs/morris-js/morris.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/raphael/raphael.min.js"></script>
-
-        <!-- Sparkline charts -->
-        <script src="<?= base_url(); ?>assets/libs/jquery-sparkline/jquery.sparkline.min.js"></script>
-
-        <!-- Dashboard init JS -->
-        <script src="<?= base_url(); ?>assets/js/pages/dashboard.init.js"></script>
-
-        <!-- App js -->
-        <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
-
-    </body>
-</html>
+include(__DIR__ . '/includes/dashboard_standard.php');
