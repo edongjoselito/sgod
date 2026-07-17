@@ -18,6 +18,7 @@
         <link href="<?= base_url(); ?>assets/libs/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="<?= base_url(); ?>assets/libs/select2/select2.min.css" rel="stylesheet" type="text/css" />
     </head>
 
     <body>
@@ -113,16 +114,37 @@
                             <div class="modal-body">
                                 <form method="post">
                                     <div class="form-group col-md-12">
+                                        <label>Select Staff from HRIS <span class="text-danger">*</span></label>
+                                        <select class="form-control" name="IDNumber" id="staffSelect" required>
+                                            <option value="">-- Select Staff --</option>
+                                            <?php
+                                                $staffOptions = isset($staffOptions) && is_array($staffOptions) ? $staffOptions : [];
+                                                foreach($staffOptions as $staff){ ?>
+                                                <option value="<?= $staff->IDNumber; ?>"
+                                                    data-fname="<?= htmlspecialchars($staff->FirstName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                    data-mname="<?= htmlspecialchars($staff->MiddleName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                    data-lname="<?= htmlspecialchars($staff->LastName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                    data-email="<?= htmlspecialchars($staff->IDNumber, ENT_QUOTES, 'UTF-8'); ?>">
+                                                    <?= htmlspecialchars($staff->LastName . ', ' . $staff->FirstName . ' ' . $staff->MiddleName, ENT_QUOTES, 'UTF-8'); ?> (<?= $staff->IDNumber; ?>)
+                                                </option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-12">
                                         <label>First Name</label>
-                                        <input type="text" name="fName" class="form-control" required />
+                                        <input type="text" name="fName" id="fName" class="form-control" required readonly />
+                                    </div>
+                                    <div class="form-group col-md-12">
+                                        <label>Middle Name</label>
+                                        <input type="text" name="mName" id="mName" class="form-control" readonly />
                                     </div>
                                     <div class="form-group col-md-12">
                                         <label>Last Name</label>
-                                        <input type="text" name="lName" class="form-control" required />
+                                        <input type="text" name="lName" id="lName" class="form-control" required readonly />
                                     </div>
                                     <div class="form-group col-md-12">
                                         <label>E-mail/Username</label>
-                                        <input type="text" name="email" class="form-control" required />
+                                        <input type="text" name="email" id="email" class="form-control" required readonly />
                                     </div>
                                     <div class="form-group col-md-12">
                                         <label>Password</label>
@@ -238,6 +260,32 @@
         <script src="<?= base_url(); ?>assets/libs/datatables/dataTables.bootstrap4.min.js"></script>
         <script src="<?= base_url(); ?>assets/libs/datatables/dataTables.responsive.min.js"></script>
         <script src="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.js"></script>
+        <script src="<?= base_url(); ?>assets/libs/select2/select2.min.js"></script>
         <script src="<?= base_url(); ?>assets/js/pages/datatables.init.js"></script>
+        <script>
+            $(document).ready(function() {
+                $('#staffSelect').select2({
+                    placeholder: '-- Select Staff --',
+                    width: '100%',
+                    dropdownParent: $('#myModal')
+                });
+
+                $('#staffSelect').on('change', function() {
+                    const selectedOption = $(this).find('option:selected');
+
+                    if ($(this).val()) {
+                        $('#fName').val(selectedOption.data('fname') || '');
+                        $('#mName').val(selectedOption.data('mname') || '');
+                        $('#lName').val(selectedOption.data('lname') || '');
+                        $('#email').val(selectedOption.data('email') || '');
+                    } else {
+                        $('#fName').val('');
+                        $('#mName').val('');
+                        $('#lName').val('');
+                        $('#email').val('');
+                    }
+                });
+            });
+        </script>
     </body>
 </html>

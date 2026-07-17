@@ -2437,14 +2437,16 @@ function usersList(){
 
 	$result['data']=$this->SGODModel->one_cond_orderby('sgod_users','section','System Administrator','secGroup','ASC');
 	$result['adminGroups']=$this->get_managed_admin_groups();
+	$result['staffOptions']=$this->SGODModel->get_hris_staff_options();
     $this->load->view('users_super_admin',$result);
 
 	if($this->input->post('submit'))
 	{
-		$username=$this->input->post('email');
+		$username=$this->input->post('IDNumber');
 		$password=sha1($this->input->post('password'));
 		$fName=$this->input->post('fName');
 		$lName=$this->input->post('lName');
+		$mName=$this->input->post('mName');
 		$email=$this->input->post('email');
 		$secGroup=$this->input->post('secGroup');
 
@@ -2458,7 +2460,7 @@ function usersList(){
 			redirect('Page/super_admin_users');
 		}
 
-		$que=$this->db->query("insert into sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','System Administrator','$secGroup')");
+		$que=$this->db->query("insert into sgod_users(username, password, fName, mName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$mName','$lName','avatar.png','$email','Active','System Administrator','$secGroup')");
 		$this->session->set_flashdata('success', 'Admin account created successfully.');
 		redirect('Page/super_admin_users');
 	}
