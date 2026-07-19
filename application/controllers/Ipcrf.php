@@ -426,7 +426,7 @@ class Ipcrf extends CI_Controller
         $errors = $this->Ipcrf_model->validation_errors($bundle, 'current');
         $this->json(array(
             'success' => empty($errors),
-            'message' => empty($errors) ? 'The rater review is complete and ready for approval.' : 'Rater validation found items that need attention.',
+            'message' => empty($errors) ? 'The rater review is ready to be completed.' : 'Rater validation found items that need attention.',
             'errors' => $errors,
             'summary' => $this->summary($bundle)
         ), empty($errors) ? 200 : 422);
@@ -482,13 +482,13 @@ class Ipcrf extends CI_Controller
                             'success' => FALSE,
                             'warning_only' => TRUE,
                             'message' => $action === 'rater_approve'
-                                ? 'Some review information is incomplete. Review the warnings, return the form, or approve anyway.'
+                                ? 'Some review information is incomplete. Review the warnings, return the form, or complete the review anyway.'
                                 : 'Some IPCRF information is incomplete. Review the warnings or submit anyway.',
                             'errors' => $errors
                         ), 409);
                         return;
                     }
-                    $remarks = ($action === 'rater_approve' ? 'Rater approved' : 'Submitted') . ' after acknowledging ' . count($errors) . ' incomplete item warning(s).';
+                    $remarks = ($action === 'rater_approve' ? 'Rater review completed' : 'Submitted') . ' after acknowledging ' . count($errors) . ' incomplete item warning(s).';
                 } else {
                     $this->json(array('success' => FALSE, 'message' => 'Complete the required fields before continuing.', 'errors' => $errors), 422);
                     return;
@@ -496,7 +496,12 @@ class Ipcrf extends CI_Controller
             }
         }
         $this->Ipcrf_model->workflow_transition($id, $target, $remarks, $actor);
-        $this->json(array('success' => TRUE, 'message' => 'Status changed to ' . $target . '.', 'status' => $target, 'reload' => site_url('Ipcrf/index/' . (int) $id)));
+        $this->json(array(
+            'success' => TRUE,
+            'message' => $action === 'rater_approve' ? 'Rater review completed.' : 'Status changed to ' . $target . '.',
+            'status' => $target,
+            'reload' => site_url('Ipcrf/index/' . (int) $id)
+        ));
     }
 
     public function upload_evidence($id)
@@ -634,10 +639,16 @@ class Ipcrf extends CI_Controller
             return;
         }
         $bundle = $this->Ipcrf_model->get_bundle($id);
+        $printableStatuses = array(
+            Ipcrf_model::STATUS_RATER_APPROVED,
+            Ipcrf_model::STATUS_SUBMITTED_PMT,
+            Ipcrf_model::STATUS_PMT_VALIDATED,
+            Ipcrf_model::STATUS_LOCKED
+        );
         $this->load->view('ipcrf/report', array(
             'bundle' => $bundle,
             'summary' => $this->summary($bundle),
-            'autoprint' => $this->input->get('autoprint') === '1',
+            'autoprint' => in_array($form['status'], $printableStatuses, TRUE) && $this->input->get('autoprint') === '1',
             'employee_signature' => $this->signature_data_uri($bundle['form']['employee_id']),
             'rater_signature' => $this->signature_data_uri($bundle['form']['rater_id']),
             'approving_authority_signature' => $this->signature_data_uri($bundle['form']['approving_authority_id'])

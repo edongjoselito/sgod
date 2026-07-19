@@ -5,6 +5,8 @@ $authorityApprovalComplete = in_array($form['status'], array(Ipcrf_model::STATUS
 $employee_signature = isset($employee_signature) ? (string) $employee_signature : '';
 $rater_signature = ($ratingsApproved && isset($rater_signature)) ? (string) $rater_signature : '';
 $approving_authority_signature = ($authorityApprovalComplete && isset($approving_authority_signature)) ? (string) $approving_authority_signature : '';
+$raterSignatoryStatus = $ratingsApproved ? '' : ' · PENDING SIGN-OFF';
+$authoritySignatoryStatus = $authorityApprovalComplete ? '' : ' · PENDING SIGN-OFF';
 $kraObjectiveGroups = array();
 
 $isPlaceholderKra = function ($title) {
@@ -247,8 +249,8 @@ $overallCompetencyAverage = $averageRatings($bundle['competencies']);
         </table>
         <div class="signature-row">
             <div class="signature-line"><?php if ($employee_signature !== ''): ?><img class="signature-image" src="<?= $e($employee_signature); ?>" alt="Ratee signature"><?php endif; ?><b><?= $e($form['employee_name']); ?></b><small>RATEE</small></div>
-            <div class="signature-line"><?php if ($rater_signature !== ''): ?><img class="signature-image" src="<?= $e($rater_signature); ?>" alt="Rater signature"><?php endif; ?><b><?= $e($form['rater_name']); ?></b><small>RATER</small></div>
-            <div class="signature-line"><?php if ($approving_authority_signature !== ''): ?><img class="signature-image" src="<?= $e($approving_authority_signature); ?>" alt="Approving authority signature"><?php endif; ?><b><?= $e($form['approving_authority_name'] ?: 'APPROVING AUTHORITY'); ?></b><small>APPROVING AUTHORITY</small></div>
+            <div class="signature-line"><?php if ($rater_signature !== ''): ?><img class="signature-image" src="<?= $e($rater_signature); ?>" alt="Rater signature"><?php endif; ?><b><?= $e($form['rater_name']); ?></b><small>RATER<?= $e($raterSignatoryStatus); ?></small></div>
+            <div class="signature-line"><?php if ($approving_authority_signature !== ''): ?><img class="signature-image" src="<?= $e($approving_authority_signature); ?>" alt="Approving authority signature"><?php endif; ?><b><?= $e($form['approving_authority_name'] ?: 'APPROVING AUTHORITY'); ?></b><small>APPROVING AUTHORITY<?= $e($authoritySignatoryStatus); ?></small></div>
         </div>
     </section>
 
@@ -315,7 +317,7 @@ $overallCompetencyAverage = $averageRatings($bundle['competencies']);
                 <div class="agreement-signature-line"><?php if ($rater_signature !== ''): ?><img src="<?= $e($rater_signature); ?>" alt="Rater signature"><?php endif; ?></div>
                 <strong><?= $e($form['rater_name']); ?></strong>
                 <span>RATER / SUPERVISOR</span>
-                <small>Date: ____________________</small>
+                <small><?= $ratingsApproved ? 'Date: ____________________' : 'Pending rater sign-off'; ?></small>
             </div>
         </div>
     </section>
@@ -341,8 +343,8 @@ $overallCompetencyAverage = $averageRatings($bundle['competencies']);
         <div class="certification">I certify that the performance information and development plan shown in this Individual Performance Commitment and Review Form have been reviewed according to the approved performance management process.
             <div class="signature-row">
                 <div class="signature-line"><?php if ($employee_signature !== ''): ?><img class="signature-image" src="<?= $e($employee_signature); ?>" alt="Ratee signature"><?php endif; ?><b><?= $e($form['employee_name']); ?></b><small>RATEE / DATE</small></div>
-                <div class="signature-line"><?php if ($rater_signature !== ''): ?><img class="signature-image" src="<?= $e($rater_signature); ?>" alt="Rater signature"><?php endif; ?><b><?= $e($form['rater_name']); ?></b><small>RATER / DATE</small></div>
-                <div class="signature-line"><?php if ($approving_authority_signature !== ''): ?><img class="signature-image" src="<?= $e($approving_authority_signature); ?>" alt="Approving authority signature"><?php endif; ?><b><?= $e($form['approving_authority_name'] ?: 'APPROVING AUTHORITY'); ?></b><small>APPROVING AUTHORITY / DATE</small></div>
+                <div class="signature-line"><?php if ($rater_signature !== ''): ?><img class="signature-image" src="<?= $e($rater_signature); ?>" alt="Rater signature"><?php endif; ?><b><?= $e($form['rater_name']); ?></b><small>RATER / DATE<?= $e($raterSignatoryStatus); ?></small></div>
+                <div class="signature-line"><?php if ($approving_authority_signature !== ''): ?><img class="signature-image" src="<?= $e($approving_authority_signature); ?>" alt="Approving authority signature"><?php endif; ?><b><?= $e($form['approving_authority_name'] ?: 'APPROVING AUTHORITY'); ?></b><small>APPROVING AUTHORITY / DATE<?= $e($authoritySignatoryStatus); ?></small></div>
             </div>
         </div>
     </section>

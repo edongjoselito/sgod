@@ -9,6 +9,12 @@ $ipcrfJsVersion = @filemtime(FCPATH . 'assets/js/ipcrf.js') ?: time();
 $presetName = 'No preset loaded';
 $latestReturn = NULL;
 $isEmployeeOwner = $hasForm && (string) $form['employee_id'] === (string) $actor;
+$canPrintPdf = $hasForm && in_array($status, array(
+    Ipcrf_model::STATUS_RATER_APPROVED,
+    Ipcrf_model::STATUS_SUBMITTED_PMT,
+    Ipcrf_model::STATUS_PMT_VALIDATED,
+    Ipcrf_model::STATUS_LOCKED
+), TRUE);
 if ($hasForm && !empty($form['template_id'])) {
     foreach ($templates as $template) {
         if ((int) $template['id'] === (int) $form['template_id']) {
@@ -70,9 +76,17 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                     <?php endif; ?>
                     <a class="btn btn-soft-secondary" href="<?= site_url('Ipcrf/report/' . (int) $form['id']); ?>" target="_blank"><i class="mdi mdi-eye-outline mr-1"></i>Preview</a>
                     <span id="workflowButtons" class="d-inline-flex flex-wrap" style="gap:8px"></span>
+                    <?php if ($canPrintPdf): ?>
                     <a class="btn btn-dark" href="<?= site_url('Ipcrf/report/' . (int) $form['id'] . '?autoprint=1'); ?>" target="_blank"><i class="mdi mdi-printer mr-1"></i>Print PDF</a>
+                    <?php endif; ?>
                     <span class="toolbar-spacer"></span>
                     <span class="ipcrf-save-state is-saved" id="saveState" role="status" aria-live="polite"><i class="mdi mdi-check-circle-outline"></i><span>All changes saved</span></span>
+                </div>
+
+                <div class="incomplete-items-banner" id="incompleteItemsBanner" hidden>
+                    <span class="incomplete-items-banner-icon"><i class="mdi mdi-alert-outline"></i></span>
+                    <div><strong>Incomplete items found</strong><span>Orange columns and fields below need attention before continuing.</span></div>
+                    <button type="button" class="btn" id="reviewIncompleteItemsBtn">Review incomplete items</button>
                 </div>
 
                 <?php if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED): ?>
@@ -98,7 +112,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                             </div>
                             <div class="ipcrf-section-body">
                                 <?php if ($edit_scope !== 'full'): ?>
-                                    <div class="scope-notice"><i class="mdi mdi-lock-outline mr-1"></i><?= $edit_scope === 'rater' ? 'Rater review mode: review the ratings and Development Plan. Return with remarks when revision is needed, or approve with an incomplete-items warning.' : ($edit_scope === 'pmt' ? 'PMT validation mode: only competency ratings can be changed.' : 'This record is read-only at its current workflow stage.'); ?></div>
+                                    <div class="scope-notice"><i class="mdi mdi-lock-outline mr-1"></i><?= $edit_scope === 'rater' ? 'Rater review mode: review the ratings and Development Plan. Return with remarks when revision is needed, or complete the review with an incomplete-items warning.' : ($edit_scope === 'pmt' ? 'PMT validation mode: only competency ratings can be changed.' : 'This record is read-only at its current workflow stage.'); ?></div>
                                 <?php endif; ?>
                                 <div class="ipcrf-pdf-masthead">
                                     <span>Republic of the Philippines · Department of Education</span>
@@ -113,11 +127,11 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                                         <div class="employee-pdf-row"><label>Office / Section</label><strong><?= htmlspecialchars($form['office'], ENT_QUOTES, 'UTF-8'); ?></strong></div>
                                     </div>
                                     <div class="employee-pdf-column">
-                                        <div class="employee-pdf-row employee-rater-row"><label>Name of Rater</label><select id="editorRater" class="form-control ipcrf-input"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><option value="<?= htmlspecialchars($form['rater_id'], ENT_QUOTES, 'UTF-8'); ?>" selected><?= htmlspecialchars($form['rater_name'] ?: 'Select rater', ENT_QUOTES, 'UTF-8'); ?></option></select></div>
+                                        <div class="employee-pdf-row employee-rater-row" id="raterAssignmentRow"><label>Name of Rater</label><select id="editorRater" class="form-control ipcrf-input"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><option value="<?= htmlspecialchars($form['rater_id'], ENT_QUOTES, 'UTF-8'); ?>" selected><?= htmlspecialchars($form['rater_name'] ?: 'Select rater', ENT_QUOTES, 'UTF-8'); ?></option></select></div>
                                         <div class="employee-pdf-row"><label>Position of Rater</label><strong id="raterPositionDisplay"><?= htmlspecialchars($form['rater_position'], ENT_QUOTES, 'UTF-8'); ?></strong></div>
-                                        <div class="employee-pdf-row employee-rater-row"><label>Approving Authority</label><select id="editorApprovingAuthority" class="form-control ipcrf-input"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><option value="<?= htmlspecialchars($form['approving_authority_id'], ENT_QUOTES, 'UTF-8'); ?>" selected><?= htmlspecialchars($form['approving_authority_name'] ?: 'Select approving authority', ENT_QUOTES, 'UTF-8'); ?></option></select></div>
+                                        <div class="employee-pdf-row employee-rater-row" id="authorityAssignmentRow"><label>Approving Authority</label><select id="editorApprovingAuthority" class="form-control ipcrf-input"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><option value="<?= htmlspecialchars($form['approving_authority_id'], ENT_QUOTES, 'UTF-8'); ?>" selected><?= htmlspecialchars($form['approving_authority_name'] ?: 'Select approving authority', ENT_QUOTES, 'UTF-8'); ?></option></select></div>
                                         <div class="employee-pdf-row"><label>Authority Position</label><strong id="approvingAuthorityPositionDisplay"><?= htmlspecialchars($form['approving_authority_position'], ENT_QUOTES, 'UTF-8'); ?></strong></div>
-                                        <div class="employee-pdf-row period-row"><label>Review Period</label><span><input type="date" class="form-control ipcrf-input js-header-field" aria-label="Period start" data-field="period_start" value="<?= htmlspecialchars($form['period_start'], ENT_QUOTES, 'UTF-8'); ?>"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><em>to</em><input type="date" class="form-control ipcrf-input js-header-field" aria-label="Period end" data-field="period_end" value="<?= htmlspecialchars($form['period_end'], ENT_QUOTES, 'UTF-8'); ?>"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>></span></div>
+                                        <div class="employee-pdf-row period-row" id="periodAssignmentRow"><label>Review Period</label><span><input type="date" class="form-control ipcrf-input js-header-field" aria-label="Period start" data-field="period_start" value="<?= htmlspecialchars($form['period_start'], ENT_QUOTES, 'UTF-8'); ?>"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><em>to</em><input type="date" class="form-control ipcrf-input js-header-field" aria-label="Period end" data-field="period_end" value="<?= htmlspecialchars($form['period_end'], ENT_QUOTES, 'UTF-8'); ?>"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>></span></div>
                                         <div class="employee-pdf-row"><label>Current Status</label><strong><?= htmlspecialchars($form['status'], ENT_QUOTES, 'UTF-8'); ?></strong></div>
                                     </div>
                                 </div>
@@ -266,7 +280,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                     <div class="modal-dialog modal-lg modal-dialog-centered" role="document"><div class="modal-content ipcrf-editor-modal">
                         <div class="modal-header"><div><span class="modal-kicker">Help and Legend</span><h5 class="modal-title" id="editorGuideTitle">How to Complete the IPCRF</h5></div><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
                         <div class="modal-body guide-modal-body">
-                            <ol><li><strong>Employee Information:</strong> confirm the compact HRIS information, assigned rater and review period.</li><li><strong>KRAs:</strong> use Add New KRA when needed, then click an existing KRA title to revise it.</li><li><strong>Objectives and Results:</strong> add an objective inside the correct KRA. Existing code, objective, timeline, weight and actual result edit directly like document text.</li><li><strong>Standards:</strong> click Quality, Efficiency or Timeliness in an objective row to view or edit all five levels.</li><li><strong>Ratings:</strong> the owner proposes Q, E and T ratings in Draft. The assigned rater reviews them after submission.</li><li><strong>Competencies:</strong> click names or indicators to edit, choose the single Rating, and add another competency only when needed.</li><li><strong>Development Plan:</strong> Add Development Entry opens a guided dialog. Both the employee and assigned rater can add or edit plan entries.</li><li><strong>Missing Items:</strong> this button appears only while incomplete information exists and opens the current warning list.</li><li><strong>Return Paper:</strong> the assigned rater must explain the required corrections. A returned employee sees those remarks above the unlocked, editable form.</li><li><strong>Approval:</strong> incomplete items produce a warning but still permit Approve Anyway.</li></ol>
+                            <ol><li><strong>Employee Information:</strong> confirm the compact HRIS information, assigned rater and review period.</li><li><strong>KRAs:</strong> use Add New KRA when needed, then click an existing KRA title to revise it.</li><li><strong>Objectives and Results:</strong> add an objective inside the correct KRA. Existing code, objective, timeline, weight and actual result edit directly like document text.</li><li><strong>Standards:</strong> click Quality, Efficiency or Timeliness in an objective row to view or edit all five levels.</li><li><strong>Ratings:</strong> the owner proposes Q, E and T ratings in Draft. The assigned rater reviews them after submission.</li><li><strong>Competencies:</strong> click names or indicators to edit, choose the single Rating, and add another competency only when needed.</li><li><strong>Development Plan:</strong> Add Development Entry opens a guided dialog. Both the employee and assigned rater can add or edit plan entries.</li><li><strong>Missing Items:</strong> orange fields and columns identify exactly where information is incomplete.</li><li><strong>Return Paper:</strong> the assigned rater must explain the required corrections. A returned employee sees those remarks above the unlocked, editable form.</li><li><strong>Complete Rater Review:</strong> incomplete items produce a warning but still allow the rater to complete the review.</li></ol>
                             <div class="guide-note"><strong>Editing states:</strong> Draft and Returned records are editable by the employee. During rater review, ratings and the Development Plan are editable by the assigned rater. Validated and Locked records are read-only.</div>
                         </div>
                         <div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal">Got it</button></div>

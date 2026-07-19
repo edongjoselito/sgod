@@ -580,6 +580,44 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
 .competency-dialog-grid { display: grid; gap: 13px; grid-template-columns: 1fr 1.5fr; }
 .competency-dialog-indicators { grid-column: 1 / -1; }
 
+/* Incomplete item guidance */
+.incomplete-items-banner { align-items: center; background: linear-gradient(135deg,#fff4d8,#ffe7b0); border: 1px solid #e3a328; border-left: 6px solid #d97706; box-shadow: 0 8px 20px rgba(180,102,10,.12); color: #633c08; display: flex; gap: 11px; margin: -2px 0 13px; padding: 10px 12px; }
+.incomplete-items-banner[hidden] { display: none; }
+.incomplete-items-banner-icon { align-items: center; background: #d97706; color: #fff; display: inline-flex; flex: 0 0 36px; font-size: 1.15rem; height: 36px; justify-content: center; }
+.incomplete-items-banner > div { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.incomplete-items-banner strong { font-size: .78rem; }
+.incomplete-items-banner > div span { color: #80551b; font-size: .65rem; margin-top: 2px; }
+.incomplete-items-banner .btn { background: #fff; border: 1px solid #c78416; color: #754507; font-size: .67rem; font-weight: 800; white-space: nowrap; }
+.incomplete-items-banner .btn:hover { background: #6f4309; color: #fff; }
+.ipcrf-section.section-has-incomplete { border-color: #df9318; box-shadow: 0 0 0 2px rgba(217,119,6,.16), 0 10px 24px rgba(180,102,10,.10); }
+.ipcrf-section.section-has-incomplete > .ipcrf-section-head { background: #fff0cf; border-bottom-color: #d99a28; }
+.objective-row > .incomplete-column,
+.competency-table-row > .incomplete-column,
+.development-table td.incomplete-column { background: #fff4dc !important; }
+.pdf-objective-header > .incomplete-column,
+.competency-table-header > .incomplete-column,
+.development-table th.incomplete-column { background: #f6b94c !important; color: #4c2d02 !important; }
+.objective-row > .incomplete-item,
+.competency-table-row > .incomplete-item,
+.development-table td.incomplete-item,
+.employee-pdf-row.incomplete-item { background: #ffe2a8 !important; box-shadow: inset 0 0 0 2px #e58b08; }
+.employee-pdf-row.incomplete-item label { background: #f6b94c; color: #4c2d02; }
+.kra-card.incomplete-item,
+.kra-card > summary.incomplete-item,
+#kraContainer > .incomplete-item,
+#competencyContainer.incomplete-item,
+#developmentContainer.incomplete-item { background: #ffe7b8 !important; box-shadow: inset 0 0 0 2px #e58b08; }
+.incomplete-focus-pulse { animation: incompleteAttentionPulse .75s ease-in-out 3; }
+@keyframes incompleteAttentionPulse {
+    0%, 100% { box-shadow: inset 0 0 0 2px #e58b08, 0 0 0 0 rgba(217,119,6,.15); }
+    50% { box-shadow: inset 0 0 0 3px #d46500, 0 0 0 7px rgba(217,119,6,.24); }
+}
+
+@media (max-width: 700px) {
+    .incomplete-items-banner { align-items: flex-start; flex-wrap: wrap; }
+    .incomplete-items-banner .btn { margin-left: 47px; white-space: normal; }
+}
+
 @media (max-width: 850px) {
     .competency-quick-guide { align-items: flex-start; flex-direction: column; gap: 5px; }
     .competency-group-card > summary { grid-template-columns: auto 1fr auto; }

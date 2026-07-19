@@ -279,7 +279,10 @@
             var ratingLabel = ['Q Rating', 'E Rating', 'T Rating'][ratingIndex];
             html += '<div class="objective-rating-cell" data-label="' + ratingLabel + '" title="' + (scope === 'full' ? 'Owner proposed rating; the rater reviews this after submission.' : '') + '"><span class="js-objective-rating-wrap" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '" data-field="' + field + '">' + ratingOptions(objective[field], canEnterObjectiveRatings()) + '</span></div>';
         });
-        html += '<div class="objective-score-cell ' + (approved ? 'approved' : 'pending') + '" data-label="Rating / Score"><span>' + (approved ? 'Approved Average' : 'Proposed Average') + '</span><strong class="js-average-score">' + (average > 0 ? average.toFixed(2) : '—') + '</strong><small class="js-score-caption">' + (approved ? 'Weighted <b class="js-weighted-score">' + weighted.toFixed(3) + '</b>' : 'Pending rater approval<b class="js-weighted-score">0.000</b>') + '</small></div>';
+        html += '<div class="objective-score-cell ' + (approved ? 'approved' : 'pending') + '" data-label="Rating / Score">';
+        if (approved) { html += '<span>Approved Average</span>'; }
+        html += '<strong class="js-average-score">' + (average > 0 ? average.toFixed(2) : '—') + '</strong>';
+        html += '<small class="js-score-caption">' + (approved ? 'Weighted ' : '') + '<b class="js-weighted-score">' + weighted.toFixed(3) + '</b></small></div>';
         return html + '</div>';
     }
 
@@ -385,10 +388,154 @@
         }).join('') || '<div class="tracking-empty"><i class="mdi mdi-timeline-clock-outline"></i><strong>No transitions recorded yet</strong><span>This IPCRF is still in its initial ' + escapeHtml(state.form.status) + ' stage.</span></div>');
     }
 
+    function hasValue(value) {
+        return String(value === undefined || value === null ? '' : value).trim() !== '';
+    }
+
+    function validPerformancePeriod() {
+        var start = String(state.form.period_start || '');
+        var end = String(state.form.period_end || '');
+        return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) && start <= end;
+    }
+
+    function applyIncompleteHighlights() {
+        $('.incomplete-item, .incomplete-column, .section-has-incomplete, .incomplete-focus-pulse')
+            .removeClass('incomplete-item incomplete-column section-has-incomplete incomplete-focus-pulse');
+
+        var hasWarnings = (reviewWarnings || []).length > 0;
+        $('#incompleteItemsBanner').prop('hidden', !hasWarnings);
+        if (!hasWarnings) { return; }
+
+        function mark($element) {
+            if ($element && $element.length) { $element.addClass('incomplete-item'); }
+        }
+
+        if (!hasValue(state.form.employee_id) || !hasValue(state.form.employee_name)) {
+            mark($('#employeeSection .employee-pdf-column').first().find('.employee-pdf-row').slice(0, 2));
+        }
+        if (!hasValue(state.form.rater_name)) { mark($('#raterAssignmentRow')); }
+        if (!hasValue(state.form.approving_authority_name)) { mark($('#authorityAssignmentRow')); }
+        if (!validPerformancePeriod()) { mark($('#periodAssignmentRow')); }
+
+        var totalWeight = 0;
+        var objectiveCount = 0;
+        (state.kras || []).forEach(function (kra) {
+            (kra.objectives || []).forEach(function (objective) {
+                objectiveCount++;
+                totalWeight += Number(objective.weight || 0);
+            });
+        });
+        var totalWeightIncomplete = Math.abs(totalWeight - 100) > 0.009;
+
+        if (!(state.kras || []).length) {
+            mark($('#kraContainer .kra-empty-objectives'));
+            $('#kraSection').addClass('section-has-incomplete');
+        }
+
+        (state.kras || []).forEach(function (kra, kraIndex) {
+            var $kra = $('#kra-' + kraIndex);
+            if (!hasValue(kra.title)) { mark($kra.children('summary')); }
+            if (!(kra.objectives || []).length) { mark($kra); }
+
+            (kra.objectives || []).forEach(function (objective, objectiveIndex) {
+                var $cells = $kra.find('.objective-row[data-objective="' + objectiveIndex + '"]').children('div');
+                if (!hasValue(objective.objective)) { mark($cells.eq(1)); }
+                if (!hasValue(objective.timeline)) { mark($cells.eq(2)); }
+                if (Number(objective.weight || 0) <= 0 || totalWeightIncomplete) { mark($cells.eq(3)); }
+                if (standardCompletion(objective, 'quality') < 5) { mark($cells.eq(4)); }
+                if (standardCompletion(objective, 'efficiency') < 5) { mark($cells.eq(5)); }
+                if (standardCompletion(objective, 'timeliness') < 5) { mark($cells.eq(6)); }
+                if (!hasValue(objective.accomplishment)) { mark($cells.eq(7)); }
+                if (scope === 'rater') {
+                    if (Number(objective.quality_rating || 0) < 1) { mark($cells.eq(8)); }
+                    if (Number(objective.efficiency_rating || 0) < 1) { mark($cells.eq(9)); }
+                    if (Number(objective.timeliness_rating || 0) < 1) { mark($cells.eq(10)); }
+                }
+            });
+
+            var objectiveIssueColumns = {};
+            $kra.find('.objective-row').each(function () {
+                $(this).children('.incomplete-item').each(function () { objectiveIssueColumns[$(this).index()] = true; });
+            });
+            Object.keys(objectiveIssueColumns).forEach(function (columnIndex) {
+                var index = Number(columnIndex);
+                $kra.find('.pdf-objective-header span').eq(index).addClass('incomplete-column');
+                $kra.find('.objective-row').each(function () { $(this).children('div').eq(index).addClass('incomplete-column'); });
+            });
+        });
+        if (objectiveCount === 0) { $('#kraSection').addClass('section-has-incomplete'); }
+
+        if (!(state.competencies || []).length) {
+            mark($('#competencyContainer'));
+            $('#competencySection').addClass('section-has-incomplete');
+        }
+        $('.competency-group-card').each(function () {
+            var $group = $(this);
+            $group.find('.competency-table-row').each(function () {
+                var $row = $(this);
+                var competency = state.competencies[Number($row.data('competency'))] || {};
+                var $cells = $row.children('div');
+                if (!hasValue(competency.name)) { mark($cells.eq(0)); }
+                if (!(competency.indicators || []).length) { mark($cells.eq(1)); }
+                if (Number(competency.rating || 0) < 1) { mark($cells.eq(2)); }
+            });
+            var competencyIssueColumns = {};
+            $group.find('.competency-table-row').each(function () {
+                $(this).children('.incomplete-item').each(function () { competencyIssueColumns[$(this).index()] = true; });
+            });
+            Object.keys(competencyIssueColumns).forEach(function (columnIndex) {
+                var index = Number(columnIndex);
+                $group.find('.competency-table-header span').eq(index).addClass('incomplete-column');
+                $group.find('.competency-table-row').each(function () { $(this).children('div').eq(index).addClass('incomplete-column'); });
+            });
+        });
+
+        if (!(state.development || []).length) {
+            mark($('#developmentContainer td').first());
+            $('#developmentSection').addClass('section-has-incomplete');
+        } else {
+            (state.development || []).forEach(function (plan, planIndex) {
+                var $cells = $('#developmentContainer tr').eq(planIndex).children('td');
+                ['strengths', 'improvement_needs', 'learning_objectives', 'interventions', 'target_timeline', 'responsible_person'].forEach(function (field, fieldIndex) {
+                    if (!hasValue(plan[field])) { mark($cells.eq(fieldIndex)); }
+                });
+            });
+            var developmentIssueColumns = {};
+            $('#developmentContainer tr').each(function () {
+                $(this).children('.incomplete-item').each(function () { developmentIssueColumns[$(this).index()] = true; });
+            });
+            Object.keys(developmentIssueColumns).forEach(function (columnIndex) {
+                var index = Number(columnIndex);
+                $('#developmentSection thead th').eq(index).addClass('incomplete-column');
+                $('#developmentContainer tr').each(function () { $(this).children('td').eq(index).addClass('incomplete-column'); });
+            });
+        }
+
+        $('.ipcrf-section').each(function () {
+            var $section = $(this);
+            if ($section.find('.incomplete-item, .incomplete-column').length) { $section.addClass('section-has-incomplete'); }
+        });
+    }
+
+    function focusFirstIncomplete() {
+        var $first = $('.incomplete-item').first();
+        if (!$first.length) { $first = $('.section-has-incomplete').first(); }
+        if (!$first.length) { return; }
+        var $details = $first.closest('details');
+        if ($details.length) {
+            $details.prop('open', true);
+            syncDetailsToggle($details.get(0));
+        }
+        $first.addClass('incomplete-focus-pulse');
+        $first.get(0).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(function () { $first.removeClass('incomplete-focus-pulse'); }, 2400);
+    }
+
     function renderMissingItems() {
         var count = (reviewWarnings || []).length;
         $('#missingItemsCount').text(count);
         $('#missingItemsBtn').prop('hidden', count === 0).toggle(count > 0);
+        applyIncompleteHighlights();
     }
 
     function showMissingItems() {
@@ -400,9 +547,11 @@
         Swal.fire({
             icon: 'warning',
             title: 'Incomplete items found',
-            html: '<p class="submission-warning-intro">These items are still incomplete. They are warnings and will not prevent employee submission or rater approval.</p><ul class="submission-warning-list">' + items + '</ul>',
-            confirmButtonText: 'Return to Form',
-            confirmButtonColor: '#3157c8'
+            html: '<p class="submission-warning-intro">These items are still incomplete. Orange fields and columns show where corrections are needed.</p><ul class="submission-warning-list">' + items + '</ul>',
+            confirmButtonText: 'Show First Incomplete Field',
+            confirmButtonColor: '#d97706'
+        }).then(function (result) {
+            if (result.value) { focusFirstIncomplete(); }
         });
     }
 
@@ -417,7 +566,7 @@
         if ((status === 'Draft' || status === 'Returned for Revision') && scope === 'full') {
             html = actionButton('submit_rater', 'Submit to Rater', 'mdi-send-outline', 'btn-success');
         } else if (status === 'Submitted to Rater' && (form.rater_id === config.actor || config.isAdmin)) {
-            html = actionButton('rater_approve', 'Approve IPCRF', 'mdi-check-decagram', 'btn-success') + actionButton('return_revision', 'Return Paper', 'mdi-file-undo-outline', 'btn-danger ml-2');
+            html = actionButton('rater_approve', 'Complete Rater Review', 'mdi-clipboard-check-outline', 'btn-success') + actionButton('return_revision', 'Return Paper', 'mdi-file-undo-outline', 'btn-danger ml-2');
         } else if (status === 'Rater Approved' && (form.rater_id === config.actor || config.isAdmin)) {
             html = actionButton('submit_pmt', 'Submit to PMT', 'mdi-send-check-outline', 'btn-success');
         } else if (status === 'Submitted to PMT' && config.isPmt) {
@@ -623,7 +772,7 @@
         var $row = $('.objective-row[data-kra="' + kraIndex + '"][data-objective="' + objectiveIndex + '"]');
         $row.find('.js-average-score').text(average > 0 ? average.toFixed(2) : '—');
         $row.find('.js-weighted-score').text(weighted.toFixed(3));
-        $row.find('.js-score-caption').html(approved ? 'Weighted <b class="js-weighted-score">' + weighted.toFixed(3) + '</b>' : 'Pending rater approval<b class="js-weighted-score">0.000</b>');
+        $row.find('.js-score-caption').html((approved ? 'Weighted ' : '') + '<b class="js-weighted-score">' + weighted.toFixed(3) + '</b>');
     }
 
     function focusObjective(kraIndex, objectiveIndex) {
@@ -815,7 +964,7 @@
         $('#addCompetencyBtn').on('click', function () { openCompetencyEditor('Core Behavioral Competency'); });
         $('#addPlanBtn').on('click', openDevelopmentEditor);
         $('#saveDraftBtn').on('click', function () { saveDraft(true); });
-        $('#missingItemsBtn').on('click', function () {
+        $('#missingItemsBtn, #reviewIncompleteItemsBtn').on('click', function () {
             saveDraft(false).then(showMissingItems);
         });
 
@@ -953,7 +1102,7 @@
         $(document).on('click', '.js-workflow', function () {
             var action = $(this).data('action');
             var needsRemarks = action === 'return_revision' || action === 'reopen';
-            var labels = { submit_rater: 'Submit this IPCRF to the assigned rater?', rater_approve: 'Approve this IPCRF as rater?', submit_pmt: 'Submit this approved IPCRF to the PMT?', pmt_validate: 'Validate this IPCRF as PMT?', lock: 'Lock this validated IPCRF?', return_revision: 'Return IPCRF Paper to Employee', reopen: 'Reopen this IPCRF for revision?' };
+            var labels = { submit_rater: 'Submit this IPCRF to the assigned rater?', rater_approve: 'Complete the rater review for this IPCRF?', submit_pmt: 'Submit this reviewed IPCRF to the PMT?', pmt_validate: 'Validate this IPCRF as PMT?', lock: 'Lock this validated IPCRF?', return_revision: 'Return IPCRF Paper to Employee', reopen: 'Reopen this IPCRF for revision?' };
             function sendWorkflow(remarks, confirmWarnings) {
                 $.post(config.urls.workflow, { action: action, remarks: remarks, confirm_warnings: confirmWarnings ? 1 : 0 }, null, 'json').done(function (response) {
                     toastr.success(response.message); window.location.href = response.reload;
@@ -963,18 +1112,22 @@
                         reviewWarnings = response.errors || [];
                         renderMissingItems();
                         var warningItems = (response.errors || []).map(function (warning) { return '<li>' + escapeHtml(warning) + '</li>'; }).join('');
-                        var approving = action === 'rater_approve';
+                        var completingReview = action === 'rater_approve';
                         Swal.fire({
                             icon: 'warning',
-                            title: approving ? 'Approve with incomplete items?' : 'Incomplete information found',
-                            html: '<p class="submission-warning-intro">' + (approving ? 'You may review the form, use Return Paper with clear remarks, or approve it anyway.' : 'You may return to the form and complete these items, or submit the IPCRF to the rater anyway.') + '</p><ul class="submission-warning-list">' + warningItems + '</ul>',
+                            title: completingReview ? 'Complete review with incomplete items?' : 'Incomplete information found',
+                            html: '<p class="submission-warning-intro">' + (completingReview ? 'You may review the orange fields, use Return Paper with clear remarks, or complete the rater review anyway.' : 'You may return to the orange fields and complete these items, or submit the IPCRF to the rater anyway.') + '</p><ul class="submission-warning-list">' + warningItems + '</ul>',
                             showCancelButton: true,
-                            confirmButtonText: approving ? 'Approve Anyway' : 'Submit Anyway',
-                            cancelButtonText: approving ? 'Review / Return' : 'Review Form',
+                            confirmButtonText: completingReview ? 'Complete Anyway' : 'Submit Anyway',
+                            cancelButtonText: completingReview ? 'Review / Return' : 'Review Form',
                             confirmButtonColor: '#b7791f',
                             focusCancel: true
                         }).then(function (warningResult) {
-                            if (warningResult.value) sendWorkflow(remarks, true);
+                            if (warningResult.value) {
+                                sendWorkflow(remarks, true);
+                            } else {
+                                focusFirstIncomplete();
+                            }
                         });
                         return;
                     }
@@ -982,7 +1135,7 @@
                 });
             }
             var returningPaper = action === 'return_revision';
-            var confirmText = action === 'submit_rater' ? 'Check and Submit' : (action === 'rater_approve' ? 'Check and Approve' : (returningPaper ? 'Return Paper' : 'Continue'));
+            var confirmText = action === 'submit_rater' ? 'Check and Submit' : (action === 'rater_approve' ? 'Complete Review' : (returningPaper ? 'Return Paper' : 'Continue'));
             Swal.fire({
                 icon: returningPaper ? 'warning' : undefined,
                 title: labels[action],
