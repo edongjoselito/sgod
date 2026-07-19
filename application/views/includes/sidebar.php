@@ -750,6 +750,20 @@
                     </li>
 
                     <li>
+                        <a href="javascript: void(0);" class="waves-effect">
+                            <i class="mdi mdi-school-outline"></i>
+                            <span> Brigada Eskwela </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul class="nav-second-level" aria-expanded="false">
+                            <li><a href="<?= base_url(); ?>Page/brigada_eskwela#school-preparedness">School Preparedness</a></li>
+                            <li><a href="<?= base_url(); ?>Page/brigada_eskwela#spc-report">SPC Report</a></li>
+                            <li><a href="<?= base_url(); ?>Page/brigada_eskwela#summary-report">Summary Report</a></li>
+                            <li><a href="<?= base_url(); ?>Page/brigada_eskwela#partners">Partners</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
                         <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>

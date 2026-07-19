@@ -126,6 +126,91 @@ class SGODModel extends CI_Model
 		}
 	}
 
+	private function request_input_value($key){
+		$value = $this->input->post($key);
+		if($value === NULL || $value === ''){
+			$value = $this->input->get($key);
+		}
+
+		return $value;
+	}
+
+	private function normalize_report_date_value($value){
+		$value = trim((string) $value);
+		if($value === ''){
+			return '';
+		}
+
+		$value = preg_replace('/\s+/', ' ', $value);
+		$value = preg_replace('/,\s*(\d{4})/', ', $1', $value);
+		$timestamp = strtotime($value);
+		if($timestamp === FALSE){
+			return '';
+		}
+
+		return date('Y-m-d', $timestamp);
+	}
+
+	private function extract_report_date_range($value){
+		$value = trim((string) $value);
+		if($value === ''){
+			return array('', '');
+		}
+
+		$value = preg_replace('/\s+/', ' ', $value);
+		$rangeParts = preg_split('/\s+to\s+/i', $value);
+		if(count($rangeParts) === 2){
+			$rangeStart = $this->normalize_report_date_value($rangeParts[0]);
+			$rangeEnd = $this->normalize_report_date_value($rangeParts[1]);
+			if($rangeStart !== '' && $rangeEnd !== ''){
+				if($rangeStart > $rangeEnd){
+					$temp = $rangeStart;
+					$rangeStart = $rangeEnd;
+					$rangeEnd = $temp;
+				}
+
+				return array($rangeStart, $rangeEnd);
+			}
+		}
+
+		$singleDate = $this->normalize_report_date_value($value);
+		if($singleDate === ''){
+			return array('', '');
+		}
+
+		return array($singleDate, $singleDate);
+	}
+
+	private function extract_accomplishment_date_range($row){
+		$targetDate = isset($row->targetDate) ? $this->normalize_report_date_value($row->targetDate) : '';
+		$dateConducted = trim((string) (isset($row->dateConducted) ? $row->dateConducted : ''));
+		list($rangeStart, $rangeEnd) = $this->extract_report_date_range($dateConducted);
+
+		if($rangeStart !== '' && $rangeEnd !== ''){
+			return array($rangeStart, $rangeEnd);
+		}
+
+		if($targetDate !== ''){
+			return array($targetDate, $targetDate);
+		}
+
+		return array('', '');
+	}
+
+	private function accomplishment_matches_selected_date($row, $selectedDate){
+		list($selectedStart, $selectedEnd) = $this->extract_report_date_range($selectedDate);
+		if($selectedStart === '' || $selectedEnd === ''){
+			return FALSE;
+		}
+
+		list($activityStart, $activityEnd) = $this->extract_accomplishment_date_range($row);
+		if($activityStart === '' || $activityEnd === ''){
+			return FALSE;
+		}
+
+		return $activityStart <= $selectedEnd && $activityEnd >= $selectedStart;
+	}
+
 	function viewSecAccomplishments($section, $secGroup, $scope = 'section', $username = ''){
 		$this->apply_accomplishment_scope($section, $secGroup, $scope, $username);
 		$this->db->order_by('id', 'DESC');
@@ -191,7 +276,7 @@ class SGODModel extends CI_Model
 
 	public function get_accomplishment_by($cat, $quarter, $year, $week, $month, $secGroup){
 
-		$sec = $this->input->post('sec');
+		$sec = $this->request_input_value('sec');
 
 		$this->db->where("quarter", $quarter);
 		$this->db->where("year", $year);
@@ -200,7 +285,7 @@ class SGODModel extends CI_Model
 
 		$this->db->where("activityCategory", $cat);
 
-		if($this->input->post('weekAcc') !=""){
+		if($this->request_input_value('weekAcc') !=""){
 		$this->db->where("monthAcc", $month);
 		$this->db->where("weekAcc", $week);
 		$this->db->where("secGroup", $secGroup);
@@ -211,16 +296,22 @@ class SGODModel extends CI_Model
 	}
 
 	public function get_accomplishment_by_date_conducted($cat, $date, $secGroup){
-		$sec = $this->input->post('sec');
-
-		$this->db->where("dateConducted", $date);
+		$sec = $this->request_input_value('sec');
 		$this->db->where("section", $sec);
 		$this->db->where("secGroup", $secGroup);
 		$this->db->where("activityCategory", $cat);
+		$this->db->order_by('targetDate', 'ASC');
+		$this->db->order_by('id', 'ASC');
+		$result = $this->db->get('sgod_accomplishments')->result();
 
-		$result = $this->db->get('sgod_accomplishments');
+		$matchedRows = array();
+		foreach($result as $row){
+			if($this->accomplishment_matches_selected_date($row, $date)){
+				$matchedRows[] = (array) $row;
+			}
+		}
 
-		return $result->result_array();
+		return $matchedRows;
 	}
 
 	public function get_accomplishment_by_row($quarter, $year, $week, $month){
@@ -231,13 +322,13 @@ class SGODModel extends CI_Model
 		if($user!='System Administrator'){
 			$sec = $this->session->userdata('section');
 		}else{
-			$sec = $this->input->post('sec');
+			$sec = $this->request_input_value('sec');
 		}
 
 		$this->db->where("section", $sec);
 
 
-		if($this->input->post('weekAcc') !=""){
+		if($this->request_input_value('weekAcc') !=""){
 			$this->db->where("monthAcc", $month);
 			$this->db->where("weekAcc", $week);
 			$this->db->group_by("section");
@@ -252,16 +343,22 @@ class SGODModel extends CI_Model
 		if($user!='System Administrator'){
 			$sec = $this->session->userdata('section');
 		}else{
-			$sec = $this->input->post('sec');
+			$sec = $this->request_input_value('sec');
 		}
 
-		$this->db->where("dateConducted", $date);
 		$this->db->where("section", $sec);
 		$this->db->where("secGroup", $secGroup);
-		$this->db->group_by("section");
-		$result = $this->db->get('sgod_accomplishments');
+		$this->db->order_by('targetDate', 'ASC');
+		$this->db->order_by('id', 'ASC');
+		$result = $this->db->get('sgod_accomplishments')->result();
 
-		return $result->result_array();
+		foreach($result as $row){
+			if($this->accomplishment_matches_selected_date($row, $date)){
+				return (array) $row;
+			}
+		}
+
+		return array();
 	}
 
 	public function get_accomplish_by_row($quarter, $year, $week, $month){
@@ -612,6 +709,45 @@ class SGODModel extends CI_Model
 		$this->db->where('secGroup', trim((string) $secGroup));
 		$result = $this->db->get('sgod_memo');
 		return $result->row();
+	}
+
+	public function get_brigada_eskwela_accomplishments($section, $secGroup, $limit = NULL){
+		$section = trim((string) $section);
+		$secGroup = trim((string) $secGroup);
+
+		$this->db->where('section', $section);
+		$this->db->where('secGroup', $secGroup);
+		$this->db->group_start();
+		$this->db->like('activity', 'Brigada Eskwela');
+		$this->db->or_like('particulars', 'Brigada Eskwela');
+		$this->db->or_like('notes', 'Brigada Eskwela');
+		$this->db->or_like('remarks', 'Brigada Eskwela');
+		$this->db->group_end();
+		$this->db->order_by('year', 'DESC');
+		$this->db->order_by('id', 'DESC');
+
+		if($limit !== NULL){
+			$this->db->limit((int) $limit);
+		}
+
+		return $this->db->get('sgod_accomplishments')->result();
+	}
+
+	public function get_brigada_eskwela_memos($secGroup, $limit = NULL){
+		$secGroup = trim((string) $secGroup);
+
+		$this->db->where('secGroup', $secGroup);
+		$this->db->group_start();
+		$this->db->like('title', 'Brigada Eskwela');
+		$this->db->or_like('memoNo', 'Brigada Eskwela');
+		$this->db->group_end();
+		$this->db->order_by('id', 'DESC');
+
+		if($limit !== NULL){
+			$this->db->limit((int) $limit);
+		}
+
+		return $this->db->get('sgod_memo')->result();
 	}
 
 	public function memo_exists_in_group($memoNo, $secGroup, $excludeId = NULL){

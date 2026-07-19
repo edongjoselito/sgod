@@ -230,28 +230,15 @@
                 </div>
                 <h1>SCHOOL GOVERNANCE AND OPERATIONS DIVISION</h1>
                 <?php if(isset($acc)){?>
-                <h2>Presentation of Accomplishments and Weekly Updates</h2>
-                <h3>
-                    <?php
-                        $q = isset($q) ? $q : '';
-                        $r = isset($r) ? $r : '';
-                        if(strlen($q)==1){
-                            $monthAcc = isset($acc) && (is_array($acc) ? isset($acc['monthAcc']) : isset($acc->monthAcc)) ? (is_array($acc) ? $acc['monthAcc'] : $acc->monthAcc) : '';
-                            echo $r.' '. $q.', '.$monthAcc;
-                        }else{
-                            echo $q.' '. $r.', FY';
-                        }
-                        $year = isset($acc) && (is_array($acc) ? isset($acc['year']) : isset($acc->year)) ? (is_array($acc) ? $acc['year'] : $acc->year) : '';
-                    ?> <?= $year; ?>
-                </h3>
+                <?php $sectionName = is_array($acc) ? (isset($acc['section']) ? $acc['section'] : '') : (isset($acc->section) ? $acc->section : ''); ?>
                 <?php } ?>
             </div>
 
-            <?php if(isset($acc) && (!empty($accomplish) || !empty($update))){ ?>
+            <?php if((isset($acc) || !empty($acc)) && (!empty($accomplish) || !empty($update))){ ?>
 
                 <?php if($cat == "updates"){?>
                     <div class="section-header">
-                        <h1><?= $acc->section; ?></h1>
+                        <h1><?= $sectionName; ?></h1>
                         <h2>Updates</h2>
                     </div>
                     <table>
@@ -259,9 +246,6 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Activity</th>
-                                <th>Performance Indicators</th>
-                                <th>Target</th>
-                                <th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -269,9 +253,6 @@
                                 <tr>
                                     <td><?= $row['targetDate']; ?></td>
                                     <td><?= $row['activity']; ?></td>
-                                    <td><?= $row['perIndicators']; ?></td>
-                                    <td><?= $row['target']; ?></td>
-                                    <td><?= $row['remarks']; ?></td>
                                 </tr>
                             <?php } ?>
                         </tbody>
@@ -280,7 +261,7 @@
                 <?php }elseif($cat == "accomplishment"){?>
 
                     <div class="section-header">
-                        <h1><?= $acc->section; ?></h1>
+                        <h1><?= $sectionName; ?></h1>
                         <h2>Accomplishments</h2>
                     </div>
                     <table>
@@ -288,11 +269,6 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Activity</th>
-                                <th>Performance Indicators</th>
-                                <th>Target</th>
-                                <th>Achieved</th>
-                                <th>% of Accomplishment</th>
-                                <th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -300,11 +276,6 @@
                                 <tr>
                                     <td><?= $row['dateConducted']; ?></td>
                                     <td><?= $row['activity']; ?></td>
-                                    <td><?= $row['perIndicators']; ?></td>
-                                    <td><?= $row['target']; ?></td>
-                                    <td><?= $row['achieved']; ?></td>
-                                    <td><?= $row['percentageAccom']; ?></td>
-                                    <td><?= $row['remarks']; ?></td>
                                 </tr>
                             <?php } ?>
                         </tbody>
@@ -313,7 +284,7 @@
                 <?php }else{ ?>
                     <?php if(!empty($accomplish)){ ?>
                         <div class="section-header">
-                            <h1><?= $acc->section; ?></h1>
+                            <h1><?= $sectionName; ?></h1>
                             <h2>Accomplishments</h2>
                         </div>
                         <table>
@@ -321,11 +292,6 @@
                                 <tr>
                                     <th>Date</th>
                                     <th>Activity</th>
-                                    <th>Performance Indicators</th>
-                                    <th>Target</th>
-                                    <th>Achieved</th>
-                                    <th>% of Accomplishment</th>
-                                    <th>Remarks</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -333,11 +299,6 @@
                                     <tr>
                                         <td><?= $row['dateConducted']; ?></td>
                                         <td><?= $row['activity']; ?></td>
-                                        <td><?= $row['perIndicators']; ?></td>
-                                        <td><?= $row['target']; ?></td>
-                                        <td><?= $row['achieved']; ?></td>
-                                        <td><?= $row['percentageAccom']; ?></td>
-                                        <td><?= $row['remarks']; ?></td>
                                     </tr>
                                 <?php } ?>
                             </tbody>
@@ -347,7 +308,7 @@
                     <?php if(!empty($update)){ ?>
                         <div class="page-break"></div>
                         <div class="section-header">
-                            <h1><?= $acc->section; ?></h1>
+                            <h1><?= $sectionName; ?></h1>
                             <h2>Updates</h2>
                         </div>
                         <table>
@@ -355,9 +316,6 @@
                                 <tr>
                                     <th>Date</th>
                                     <th>Activity</th>
-                                    <th>Performance Indicators</th>
-                                    <th>Target</th>
-                                    <th>Remarks</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -365,19 +323,12 @@
                                     <tr>
                                         <td><?= $row['targetDate']; ?></td>
                                         <td><?= $row['activity']; ?></td>
-                                        <td><?= $row['perIndicators']; ?></td>
-                                        <td><?= $row['target']; ?></td>
-                                        <td><?= $row['remarks']; ?></td>
                                     </tr>
                                 <?php } ?>
                             </tbody>
                         </table>
                     <?php } ?>
                 <?php } ?>
-
-                <div class="footer">
-                    <p>Generated on <?= date('F j, Y, g:i a'); ?> | School Governance and Operations Division</p>
-                </div>
 
             <?php }else{ ?>
                 <div class="no-records">

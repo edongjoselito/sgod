@@ -845,72 +845,30 @@ if (!function_exists('sect_accom_resource_markup')) {
                                         Section Workspace
                                     </span>
                                     <h1 class="hero-title">Section Accomplishments</h1>
-                                    <p class="hero-copy">
-                                        Keep your section reports, activity entries, and accomplishment records organized in one place.
-                                    </p>
-                                    <div class="hero-meta">
-                                        <span class="hero-chip"><i class="mdi mdi-office-building-outline"></i> <?= sect_accom_escape($sectionName); ?></span>
-                                        <?php if ($secGroupName !== '') { ?>
-                                            <span class="hero-chip"><i class="mdi mdi-account-group-outline"></i> <?= sect_accom_escape($secGroupName); ?></span>
-                                        <?php } ?>
-                                        <span class="hero-chip"><i class="mdi mdi-format-list-bulleted"></i> <?= number_format($recordCount); ?> records</span>
-                                    </div>
-                                </div>
-
-                                <div class="hero-actions">
-                                    <a href="<?= base_url(); ?>Page/addAccomplishments" class="hero-action">
-                                        <i class="mdi mdi-plus-circle-outline"></i>
-                                        Add Accomplishment
-                                    </a>
-                                    <a target="_blank" rel="noopener noreferrer" href="<?= base_url(); ?>Page/sec_filterv2/1/<?= rawurlencode($sectionName); ?>" class="hero-action hero-action--secondary">
-                                        <i class="mdi mdi-file-chart-outline"></i>
-                                        Quarterly Report
-                                    </a>
-                                    <a target="_blank" rel="noopener noreferrer" href="<?= base_url(); ?>Page/sec_filterv2/2/<?= rawurlencode($sectionName); ?>" class="hero-action hero-action--secondary">
-                                        <i class="mdi mdi-calendar-week-outline"></i>
-                                        Weekly Report
-                                    </a>
-                                    <a target="_blank" rel="noopener noreferrer" href="<?= base_url(); ?>Page/sec_filterv2/3/<?= rawurlencode($sectionName); ?>" class="hero-action hero-action--secondary">
-                                        <i class="mdi mdi-calendar-today-outline"></i>
-                                        Daily Report
-                                    </a>
-                                    <a target="_blank" rel="noopener noreferrer" href="<?= base_url(); ?>Page/print_report/<?= rawurlencode($sectionName); ?>" class="hero-action hero-action--secondary">
-                                        <i class="mdi mdi-printer-outline"></i>
-                                        Printable Report
-                                    </a>
                                 </div>
                             </div>
                         </div>
 
-                        <?php if ($this->session->flashdata('success')) { ?>
-                            <div class="alert alert-success flash-alert alert-dismissible fade show" role="alert">
-                                <?= sect_accom_escape($this->session->flashdata('success')); ?>
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                        <?php } ?>
-
-                        <?php if ($this->session->flashdata('danger')) { ?>
-                            <div class="alert alert-warning flash-alert alert-dismissible fade show" role="alert">
-                                <?= sect_accom_escape($this->session->flashdata('danger')); ?>
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                        <?php } ?>
-
-                        <div class="panel-card">
+                        <div class="panel-card" style="margin-top: 24px;">
                             <div class="panel-head">
                                 <div>
-                                    <div class="panel-kicker">Filter</div>
-                                    <h4 class="panel-title">Refine accomplishment records</h4>
-                                    <p class="panel-copy">Switch between section-wide and personal accomplishments, then narrow the list to a specific reporting month.</p>
+                                    <div class="panel-kicker">Quick Actions & Filter</div>
                                 </div>
                                 <div class="panel-summary">
                                     <i class="mdi mdi-filter-outline"></i>
                                     <span><?= sect_accom_escape($filterSummary); ?></span>
                                 </div>
+                            </div>
+
+                            <div class="filter-actions" style="margin-bottom: 20px;">
+                                <a href="<?= base_url(); ?>Page/addAccomplishments" class="shell-button shell-button--primary">
+                                    <i class="mdi mdi-plus-circle-outline"></i>
+                                    Add Accomplishment
+                                </a>
+                                <a target="_blank" rel="noopener noreferrer" href="<?= base_url(); ?>Page/print_report/<?= rawurlencode($sectionName); ?>" class="shell-button shell-button--secondary">
+                                    <i class="mdi mdi-printer-outline"></i>
+                                    Generate Report
+                                </a>
                             </div>
 
                             <?php $att = array('class' => 'parsley-examples'); ?>
@@ -957,6 +915,24 @@ if (!function_exists('sect_accom_resource_markup')) {
                                 </div>
                             </form>
                         </div>
+
+                        <?php if ($this->session->flashdata('success')) { ?>
+                            <div class="alert alert-success flash-alert alert-dismissible fade show" role="alert">
+                                <?= sect_accom_escape($this->session->flashdata('success')); ?>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        <?php } ?>
+
+                        <?php if ($this->session->flashdata('danger')) { ?>
+                            <div class="alert alert-warning flash-alert alert-dismissible fade show" role="alert">
+                                <?= sect_accom_escape($this->session->flashdata('danger')); ?>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        <?php } ?>
 
                         <div class="panel-card table-shell">
                             <div class="panel-head">

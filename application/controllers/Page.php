@@ -166,6 +166,15 @@ class Page extends CI_Controller{
 	return $date->format('Y-m-d');
   }
 
+  private function request_input_value($key){
+	$value = $this->input->post($key);
+	if($value === NULL || $value === ''){
+		$value = $this->input->get($key);
+	}
+
+	return $value;
+  }
+
   private function get_quarter_from_date($dateValue){
 	$monthNumber = (int) date('n', strtotime($dateValue));
 	if($monthNumber >= 1 && $monthNumber <= 3){
@@ -308,6 +317,10 @@ class Page extends CI_Controller{
 	}
 
 	return $message;
+  }
+
+  private function can_access_smn_workspace(){
+	return trim((string) $this->session->userdata('section')) === 'Social Mobilization and Networking';
   }
 
   private function get_section_head_record_for_user($username, $section, $secGroup){
@@ -512,6 +525,39 @@ class Page extends CI_Controller{
     }else{
         echo "Access Denied";
     }
+  }
+
+  function brigada_eskwela(){
+	if(!$this->can_access_smn_workspace()){
+		echo "Access Denied";
+		return;
+	}
+
+	$section = trim((string) $this->session->userdata('section'));
+	$secGroup = trim((string) $this->session->userdata('secGroup'));
+	$profileState = $this->get_current_user_profile_state();
+	$accomplishments = $this->SGODModel->get_brigada_eskwela_accomplishments($section, $secGroup, 20);
+	$memos = $this->SGODModel->get_brigada_eskwela_memos($secGroup, 20);
+	$brigadaAccomplishmentCount = 0;
+	$brigadaUpdateCount = 0;
+
+	foreach($accomplishments as $record){
+		$category = strtolower(trim((string) $record->activityCategory));
+		if($category === 'updates'){
+			$brigadaUpdateCount++;
+		}else{
+			$brigadaAccomplishmentCount++;
+		}
+	}
+
+	$result['accomplishments'] = $accomplishments;
+	$result['memos'] = $memos;
+	$result['brigadaAccomplishmentCount'] = $brigadaAccomplishmentCount;
+	$result['brigadaUpdateCount'] = $brigadaUpdateCount;
+	$result['brigadaMemoCount'] = count($memos);
+	$result['currentAvatar'] = $profileState['currentAvatar'];
+	$result['shouldPromptAvatarUpdate'] = $profileState['shouldPromptAvatarUpdate'];
+	$this->load->view('brigada_eskwela', $result);
   }
 
   function Planning(){
@@ -1943,24 +1989,63 @@ public function memo_delete(){
 	}
 	function reportv2(){
 
-		$filterType = $this->input->post('filterType');
-		$quarter = $this->input->post('quarter');
-		$year = $this->input->post('year');
-		$week = $this->input->post('weekAcc');
-		$month = $this->input->post('month');
-		$date = $this->input->post('date');
-		$category = $this->input->post('activityCategory');
+		$filterType = $this->request_input_value('filterType');
+		$quarter = $this->request_input_value('quarter');
+		$year = $this->request_input_value('year');
+		$week = $this->request_input_value('weekAcc');
+		$month = $this->request_input_value('month');
+		$date = $this->request_input_value('date');
+		$category = $this->request_input_value('activityCategory');
 		$secGroup=$this->session->userdata('secGroup');
 
 		$result['cat'] = $category;
+		$result['accomplish'] = array();
+		$result['update'] = array();
 
-		if($filterType == 'day' || $date != ""){
-			// Daily report
-			$result['accomplish']=$this->SGODModel->get_accomplishment_by_date_conducted('Accomplishment', $date, $secGroup);
-			$result['acc'] = $this->SGODModel->get_accomplishment_by_date_row($date, $secGroup);
-			$result['r'] = "Day";
+		$dateFrom = $this->request_input_value('dateFrom');
+		$dateTo = $this->request_input_value('dateTo');
+
+		if($filterType == 'day' || $date != "" || $dateFrom != "" || $dateTo != ""){
+			// Daily report or date range report
+			$sec = $this->request_input_value('sec');
+			$normalizedCategory = strtolower(trim((string) $category));
+
+			// Use date range if provided, otherwise use single date
+			if($dateFrom != "" && $dateTo != ""){
+				$dateRange = $dateFrom . ' to ' . $dateTo;
+				$displayDate = $dateFrom . ' - ' . $dateTo;
+			}elseif($dateFrom != ""){
+				$dateRange = $dateFrom;
+				$displayDate = $dateFrom;
+			}elseif($dateTo != ""){
+				$dateRange = $dateTo;
+				$displayDate = $dateTo;
+			}else{
+				$dateRange = $date;
+				$displayDate = $date;
+			}
+
+			if($normalizedCategory === 'all'){
+				$result['accomplish']=$this->SGODModel->get_accomplishment_by_date_conducted('Accomplishment', $dateRange, $secGroup);
+				$result['update']=$this->SGODModel->get_accomplishment_by_date_conducted('Updates', $dateRange, $secGroup);
+			}elseif($normalizedCategory === 'updates'){
+				$result['update']=$this->SGODModel->get_accomplishment_by_date_conducted('Updates', $dateRange, $secGroup);
+			}else{
+				$result['accomplish']=$this->SGODModel->get_accomplishment_by_date_conducted('Accomplishment', $dateRange, $secGroup);
+			}
+
+			$result['acc'] = $this->SGODModel->get_accomplishment_by_date_row($dateRange, $secGroup);
+			$result['r'] = "Date Range";
 			$result['rr'] = "ly";
-			$result['q'] = $date;
+			$result['q'] = $displayDate;
+
+			// Set section info for daily report
+			if (empty($result['acc'])) {
+				$result['acc'] = array();
+			}
+			$result['acc']['section'] = $sec;
+			$result['acc']['year'] = date('Y', strtotime($dateFrom ? $dateFrom : $date));
+			$result['acc']['monthAcc'] = date('F', strtotime($dateFrom ? $dateFrom : $date));
 		}elseif($filterType == 'week' || $week != ""){
 			// Weekly report
 			$result['accomplish']=$this->SGODModel->get_accomplishment_by('Accomplishment', $quarter, $year, $week, $month, $secGroup);
@@ -1982,11 +2067,11 @@ public function memo_delete(){
 			if($week == ""){
 				$result['r'] = "Quarter";
 				$result['rr'] = "ly";
-				$result['q'] = $this->input->post('quarter');
+				$result['q'] = $quarter;
 			}else{
 				$result['r'] = "Week";
 				$result['rr'] = "ly";
-				$result['q'] = $this->input->post('weekAcc');
+				$result['q'] = $week;
 			}
 		}
 

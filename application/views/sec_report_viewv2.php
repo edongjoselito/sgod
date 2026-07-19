@@ -26,20 +26,6 @@
             </div>
             <h1>SCHOOL GOVERNANCE AND<br /> OPERATIONS DIVISION</h1>
             <?php if(isset($acc)){?>
-            <h2>Presentation of Accomplishments<br /> and Weekly Updates</h2>
-            <h3>
-                <?php
-                    $q = isset($q) ? $q : '';
-                    $r = isset($r) ? $r : '';
-                    $monthAcc = is_array($acc) ? (isset($acc['monthAcc']) ? $acc['monthAcc'] : '') : (isset($acc->monthAcc) ? $acc->monthAcc : '');
-                    $year = is_array($acc) ? (isset($acc['year']) ? $acc['year'] : '') : (isset($acc->year) ? $acc->year : '');
-                    if(strlen($q)==1){
-                        echo $r.' '. $q.', '.$monthAcc;
-                    }else{
-                        echo $q.' '. $r.', FY';
-                    }
-                ?> <?= $year; ?>
-            </h3>
 
         </div>
 
@@ -60,9 +46,6 @@
                 <tr>
                     <th>Date</th> 
                     <th>Activity</th> 
-                    <th>Performance Indicators</th> 
-                    <th>Target</th> 
-                    <th>Remarks</th>
                 </tr>
             </thead>
             <tbody>
@@ -70,9 +53,6 @@
                     <tr>
                          <td><?= $row['targetDate']; ?></td>
                         <td><?= $row['activity']; ?></td>
-                        <td><?= $row['perIndicators']; ?></td>
-                        <td><?= $row['target']; ?></td>
-                        <td><?= $row['remarks']; ?></td>
                     </tr>
                 <?php }  ?>                             
             </tbody>
@@ -95,11 +75,6 @@
                 <tr>
                     <th>Date</th> 
                     <th>Activity</th> 
-                    <th>Performance Indicators</th> 
-                    <th>Target</th> 
-                    <th>Achieved</th>
-                    <th> % of Accomplishment</th> 
-                    <th>Remarks</th>
                 </tr>
             </thead>
             <tbody>
@@ -107,18 +82,13 @@
                     <tr>
                         <td><?= $row['dateConducted']; ?></td>
                         <td><?= $row['activity']; ?></td>
-                        <td><?= $row['perIndicators']; ?></td>
-                        <td><?= $row['target']; ?></td>
-                        <td><?= $row['achieved']; ?></td>
-                        <td><?= $row['percentageAccom']; ?></td>
-                        <td><?= $row['remarks']; ?></td>
                     </tr>
                 <?php } ?>                              
             </tbody>
         </table>
         </div>
         <?php }else{ ?>
-        <?php if(!empty($accomplish)){ ?>
+        <?php if(!empty($accomplish) || !empty($update)){ ?>
             <div class="pagecontent">
         <div class="logoleft">
                 <img src="<?= base_url(); ?>assets/images/report/matatag.png" />
@@ -132,11 +102,6 @@
                 <tr>
                     <th>Date</th> 
                     <th>Activity</th> 
-                    <th>Performance Indicators</th> 
-                    <th>Target</th> 
-                    <th>Achieved</th>
-                    <th> % of Accomplishment</th> 
-                    <th>Remarks</th>
                 </tr>
             </thead>
             <tbody>
@@ -144,11 +109,6 @@
                     <tr>
                         <td><?= $row['dateConducted']; ?></td>
                         <td><?= $row['activity']; ?></td>
-                        <td><?= $row['perIndicators']; ?></td>
-                        <td><?= $row['target']; ?></td>
-                        <td><?= $row['achieved']; ?></td>
-                        <td><?= $row['percentageAccom']; ?></td>
-                        <td><?= $row['remarks']; ?></td>
                     </tr>
                 <?php  } ?>                             
             </tbody>
@@ -170,9 +130,6 @@
                 <tr>
                     <th>Date</th> 
                     <th>Activity</th> 
-                    <th>Performance Indicators</th> 
-                    <th>Target</th> 
-                    <th>Remarks</th>
                 </tr>
             </thead>
             <tbody>
@@ -180,9 +137,6 @@
                     <tr>
                         <td><?= $row['targetDate']; ?></td>
                         <td><?= $row['activity']; ?></td>
-                        <td><?= $row['perIndicators']; ?></td>
-                        <td><?= $row['target']; ?></td>
-                        <td><?= $row['remarks']; ?></td>
                     </tr>
                 <?php } ?>                              
             </tbody>

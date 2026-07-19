@@ -88,7 +88,7 @@
 
         <div class="filter-container">
             <div class="filter-header">
-                <h2><i class="mdi mdi-printer"></i> Print Report</h2>
+                <h2><i class="mdi mdi-filter-outline"></i> Filter Report</h2>
                 <p>Select your filter options to generate a printable report</p>
             </div>
 
@@ -109,8 +109,15 @@
             </div>
 
             <div class="form-group" id="dayField">
-                <label>Date</label>
-                <input type="date" name="date" id="dateInput" class="form-control" value="<?= date('Y-m-d'); ?>">
+                <label>From Date</label>
+                <input type="date" name="dateFrom" id="dateFromInput" class="form-control" value="<?= date('Y-m-d'); ?>">
+                <small class="text-muted">Format: YYYY-MM-DD</small>
+            </div>
+
+            <div class="form-group" id="dayFieldTo">
+                <label>To Date</label>
+                <input type="date" name="dateTo" id="dateToInput" class="form-control" value="<?= date('Y-m-d'); ?>">
+                <small class="text-muted">Format: YYYY-MM-DD</small>
             </div>
 
             <div class="form-group" id="weekFields" style="display: none;">
@@ -160,7 +167,7 @@
             </div>
 
             <button type="submit" name="submit" class="btn-submit">
-                <i class="mdi mdi-printer"></i> Generate Print Report
+                <i class="mdi mdi-printer"></i> Generate Report
             </button>
 
             </form>
@@ -176,6 +183,7 @@
             function toggleFilterFields() {
                 var filterType = document.getElementById('filterType').value;
                 var dayField = document.getElementById('dayField');
+                var dayFieldTo = document.getElementById('dayFieldTo');
                 var weekFields = document.getElementById('weekFields');
                 var weekField = document.getElementById('weekField');
                 var monthField = document.getElementById('monthField');
@@ -183,6 +191,7 @@
 
                 // Hide all fields first
                 dayField.style.display = 'none';
+                dayFieldTo.style.display = 'none';
                 weekFields.style.display = 'none';
                 weekField.style.display = 'none';
                 monthField.style.display = 'none';
@@ -191,6 +200,7 @@
                 // Show relevant fields based on selection
                 if (filterType === 'day') {
                     dayField.style.display = 'block';
+                    dayFieldTo.style.display = 'block';
                 } else if (filterType === 'week') {
                     weekFields.style.display = 'block';
                     weekField.style.display = 'block';
