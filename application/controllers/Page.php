@@ -2581,16 +2581,21 @@ function usersList(){
 
 	$result['data']=$this->SGODModel->get_all_by_row2('secGroup','one_sgod_users', $secGroup, 'section', $section);
 	$result['data1']=$this->SGODModel->get_all_by_row2('secGroup','one_sgod_sections', $secGroup, 'sectionName', $section);
+	
+	// Fetch staff from hris_staff table
+	$result['staffOptions'] = $this->db->get('hris_staff')->result();
+	
     $this->load->view('users',$result); 
 	
 	if($this->input->post('submit'))
 	{
 	$param=$this->session->userdata('secGroup');	
-	$username=$this->input->post('email');
+	$username=$this->input->post('IDNumber'); // Use IDNumber as username
 	$password=sha1($this->input->post('password'));
 	$fName=$this->input->post('fName');
+	$mName=$this->input->post('mName');
 	$lName=$this->input->post('lName');
-	$email=$this->input->post('email');
+	$email=$this->input->post('IDNumber'); // Use IDNumber as email/username
 	$section=$this->input->post('section');
 
 	if(!$this->is_valid_section_for_current_user($section)){
@@ -2598,7 +2603,7 @@ function usersList(){
 		redirect('Page/usersListv2');
 	}
  
-	$que=$this->db->query("insert into one_sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','$section','$param')");
+	$que=$this->db->query("insert into one_sgod_users(username, password, fName, mName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$mName','$lName','avatar.png','$email','Active','$section','$param')");
 	$this->session->set_flashdata('msg', '<div class="alert alert-success text-center"><b>New account has been created successfully.</b></div>');
 	redirect('Page/usersListv2');
 	}			

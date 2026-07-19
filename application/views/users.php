@@ -80,6 +80,7 @@ $metrics = array(
         <link href="<?= base_url(); ?>assets/libs/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="<?= base_url(); ?>assets/libs/select2/select2.min.css" rel="stylesheet" type="text/css" />
 
         <style>
             :root {
@@ -871,31 +872,49 @@ $metrics = array(
                             <div class="modern-modal-body">
                                 <form method="post">
                                     <div class="form-card">
+                                        <div class="form-group">
+                                            <label class="modern-label">Select Staff from HRIS <span class="text-danger">*</span></label>
+                                            <select class="form-control modern-input" name="IDNumber" id="staffSelect" required>
+                                                <option value="">-- Select Staff --</option>
+                                                <?php
+                                                    $staffOptions = isset($staffOptions) && is_array($staffOptions) ? $staffOptions : [];
+                                                    foreach($staffOptions as $staff){ ?>
+                                                    <option value="<?= $staff->IDNumber; ?>"
+                                                        data-fname="<?= htmlspecialchars($staff->FirstName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                        data-mname="<?= htmlspecialchars($staff->MiddleName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                        data-lname="<?= htmlspecialchars($staff->LastName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                        data-email="<?= htmlspecialchars($staff->IDNumber, ENT_QUOTES, 'UTF-8'); ?>">
+                                                        <?= htmlspecialchars($staff->LastName . ', ' . $staff->FirstName . ' ' . $staff->MiddleName, ENT_QUOTES, 'UTF-8'); ?> (<?= $staff->IDNumber; ?>)
+                                                    </option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
                                         <div class="form-row">
                                             <div class="form-group col-md-6">
                                                 <label class="modern-label">First Name</label>
-                                                <input type="text" name="fName" class="form-control modern-input" />
+                                                <input type="text" name="fName" id="fName" class="form-control modern-input" required readonly />
                                             </div>
                                             <div class="form-group col-md-6">
-                                                <label class="modern-label">Last Name</label>
-                                                <input type="text" name="lName" class="form-control modern-input" />
+                                                <label class="modern-label">Middle Name</label>
+                                                <input type="text" name="mName" id="mName" class="form-control modern-input" readonly />
                                             </div>
                                         </div>
-
                                         <div class="form-group">
-                                            <label class="modern-label">E-mail / Username</label>
-                                            <input type="text" name="email" class="form-control modern-input" />
-                                            <small class="input-note">This value is also used as the username for sign in.</small>
+                                            <label class="modern-label">Last Name</label>
+                                            <input type="text" name="lName" id="lName" class="form-control modern-input" required readonly />
                                         </div>
-
+                                        <div class="form-group">
+                                            <label class="modern-label">E-mail/Username</label>
+                                            <input type="text" name="email" id="email" class="form-control modern-input" required readonly />
+                                            <small class="input-note">IDNumber is used as the username for sign in.</small>
+                                        </div>
                                         <div class="form-group">
                                             <label class="modern-label">Password</label>
-                                            <input type="password" name="password" class="form-control modern-input" />
+                                            <input type="password" name="password" class="form-control modern-input" required />
                                         </div>
-
                                         <div class="form-group mb-0">
                                             <label class="modern-label">Section</label>
-                                            <select class="form-control modern-input" name="section">
+                                            <select class="form-control modern-input select2-section" name="section" id="sectionSelect">
                                                 <option value=""></option>
                                                 <?php if (!empty($data1)) : ?>
                                                     <?php foreach ($data1 as $row) : ?>
@@ -1053,6 +1072,7 @@ $metrics = array(
         <script src="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.js"></script>
         <script src="<?= base_url(); ?>assets/libs/datatables/dataTables.keyTable.min.js"></script>
         <script src="<?= base_url(); ?>assets/libs/datatables/dataTables.select.min.js"></script>
+        <script src="<?= base_url(); ?>assets/libs/select2/select2.min.js"></script>
 
         <script type="text/javascript">
             $(function () {
@@ -1074,6 +1094,34 @@ $metrics = array(
                 });
 
                 $('#datatable_filter input').attr('placeholder', 'Search users');
+
+                $('#sectionSelect').select2({
+                    placeholder: '-- Select Section --',
+                    width: '100%',
+                    dropdownParent: $('#myModal')
+                });
+
+                $('#staffSelect').select2({
+                    placeholder: '-- Select Staff --',
+                    width: '100%',
+                    dropdownParent: $('#myModal')
+                });
+
+                $('#staffSelect').on('change', function() {
+                    const selectedOption = $(this).find('option:selected');
+
+                    if ($(this).val()) {
+                        $('#fName').val(selectedOption.data('fname') || '');
+                        $('#mName').val(selectedOption.data('mname') || '');
+                        $('#lName').val(selectedOption.data('lname') || '');
+                        $('#email').val(selectedOption.data('email') || '');
+                    } else {
+                        $('#fName').val('');
+                        $('#mName').val('');
+                        $('#lName').val('');
+                        $('#email').val('');
+                    }
+                });
 
                 $(document).on('change', '.js-manage-select', function () {
                     const $select = $(this);
