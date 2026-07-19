@@ -128,7 +128,7 @@
                                                         <td><?= $row->school_id; ?></td> 
                                                         <td>
                                                             <?php 
-		                                                        $soppt = $this->SGODModel->two_cond_row('sgod_sop','aip_id',$row->id,'type','1');
+		                                                        $soppt = $this->SGODModel->two_cond_row('one_sgod_sop','aip_id',$row->id,'type','1');
                                                                 if(!empty($soppt)){ ?>
                                                                     <a href="sop_edit/<?= $soppt->id; ?>" class="btn btn-warning">EDIT PT</a> 
                                                                 <?php }else{ ?>
@@ -136,7 +136,7 @@
                                                             <?php } ?>
 
                                                             <?php 
-		                                                        $sopft = $this->SGODModel->two_cond_row('sgod_sop','aip_id',$row->id,'type','2');
+		                                                        $sopft = $this->SGODModel->two_cond_row('one_sgod_sop','aip_id',$row->id,'type','2');
                                                                 if(!empty($sopft)){ ?>
                                                                     <a href="sop_edit/<?= $sopft->id; ?>" class="btn btn-warning">EDIT FT (MOOE)</a> 
                                                                 <?php }else{ ?>
@@ -144,7 +144,7 @@
                                                             <?php } ?>
 
                                                             <?php 
-		                                                        $sopfo = $this->SGODModel->two_cond_row('sgod_sop','aip_id',$row->id,'type','3');
+		                                                        $sopfo = $this->SGODModel->two_cond_row('one_sgod_sop','aip_id',$row->id,'type','3');
                                                                 if(!empty($sopfo)){ ?>
                                                                     <a href="sop_edit/<?= $sopfo->id; ?>" class="btn btn-warning">EDIT FT (OTHER SOURCES OF FUND)</a> 
                                                                 <?php }else{ ?>

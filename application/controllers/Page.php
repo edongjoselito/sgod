@@ -42,9 +42,9 @@ class Page extends CI_Controller{
 
   function super_admin(){
     if($this->session->userdata('section')==='Super Admin'){
-		$result['data']=$this->SGODModel->count_table_row('sgod_users');
-		$result['data1']=$this->SGODModel->count_table_row('sgod_sections');
-		$result['data2']=$this->SGODModel->count_table_row('sgod_accomplishments');
+		$result['data']=$this->SGODModel->count_table_row('one_sgod_users');
+		$result['data1']=$this->SGODModel->count_table_row('one_sgod_sections');
+		$result['data2']=$this->SGODModel->count_table_row('one_sgod_accomplishments');
 		$result['data3']=$this->SGODModel->count_table_row('schools');
 		$this->load->view('dashboard_admin',$result);
     }else{
@@ -54,15 +54,15 @@ class Page extends CI_Controller{
 
   private function load_admin_dashboard($view){
 		$param=$this->session->userdata('secGroup');
-		$result['data']=$this->SGODModel->count_sec_users('sgod_users',$param);
-		$result['data1']=$this->SGODModel->count_sections('sgod_sections',$param);
-		$result['data2']=$this->SGODModel->count_sec_accomplishments('sgod_accomplishments',$param);
+		$result['data']=$this->SGODModel->count_sec_users('one_sgod_users',$param);
+		$result['data1']=$this->SGODModel->count_sections('one_sgod_sections',$param);
+		$result['data2']=$this->SGODModel->count_sec_accomplishments('one_sgod_accomplishments',$param);
 		$result['data3']=$this->SGODModel->count_table_row('schools');
 		$this->load->view($view,$result);
   }
 
   private function ensure_accomplishment_report_table(){
-	$this->db->query("CREATE TABLE IF NOT EXISTS sgod_accomplishment_reports (
+	$this->db->query("CREATE TABLE IF NOT EXISTS one_sgod_accomplishment_reports (
 		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 		acc_id INT UNSIGNED NOT NULL,
 		document_name VARCHAR(255) NOT NULL DEFAULT '',
@@ -73,17 +73,17 @@ class Page extends CI_Controller{
 		KEY idx_acc_id (acc_id)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-	if(!$this->db->field_exists('document_name', 'sgod_accomplishment_reports')){
-		$this->db->query("ALTER TABLE sgod_accomplishment_reports ADD COLUMN document_name VARCHAR(255) NOT NULL DEFAULT '' AFTER acc_id");
+	if(!$this->db->field_exists('document_name', 'one_sgod_accomplishment_reports')){
+		$this->db->query("ALTER TABLE one_sgod_accomplishment_reports ADD COLUMN document_name VARCHAR(255) NOT NULL DEFAULT '' AFTER acc_id");
 	}
   }
 
   private function ensure_accomplishment_scope_column(){
-	if(!$this->db->field_exists('accomplishmentScope', 'sgod_accomplishments')){
-		$this->db->query("ALTER TABLE sgod_accomplishments ADD COLUMN accomplishmentScope VARCHAR(20) NOT NULL DEFAULT 'section' AFTER encoder");
+	if(!$this->db->field_exists('accomplishmentScope', 'one_sgod_accomplishments')){
+		$this->db->query("ALTER TABLE one_sgod_accomplishments ADD COLUMN accomplishmentScope VARCHAR(20) NOT NULL DEFAULT 'section' AFTER encoder");
 	}
 
-	$this->db->query("UPDATE sgod_accomplishments SET accomplishmentScope = 'section' WHERE accomplishmentScope IS NULL OR TRIM(accomplishmentScope) = ''");
+	$this->db->query("UPDATE one_sgod_accomplishments SET accomplishmentScope = 'section' WHERE accomplishmentScope IS NULL OR TRIM(accomplishmentScope) = ''");
   }
 
   private function upload_accomplishment_report($fieldName = 'attachment_file'){
@@ -142,7 +142,7 @@ class Page extends CI_Controller{
 	$secGroup = $this->session->userdata('secGroup');
 
 	return $this->SGODModel->three_cond_row(
-		'sgod_accomplishments',
+		'one_sgod_accomplishments',
 		'id',
 		(int) $accomplishmentId,
 		'section',
@@ -268,7 +268,7 @@ class Page extends CI_Controller{
 			continue;
 		}
 
-		if($this->SGODModel->get_single_by_id('username', 'sgod_users', $username)){
+		if($this->SGODModel->get_single_by_id('username', 'one_sgod_users', $username)){
 			$result['existing']++;
 			continue;
 		}
@@ -279,7 +279,7 @@ class Page extends CI_Controller{
 			$lastName = trim($lastName . ' ' . $nameExtension);
 		}
 
-		$isInserted = $this->db->insert('sgod_users', array(
+		$isInserted = $this->db->insert('one_sgod_users', array(
 			'username' => $username,
 			'password' => sha1($username),
 			'fName' => trim((string) $staff->FirstName),
@@ -332,7 +332,7 @@ class Page extends CI_Controller{
 		return NULL;
 	}
 
-	$sectionRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $username, 'secGroup', $secGroup);
+	$sectionRecord = $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionHead', $username, 'secGroup', $secGroup);
 	if(!$sectionRecord){
 		return NULL;
 	}
@@ -354,7 +354,7 @@ class Page extends CI_Controller{
 
   private function get_current_user_profile_state(){
 	$username = $this->session->userdata('username');
-	$user = $this->SGODModel->get_single_by_id('username', 'sgod_users', $username);
+	$user = $this->SGODModel->get_single_by_id('username', 'one_sgod_users', $username);
 	$currentAvatar = 'avatar.png';
 
 	if($user && !empty($user->avatar)){
@@ -384,9 +384,9 @@ class Page extends CI_Controller{
     //Allowing access to Admin only
     if($this->session->userdata('section')==='Chief - SGOD'){
 		$param=$this->session->userdata('secGroup');
-		$result['data']=$this->SGODModel->count_sec_users('sgod_users',$param);
-		$result['data1']=$this->SGODModel->count_sections('sgod_sections',$param);
-		$result['data2']=$this->SGODModel->count_sec_accomplishments('sgod_accomplishments',$param);
+		$result['data']=$this->SGODModel->count_sec_users('one_sgod_users',$param);
+		$result['data1']=$this->SGODModel->count_sections('one_sgod_sections',$param);
+		$result['data2']=$this->SGODModel->count_sec_accomplishments('one_sgod_accomplishments',$param);
 		$result['data3']=$this->SGODModel->count_table_row('schools');
 		$this->load->view('dashboard_admin',$result);
     }else{
@@ -397,10 +397,10 @@ class Page extends CI_Controller{
   function School(){
     //Allowing access to Admin only
     if($this->session->userdata('section')==='School'){
-		$result['data']=$this->SGODModel->one_cond_count('sgod_aip','school_id',$this->session->username);
-		$result['pillar']=$this->SGODModel->count_table_row('sgod_settings_pillar');
-		$result['domain']=$this->SGODModel->count_table_row('sgod_settings_domain');
-		$result['pias']=$this->SGODModel->one_cond_count('sgod_settings_pias','school_id',$this->session->username);
+		$result['data']=$this->SGODModel->one_cond_count('one_sgod_aip','school_id',$this->session->username);
+		$result['pillar']=$this->SGODModel->count_table_row('one_sgod_settings_pillar');
+		$result['domain']=$this->SGODModel->count_table_row('one_sgod_settings_domain');
+		$result['pias']=$this->SGODModel->one_cond_count('one_sgod_settings_pias','school_id',$this->session->username);
 		$this->load->view('dashboard_school', $result);
     }else{
         echo "Access Denied";
@@ -684,7 +684,7 @@ class Page extends CI_Controller{
     $filename=$uploadData['file_name'];
 
     $this->db->where('username', $username);
-    $updated=$this->db->update('sgod_users', array('avatar' => $filename));
+    $updated=$this->db->update('one_sgod_users', array('avatar' => $filename));
 
     if(!$updated){
       if(!empty($uploadData['full_path']) && file_exists($uploadData['full_path'])){
@@ -724,7 +724,7 @@ class Page extends CI_Controller{
       $notes=$this->input->post('notes');
       $now=date('Y-m-d H:i:s');
 
-      $this->db->query("INSERT INTO sgod_employee_whereabouts (username, fName, lName, section, secGroup, date, location, activity, status, notes, created_at, updated_at) VALUES ('$username','$fName','$lName','$section','$secGroup','$date','$location','$activity','$status','$notes','$now','$now')");
+      $this->db->query("INSERT INTO one_sgod_employee_whereabouts (username, fName, lName, section, secGroup, date, location, activity, status, notes, created_at, updated_at) VALUES ('$username','$fName','$lName','$section','$secGroup','$date','$location','$activity','$status','$notes','$now','$now')");
       $this->session->set_flashdata('success', 'Whereabouts posted successfully!');
       redirect('Page/user_dashboard');
     }
@@ -746,7 +746,7 @@ class Page extends CI_Controller{
       $notes=$this->input->post('notes');
       $now=date('Y-m-d H:i:s');
 
-      $this->db->query("UPDATE sgod_employee_whereabouts SET date='$date', location='$location', activity='$activity', status='$status', notes='$notes', updated_at='$now' WHERE id='$id'");
+      $this->db->query("UPDATE one_sgod_employee_whereabouts SET date='$date', location='$location', activity='$activity', status='$status', notes='$notes', updated_at='$now' WHERE id='$id'");
       $this->session->set_flashdata('success', 'Whereabouts updated successfully!');
       redirect('Page/user_dashboard');
     }
@@ -754,7 +754,7 @@ class Page extends CI_Controller{
 
   function delete_whereabouts(){
     $id=$this->input->get('id');
-    $this->db->query("DELETE FROM sgod_employee_whereabouts WHERE id='$id'");
+    $this->db->query("DELETE FROM one_sgod_employee_whereabouts WHERE id='$id'");
     $this->session->set_flashdata('success', 'Whereabouts deleted successfully!');
     redirect('Page/user_dashboard');
   }
@@ -868,7 +868,7 @@ class Page extends CI_Controller{
 
     foreach($cleanDates as $date){
       foreach($cleanEntries as $entry){
-        $saved=$this->db->insert('sgod_employee_whereabouts', array(
+        $saved=$this->db->insert('one_sgod_employee_whereabouts', array(
           'username' => $username,
           'fName' => $fName,
           'lName' => $lName,
@@ -926,9 +926,9 @@ class Page extends CI_Controller{
 	$data['title'] = "Category List";
 	$data['m_title'] = "Add New Category";
 	$data['e_title'] = "Update Category";
-	$data['page']=$this->SGODModel->get_all('sgod_settings_cat');
+	$data['page']=$this->SGODModel->get_all('one_sgod_settings_cat');
 	$id = $this->input->post('id');
-	$data['cat'] = $this->SGODModel->get_data_by_id('sgod_settings_cat', 'id',$id);
+	$data['cat'] = $this->SGODModel->get_data_by_id('one_sgod_settings_cat', 'id',$id);
     $this->load->view('setting_cat',$data);  
 
 	if($this->input->post('submit')){
@@ -954,13 +954,13 @@ class Page extends CI_Controller{
 // 	$data['e_title'] = "Update Memo";
 // 	$data['add_action'] = "memo";
 	
-// 	$data['page']=$this->SGODModel->get_all('sgod_memo');
+// 	$data['page']=$this->SGODModel->get_all('one_sgod_memo');
 // 	$id = $this->input->post('id');
-//     $this->load->view('sgod_memo',$data); 
+//     $this->load->view('one_sgod_memo',$data); 
 	
 // 	if($this->input->post('submit')){
 // 		$config['allowed_types'] = 'pdf';
-//         $config['upload_path'] = './upload/sgod_memo/';
+//         $config['upload_path'] = './upload/one_sgod_memo/';
 //         $this->load->library('upload', $config);
 
 //         if($this->upload->do_upload('file')){
@@ -1018,7 +1018,7 @@ public function memo() {
 	$data['ln'] = $this->SGODModel->get_last_memo_record_by_group($secGroup);
 	$data['next_memo_no'] = $this->build_next_memo_no($secGroup, $data['ln']);
 
-	$this->load->view('sgod_memo', $data);
+	$this->load->view('one_sgod_memo', $data);
 }
 
 public function memo_update() {
@@ -1145,7 +1145,7 @@ public function memo_delete(){
 
 	$this->db->where('id', $id);
 	$this->db->where('secGroup', $this->session->userdata('secGroup'));
-	$this->db->delete('sgod_memo');
+	$this->db->delete('one_sgod_memo');
 	$this->session->set_flashdata('success', 'Deleted successfully!');
 	redirect(base_url().'Page/memo');
   }
@@ -1180,9 +1180,9 @@ public function memo_delete(){
 	$data['del'] = "setting_pillar_del";
 	$r_page = "settings_pillar";
 
-	$data['page']=$this->SGODModel->get_all('sgod_settings_pillar');
+	$data['page']=$this->SGODModel->get_all('one_sgod_settings_pillar');
 	$id = $this->input->post('id');
-	$data['pillar'] = $this->SGODModel->get_data_by_id('sgod_settings_pillar', 'id',$id);
+	$data['pillar'] = $this->SGODModel->get_data_by_id('one_sgod_settings_pillar', 'id',$id);
     $this->load->view('setting_pillar',$data);  
 
 	if($this->input->post('submit')){
@@ -1197,7 +1197,7 @@ public function memo_delete(){
 	} 
   }
   public function setting_pillar_del(){
-	$this->SGODModel->delete(3,'id','sgod_settings_pillar');
+	$this->SGODModel->delete(3,'id','one_sgod_settings_pillar');
 	redirect(base_url().'Page/settings_pillar');
   }
 
@@ -1210,9 +1210,9 @@ public function memo_delete(){
 	$data['del'] = "setting_section_del";
 	$r_page = "settings_section";
 
-	$data['page']=$this->SGODModel->get_all('sgod_sections');
+	$data['page']=$this->SGODModel->get_all('one_sgod_sections');
 	$id = $this->input->post('id');
-	$data['pillar'] = $this->SGODModel->get_data_by_id('sgod_sections', 'id',$id);
+	$data['pillar'] = $this->SGODModel->get_data_by_id('one_sgod_sections', 'id',$id);
     $this->load->view('setting_sections',$data);  
 
 	if($this->input->post('submit')){
@@ -1236,7 +1236,7 @@ public function memo_delete(){
 	$data['del'] = "setting_domain_del";
 	$r_page = "settings_domain";
 
-	$data['page']=$this->SGODModel->get_all('sgod_settings_domain');
+	$data['page']=$this->SGODModel->get_all('one_sgod_settings_domain');
     $this->load->view('setting_domain',$data);  
 
 	if($this->input->post('submit')){
@@ -1250,7 +1250,7 @@ public function memo_delete(){
 	} 
   }
   public function setting_domain_del(){
-	$this->SGODModel->delete(3,'id','sgod_settings_domain');
+	$this->SGODModel->delete(3,'id','one_sgod_settings_domain');
 	redirect(base_url().'Page/settings_domain');
 	
   }
@@ -1264,7 +1264,7 @@ public function memo_delete(){
 	$data['del'] = "setting_strand_del";
 	$r_page = "settings_strand";
 
-	$data['page']=$this->SGODModel->get_all('sgod_settings_strand');
+	$data['page']=$this->SGODModel->get_all('one_sgod_settings_strand');
     $this->load->view('setting_strand',$data);  
 
 	if($this->input->post('submit')){
@@ -1278,7 +1278,7 @@ public function memo_delete(){
 	} 
   }
   public function setting_strand_del(){
-	$this->SGODModel->delete(3,'id','sgod_settings_Strand');
+	$this->SGODModel->delete(3,'id','one_sgod_settings_strand');
 	redirect(base_url().'Page/settings_Strand');
   }
 
@@ -1291,7 +1291,7 @@ public function memo_delete(){
 	$data['del'] = "setting_pias_del";
 	$r_page = "settings_pias";
 
-	$data['page']=$this->SGODModel->one_cond('sgod_settings_pias','school_id',$this->session->username);
+	$data['page']=$this->SGODModel->one_cond('one_sgod_settings_pias','school_id',$this->session->username);
     $this->load->view('setting_pias',$data);  
 
 	if($this->input->post('submit')){
@@ -1305,7 +1305,7 @@ public function memo_delete(){
 	} 
   }
   public function setting_pias_del(){
-	$this->SGODModel->delete(3,'id','sgod_settings_pias');
+	$this->SGODModel->delete(3,'id','one_sgod_settings_pias');
 	redirect(base_url().'Page/settings_pias');
 	
   }
@@ -1315,10 +1315,10 @@ public function memo_delete(){
 	$fy = $this->input->post('fy');
 	$bcode = $this->input->post('b_code');
 
-	$data['mr']=$this->SGODModel->aip_category('sgod_aip',$school_id, $fy,$bcode,'MINOR REPAIR');
-	$data['mb']=$this->SGODModel->aip_category('sgod_aip',$school_id, $fy,$bcode,'MANDATORY BILLS');
-	$data['tli']=$this->SGODModel->aip_category('sgod_aip',$school_id, $fy,$bcode,'TEACHING-LEARNING INSTRUCTION');
-	$data['tst']=$this->SGODModel->aip_category('sgod_aip',$school_id, $fy,$bcode,'TRAININGS/SEMINAR/TRAVEL');
+	$data['mr']=$this->SGODModel->aip_category('one_sgod_aip',$school_id, $fy,$bcode,'MINOR REPAIR');
+	$data['mb']=$this->SGODModel->aip_category('one_sgod_aip',$school_id, $fy,$bcode,'MANDATORY BILLS');
+	$data['tli']=$this->SGODModel->aip_category('one_sgod_aip',$school_id, $fy,$bcode,'TEACHING-LEARNING INSTRUCTION');
+	$data['tst']=$this->SGODModel->aip_category('one_sgod_aip',$school_id, $fy,$bcode,'TRAININGS/SEMINAR/TRAVEL');
     $this->load->view('rca_generate',$data);  
 	}
 
@@ -1327,10 +1327,10 @@ public function memo_delete(){
 		$fy = $this->uri->segment(4);
 		$bcode = $this->uri->segment(5);
 	
-		$data['mr']=$this->SGODModel->aip_category('sgod_aip',$school_id, $fy,$bcode,'MINOR REPAIR');
-		$data['mb']=$this->SGODModel->aip_category('sgod_aip',$school_id, $fy,$bcode,'MANDATORY BILLS');
-		$data['tli']=$this->SGODModel->aip_category('sgod_aip',$school_id, $fy,$bcode,'TEACHING-LEARNING INSTRUCTION');
-		$data['tst']=$this->SGODModel->aip_category('sgod_aip',$school_id, $fy,$bcode,'TRAININGS/SEMINAR/TRAVEL');
+		$data['mr']=$this->SGODModel->aip_category('one_sgod_aip',$school_id, $fy,$bcode,'MINOR REPAIR');
+		$data['mb']=$this->SGODModel->aip_category('one_sgod_aip',$school_id, $fy,$bcode,'MANDATORY BILLS');
+		$data['tli']=$this->SGODModel->aip_category('one_sgod_aip',$school_id, $fy,$bcode,'TEACHING-LEARNING INSTRUCTION');
+		$data['tst']=$this->SGODModel->aip_category('one_sgod_aip',$school_id, $fy,$bcode,'TRAININGS/SEMINAR/TRAVEL');
 		$this->load->view('rca_generate',$data);  
 		}
 
@@ -1344,7 +1344,7 @@ public function memo_delete(){
 	$data['del'] = "setting_matatag_del";
 	$r_page = "settings_matatag";
 
-	$data['page']=$this->SGODModel->get_all('sgod_settings_matatag');
+	$data['page']=$this->SGODModel->get_all('one_sgod_settings_matatag');
     $this->load->view('setting_matatag',$data);  
 
 	if($this->input->post('submit')){
@@ -1358,7 +1358,7 @@ public function memo_delete(){
 	} 
   }
   public function setting_matatag_del(){
-	$this->SGODModel->delete(3,'id','sgod_settings_matatag');
+	$this->SGODModel->delete(3,'id','one_sgod_settings_matatag');
 	redirect(base_url().'Page/settings_matatag');
 	
   }
@@ -1372,7 +1372,7 @@ public function memo_delete(){
 	$data['del'] = "setting_bs_del";
 	$r_page = "settings_bs";
 
-	$data['page']=$this->SGODModel->get_all('sgod_settings_bs');
+	$data['page']=$this->SGODModel->get_all('one_sgod_settings_bs');
     $this->load->view('setting_bs',$data);  
 
 	if($this->input->post('submit')){
@@ -1386,7 +1386,7 @@ public function memo_delete(){
 	} 
   }
   public function setting_bs_del(){
-	$this->SGODModel->delete(3,'id','sgod_settings_bs');
+	$this->SGODModel->delete(3,'id','one_sgod_settings_bs');
 	redirect(base_url().'Page/settings_bs');
 	
   }
@@ -1418,7 +1418,7 @@ public function memo_delete(){
 	}
 
 	function sections_edit(){
-		$result['data']=$this->SGODModel->one_cond_row('sgod_sections','id',$this->uri->segment(3));
+		$result['data']=$this->SGODModel->one_cond_row('one_sgod_sections','id',$this->uri->segment(3));
 		$result['staffOptions']=$this->SGODModel->get_hris_staff_options();
 		if(!$result['data'] || $result['data']->secGroup !== $this->session->userdata('secGroup')){
 			$this->session->set_flashdata('danger', 'You can only manage sections under your department.');
@@ -1459,7 +1459,7 @@ public function memo_delete(){
 		$id = $this->input->get('id');
 		$this->db->where('id', $id);
 		$this->db->where('secGroup', $this->session->userdata('secGroup'));
-		$this->db->delete('sgod_sections');
+		$this->db->delete('one_sgod_sections');
 		$this->session->set_flashdata('success', 'Deleted successfully!');
 		redirect('Page/sections');
 	}
@@ -1539,7 +1539,7 @@ public function memo_delete(){
 			return;
 		}
 
-		$saved = $this->db->insert('sgod_accomplishment_reports', array(
+		$saved = $this->db->insert('one_sgod_accomplishment_reports', array(
 			'acc_id' => $accomplishmentId,
 			'document_name' => $documentName,
 			'original_name' => (string) $reportUpload['data']['client_name'],
@@ -1574,14 +1574,14 @@ public function memo_delete(){
 		$result['title'] = "ANNUAL IMPLEMENTATION PLAN";
 		$result['b_label'] = "+ ADD NEW";
 		$result['b_link'] = "aip_new";
-		$result['data']=$this->SGODModel->two_cond('sgod_aip','school_id',$this->session->username,'fy',$date);
-		$result['ssa']=$this->SGODModel->two_cond('sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
+		$result['data']=$this->SGODModel->two_cond('one_sgod_aip','school_id',$this->session->username,'fy',$date);
+		$result['ssa']=$this->SGODModel->two_cond('one_sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
 		
 
-		$result['pillar']=$this->SGODModel->get_all('sgod_settings_pillar');
-		$result['domain']=$this->SGODModel->get_all('sgod_settings_domain');
-		$result['pias']=$this->SGODModel->get_all('sgod_settings_pias');
-		$result['strand']=$this->SGODModel->get_all('sgod_settings_strand');
+		$result['pillar']=$this->SGODModel->get_all('one_sgod_settings_pillar');
+		$result['domain']=$this->SGODModel->get_all('one_sgod_settings_domain');
+		$result['pias']=$this->SGODModel->get_all('one_sgod_settings_pias');
+		$result['strand']=$this->SGODModel->get_all('one_sgod_settings_strand');
 		$this->load->view('aip_view', $result);
 	}
 	
@@ -1590,10 +1590,10 @@ public function memo_delete(){
 		$result['b_label'] = "+ ADD NEW";
 		$result['b_link'] = "aip_new";
 
-		$result['pillar']=$this->SGODModel->get_all('sgod_settings_pillar');
-		$result['domain']=$this->SGODModel->get_all('sgod_settings_domain');
-		$result['pias']=$this->SGODModel->get_all('sgod_settings_pias');
-		$result['strand']=$this->SGODModel->get_all('sgod_settings_strand');
+		$result['pillar']=$this->SGODModel->get_all('one_sgod_settings_pillar');
+		$result['domain']=$this->SGODModel->get_all('one_sgod_settings_domain');
+		$result['pias']=$this->SGODModel->get_all('one_sgod_settings_pias');
+		$result['strand']=$this->SGODModel->get_all('one_sgod_settings_strand');
 
 		$result['data']=$this->SGODModel->get_all_aip_by();
 		$this->load->view('aip_view', $result);
@@ -1644,7 +1644,7 @@ public function memo_delete(){
 	function aip_action_list(){
 		$result['title'] = "ANNUAL IMPLEMENTATION PLAN ACTION LIST";
 
-		$result['data'] = $this->SGODModel->two_cond('sgod_aip_submit', 'school_id', $this->session->username, 'fy', $_SESSION['fy']);
+		$result['data'] = $this->SGODModel->two_cond('one_sgod_aip_submit', 'school_id', $this->session->username, 'fy', $_SESSION['fy']);
 
 		$this->load->view('templates/head');
 		$this->load->view('templates/header');
@@ -1654,8 +1654,8 @@ public function memo_delete(){
 	public function school_allocations2(){
 		$schoolID = $this->session->userdata('username');
 		$result['st'] = $this->SGODModel->one_cond_row('schools','schoolID',$this->session->username);
-		$result['bs'] = $this->SGODModel->no_cond('sgod_settings_bs');
-		$result['last'] = $this->SGODModel->get_last_record('sgod_school_allocation');
+		$result['bs'] = $this->SGODModel->no_cond('one_sgod_settings_bs');
+		$result['last'] = $this->SGODModel->get_last_record('one_sgod_school_allocation');
 		$result['data'] = $this->PersonnelModel->school_allocations2($schoolID);
 		$this->load->view('school_allocation2', $result);
 	}
@@ -1665,8 +1665,8 @@ public function memo_delete(){
 
 		$id = $this->uri->segment(3);
 		
-		$result['data']=$this->SGODModel->one_cond_orderby('sgod_aip_track','submit_id',$id,'date','ASC');
-		$result['aip']=$this->SGODModel->one_cond_row('sgod_aip_submit','id',$id);
+		$result['data']=$this->SGODModel->one_cond_orderby('one_sgod_aip_track','submit_id',$id,'date','ASC');
+		$result['aip']=$this->SGODModel->one_cond_row('one_sgod_aip_submit','id',$id);
 		$this->load->view('aip_track_view', $result);
 
 	}
@@ -1678,7 +1678,7 @@ public function memo_delete(){
 		$result['fy'] = $this->input->post('fy');
 		$result['b_code'] = $this->input->post('b_code');
 
-		$result['budget'] = $this->SGODModel->one_cond_row('sgod_school_allocation','alloc_batch',$bcode);
+		$result['budget'] = $this->SGODModel->one_cond_row('one_sgod_school_allocation','alloc_batch',$bcode);
 		$result['aip_sum'] = $this->SGODModel->aip_budget_sum($fy,$school_id,$bcode);
 		
 
@@ -1686,7 +1686,7 @@ public function memo_delete(){
 		$b_code = $this->input->post('b_code');
 		$school_id = $this->session->username;
 		$result['school']=$this->SGODModel->one_cond_row('schools', 'schoolId',$school_id);
-		$result['ssa']=$this->SGODModel->three_cond_row('sgod_school_allocation', 'schoolID',$school_id,'alloc_batch',$b_code,'alloc_year',$fy);
+		$result['ssa']=$this->SGODModel->three_cond_row('one_sgod_school_allocation', 'schoolID',$school_id,'alloc_batch',$b_code,'alloc_year',$fy);
 		
 		$this->load->view('app_generate', $result);
 
@@ -1702,7 +1702,7 @@ public function memo_delete(){
 		$fy = $this->uri->segment(4);
 		$b_code = $this->uri->segment(5);
 		$result['school']=$this->SGODModel->one_cond_row('schools', 'schoolId',$school_id);
-		$result['ssa']=$this->SGODModel->three_cond_row('sgod_school_allocation', 'schoolID',$school_id,'alloc_batch',$b_code,'alloc_year',$fy);
+		$result['ssa']=$this->SGODModel->three_cond_row('one_sgod_school_allocation', 'schoolID',$school_id,'alloc_batch',$b_code,'alloc_year',$fy);
 		
 		$this->load->view('app_generate', $result);
 
@@ -1710,8 +1710,8 @@ public function memo_delete(){
 
 	function view_app(){
 		$result['title'] = " ANNUAL PROCUREMENT PLAN (APP)";
-		$result['data']=$this->SGODModel->one_cond('sgod_app','school_id', $this->session->username);
-		$result['ssa']=$this->SGODModel->two_cond('sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
+		$result['data']=$this->SGODModel->one_cond('one_sgod_app','school_id', $this->session->username);
+		$result['ssa']=$this->SGODModel->two_cond('one_sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
 		$this->load->view('app_view', $result);
 
 		if($this->input->post('submit')){
@@ -1726,18 +1726,18 @@ public function memo_delete(){
 	function aip_new(){
 		$d = date('Y')+1;
 		$result['title'] = "ADD NEW ANNUAL IMPLEMENTATION PLAN";
-		$result['data']=$this->SGODModel->get_all('sgod_aip');
-		$result['pillar']=$this->SGODModel->get_all_orderby('sgod_settings_pillar','pillar','ASC');
-		$result['domain']=$this->SGODModel->get_all_orderby('sgod_settings_domain','domain','ASC');
-		$result['pias']=$this->SGODModel->two_cond_orderby('sgod_settings_pias','school_id',$this->session->username,'year',$d,'pias','ASC');
-		$result['matatag']=$this->SGODModel->get_all_orderby('sgod_settings_matatag','matatag','ASC');
-		$result['bs']=$this->SGODModel->get_all_orderby('sgod_settings_bs','description','ASC');
-		$result['strand']=$this->SGODModel->get_all_orderby('sgod_settings_strand','strand','ASC');
-		$result['last']=$this->SGODModel->last_record('sgod_aip','id','DESC');
-		$result['pil']=$this->SGODModel->table_num('sgod_aip');
-		$result['ssa']=$this->SGODModel->two_cond('sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
+		$result['data']=$this->SGODModel->get_all('one_sgod_aip');
+		$result['pillar']=$this->SGODModel->get_all_orderby('one_sgod_settings_pillar','pillar','ASC');
+		$result['domain']=$this->SGODModel->get_all_orderby('one_sgod_settings_domain','domain','ASC');
+		$result['pias']=$this->SGODModel->two_cond_orderby('one_sgod_settings_pias','school_id',$this->session->username,'year',$d,'pias','ASC');
+		$result['matatag']=$this->SGODModel->get_all_orderby('one_sgod_settings_matatag','matatag','ASC');
+		$result['bs']=$this->SGODModel->get_all_orderby('one_sgod_settings_bs','description','ASC');
+		$result['strand']=$this->SGODModel->get_all_orderby('one_sgod_settings_strand','strand','ASC');
+		$result['last']=$this->SGODModel->last_record('one_sgod_aip','id','DESC');
+		$result['pil']=$this->SGODModel->table_num('one_sgod_aip');
+		$result['ssa']=$this->SGODModel->two_cond('one_sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
 		
-		// $result['budget'] = $this->SGODModel->one_cond_row('sgod_school_allocation','alloc_batch',20240390);
+		// $result['budget'] = $this->SGODModel->one_cond_row('one_sgod_school_allocation','alloc_batch',20240390);
 		// $result['aip_sum'] = $this->SGODModel->aip_budget_sum($fy,$this->session->username,$b_code);
 
 		$this->load->view('aip_add', $result);
@@ -1746,14 +1746,14 @@ public function memo_delete(){
 			$fy = $this->input->post('fy');
 			$b_code = $this->input->post('b_code');
 			$bud = $this->input->post('budget');
-			$budget = $this->SGODModel->one_cond_row('sgod_school_allocation','alloc_batch',$b_code);
+			$budget = $this->SGODModel->one_cond_row('one_sgod_school_allocation','alloc_batch',$b_code);
 			$aip_sums = $this->SGODModel->aip_budget_sum($fy,$this->session->username,$b_code);
 			
 			if((int)$aip_sums->budget+$bud >= (int)$budget->alloc_amount){
 				$this->session->set_flashdata('danger', 'You have exceeded to the allocated budget.');
 			}
 			
-			$check = $this->SGODModel->three_cond('sgod_aip_submit','fy',$fy,'remarks','Approved','b_code',$b_code);
+			$check = $this->SGODModel->three_cond('one_sgod_aip_submit','fy',$fy,'remarks','Approved','b_code',$b_code);
 			if(empty($check)){
 				$this->SGODModel->insert_aip();
 				$this->SGODModel->insert_app();
@@ -1769,18 +1769,18 @@ public function memo_delete(){
 	function aip_edit($param){
 		$d = date('Y')+1;
 		$result['title'] = "UPDATE ANNUAL IMPLEMENTATION PLAN";
-		$result['data']=$this->SGODModel->get_single_by_id('id', 'sgod_aip', $param);
-		$result['pillar']=$this->SGODModel->get_all_orderby('sgod_settings_pillar','pillar','ASC');
-		$result['domain']=$this->SGODModel->get_all_orderby('sgod_settings_domain','domain','ASC');
-		$result['pias']=$this->SGODModel->two_cond_orderby('sgod_settings_pias','school_id',$this->session->username,'year',$d,'pias','ASC');
-		$result['matatag']=$this->SGODModel->get_all_orderby('sgod_settings_matatag','matatag','ASC');
-		$result['strand']=$this->SGODModel->get_all_orderby('sgod_settings_strand','strand','ASC');
-		$result['ssa']=$this->SGODModel->two_cond('sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
+		$result['data']=$this->SGODModel->get_single_by_id('id', 'one_sgod_aip', $param);
+		$result['pillar']=$this->SGODModel->get_all_orderby('one_sgod_settings_pillar','pillar','ASC');
+		$result['domain']=$this->SGODModel->get_all_orderby('one_sgod_settings_domain','domain','ASC');
+		$result['pias']=$this->SGODModel->two_cond_orderby('one_sgod_settings_pias','school_id',$this->session->username,'year',$d,'pias','ASC');
+		$result['matatag']=$this->SGODModel->get_all_orderby('one_sgod_settings_matatag','matatag','ASC');
+		$result['strand']=$this->SGODModel->get_all_orderby('one_sgod_settings_strand','strand','ASC');
+		$result['ssa']=$this->SGODModel->two_cond('one_sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
 		$this->load->view('aip_update', $result);
 
 		if($this->input->post('submit')){
 			$this->SGODModel->update_aip($param);
-			$this->SGODModel->delete('3', 'aip_id', 'sgod_app');
+			$this->SGODModel->delete('3', 'aip_id', 'one_sgod_app');
 			$this->SGODModel->update_app($param);
             $this->session->set_flashdata('success', 'Updated successfully');
             redirect(base_url().'Page/aip');
@@ -1789,9 +1789,9 @@ public function memo_delete(){
 	}
 
 	function aip_delete(){
-        $this->SGODModel->delete('3', 'id', 'sgod_aip');
-		$this->SGODModel->delete('3', 'aip_id', 'sgod_app');
-		$this->SGODModel->delete('3', 'aip_id', 'sgod_sop');
+        $this->SGODModel->delete('3', 'id', 'one_sgod_aip');
+		$this->SGODModel->delete('3', 'aip_id', 'one_sgod_app');
+		$this->SGODModel->delete('3', 'aip_id', 'one_sgod_sop');
         $this->session->set_flashdata('danger', ' Settings was deleted');
         redirect(base_url().'Page/aip');
     }
@@ -1800,10 +1800,10 @@ public function memo_delete(){
 		$result['title'] = "SCHOOL OPERATIONAL PLAN";
 		$result['b_label'] = "+ ADD NEW";
 		$result['b_link'] = "#";
-		$result['ssa']=$this->SGODModel->two_cond('sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
-		//$result['data']=$this->SGODModel->get_all('sgod_aip');
+		$result['ssa']=$this->SGODModel->two_cond('one_sgod_school_allocation', 'schoolID',$this->session->username,'alloc_year',date('Y')+1);
+		//$result['data']=$this->SGODModel->get_all('one_sgod_aip');
 
-		$result['data']=$this->SGODModel->one_cond('sgod_aip', 'school_id', $this->session->username);
+		$result['data']=$this->SGODModel->one_cond('one_sgod_aip', 'school_id', $this->session->username);
 
 		$this->load->view('sop_view', $result);
 
@@ -1820,7 +1820,7 @@ public function memo_delete(){
 		$result['b_label'] = "+ ADD NEW";
 		$result['b_link'] = "#";
 
-		$result['sop']=$this->SGODModel->one_cond_row('sgod_sop','id',$param);
+		$result['sop']=$this->SGODModel->one_cond_row('one_sgod_sop','id',$param);
 
 		$this->load->view('sop_update', $result);
 
@@ -1843,7 +1843,7 @@ public function memo_delete(){
 		$fy = $this->input->post('fy');
 		$bcode = $this->input->post('b_code');
 
-		$result['budget'] = $this->SGODModel->one_cond_row('sgod_school_allocation','alloc_batch',$bcode);
+		$result['budget'] = $this->SGODModel->one_cond_row('one_sgod_school_allocation','alloc_batch',$bcode);
 		$result['aip_sum'] = $this->SGODModel->aip_budget_sum($fy,$school_id,$bcode);
 
 		$result['data']=$this->SGODModel->get_aip($school_id, $fy,$bcode);
@@ -1885,14 +1885,14 @@ public function memo_delete(){
 		$fy = $this->input->post('fy');
 		$bcode = $this->input->post('b_code');
 
-		$result['budget'] = $this->SGODModel->one_cond_row('sgod_school_allocation','alloc_batch',$bcode);
+		$result['budget'] = $this->SGODModel->one_cond_row('one_sgod_school_allocation','alloc_batch',$bcode);
 		$result['aip_sum'] = $this->SGODModel->aip_budget_sum($fy,$school_id,$bcode);
 
 		$result['data']=$this->SGODModel->get_aip($school_id, $fy,$bcode);
 		
 		$result['data_row']=$this->SGODModel->get_aip_row($school_id, $fy,$bcode);
 		$result['school']=$this->SGODModel->one_cond_row('schools', 'schoolId',$school_id);
-		$result['aip_submit']=$this->SGODModel->aip_related_row('sgod_aip_submit',$school_id, $fy,$bcode);
+		$result['aip_submit']=$this->SGODModel->aip_related_row('one_sgod_aip_submit',$school_id, $fy,$bcode);
 
 
 		if(empty($result['data_row'])){
@@ -1915,16 +1915,16 @@ public function memo_delete(){
 		$result['data']=$this->SGODModel->get_aip($school_id,$fy,$bcode);
 		$result['data_row']=$this->SGODModel->get_aip_row($school_id,$fy,$bcode);
 		$result['school']=$this->SGODModel->one_cond_row('schools', 'schoolId',$school_id);
-		$result['aip_submit']=$this->SGODModel->aip_related_row('sgod_aip_submit',$school_id, $fy,$bcode);
+		$result['aip_submit']=$this->SGODModel->aip_related_row('one_sgod_aip_submit',$school_id, $fy,$bcode);
 
 		$this->load->view('aip_generate', $result);
 	}
 
 	function aip_sub(){
 		$result['title'] = "SUBMITTED PLANS";
-		$fys = $this->SGODModel->last_record('sgod_fy', 'id', 'DESC');
+		$fys = $this->SGODModel->last_record('one_sgod_fy', 'id', 'DESC');
 
-		$result['data'] = $this->SGODModel->two_cond('sgod_aip_submit', 'fy', $fys->fy,'status',0);
+		$result['data'] = $this->SGODModel->two_cond('one_sgod_aip_submit', 'fy', $fys->fy,'status',0);
 
 		$this->load->view('templates/head');
 		$this->load->view('templates/header');
@@ -1941,15 +1941,15 @@ public function memo_delete(){
 		$data['page']=$this->SGODModel->get_accomplishment();
 		$data['section'] = $data['page']['section'];
 		$id = $data['page']['id'];
-		$data['acc']=$this->SGODModel->get_all_data_where_single('sgod_accomplishments','year','2023');
+		$data['acc']=$this->SGODModel->get_all_data_where_single('one_sgod_accomplishments','year','2023');
 			
 		$this->load->view('accomplishment', $data);
 
 	}
 
 	function secaccview($param){
-		$result['data']=$this->SGODModel->get_table_where($param,'sgod_acc_image');
-		$result['sf']=$this->SGODModel->get_table_where($param,'sgod_files');
+		$result['data']=$this->SGODModel->get_table_where($param,'one_sgod_acc_image');
+		$result['sf']=$this->SGODModel->get_table_where($param,'one_sgod_files');
 		$this->load->view('sec_acc_view', $result);
 	}
 
@@ -2292,17 +2292,17 @@ public function memo_delete(){
 
 
 	public function delete_attach($param){
-		$result['img']=$this->SGODModel->get_single_table_by_id('id', 'sgod_acc_image', $param);
+		$result['img']=$this->SGODModel->get_single_table_by_id('id', 'one_sgod_acc_image', $param);
 		$filename = $result['img']['file'];
 		$id = $result['img']['acc_id'];
-		$this->SGODModel->delete_group($param, $filename,'tr_images','sgod_acc_image');
+		$this->SGODModel->delete_group($param, $filename,'tr_images','one_sgod_acc_image');
 		redirect('Page/secaccview/'.$id);
 	}
 	public function delete_file($param){
-		$result['img']=$this->SGODModel->get_single_table_by_id('id', 'sgod_files', $param);
+		$result['img']=$this->SGODModel->get_single_table_by_id('id', 'one_sgod_files', $param);
 		$filename = $result['img']['file'];
 		$id = $result['img']['acc_id'];
-		$this->SGODModel->delete_group($param, $filename,'training_resources','sgod_files');
+		$this->SGODModel->delete_group($param, $filename,'training_resources','one_sgod_files');
 		redirect('Page/secaccview/'.$id);
 	}
 
@@ -2330,7 +2330,7 @@ public function memo_delete(){
 			$filename = $this->upload->data('nonoy');
 			$docName=$this->input->post('docName');
 			$date=date("Y-m-d");
-			$que=$this->db->query("insert into sgod_files values('','$IDNumber','$docName','$filename','$date')");
+			$que=$this->db->query("insert into one_sgod_files values('','$IDNumber','$docName','$filename','$date')");
 			$this->session->set_flashdata('msg', '<div class="alert alert-success text-center"><b>Uploaded Succesfully!</b></div>');
 			
 			redirect('Page/sec_acc_view');
@@ -2405,7 +2405,7 @@ public function memo_delete(){
 		'secGroup' => $secGroup
 	  );
 
-	  $saved = $this->db->insert('sgod_accomplishments', $accomplishmentData);
+	  $saved = $this->db->insert('one_sgod_accomplishments', $accomplishmentData);
 	  if(!$saved){
 		$result['uploadError'] = 'Unable to save the accomplishment entry right now. Please try again.';
 		$this->load->view('sect_accomplishments_add', $result);
@@ -2451,7 +2451,7 @@ public function memo_delete(){
   $achieved=$this->input->post('achieved');
   $percentageAccom=$this->input->post('percentageAccom');
   
-  $que=$this->db->query("update sgod_accomplishments set quarter='$quarter', year='$year', monthAcc='$monthAcc', weekAcc='$weekAcc', section='$section', activity='$activity', activityCategory='$activityCategory', particulars='$particulars', venue='$venue', targetDate='$targetDate', dateConducted='$dateConducted',resources='$resources',notes='$notes',perIndicators='$perIndicators',target='$target',achieved='$achieved',percentageAccom='$percentageAccom',remarks='$remarks' where id='".$id."'");
+  $que=$this->db->query("update one_sgod_accomplishments set quarter='$quarter', year='$year', monthAcc='$monthAcc', weekAcc='$weekAcc', section='$section', activity='$activity', activityCategory='$activityCategory', particulars='$particulars', venue='$venue', targetDate='$targetDate', dateConducted='$dateConducted',resources='$resources',notes='$notes',perIndicators='$perIndicators',target='$target',achieved='$achieved',percentageAccom='$percentageAccom',remarks='$remarks' where id='".$id."'");
   $this->session->set_flashdata('success', ' Updated Successfully!');
   redirect('Page/viewSecAccomplishments');
   }
@@ -2462,7 +2462,7 @@ public function memo_delete(){
 		$id=$this->input->get('id');
 		$this->delete_accomplishment_reports($id);
 		
-		$que=$this->db->query("delete from sgod_accomplishments where id='".$id."'");
+		$que=$this->db->query("delete from one_sgod_accomplishments where id='".$id."'");
 		$this->session->set_flashdata('danger', ' Deleted successfully.');
 		redirect('Page/viewSecAccomplishments');
 	}	
@@ -2512,8 +2512,8 @@ function usersList(){
 	$param=$this->session->userdata('secGroup');
 	$this->db->where('secGroup', $param);
 	$this->db->where_not_in('section', ['System Administrator', 'Super Admin']);
-	$result['data']=$this->db->get('sgod_users')->result();
-	$result['data1']=$this->SGODModel->get_all_by_row('secGroup','sgod_sections', $param);
+	$result['data']=$this->db->get('one_sgod_users')->result();
+	$result['data1']=$this->SGODModel->get_all_by_row('secGroup','one_sgod_sections', $param);
     $this->load->view('users',$result); 
 	
 	if($this->input->post('submit'))
@@ -2531,7 +2531,7 @@ function usersList(){
 		redirect('Page/usersList');
 	}
  
-	$que=$this->db->query("insert into sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','$section','$param')");
+	$que=$this->db->query("insert into one_sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','$section','$param')");
 	$this->session->set_flashdata('msg', '<div class="alert alert-success text-center"><b>New account has been created successfully.</b></div>');
 	redirect('Page/usersList');
 	}			
@@ -2544,7 +2544,7 @@ function usersList(){
 		return;
 	}
 
-	$result['data']=$this->SGODModel->one_cond_orderby('sgod_users','section','System Administrator','secGroup','ASC');
+	$result['data']=$this->SGODModel->one_cond_orderby('one_sgod_users','section','System Administrator','secGroup','ASC');
 	$result['adminGroups']=$this->get_managed_admin_groups();
 	$result['staffOptions']=$this->SGODModel->get_hris_staff_options();
     $this->load->view('users_super_admin',$result);
@@ -2564,12 +2564,12 @@ function usersList(){
 			redirect('Page/super_admin_users');
 		}
 
-		if($this->SGODModel->get_single_by_id('username', 'sgod_users', $username)){
+		if($this->SGODModel->get_single_by_id('username', 'one_sgod_users', $username)){
 			$this->session->set_flashdata('danger', 'Username already exists.');
 			redirect('Page/super_admin_users');
 		}
 
-		$que=$this->db->query("insert into sgod_users(username, password, fName, mName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$mName','$lName','avatar.png','$email','Active','System Administrator','$secGroup')");
+		$que=$this->db->query("insert into one_sgod_users(username, password, fName, mName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$mName','$lName','avatar.png','$email','Active','System Administrator','$secGroup')");
 		$this->session->set_flashdata('success', 'Admin account created successfully.');
 		redirect('Page/super_admin_users');
 	}
@@ -2579,8 +2579,8 @@ function usersList(){
 	$secGroup=$this->session->userdata('secGroup');
 	$section=$this->session->userdata('section');
 
-	$result['data']=$this->SGODModel->get_all_by_row2('secGroup','sgod_users', $secGroup, 'section', $section);
-	$result['data1']=$this->SGODModel->get_all_by_row2('secGroup','sgod_sections', $secGroup, 'sectionName', $section);
+	$result['data']=$this->SGODModel->get_all_by_row2('secGroup','one_sgod_users', $secGroup, 'section', $section);
+	$result['data1']=$this->SGODModel->get_all_by_row2('secGroup','one_sgod_sections', $secGroup, 'sectionName', $section);
     $this->load->view('users',$result); 
 	
 	if($this->input->post('submit'))
@@ -2598,7 +2598,7 @@ function usersList(){
 		redirect('Page/usersListv2');
 	}
  
-	$que=$this->db->query("insert into sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','$section','$param')");
+	$que=$this->db->query("insert into one_sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','$section','$param')");
 	$this->session->set_flashdata('msg', '<div class="alert alert-success text-center"><b>New account has been created successfully.</b></div>');
 	redirect('Page/usersListv2');
 	}			
@@ -2618,7 +2618,7 @@ function usersList(){
 		redirect($this->get_users_redirect_route());
 	}
 
-	$this->db->query("delete  from sgod_users where username='".$id."'");
+	$this->db->query("delete  from one_sgod_users where username='".$id."'");
 	$this->session->set_flashdata('success', 'Deleted successfully!');
 	redirect($this->get_users_redirect_route());
 }
@@ -2670,7 +2670,7 @@ public function update_user(){
 	}
 
 	$this->db->where('username', $username);
-	$this->db->update('sgod_users', $data);
+	$this->db->update('one_sgod_users', $data);
 	$this->session->set_flashdata('success', 'User updated successfully!');
 	redirect($this->get_users_redirect_route());
 }
@@ -2711,7 +2711,7 @@ public function change_user_password(){
 	}
 
 	$this->db->where('username', $username);
-	$this->db->update('sgod_users', array('password' => sha1($newPassword)));
+	$this->db->update('one_sgod_users', array('password' => sha1($newPassword)));
 	$this->session->set_flashdata('success', 'Password changed successfully!');
 	redirect($this->get_users_redirect_route());
 }
@@ -2735,7 +2735,7 @@ public function reset_password(){
 	);
 
 	$this->db->where('username', $username);
-	$this->db->update('sgod_users', $data);
+	$this->db->update('one_sgod_users', $data);
 	$this->session->set_flashdata('success', 'Password reset successfully! Default password: 123456');
 	redirect($this->get_users_redirect_route());
 }
@@ -2759,7 +2759,7 @@ public function deactivate_user(){
 	);
 
 	$this->db->where('username', $username);
-	$this->db->update('sgod_users', $data);
+	$this->db->update('one_sgod_users', $data);
 	$this->session->set_flashdata('success', 'User status updated successfully!');
 	redirect($this->get_users_redirect_route());
 }
@@ -2839,7 +2839,7 @@ public function auto_migrate_whereabouts_table(){
 
 	$this->dbforge->add_field($fields);
 	$this->dbforge->add_key('id', TRUE);
-	$this->dbforge->create_table('sgod_employee_whereabouts', TRUE);
+	$this->dbforge->create_table('one_sgod_employee_whereabouts', TRUE);
 }
 
 private function is_valid_section_for_current_user($section){
@@ -2851,14 +2851,14 @@ private function is_valid_section_for_current_user($section){
 	}
 
 	if(in_array($currentSection, ['System Administrator', 'Chief - SGOD'], true)){
-		return (bool) $this->SGODModel->two_cond_row('sgod_sections', 'sectionName', $section, 'secGroup', $currentGroup);
+		return (bool) $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionName', $section, 'secGroup', $currentGroup);
 	}
 
 	return $section === $currentSection;
 }
 
 private function can_manage_user($username){
-	$user = $this->SGODModel->get_single_by_id('username', 'sgod_users', $username);
+	$user = $this->SGODModel->get_single_by_id('username', 'one_sgod_users', $username);
 
 	if(!$user){
 		return FALSE;
@@ -2883,7 +2883,7 @@ private function can_manage_user($username){
 }
 
 private function is_super_admin_managed_account($username){
-	$user = $this->SGODModel->get_single_by_id('username', 'sgod_users', $username);
+	$user = $this->SGODModel->get_single_by_id('username', 'one_sgod_users', $username);
 
 	if(!$user){
 		return FALSE;
@@ -2911,7 +2911,7 @@ private function is_super_admin_managed_account($username){
 		  	$newpass= sha1($this->input->post('newpassword'));
 
 			$this->db->where('username', $username);
-			$isUpdated = $this->db->update('sgod_users', array('password' => $newpass));
+			$isUpdated = $this->db->update('one_sgod_users', array('password' => $newpass));
 
 			if($isUpdated){
 				$this->session->set_flashdata('success', 'Password changed successfully.');
@@ -2930,7 +2930,7 @@ private function is_super_admin_managed_account($username){
 	function _validate_currentpassword(){
 		$username=$this->session->userdata('username');
 		$currentpass= sha1($this->input->post('currentpassword'));
-		$user = $this->SGODModel->get_single_by_id('username', 'sgod_users', $username);
+		$user = $this->SGODModel->get_single_by_id('username', 'one_sgod_users', $username);
 		if($user && $user->password === $currentpass){
 			return TRUE;
 		}

@@ -18,26 +18,26 @@ class SGODModel extends CI_Model
 	}
 
 	function aSectionAccomplishments($section){
-		$query=$this->db->query("select count(id) as Counts from sgod_accomplishments where section='".$section."'");
+		$query=$this->db->query("select count(id) as Counts from one_sgod_accomplishments where section='".$section."'");
 		return $query->result();
 	}
 
 	function totalSectionUsers($section){
-		$query=$this->db->query("select count(username) as Counts from sgod_users where section='".$section."'");
+		$query=$this->db->query("select count(username) as Counts from one_sgod_users where section='".$section."'");
 		return $query->result();
 	}
 
 	public function viewSections($param){
 		$this->db->where('secGroup', trim((string) $param));
 		$this->db->order_by('sectionName');
-		$query = $this->db->get('sgod_sections');
+		$query = $this->db->get('one_sgod_sections');
 		return $query->result();
 	}
 	public function viewSectionsChecking($param){
 		$this->db->where('secGroup', trim((string) $param));
 		$this->db->where('sectionName !=', 'Chief - SGOD');
 		$this->db->order_by('sectionName');
-		$query = $this->db->get('sgod_sections');
+		$query = $this->db->get('one_sgod_sections');
 		return $query->result();
 	}
 
@@ -52,7 +52,7 @@ class SGODModel extends CI_Model
 
 	function accombyid($id){
 		$this->db->where('id', $id);
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 		return $result->result();
 	}
 
@@ -61,27 +61,27 @@ class SGODModel extends CI_Model
 		$this->db->order_by('date', 'DESC');
 		$this->db->order_by('updated_at', 'DESC');
 		$this->db->order_by('id', 'DESC');
-		$result = $this->db->get('sgod_employee_whereabouts');
+		$result = $this->db->get('one_sgod_employee_whereabouts');
 		return $result->result();
 	}
 
 	function get_whereabouts_by_id($id){
 		$this->db->where('id', $id);
-		$result = $this->db->get('sgod_employee_whereabouts');
+		$result = $this->db->get('one_sgod_employee_whereabouts');
 		return $result->result();
 	}
 
 	function get_all_whereabouts_by_date($date){
 		$latestPerEmployee = $this->db
 			->select('MAX(w_latest.id) AS latest_id')
-			->from('sgod_employee_whereabouts w_latest')
+			->from('one_sgod_employee_whereabouts w_latest')
 			->where('w_latest.date', $date)
 			->group_by('w_latest.username')
 			->get_compiled_select();
 
 		$this->db->select("w.*, COALESCE(NULLIF(u.avatar, ''), 'avatar.png') AS userAvatar");
-		$this->db->from('sgod_employee_whereabouts w');
-		$this->db->join('sgod_users u', 'u.username = w.username', 'left');
+		$this->db->from('one_sgod_employee_whereabouts w');
+		$this->db->join('one_sgod_users u', 'u.username = w.username', 'left');
 		$this->db->where("w.id IN ($latestPerEmployee)", NULL, FALSE);
 		$this->db->order_by('w.section', 'ASC');
 		$this->db->order_by('w.lName', 'ASC');
@@ -91,8 +91,8 @@ class SGODModel extends CI_Model
 
 	function search_whereabouts($search){
 		$this->db->select("w.*, COALESCE(NULLIF(u.avatar, ''), 'avatar.png') AS userAvatar");
-		$this->db->from('sgod_employee_whereabouts w');
-		$this->db->join('sgod_users u', 'u.username = w.username', 'left');
+		$this->db->from('one_sgod_employee_whereabouts w');
+		$this->db->join('one_sgod_users u', 'u.username = w.username', 'left');
 		$this->db->group_start();
 		$this->db->like('w.fName', $search);
 		$this->db->or_like('w.lName', $search);
@@ -103,7 +103,7 @@ class SGODModel extends CI_Model
 		return $result->result();
 	}
 
-	//$result = $this->db->query('SELECT * FROM mis.sgod_accomplishments where quarter="'.$quarter.'" and year='.$year.' and monthAcc="'.$month.'" and weekAcc='.$week.' and section="'.$sec.'" and activityCategory="'.$ac.'"');
+	//$result = $this->db->query('SELECT * FROM mis.one_sgod_accomplishments where quarter="'.$quarter.'" and year='.$year.' and monthAcc="'.$month.'" and weekAcc='.$week.' and section="'.$sec.'" and activityCategory="'.$ac.'"');
 
 	public function checking($quarter,$year,$week,$month,$sec,$ac){
 		 $this->db->where("quarter", $quarter);
@@ -111,7 +111,7 @@ class SGODModel extends CI_Model
 		 $this->db->where("section", $sec);
 		 $this->db->where("monthAcc", $month);
 		 $this->db->where("weekAcc", $week);
-		 $result = $this->db->get('sgod_accomplishments');
+		 $result = $this->db->get('one_sgod_accomplishments');
 		return $result->result();
 	}
 
@@ -214,7 +214,7 @@ class SGODModel extends CI_Model
 	function viewSecAccomplishments($section, $secGroup, $scope = 'section', $username = ''){
 		$this->apply_accomplishment_scope($section, $secGroup, $scope, $username);
 		$this->db->order_by('id', 'DESC');
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 		return $result->result();
 	}
 
@@ -228,7 +228,7 @@ class SGODModel extends CI_Model
 		$this->db->where('acc_id', (int) $accId);
 		$this->db->order_by('uploaded_at', 'DESC');
 		$this->db->order_by('id', 'DESC');
-		$result = $this->db->get('sgod_accomplishment_reports');
+		$result = $this->db->get('one_sgod_accomplishment_reports');
 		return $result->result();
 	}
 
@@ -241,7 +241,7 @@ class SGODModel extends CI_Model
 		$this->db->where_in('acc_id', $cleanIds);
 		$this->db->order_by('uploaded_at', 'DESC');
 		$this->db->order_by('id', 'DESC');
-		$result = $this->db->get('sgod_accomplishment_reports')->result();
+		$result = $this->db->get('one_sgod_accomplishment_reports')->result();
 
 		$reportGroups = array();
 		foreach($cleanIds as $accId){
@@ -258,12 +258,12 @@ class SGODModel extends CI_Model
 
 	function delete_accomplishment_reports($accId){
 		$this->db->where('acc_id', (int) $accId);
-		return $this->db->delete('sgod_accomplishment_reports');
+		return $this->db->delete('one_sgod_accomplishment_reports');
 	}
 
 	public function get_accomplishment(){
 		$this->db->where('year', '2023');
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->row_array();
 	}
@@ -290,7 +290,7 @@ class SGODModel extends CI_Model
 		$this->db->where("weekAcc", $week);
 		$this->db->where("secGroup", $secGroup);
 		}
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result_array();
 	}
@@ -302,7 +302,7 @@ class SGODModel extends CI_Model
 		$this->db->where("activityCategory", $cat);
 		$this->db->order_by('targetDate', 'ASC');
 		$this->db->order_by('id', 'ASC');
-		$result = $this->db->get('sgod_accomplishments')->result();
+		$result = $this->db->get('one_sgod_accomplishments')->result();
 
 		$matchedRows = array();
 		foreach($result as $row){
@@ -333,7 +333,7 @@ class SGODModel extends CI_Model
 			$this->db->where("weekAcc", $week);
 			$this->db->group_by("section");
 		}
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result_array();
 	}
@@ -350,7 +350,7 @@ class SGODModel extends CI_Model
 		$this->db->where("secGroup", $secGroup);
 		$this->db->order_by('targetDate', 'ASC');
 		$this->db->order_by('id', 'ASC');
-		$result = $this->db->get('sgod_accomplishments')->result();
+		$result = $this->db->get('one_sgod_accomplishments')->result();
 
 		foreach($result as $row){
 			if($this->accomplishment_matches_selected_date($row, $date)){
@@ -370,14 +370,14 @@ class SGODModel extends CI_Model
 			$this->db->where("weekAcc", $week);
 			$this->db->group_by("section");
 		}
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->row();
 	}
 
 	public function get_accomplish_by_row_year($year){
 		$this->db->where("year", $year);
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 		return $result->row();
 	}
 	public function get_all_accomplishment($cat, $quarter, $year, $week, $month, $secGroup){
@@ -393,7 +393,7 @@ class SGODModel extends CI_Model
 			$this->db->where("secGroup", $secGroup);
 		}
 		$this->db->group_by('section');
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result();
 	}
@@ -404,7 +404,7 @@ class SGODModel extends CI_Model
 		$this->db->where("activityCategory", $cat);
 		$this->db->where("secGroup", $secGroup);
 		$this->db->group_by('section');
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result();
 	}
@@ -420,7 +420,7 @@ class SGODModel extends CI_Model
 			$this->db->where("monthAcc", $month);
 			$this->db->where("weekAcc", $week);
 		}
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result();
 	}
@@ -430,7 +430,7 @@ class SGODModel extends CI_Model
 		$this->db->where("year", $year);
 		$this->db->where("activityCategory", $cat);
 		$this->db->where("section", $section);
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result();
 	}
@@ -445,7 +445,7 @@ class SGODModel extends CI_Model
 		
 		}
 		$this->db->group_by('section');
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result();
 	}
@@ -455,7 +455,7 @@ class SGODModel extends CI_Model
 		$this->db->where("year", $year);
 
 		$this->db->group_by('section');
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result();
 	}
@@ -471,7 +471,7 @@ class SGODModel extends CI_Model
 		}
 
 		$this->db->group_by('section');
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result();
 	}
@@ -481,7 +481,7 @@ class SGODModel extends CI_Model
 		$this->db->where("fy", $fy);
 		$this->db->where("b_code", $bcode);
 		$this->db->group_by('pia');
-		$result = $this->db->get('sgod_aip');
+		$result = $this->db->get('one_sgod_aip');
 
 		return $result->result();
 	}
@@ -492,7 +492,7 @@ class SGODModel extends CI_Model
 		$this->db->where("b_code", $bcode);
 		$this->db->where("pia", $pia);
 		$this->db->group_by('sip_project');
-		$result = $this->db->get('sgod_aip');
+		$result = $this->db->get('one_sgod_aip');
 		return $result->result();
 	}
 
@@ -501,7 +501,7 @@ class SGODModel extends CI_Model
 		$this->db->where("fy", $fy);
 		$this->db->where("b_code", $bcode);
 		$this->db->where("sip_project", $sip);
-		$result = $this->db->get('sgod_aip');
+		$result = $this->db->get('one_sgod_aip');
 		return $result->result();
 	}
 
@@ -510,7 +510,7 @@ class SGODModel extends CI_Model
 		$this->db->where("fy", $fy);
 		$this->db->where("b_code", $bcode);
 		$this->db->group_by('fy');
-		$result = $this->db->get('sgod_aip');
+		$result = $this->db->get('one_sgod_aip');
 
 		return $result->row();
 	}
@@ -536,7 +536,7 @@ class SGODModel extends CI_Model
 		$this->db->where("fy", $fy);
 		$this->db->where("b_code", $code);
 		$this->db->where("pia", $pia);
-		$result = $this->db->get('sgod_aip');
+		$result = $this->db->get('one_sgod_aip');
 
 		return $result->result();
 	}
@@ -558,7 +558,7 @@ class SGODModel extends CI_Model
 		if($domain != ""){$this->db->where("domain",$domain);}
 		if($strand != ""){$this->db->where("strand",$strand);}
 		if($pias != ""){$this->db->where("pia",$pias);}
-		$result = $this->db->get('sgod_aip');
+		$result = $this->db->get('one_sgod_aip');
 
 		return $result->result();
 	}
@@ -692,7 +692,7 @@ class SGODModel extends CI_Model
 	public function get_memos_by_group($secGroup){
 		$this->db->where('secGroup', trim((string) $secGroup));
 		$this->db->order_by('id', 'DESC');
-		$result = $this->db->get('sgod_memo');
+		$result = $this->db->get('one_sgod_memo');
 		return $result->result();
 	}
 
@@ -700,14 +700,14 @@ class SGODModel extends CI_Model
 		$this->db->where('secGroup', trim((string) $secGroup));
 		$this->db->order_by('id', 'DESC');
 		$this->db->limit(1);
-		$result = $this->db->get('sgod_memo');
+		$result = $this->db->get('one_sgod_memo');
 		return $result->row();
 	}
 
 	public function get_memo_by_group_and_id($id, $secGroup){
 		$this->db->where('id', $id);
 		$this->db->where('secGroup', trim((string) $secGroup));
-		$result = $this->db->get('sgod_memo');
+		$result = $this->db->get('one_sgod_memo');
 		return $result->row();
 	}
 
@@ -730,7 +730,7 @@ class SGODModel extends CI_Model
 			$this->db->limit((int) $limit);
 		}
 
-		return $this->db->get('sgod_accomplishments')->result();
+		return $this->db->get('one_sgod_accomplishments')->result();
 	}
 
 	public function get_brigada_eskwela_memos($secGroup, $limit = NULL){
@@ -747,7 +747,7 @@ class SGODModel extends CI_Model
 			$this->db->limit((int) $limit);
 		}
 
-		return $this->db->get('sgod_memo')->result();
+		return $this->db->get('one_sgod_memo')->result();
 	}
 
 	public function memo_exists_in_group($memoNo, $secGroup, $excludeId = NULL){
@@ -756,7 +756,7 @@ class SGODModel extends CI_Model
 		if($excludeId !== NULL){
 			$this->db->where('id !=', $excludeId);
 		}
-		return $this->db->get('sgod_memo');
+		return $this->db->get('one_sgod_memo');
 	}
 
 	public function get_paginated($table, $order_col, $order_val, $limit, $offset){
@@ -826,7 +826,7 @@ class SGODModel extends CI_Model
 		'category' => $this->input->post('category')
 		); 
 
-		return $this->db->insert('sgod_settings_cat', $data);	
+		return $this->db->insert('one_sgod_settings_cat', $data);	
 	}
 	public function update_app_cat(){
 
@@ -837,7 +837,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_settings_cat', $data);
+		return $this->db->update('one_sgod_settings_cat', $data);
 		
 	}
 
@@ -846,7 +846,7 @@ class SGODModel extends CI_Model
 		'pillar' => $this->input->post('pillar')
 		); 
 
-		return $this->db->insert('sgod_settings_pillar', $data);	
+		return $this->db->insert('one_sgod_settings_pillar', $data);	
 	}
 
 	public function update_app_pillar(){
@@ -858,7 +858,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_settings_pillar', $data);
+		return $this->db->update('one_sgod_settings_pillar', $data);
 		
 	}
 
@@ -867,7 +867,7 @@ class SGODModel extends CI_Model
 		'domain' => $this->input->post('domain')
 		); 
 
-		return $this->db->insert('sgod_settings_domain', $data);	
+		return $this->db->insert('one_sgod_settings_domain', $data);	
 	}
 	public function update_domain(){
 
@@ -878,7 +878,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_settings_domain', $data);
+		return $this->db->update('one_sgod_settings_domain', $data);
 		
 	}
 
@@ -888,7 +888,7 @@ class SGODModel extends CI_Model
 		'domain_id' => $this->input->post('d_id')
 		); 
 
-		return $this->db->insert('sgod_settings_strand', $data);	
+		return $this->db->insert('one_sgod_settings_strand', $data);	
 	}
 	public function update_strand(){
 
@@ -900,7 +900,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_settings_strand', $data);
+		return $this->db->update('one_sgod_settings_strand', $data);
 		
 	}
 
@@ -911,7 +911,7 @@ class SGODModel extends CI_Model
 		'school_id' => $this->session->username
 		); 
 
-		return $this->db->insert('sgod_settings_pias', $data);	
+		return $this->db->insert('one_sgod_settings_pias', $data);	
 	}
 
 	public function update_pias(){
@@ -925,7 +925,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_settings_pias', $data);
+		return $this->db->update('one_sgod_settings_pias', $data);
 		
 	}
 
@@ -935,7 +935,7 @@ class SGODModel extends CI_Model
 		'pillar_id' => $this->input->post('pillar_id')
 		); 
 
-		return $this->db->insert('sgod_setting_io', $data);	
+		return $this->db->insert('one_sgod_setting_io', $data);	
 	}
 
 
@@ -949,7 +949,7 @@ class SGODModel extends CI_Model
 		);  
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_setting_io', $data);
+		return $this->db->update('one_sgod_setting_io', $data);
 		
 	}
 
@@ -958,7 +958,7 @@ class SGODModel extends CI_Model
 		'matatag' => $this->input->post('matatag')
 		); 
 
-		return $this->db->insert('sgod_settings_matatag', $data);	
+		return $this->db->insert('one_sgod_settings_matatag', $data);	
 	}
 
 	public function update_matatag(){
@@ -970,7 +970,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_settings_matatag', $data);
+		return $this->db->update('one_sgod_settings_matatag', $data);
 		
 	}
 
@@ -979,7 +979,7 @@ class SGODModel extends CI_Model
 		'description' => $this->input->post('description')
 		); 
 
-		return $this->db->insert('sgod_settings_bs', $data);	
+		return $this->db->insert('one_sgod_settings_bs', $data);	
 	}
 
 	public function update_bs(){
@@ -991,7 +991,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_settings_bs', $data);
+		return $this->db->update('one_sgod_settings_bs', $data);
 		
 	}
 
@@ -1022,7 +1022,7 @@ class SGODModel extends CI_Model
 		'io' => $this->input->post('io')
 		); 
 
-		return $this->db->insert('sgod_aip', $data);	
+		return $this->db->insert('one_sgod_aip', $data);	
 	}
 
 	public function insert_app(){
@@ -1040,7 +1040,7 @@ class SGODModel extends CI_Model
 			'school_id' => $this->session->username
 			);
 
-			$this->db->insert('sgod_app', $item);
+			$this->db->insert('one_sgod_app', $item);
 		}
 	}
 
@@ -1057,7 +1057,7 @@ class SGODModel extends CI_Model
 			'fy' => $this->input->post('fy'),
 			'school_id' => $this->session->username
 			);
-			$this->db->insert('sgod_app', $item);
+			$this->db->insert('one_sgod_app', $item);
 		}
 	}
 
@@ -1085,7 +1085,7 @@ class SGODModel extends CI_Model
 		);
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_app', $data);
+		return $this->db->update('one_sgod_app', $data);
 	}
 
 	public function insert_sop(){
@@ -1099,7 +1099,7 @@ class SGODModel extends CI_Model
 		'type' => $this->input->post('type')
 		); 
 
-		return $this->db->insert('sgod_sop', $data);	
+		return $this->db->insert('one_sgod_sop', $data);	
 	}
 	public function update_sop($id){
 		$data = array(
@@ -1111,7 +1111,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_sop', $data);
+		return $this->db->update('one_sgod_sop', $data);
 	}
 
 	public function update_aip($param){
@@ -1140,7 +1140,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $param);
-		return $this->db->update('sgod_aip', $data);	
+		return $this->db->update('one_sgod_aip', $data);	
 	}
 
 	public function insert_aip_action(){
@@ -1155,7 +1155,7 @@ class SGODModel extends CI_Model
 		'res' => $this->session->username
 		); 
 
-		return $this->db->insert('sgod_aip_track', $data);	
+		return $this->db->insert('one_sgod_aip_track', $data);	
 	}
 
 	public function aip_approved(){
@@ -1169,7 +1169,7 @@ class SGODModel extends CI_Model
 		'res' => $this->session->username
 		); 
 
-		return $this->db->insert('sgod_aip_track', $data);	
+		return $this->db->insert('one_sgod_aip_track', $data);	
 	}
 
 	public function aip_remarks(){
@@ -1183,7 +1183,7 @@ class SGODModel extends CI_Model
 		'res' => $this->session->username
 		); 
 
-		return $this->db->insert('sgod_aip_track', $data);	
+		return $this->db->insert('one_sgod_aip_track', $data);	
 	}
 
 	public function aip_open(){
@@ -1197,7 +1197,7 @@ class SGODModel extends CI_Model
 		'res' => $this->session->username
 		); 
 
-		return $this->db->insert('sgod_aip_track', $data);	
+		return $this->db->insert('one_sgod_aip_track', $data);	
 	}
 
 	public function aip_open_plans(){
@@ -1211,7 +1211,7 @@ class SGODModel extends CI_Model
 		'submit_id' => $this->input->post('id')
 		); 
 
-		return $this->db->insert('sgod_approved_plans', $data);	
+		return $this->db->insert('one_sgod_approved_plans', $data);	
 	}
 
 	public function update_aip_open(){
@@ -1224,7 +1224,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_aip_submit', $data);
+		return $this->db->update('one_sgod_aip_submit', $data);
 		
 	}
 
@@ -1238,7 +1238,7 @@ class SGODModel extends CI_Model
 		); 
 
 		$this->db->where('id', $id);
-		return $this->db->update('sgod_aip_submit', $data);
+		return $this->db->update('one_sgod_aip_submit', $data);
 		
 	}
 
@@ -1255,7 +1255,7 @@ class SGODModel extends CI_Model
 		'b_code' => $bcode
 		); 
 
-		return $this->db->insert('sgod_aip_submit', $data);	
+		return $this->db->insert('one_sgod_aip_submit', $data);	
 	}
 	public function aip_track($id){
 		date_default_timezone_set('Asia/Manila');
@@ -1268,7 +1268,7 @@ class SGODModel extends CI_Model
 		'date' => $date
 		); 
 
-		return $this->db->insert('sgod_aip_track', $data);	
+		return $this->db->insert('one_sgod_aip_track', $data);	
 	}
 
 	// public function update_aip_status(){
@@ -1283,7 +1283,7 @@ class SGODModel extends CI_Model
 	// 	//$this->db->where('status', 0);
 	// 	$this->db->where('fy', $fy);
 	// 	$this->db->where('school_id', $school_id);
-	// 	return $this->db->update('sgod_aip', $data);	
+	// 	return $this->db->update('one_sgod_aip', $data);	
 	// }
 
 
@@ -1310,7 +1310,7 @@ class SGODModel extends CI_Model
 			'secGroup' => $this->session->userdata('secGroup')
         ); 
 
-        return $this->db->insert('sgod_memo', $data);
+        return $this->db->insert('one_sgod_memo', $data);
     }
 
 	public function memo_update(){
@@ -1323,7 +1323,7 @@ class SGODModel extends CI_Model
         ); 
 
 		$this->db->where('id', $this->input->post('id'));
-        return $this->db->update('sgod_memo', $data);
+        return $this->db->update('one_sgod_memo', $data);
     }
 
 	public function mfu(){
@@ -1337,7 +1337,7 @@ class SGODModel extends CI_Model
         ); 
 		
 		$this->db->where('id', $this->input->post('id'));
-        return $this->db->update('sgod_memo', $data);
+        return $this->db->update('one_sgod_memo', $data);
     }
 
 
@@ -1350,7 +1350,7 @@ class SGODModel extends CI_Model
             'file' => $file,
         );
         $this->db->where('id', $id);
-        $this->db->update('sgod_memo', $data);
+        $this->db->update('one_sgod_memo', $data);
     }
 
 	
@@ -1360,11 +1360,11 @@ class SGODModel extends CI_Model
 	// end in this portion
 
 	public function multiple_images($image = array()){
-		return $this->db->insert_batch('sgod_acc_image',$image);
+		return $this->db->insert_batch('one_sgod_acc_image',$image);
 	}
 
 	public function atr($image = array()){
-		return $this->db->insert_batch('sgod_files',$image);
+		return $this->db->insert_batch('one_sgod_files',$image);
 	}
 
 	function delete_group($param, $attach, $path, $table){
@@ -1374,10 +1374,10 @@ class SGODModel extends CI_Model
     }
 
 	function copy_row($param){
-        $query=$this->db->query("INSERT INTO sgod_accomplishments
+        $query=$this->db->query("INSERT INTO one_sgod_accomplishments
 		(quarter, year, monthAcc, weekAcc, section, activity, activityCategory, particulars, venue, targetDate, dateConducted, encoder, accomplishmentScope, resources, notes, perIndicators, target, achieved, percentageAccom, remarks, secGroup)
 		SELECT quarter, year, monthAcc, weekAcc, section, activity, activityCategory, particulars, venue, targetDate, dateConducted, encoder, accomplishmentScope, resources, notes, perIndicators, target, achieved, percentageAccom, remarks, secGroup
-		FROM sgod_accomplishments
+		FROM one_sgod_accomplishments
 		WHERE id = '{$param}'");
     }
 
@@ -1386,7 +1386,7 @@ class SGODModel extends CI_Model
 		$this->db->where("monthAcc", $month);
 		$this->apply_accomplishment_scope($section, $secGroup, $scope, $username);
 		$this->db->order_by('id', 'DESC');
-		$result = $this->db->get('sgod_accomplishments');
+		$result = $this->db->get('one_sgod_accomplishments');
 
 		return $result->result();
 	}
@@ -1396,7 +1396,7 @@ class SGODModel extends CI_Model
 		$this->db->where("fy", $fy);
 		$this->db->where("school_id", $school_id);
 		$this->db->where("b_code", $b_code);
-		$result = $this->db->get('sgod_aip');
+		$result = $this->db->get('one_sgod_aip');
 		
 		return $result->row();
 	}
@@ -1440,12 +1440,12 @@ class SGODModel extends CI_Model
 		'member' => $this->normalize_section_members($this->input->post('member'))
 		); 
 
-		return $this->db->insert('sgod_sections', $data);	
+		return $this->db->insert('one_sgod_sections', $data);	
 	}
 
 	public function update_sections(){
 		// Get old section name before updating
-		$oldSection = $this->db->get_where('sgod_sections', ['id' => $this->input->post('id')])->row()->sectionName;
+		$oldSection = $this->db->get_where('one_sgod_sections', ['id' => $this->input->post('id')])->row()->sectionName;
 
 		$data = array(
 		'sectionName' => trim((string) $this->input->post('sectionName')),
@@ -1456,12 +1456,12 @@ class SGODModel extends CI_Model
 		);
 
 		$this->db->where('id', $this->input->post('id'));
-		$updateResult = $this->db->update('sgod_sections', $data);
+		$updateResult = $this->db->update('one_sgod_sections', $data);
 
-		// Update sgod_users table if section name changed
+		// Update one_sgod_users table if section name changed
 		if ($updateResult && $oldSection !== trim((string) $this->input->post('sectionName'))) {
 			$this->db->where('section', $oldSection);
-			$this->db->update('sgod_users', ['section' => trim((string) $this->input->post('sectionName'))]);
+			$this->db->update('one_sgod_users', ['section' => trim((string) $this->input->post('sectionName'))]);
 		}
 
 		return $updateResult;

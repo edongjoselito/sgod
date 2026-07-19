@@ -159,7 +159,7 @@
                                                         <td><?= $row->b_code; ?></td>
                                                         <td>
                                                             <?php 
-                                                              $check = $this->SGODModel->three_cond_row('sgod_aip_submit','school_id',$row->school_id,'fy',$row->fy,'b_code',$row->b_code);
+                                                              $check = $this->SGODModel->three_cond_row('one_sgod_aip_submit','school_id',$row->school_id,'fy',$row->fy,'b_code',$row->b_code);
                                                               if(!empty($check)){
                                                               if($check->status == 0){
                                                             ?>

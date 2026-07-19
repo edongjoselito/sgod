@@ -128,7 +128,7 @@
                 <td colspan="23" class="bar">I. MANDATORY   ( 20%)</td>
             </tr>
             <?php 
-                $aip_by_pillar = $this->SGODModel->aip('sgod_aip',$school_id,$fy,$b_code,'MANDATORY BILLS');
+                $aip_by_pillar = $this->SGODModel->aip('one_sgod_aip',$school_id,$fy,$b_code,'MANDATORY BILLS');
                 $otba = 0;
                 $otjan = 0;
                 $otfeb = 0;
@@ -155,7 +155,7 @@
                 <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
             </tr>
             <?php 
-            $get_app = $this->SGODModel->one_cond('sgod_app', 'aip_id',$row->id);
+            $get_app = $this->SGODModel->one_cond('one_sgod_app', 'aip_id',$row->id);
             $ba = 0;
             $jan = 0;
             $feb = 0;
@@ -301,7 +301,7 @@
                 <td colspan="23" class="bar">II. MINOR REPAIR     ( 30% )</td>
             </tr>
             <?php 
-                $aip_by_pillar = $this->SGODModel->aip('sgod_aip',$school_id,$fy,$b_code,'MINOR REPAIR');
+                $aip_by_pillar = $this->SGODModel->aip('one_sgod_aip',$school_id,$fy,$b_code,'MINOR REPAIR');
                 $otba = 0;
                 $otjan = 0;
                 $otfeb = 0;
@@ -328,7 +328,7 @@
                 <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
             </tr>
             <?php 
-            $get_app = $this->SGODModel->one_cond('sgod_app', 'aip_id',$row->id);
+            $get_app = $this->SGODModel->one_cond('one_sgod_app', 'aip_id',$row->id);
             $ba = 0;
             $jan = 0;
             $feb = 0;
@@ -473,7 +473,7 @@
                 <td colspan="23" class="bar">III. TEACHING-LEARNING INSTRUCTION   (25% )</td>
             </tr>
             <?php 
-                $aip_by_pillar = $this->SGODModel->aip('sgod_aip',$school_id,$fy,$b_code,'TEACHING-LEARNING INSTRUCTION');
+                $aip_by_pillar = $this->SGODModel->aip('one_sgod_aip',$school_id,$fy,$b_code,'TEACHING-LEARNING INSTRUCTION');
                 $otba = 0;
                 $otjan = 0;
                 $otfeb = 0;
@@ -500,7 +500,7 @@
                 <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
             </tr>
             <?php 
-            $get_app = $this->SGODModel->one_cond('sgod_app', 'aip_id',$row->id);
+            $get_app = $this->SGODModel->one_cond('one_sgod_app', 'aip_id',$row->id);
             $ba = 0;
             $jan = 0;
             $feb = 0;
@@ -646,7 +646,7 @@
                 <td colspan="23" class="bar">IV. Attendance to & Conduct of Trainings/Seminars/Conferences (25%)  </td>
             </tr>
             <?php 
-                $aip_by_pillar = $this->SGODModel->aip('sgod_aip',$school_id,$fy,$b_code,'TRAININGS/SEMINAR/TRAVEL');
+                $aip_by_pillar = $this->SGODModel->aip('one_sgod_aip',$school_id,$fy,$b_code,'TRAININGS/SEMINAR/TRAVEL');
                 $otba = 0;
                 $otjan = 0;
                 $otfeb = 0;
@@ -673,7 +673,7 @@
                 <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
             </tr>
             <?php 
-            $get_app = $this->SGODModel->one_cond('sgod_app', 'aip_id',$row->id);
+            $get_app = $this->SGODModel->one_cond('one_sgod_app', 'aip_id',$row->id);
             $ba = 0;
             $jan = 0;
             $feb = 0;

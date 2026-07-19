@@ -44,7 +44,7 @@
                 <img src="<?= base_url(); ?>assets/images/report/deped.png" />
                 <img src="<?= base_url(); ?>assets/images/report/davor.png" />
             </div>
-            <?php $sm = $this->SGODModel->one_cond_row('sgod_sections','sectionName',$row->section); ?>    
+            <?php $sm = $this->SGODModel->one_cond_row('one_sgod_sections','sectionName',$row->section); ?>    
             <h1><?= $row->section; ?><span class="names"><?= $sm->member; ?></span></h1>
         <h2>Updates</h2>
         <table>
@@ -82,7 +82,7 @@
                 <img src="<?= base_url(); ?>assets/images/report/deped.png" />
                 <img src="<?= base_url(); ?>assets/images/report/davor.png" />
             </div>
-            <?php $sm = $this->SGODModel->one_cond_row('sgod_sections','sectionName',$row->section); ?>
+            <?php $sm = $this->SGODModel->one_cond_row('one_sgod_sections','sectionName',$row->section); ?>
             <h1><?= $row->section; ?><span class="names"><?= $sm->member; ?></span></h1>
         <h2>Accomplishments</h2>
         <table>
@@ -129,7 +129,7 @@
                 <img src="<?= base_url(); ?>assets/images/report/deped.png" />
                 <img src="<?= base_url(); ?>assets/images/report/davor.png" />
             </div>
-        <?php $sm = $this->SGODModel->one_cond_row('sgod_sections','sectionName',$row->section); ?>    
+        <?php $sm = $this->SGODModel->one_cond_row('one_sgod_sections','sectionName',$row->section); ?>    
         <h1><?= $row->section; ?><span class="names"><?= $sm->member; ?></span></h1>
         
         <h2>Accomplishments</h2>
@@ -174,7 +174,7 @@
                 <img src="<?= base_url(); ?>assets/images/report/deped.png" />
                 <img src="<?= base_url(); ?>assets/images/report/davor.png" />
             </div>
-            <?php $sm = $this->SGODModel->one_cond_row('sgod_sections','sectionName',$row->section); ?>    
+            <?php $sm = $this->SGODModel->one_cond_row('one_sgod_sections','sectionName',$row->section); ?>    
             <h1><?= $row->section; ?><span class="names"><?= $sm->member; ?></span></h1>
         
         <h2>Updates</h2>

@@ -79,7 +79,7 @@
             $all_total = 0;
             foreach($mb as $row){?>
             <?php 
-            $get_app = $this->SGODModel->one_cond('sgod_app', 'aip_id',$row->id);
+            $get_app = $this->SGODModel->one_cond('one_sgod_app', 'aip_id',$row->id);
             $mb_total = 0;
             foreach($get_app as $row){?>
             <tr>
@@ -104,7 +104,7 @@
         <?php $all_total = 0;
             foreach($mr as $row){?>
             <?php 
-            $get_app = $this->SGODModel->one_cond('sgod_app', 'aip_id',$row->id);
+            $get_app = $this->SGODModel->one_cond('one_sgod_app', 'aip_id',$row->id);
             $mb_total = 0;
             foreach($get_app as $row){?>
             <tr>
@@ -129,7 +129,7 @@
         <?php $all_total = 0;
             foreach($tli as $row){?>
             <?php 
-            $get_app = $this->SGODModel->one_cond('sgod_app', 'aip_id',$row->id);
+            $get_app = $this->SGODModel->one_cond('one_sgod_app', 'aip_id',$row->id);
             $mb_total = 0;
             foreach($get_app as $row){?>
             <tr>
@@ -153,7 +153,7 @@
         <?php $all_total = 0;
             foreach($tst as $row){?>
             <?php 
-            $get_app = $this->SGODModel->one_cond('sgod_app', 'aip_id',$row->id);
+            $get_app = $this->SGODModel->one_cond('one_sgod_app', 'aip_id',$row->id);
             $mb_total = 0;
             foreach($get_app as $row){?>
             <tr>

@@ -118,7 +118,7 @@
                 <td><?= $row->budget_source; ?></td>
                 <td><?= $row->materials; ?></td>
                 <?php 
-                  $pt = $this->SGODModel->two_cond_row('sgod_sop', 'aip_id',$row->id,'type',1);
+                  $pt = $this->SGODModel->two_cond_row('one_sgod_sop', 'aip_id',$row->id,'type',1);
                   if(!empty($pt)){
                 ?>
                 <td><?= $pt->q1; ?></td>
@@ -131,7 +131,7 @@
                 <?php } ?>
 
                 <?php 
-                  $ft = $this->SGODModel->two_cond_row('sgod_sop', 'aip_id',$row->id,'type',2);
+                  $ft = $this->SGODModel->two_cond_row('one_sgod_sop', 'aip_id',$row->id,'type',2);
                   if(!empty($ft)){
                 ?>
                 <td><?= $ft->q1; ?></td>
@@ -145,7 +145,7 @@
 
 
                 <?php 
-                  $fto = $this->SGODModel->two_cond_row('sgod_sop', 'aip_id',$row->id,'type',3);
+                  $fto = $this->SGODModel->two_cond_row('one_sgod_sop', 'aip_id',$row->id,'type',3);
                   if(!empty($fto)){
                 ?>
                 <td><?= $fto->q1; ?></td>

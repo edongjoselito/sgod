@@ -4,7 +4,7 @@ class Login_model extends CI_Model{
   function validate($username,$password){
     $this->db->where('username',$username);
     $this->db->where('password',$password);
-    $result = $this->db->get('sgod_users',1);
+    $result = $this->db->get('one_sgod_users',1);
     return $result;
   }
 
@@ -12,7 +12,7 @@ class Login_model extends CI_Model{
  public function forgotPassword($email)
   {
     $this->db->select('email');
-    $this->db->from('sgod_users');
+    $this->db->from('one_sgod_users');
     $this->db->where('email', $email);
     $query = $this->db->get();
     return $query->row_array();
@@ -21,14 +21,14 @@ class Login_model extends CI_Model{
   public function sendpassword($data)
   {
     $email = $data['email'];
-    $query1 = $this->db->query("SELECT *  from payroll_users where email = '" . $email . "' ");
+    $query1 = $this->db->query("SELECT *  from one_payroll_users where email = '" . $email . "' ");
     $row = $query1->result_array();
     if ($query1->num_rows() > 0) {
       $passwordplain = "";
       $passwordplain  = rand(999999999, 9999999999);
       $newpass['password'] = sha1($passwordplain);
       $this->db->where('email', $email);
-      $this->db->update('payroll_users', $newpass);
+      $this->db->update('one_payroll_users', $newpass);
       
       //Email Notification
 			$this->load->config('email');

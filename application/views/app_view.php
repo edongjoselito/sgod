@@ -117,7 +117,7 @@
                                                     <?php foreach($data as $row){ ?>
                                                     <tr>
                                                         <td>
-                                                            <?php $aip=$this->SGODModel->one_cond_row('sgod_aip','id', $row->aip_id); ?>
+                                                            <?php $aip=$this->SGODModel->one_cond_row('one_sgod_aip','id', $row->aip_id); ?>
                                                             <?= $aip->sip_project; ?> / <?= $aip->strategy; ?>
                                                         </td>
                                                         <td><?= $row->materials; ?>  </td>

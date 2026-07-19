@@ -36,7 +36,7 @@
                 <div class="act">
                     <h1><?= $row['activity']; ?></h1>
                     <?php 
-		            $image=$this->SGODModel->get_all_data_where_single('sgod_acc_image','acc_id',$row['id']);
+		            $image=$this->SGODModel->get_all_data_where_single('one_sgod_acc_image','acc_id',$row['id']);
                     foreach($image as $img){ ?>
                         <img src="<?= base_url().'upload/'. $img['file']; ?>" />          
                     <?php } ?>

@@ -165,7 +165,7 @@
                                                                 <option></option>
                                                                 <?php   foreach($pillar as $row){
                                                                     echo '<optgroup label="'.$row->pillar.'">';
-                                                                    $io = $this->SGODModel->one_cond_orderby('sgod_setting_io','pillar_id',$row->id,'id','ASC');
+                                                                    $io = $this->SGODModel->one_cond_orderby('one_sgod_setting_io','pillar_id',$row->id,'id','ASC');
                                                                         foreach($io as $row){
                                                                             echo '<option class="ssigment" value="'.$row->id.'">'.$row->description.'</option>';   
                                                                         }
@@ -217,7 +217,7 @@
                                                                 <option></option>
                                                                 <?php   foreach($domain as $row){
                                                                     echo '<optgroup label="'.$row->domain.'">';
-                                                                    $strand = $this->SGODModel->one_cond_orderby('sgod_settings_strand','domain_id',$row->id,'strand','ASC');
+                                                                    $strand = $this->SGODModel->one_cond_orderby('one_sgod_settings_strand','domain_id',$row->id,'strand','ASC');
                                                                         foreach($strand as $row){
                                                                             echo '<option class="ssigment" value="'.$row->strand.'">'.$row->strand.'</option>';   
                                                                         }

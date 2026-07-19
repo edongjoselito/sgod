@@ -10,7 +10,7 @@ if (
     $topbarSecGroup !== '' &&
     !in_array($topbarSection, array('Super Admin', 'System Administrator', 'Chief - SGOD', 'School'), TRUE)
 ) {
-    $topbarSectionHeadRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $topbarUsername, 'secGroup', $topbarSecGroup);
+    $topbarSectionHeadRecord = $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionHead', $topbarUsername, 'secGroup', $topbarSecGroup);
     if ($topbarSectionHeadRecord && trim((string) $topbarSectionHeadRecord->sectionName) === $topbarSection) {
         $topbarProfileRoute = base_url() . 'Page/section_head_dashboard?open_profile_picture=1';
     }

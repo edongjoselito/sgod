@@ -48,7 +48,7 @@
                 $currentSidebarSecGroup !== '' &&
                 !in_array($currentSidebarSection, array('Super Admin', 'System Administrator', 'Chief - SGOD', 'School'), TRUE)
             ) {
-                $sidebarSectionHeadRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $currentSidebarUsername, 'secGroup', $currentSidebarSecGroup);
+                $sidebarSectionHeadRecord = $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionHead', $currentSidebarUsername, 'secGroup', $currentSidebarSecGroup);
                 if ($sidebarSectionHeadRecord && trim((string) $sidebarSectionHeadRecord->sectionName) === $currentSidebarSection) {
                     $isSectionHeadDashboardUser = TRUE;
                     $sectionDashboardRoute = 'Page/section_head_dashboard';

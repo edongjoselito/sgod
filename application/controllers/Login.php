@@ -17,14 +17,14 @@ class Login extends CI_Controller{
 	}
 
 	// Try matching by username first
-	$sectionRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $username, 'secGroup', $secGroup);
+	$sectionRecord = $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionHead', $username, 'secGroup', $secGroup);
 
 	// If not found by username, try by IDNumber
 	// Get the user's IDNumber from the users table
 	if(!$sectionRecord){
 		$user = $this->SGODModel->one_cond_row('users', 'username', $username);
 		if($user && isset($user->IDNumber)){
-			$sectionRecord = $this->SGODModel->two_cond_row('sgod_sections', 'sectionHead', $user->IDNumber, 'secGroup', $secGroup);
+			$sectionRecord = $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionHead', $user->IDNumber, 'secGroup', $secGroup);
 		}
 	}
 
@@ -69,7 +69,7 @@ function registration(){
     }
     else
     {
-    $que=$this->db->query("insert into payroll_users values('$username','$h_upass','$fName','$mName','$lName','avatar.png','User','$email','Active','')");
+    $que=$this->db->query("insert into one_payroll_users values('$username','$h_upass','$fName','$mName','$lName','avatar.png','User','$email','Active','')");
 	$this->session->set_flashdata('msg', '<div class="alert alert-success text-center"><b>Registration details have been processed successfully.  Please check your email for the login credentials.</b></div>');
     //redirect('Login/registration');
 	
