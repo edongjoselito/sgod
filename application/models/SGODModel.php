@@ -190,14 +190,14 @@ class SGODModel extends CI_Model
 	}
 
 	public function get_accomplishment_by($cat, $quarter, $year, $week, $month, $secGroup){
-		
+
 		$sec = $this->input->post('sec');
 
 		$this->db->where("quarter", $quarter);
 		$this->db->where("year", $year);
 		$this->db->where("section", $sec);
 		$this->db->where("secGroup", $secGroup);
-		
+
 		$this->db->where("activityCategory", $cat);
 
 		if($this->input->post('weekAcc') !=""){
@@ -209,19 +209,33 @@ class SGODModel extends CI_Model
 
 		return $result->result_array();
 	}
+
+	public function get_accomplishment_by_date_conducted($cat, $date, $secGroup){
+		$sec = $this->input->post('sec');
+
+		$this->db->where("dateConducted", $date);
+		$this->db->where("section", $sec);
+		$this->db->where("secGroup", $secGroup);
+		$this->db->where("activityCategory", $cat);
+
+		$result = $this->db->get('sgod_accomplishments');
+
+		return $result->result_array();
+	}
+
 	public function get_accomplishment_by_row($quarter, $year, $week, $month){
 		$this->db->where("quarter", $quarter);
 		$this->db->where("year", $year);
 
 		$user = $this->session->userdata('acctLevel');
 		if($user!='System Administrator'){
-			$sec = $this->session->userdata('section'); 
+			$sec = $this->session->userdata('section');
 		}else{
 			$sec = $this->input->post('sec');
 		}
 
 		$this->db->where("section", $sec);
-		
+
 
 		if($this->input->post('weekAcc') !=""){
 			$this->db->where("monthAcc", $month);
@@ -230,8 +244,26 @@ class SGODModel extends CI_Model
 		}
 		$result = $this->db->get('sgod_accomplishments');
 
-		return $result->row();
+		return $result->result_array();
 	}
+
+	public function get_accomplishment_by_date_row($date, $secGroup){
+		$user = $this->session->userdata('acctLevel');
+		if($user!='System Administrator'){
+			$sec = $this->session->userdata('section');
+		}else{
+			$sec = $this->input->post('sec');
+		}
+
+		$this->db->where("dateConducted", $date);
+		$this->db->where("section", $sec);
+		$this->db->where("secGroup", $secGroup);
+		$this->db->group_by("section");
+		$result = $this->db->get('sgod_accomplishments');
+
+		return $result->result_array();
+	}
+
 	public function get_accomplish_by_row($quarter, $year, $week, $month){
 		$this->db->where("quarter", $quarter);
 		$this->db->where("year", $year);

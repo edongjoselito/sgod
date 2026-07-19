@@ -870,6 +870,14 @@ if (!function_exists('sect_accom_resource_markup')) {
                                         <i class="mdi mdi-calendar-week-outline"></i>
                                         Weekly Report
                                     </a>
+                                    <a target="_blank" rel="noopener noreferrer" href="<?= base_url(); ?>Page/sec_filterv2/3/<?= rawurlencode($sectionName); ?>" class="hero-action hero-action--secondary">
+                                        <i class="mdi mdi-calendar-today-outline"></i>
+                                        Daily Report
+                                    </a>
+                                    <a target="_blank" rel="noopener noreferrer" href="<?= base_url(); ?>Page/print_report/<?= rawurlencode($sectionName); ?>" class="hero-action hero-action--secondary">
+                                        <i class="mdi mdi-printer-outline"></i>
+                                        Printable Report
+                                    </a>
                                 </div>
                             </div>
                         </div>

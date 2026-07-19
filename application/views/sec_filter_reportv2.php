@@ -29,17 +29,31 @@
         <label>Year</label>
         <input type="text" name="year" required class="form-control" > <br />
 
+    <?php }elseif($this->uri->segment(3) == 3){ ?>
+        <label>Date</label>
+        <input type="date" name="date" required class="form-control" > <br />
+
+        <label>Category</label>
+        <select class="form-control" name="activityCategory" required>
+            <option></option>
+            <option value="accomplishment">Accomplishment</option>
+            <option value="updates">Updates</option>
+            <option value="all">All</option>
+        </select>
+
+        <input type="hidden" name="sec" value="<?= urldecode($this->uri->segment('4')); ?>">
+
     <?php }else{ ?>
         <label>Quarter</label>
         <select class="form-control" name="quarter" required>
             <?php $quater = array("1st", "2nd", "3rd", "4th"); ?>
             <option></option>
-            <?php 
+            <?php
               foreach($quater as $row){
                     echo '<option value="'.$row.'">'.$row.' Quarter</option>';
               }
             ?>
-             
+
         </select> <br />
         <label>Year</label>
         <input type="text" name="year" required class="form-control" > <br />
@@ -83,8 +97,21 @@
         <?php } ?>
 
         <input type="submit" value="Submit" name="submit">
-                                                        
+        <br><br>
+        <a href="javascript:void(0)" onclick="openPrintVersion()" class="btn btn-info">Printable Version</a>
+
         </form>
+
+        <script>
+            function openPrintVersion() {
+                var form = document.querySelector('form');
+                var action = form.action;
+                var formData = new FormData(form);
+                var params = new URLSearchParams(formData);
+
+                window.open(action + '?print=true&' + params.toString(), '_blank');
+            }
+        </script>
 
     
 

@@ -1942,40 +1942,61 @@ public function memo_delete(){
 		$this->load->view('sec_report_view', $result);
 	}
 	function reportv2(){
-		
-		$quarter = $this->input->post('quarter'); 
+
+		$filterType = $this->input->post('filterType');
+		$quarter = $this->input->post('quarter');
 		$year = $this->input->post('year');
 		$week = $this->input->post('weekAcc');
 		$month = $this->input->post('month');
+		$date = $this->input->post('date');
 		$category = $this->input->post('activityCategory');
 		$secGroup=$this->session->userdata('secGroup');
 
 		$result['cat'] = $category;
 
-		if($category == 'all'){
-			$result['accomplish']=$this->SGODModel->get_accomplishment_by('Accomplishment', $quarter, $year, $week, $month, $secGroup);
-			$result['update']=$this->SGODModel->get_accomplishment_by('Updates', $quarter, $year, $week, $month,$secGroup);
-
-		}elseif($category == 'accomplishment'){
-			$result['accomplish']=$this->SGODModel->get_accomplishment_by($category, $quarter, $year, $week, $month, $secGroup);
-		}else{
-			$result['update']=$this->SGODModel->get_accomplishment_by($category, $quarter, $year, $week, $month, $secGroup);
-		}
-			$result['acc'] = $this->SGODModel->get_accomplishment_by_row($quarter, $year,$week, $month, $secGroup);
-
-		if($week == ""){
-			$result['r'] = "Quarter";
+		if($filterType == 'day' || $date != ""){
+			// Daily report
+			$result['accomplish']=$this->SGODModel->get_accomplishment_by_date_conducted('Accomplishment', $date, $secGroup);
+			$result['acc'] = $this->SGODModel->get_accomplishment_by_date_row($date, $secGroup);
+			$result['r'] = "Day";
 			$result['rr'] = "ly";
-			$result['q'] = $this->input->post('quarter');
-		}else{
+			$result['q'] = $date;
+		}elseif($filterType == 'week' || $week != ""){
+			// Weekly report
+			$result['accomplish']=$this->SGODModel->get_accomplishment_by('Accomplishment', $quarter, $year, $week, $month, $secGroup);
+			$result['acc'] = $this->SGODModel->get_accomplishment_by_row($quarter, $year,$week, $month, $secGroup);
 			$result['r'] = "Week";
 			$result['rr'] = "ly";
-			$result['q'] = $this->input->post('weekAcc');
+			$result['q'] = $week;
+		}elseif($filterType == 'month' || ($month != "" && $week == "")){
+			// Monthly report
+			$result['accomplish']=$this->SGODModel->get_accomplishment_by('Accomplishment', $quarter, $year, '', $month, $secGroup);
+			$result['acc'] = $this->SGODModel->get_accomplishment_by_row($quarter, $year,'', $month, $secGroup);
+			$result['r'] = "Month";
+			$result['rr'] = "ly";
+			$result['q'] = $month;
+		}else{
+			// Default to weekly for backward compatibility
+			$result['accomplish']=$this->SGODModel->get_accomplishment_by('Accomplishment', $quarter, $year, $week, $month, $secGroup);
+			$result['acc'] = $this->SGODModel->get_accomplishment_by_row($quarter, $year,$week, $month, $secGroup);
+			if($week == ""){
+				$result['r'] = "Quarter";
+				$result['rr'] = "ly";
+				$result['q'] = $this->input->post('quarter');
+			}else{
+				$result['r'] = "Week";
+				$result['rr'] = "ly";
+				$result['q'] = $this->input->post('weekAcc');
+			}
 		}
 
 		
 
-		$this->load->view('sec_report_viewv2', $result);
+		if($this->input->post('print') == 'true' || $this->input->get('print') == 'true'){
+			$this->load->view('sec_report_viewv2_print', $result);
+		}else{
+			$this->load->view('sec_report_viewv2', $result);
+		}
 	}
 
 
@@ -1984,6 +2005,9 @@ public function memo_delete(){
 	}
 	function sec_filterv2(){
 		$this->load->view('sec_filter_reportv2');
+	}
+	function print_report(){
+		$this->load->view('sec_filter_print');
 	}
 	function sfy(){
 		$this->load->view('sec_filter_year');

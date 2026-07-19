@@ -27,8 +27,20 @@
             <h1>SCHOOL GOVERNANCE AND<br /> OPERATIONS DIVISION</h1>
             <?php if(isset($acc)){?>
             <h2>Presentation of Accomplishments<br /> and Weekly Updates</h2>
-            <h3><?php if(strlen($q)==1){ echo $r.' '. $q.', '.$acc->monthAcc;}else{echo $q.' '. $r.', FY';} ?> <?= $acc->year; ?></h3>
-           
+            <h3>
+                <?php
+                    $q = isset($q) ? $q : '';
+                    $r = isset($r) ? $r : '';
+                    $monthAcc = is_array($acc) ? (isset($acc['monthAcc']) ? $acc['monthAcc'] : '') : (isset($acc->monthAcc) ? $acc->monthAcc : '');
+                    $year = is_array($acc) ? (isset($acc['year']) ? $acc['year'] : '') : (isset($acc->year) ? $acc->year : '');
+                    if(strlen($q)==1){
+                        echo $r.' '. $q.', '.$monthAcc;
+                    }else{
+                        echo $q.' '. $r.', FY';
+                    }
+                ?> <?= $year; ?>
+            </h3>
+
         </div>
 
 
@@ -41,7 +53,7 @@
                 <img src="<?= base_url(); ?>assets/images/report/deped.png" />
                 <img src="<?= base_url(); ?>assets/images/report/davor.png" />
             </div>
-        <h1><?= $acc->section; ?></h1>
+        <h1><?= is_array($acc) ? (isset($acc['section']) ? $acc['section'] : '') : (isset($acc->section) ? $acc->section : ''); ?></h1>
         <h2>Updates</h2>
         <table>
             <thead>
@@ -76,7 +88,7 @@
                 <img src="<?= base_url(); ?>assets/images/report/deped.png" />
                 <img src="<?= base_url(); ?>assets/images/report/davor.png" />
             </div>
-        <h1><?= $acc->section; ?></h1>
+        <h1><?= is_array($acc) ? (isset($acc['section']) ? $acc['section'] : '') : (isset($acc->section) ? $acc->section : ''); ?></h1>
         <h2>Accomplishments</h2>
         <table>
             <thead>
@@ -113,7 +125,7 @@
                 <img src="<?= base_url(); ?>assets/images/report/deped.png" />
                 <img src="<?= base_url(); ?>assets/images/report/davor.png" />
             </div>
-        <h1><?= $acc->section; ?></h1>
+        <h1><?= is_array($acc) ? (isset($acc['section']) ? $acc['section'] : '') : (isset($acc->section) ? $acc->section : ''); ?></h1>
         <h2>Accomplishments</h2>
         <table>
             <thead>
@@ -151,7 +163,7 @@
                 <img src="<?= base_url(); ?>assets/images/report/deped.png" />
                 <img src="<?= base_url(); ?>assets/images/report/davor.png" />
             </div>
-        <h1><?= $acc->section; ?></h1>
+        <h1><?= is_array($acc) ? (isset($acc['section']) ? $acc['section'] : '') : (isset($acc->section) ? $acc->section : ''); ?></h1>
         <h2>Updates</h2>
         <table>
             <thead>
