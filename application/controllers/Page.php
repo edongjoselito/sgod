@@ -1018,7 +1018,7 @@ public function memo() {
 	$data['ln'] = $this->SGODModel->get_last_memo_record_by_group($secGroup);
 	$data['next_memo_no'] = $this->build_next_memo_no($secGroup, $data['ln']);
 
-	$this->load->view('one_sgod_memo', $data);
+	$this->load->view('sgod_memo', $data);
 }
 
 public function memo_update() {
