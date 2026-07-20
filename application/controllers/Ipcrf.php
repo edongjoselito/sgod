@@ -748,4 +748,193 @@ class Ipcrf extends CI_Controller
     {
         $this->output->set_status_header($status)->set_content_type('application/json', 'utf-8')->set_output(json_encode($payload));
     }
+
+    /* ==========================================================================
+     * Manage IPCR (SGOD Chief workspace) — set up the shared IPCR template that
+     * every SGOD member's IPCRF is generated from.
+     * ======================================================================== */
+
+    private function current_sec_position()
+    {
+        $username = $this->actor();
+        if ($username === '') {
+            return '';
+        }
+        $row = $this->db->select('secPosition')->where('username', $username)->get('one_sgod_users', 1)->row_array();
+        return $row ? trim((string) $row['secPosition']) : '';
+    }
+
+    public function can_manage_ipcr_template()
+    {
+        return $this->current_sec_position() === 'SGOD Chief' || $this->Ipcrf_model->is_admin();
+    }
+
+    private function guard_template_manager()
+    {
+        if (!$this->can_manage_ipcr_template()) {
+            show_error('You are not authorized to manage the IPCR template. This workspace is for the SGOD Chief.', 403);
+            exit;
+        }
+    }
+
+    private function active_template_or_redirect()
+    {
+        $template = $this->Ipcrf_model->get_active_template();
+        if (!$template) {
+            $this->session->set_flashdata('danger', 'No active IPCR template was found.');
+            redirect('Ipcrf/manage_template');
+        }
+        return $template;
+    }
+
+    public function manage_template()
+    {
+        $this->guard_template_manager();
+        $template = $this->Ipcrf_model->get_active_template();
+        $secGroup = trim((string) $this->session->userdata('secGroup'));
+        $data = array(
+            'bundle' => $template ? $this->Ipcrf_model->get_template_bundle($template['id']) : NULL,
+            'is_admin' => $this->Ipcrf_model->is_admin(),
+            'members' => $this->Ipcrf_model->get_taggable_members($secGroup),
+            'assignment_map' => $this->Ipcrf_model->get_kra_member_map()
+        );
+        $this->load->view('ipcrf/manage_template', $data);
+    }
+
+    public function kra_assign()
+    {
+        $this->guard_template_manager();
+        $kraId = (int) $this->input->post('kra_id');
+        if ($kraId <= 0) {
+            redirect('Ipcrf/manage_template');
+        }
+        $members = $this->input->post('members');
+        $this->Ipcrf_model->set_kra_members($kraId, is_array($members) ? $members : array(), $this->actor());
+        $this->session->set_flashdata('success', 'Member tags for this KRA were updated.');
+        redirect('Ipcrf/manage_template');
+    }
+
+    // Member-facing: the KRAs (and objectives) the SGOD Chief tagged this account into.
+    public function my_kras()
+    {
+        $data = array(
+            'kras' => $this->Ipcrf_model->get_member_kras($this->actor()),
+            'employee' => $this->Ipcrf_model->get_employee($this->employeeId)
+        );
+        $this->load->view('ipcrf/my_kras', $data);
+    }
+
+    public function template_meta_save()
+    {
+        $this->guard_template_manager();
+        $template = $this->active_template_or_redirect();
+        $name = trim((string) $this->input->post('name'));
+        if ($name === '') {
+            $this->session->set_flashdata('danger', 'Template name is required.');
+            redirect('Ipcrf/manage_template');
+        }
+        $this->Ipcrf_model->update_template_meta($template['id'], array(
+            'name' => $name,
+            'year' => $this->input->post('year'),
+            'description' => $this->input->post('description')
+        ));
+        $this->session->set_flashdata('success', 'IPCR template details updated.');
+        redirect('Ipcrf/manage_template');
+    }
+
+    public function kra_save()
+    {
+        $this->guard_template_manager();
+        $template = $this->active_template_or_redirect();
+        $title = trim((string) $this->input->post('title'));
+        $kraId = (int) $this->input->post('kra_id');
+        if ($title === '') {
+            $this->session->set_flashdata('danger', 'KRA title is required.');
+            redirect('Ipcrf/manage_template');
+        }
+        if ($kraId > 0) {
+            $this->Ipcrf_model->update_template_kra($kraId, $title);
+            $this->session->set_flashdata('success', 'KRA updated.');
+        } else {
+            $this->Ipcrf_model->add_template_kra($template['id'], $title);
+            $this->session->set_flashdata('success', 'KRA added.');
+        }
+        redirect('Ipcrf/manage_template');
+    }
+
+    public function kra_delete()
+    {
+        $this->guard_template_manager();
+        $kraId = (int) $this->input->get('id');
+        if ($kraId > 0) {
+            $this->Ipcrf_model->delete_template_kra($kraId);
+            $this->session->set_flashdata('success', 'KRA and its objectives were removed.');
+        }
+        redirect('Ipcrf/manage_template');
+    }
+
+    public function objective_save()
+    {
+        $this->guard_template_manager();
+        $kraId = (int) $this->input->post('kra_id');
+        $objectiveId = (int) $this->input->post('objective_id');
+        if ($kraId <= 0 && $objectiveId <= 0) {
+            redirect('Ipcrf/manage_template');
+        }
+        if (trim((string) $this->input->post('objective')) === '') {
+            $this->session->set_flashdata('danger', 'Objective description is required.');
+            redirect('Ipcrf/manage_template');
+        }
+        $this->Ipcrf_model->save_template_objective($kraId, $objectiveId, array(
+            'code' => $this->input->post('code'),
+            'objective' => $this->input->post('objective'),
+            'timeline' => $this->input->post('timeline'),
+            'weight' => $this->input->post('weight'),
+            'quality' => $this->input->post('quality'),
+            'efficiency' => $this->input->post('efficiency'),
+            'timeliness' => $this->input->post('timeliness')
+        ));
+        $this->session->set_flashdata('success', $objectiveId > 0 ? 'Objective updated.' : 'Objective added.');
+        redirect('Ipcrf/manage_template');
+    }
+
+    public function objective_delete()
+    {
+        $this->guard_template_manager();
+        $objectiveId = (int) $this->input->get('id');
+        if ($objectiveId > 0) {
+            $this->Ipcrf_model->delete_template_objective($objectiveId);
+            $this->session->set_flashdata('success', 'Objective removed.');
+        }
+        redirect('Ipcrf/manage_template');
+    }
+
+    public function competency_save()
+    {
+        $this->guard_template_manager();
+        $template = $this->active_template_or_redirect();
+        $competencyId = (int) $this->input->post('competency_id');
+        if (trim((string) $this->input->post('name')) === '') {
+            $this->session->set_flashdata('danger', 'Competency name is required.');
+            redirect('Ipcrf/manage_template');
+        }
+        $this->Ipcrf_model->save_template_competency($template['id'], $competencyId, array(
+            'category' => $this->input->post('category'),
+            'name' => $this->input->post('name'),
+            'indicators' => $this->input->post('indicators')
+        ));
+        $this->session->set_flashdata('success', $competencyId > 0 ? 'Competency updated.' : 'Competency added.');
+        redirect('Ipcrf/manage_template');
+    }
+
+    public function competency_delete()
+    {
+        $this->guard_template_manager();
+        $competencyId = (int) $this->input->get('id');
+        if ($competencyId > 0) {
+            $this->Ipcrf_model->delete_template_competency($competencyId);
+            $this->session->set_flashdata('success', 'Competency removed.');
+        }
+        redirect('Ipcrf/manage_template');
+    }
 }

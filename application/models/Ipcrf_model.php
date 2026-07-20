@@ -1152,4 +1152,312 @@ class Ipcrf_model extends CI_Model
     {
         return $this->db->where('id', (int) $objectiveId)->where('form_id', (int) $formId)->where('is_deleted', 0)->count_all_results('ipcrf_objectives') > 0;
     }
+
+    /* ==========================================================================
+     * IPCR Template management (used by the SGOD Chief "Manage IPCR" workspace).
+     * The active template is the master preset every member's IPCRF copies from.
+     * ======================================================================== */
+
+    public function get_active_template()
+    {
+        $template = $this->db->where('is_active', 1)->order_by('year', 'DESC')->get('ipcrf_templates', 1)->row_array();
+        if (!$template) {
+            $template = $this->get_default_template();
+        }
+        return $template;
+    }
+
+    // Full nested template: template -> kras[ objectives[] ] + competencies[] (grouped-ready).
+    public function get_template_bundle($templateId)
+    {
+        $templateId = (int) $templateId;
+        $template = $this->db->where('id', $templateId)->get('ipcrf_templates', 1)->row_array();
+        if (!$template) {
+            return NULL;
+        }
+
+        $kras = $this->db->where('template_id', $templateId)->order_by('sort_order')->get('ipcrf_template_kras')->result_array();
+        $totalWeight = 0;
+        foreach ($kras as $index => $kra) {
+            $objectives = $this->db->where('template_kra_id', (int) $kra['id'])->order_by('sort_order')->get('ipcrf_template_objectives')->result_array();
+            foreach ($objectives as &$objective) {
+                $objective['quality'] = $this->decode_json($objective['quality_json']);
+                $objective['efficiency'] = $this->decode_json($objective['efficiency_json']);
+                $objective['timeliness'] = $this->decode_json($objective['timeliness_json']);
+                $totalWeight += (float) $objective['weight'];
+            }
+            unset($objective);
+            $kras[$index]['objectives'] = $objectives;
+        }
+
+        $competencies = $this->db->where('template_id', $templateId)->order_by('sort_order')->get('ipcrf_template_competencies')->result_array();
+        foreach ($competencies as &$competency) {
+            $competency['indicators'] = $this->decode_json($competency['indicators_json']);
+        }
+        unset($competency);
+
+        return array(
+            'template' => $template,
+            'kras' => $kras,
+            'competencies' => $competencies,
+            'total_weight' => $totalWeight
+        );
+    }
+
+    public function update_template_meta($templateId, $data)
+    {
+        $update = array(
+            'name' => trim((string) ($data['name'] ?? '')),
+            'year' => (int) ($data['year'] ?? date('Y')),
+            'description' => trim((string) ($data['description'] ?? '')),
+            'updated_at' => date('Y-m-d H:i:s')
+        );
+        return $this->db->where('id', (int) $templateId)->update('ipcrf_templates', $update);
+    }
+
+    private function next_sort_order($table, $column, $parentId)
+    {
+        $row = $this->db->select_max('sort_order', 'mx')->where($column, (int) $parentId)->get($table)->row_array();
+        return ((int) ($row['mx'] ?? 0)) + 1;
+    }
+
+    // ---- KRA ----
+    public function add_template_kra($templateId, $title)
+    {
+        $this->db->insert('ipcrf_template_kras', array(
+            'template_id' => (int) $templateId,
+            'title' => trim((string) $title),
+            'sort_order' => $this->next_sort_order('ipcrf_template_kras', 'template_id', $templateId)
+        ));
+        $this->touch_template($templateId);
+        return (int) $this->db->insert_id();
+    }
+
+    public function update_template_kra($kraId, $title)
+    {
+        return $this->db->where('id', (int) $kraId)->update('ipcrf_template_kras', array('title' => trim((string) $title)));
+    }
+
+    public function delete_template_kra($kraId)
+    {
+        $kraId = (int) $kraId;
+        $this->db->where('template_kra_id', $kraId)->delete('ipcrf_template_objectives');
+        return $this->db->where('id', $kraId)->delete('ipcrf_template_kras');
+    }
+
+    public function template_kra($kraId)
+    {
+        return $this->db->where('id', (int) $kraId)->get('ipcrf_template_kras', 1)->row_array();
+    }
+
+    // ---- Objective ----
+    // $scale keys expected: quality, efficiency, timeliness -> each an array('5'=>..,'1'=>..)
+    public function save_template_objective($kraId, $objectiveId, $data)
+    {
+        $payload = array(
+            'code' => trim((string) ($data['code'] ?? '')),
+            'objective' => trim((string) ($data['objective'] ?? '')),
+            'timeline' => trim((string) ($data['timeline'] ?? '')),
+            'weight' => (float) ($data['weight'] ?? 0),
+            'quality_json' => json_encode($this->normalize_scale($data['quality'] ?? array())),
+            'efficiency_json' => json_encode($this->normalize_scale($data['efficiency'] ?? array())),
+            'timeliness_json' => json_encode($this->normalize_scale($data['timeliness'] ?? array()))
+        );
+
+        if ((int) $objectiveId > 0) {
+            $this->db->where('id', (int) $objectiveId)->update('ipcrf_template_objectives', $payload);
+            return (int) $objectiveId;
+        }
+
+        $payload['template_kra_id'] = (int) $kraId;
+        $payload['sort_order'] = $this->next_sort_order('ipcrf_template_objectives', 'template_kra_id', $kraId);
+        $this->db->insert('ipcrf_template_objectives', $payload);
+        return (int) $this->db->insert_id();
+    }
+
+    public function delete_template_objective($objectiveId)
+    {
+        return $this->db->where('id', (int) $objectiveId)->delete('ipcrf_template_objectives');
+    }
+
+    public function template_objective($objectiveId)
+    {
+        $objective = $this->db->where('id', (int) $objectiveId)->get('ipcrf_template_objectives', 1)->row_array();
+        if ($objective) {
+            $objective['quality'] = $this->decode_json($objective['quality_json']);
+            $objective['efficiency'] = $this->decode_json($objective['efficiency_json']);
+            $objective['timeliness'] = $this->decode_json($objective['timeliness_json']);
+        }
+        return $objective;
+    }
+
+    // ---- Competency ----
+    public function save_template_competency($templateId, $competencyId, $data)
+    {
+        $payload = array(
+            'category' => trim((string) ($data['category'] ?? '')),
+            'name' => trim((string) ($data['name'] ?? '')),
+            'indicators_json' => json_encode($this->normalize_indicators($data['indicators'] ?? array()))
+        );
+
+        if ((int) $competencyId > 0) {
+            $this->db->where('id', (int) $competencyId)->update('ipcrf_template_competencies', $payload);
+            return (int) $competencyId;
+        }
+
+        $payload['template_id'] = (int) $templateId;
+        $payload['sort_order'] = $this->next_sort_order('ipcrf_template_competencies', 'template_id', $templateId);
+        $this->db->insert('ipcrf_template_competencies', $payload);
+        return (int) $this->db->insert_id();
+    }
+
+    public function delete_template_competency($competencyId)
+    {
+        return $this->db->where('id', (int) $competencyId)->delete('ipcrf_template_competencies');
+    }
+
+    public function template_competency($competencyId)
+    {
+        $competency = $this->db->where('id', (int) $competencyId)->get('ipcrf_template_competencies', 1)->row_array();
+        if ($competency) {
+            $competency['indicators'] = $this->decode_json($competency['indicators_json']);
+        }
+        return $competency;
+    }
+
+    private function touch_template($templateId)
+    {
+        $this->db->where('id', (int) $templateId)->update('ipcrf_templates', array('updated_at' => date('Y-m-d H:i:s')));
+    }
+
+    // Force a 5..1 keyed scale from posted values, trimming blanks to empty strings.
+    private function normalize_scale($scale)
+    {
+        $scale = is_array($scale) ? $scale : array();
+        $out = array();
+        foreach (array('5', '4', '3', '2', '1') as $level) {
+            $out[$level] = trim((string) ($scale[$level] ?? ''));
+        }
+        return $out;
+    }
+
+    // Keep up to 5 non-null behavioral indicator strings (blanks dropped).
+    private function normalize_indicators($indicators)
+    {
+        $indicators = is_array($indicators) ? $indicators : array();
+        $out = array();
+        foreach ($indicators as $indicator) {
+            $indicator = trim((string) $indicator);
+            if ($indicator !== '') {
+                $out[] = $indicator;
+            }
+        }
+        return $out;
+    }
+
+    /* ==========================================================================
+     * KRA tagging — the SGOD Chief assigns members to specific KRAs. Each tagged
+     * member then sees those KRAs (with their objectives) on their own side.
+     * ======================================================================== */
+
+    private function ensure_assignments_table()
+    {
+        $this->db->query(
+            "CREATE TABLE IF NOT EXISTS ipcrf_kra_assignments (
+                id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                template_kra_id INT UNSIGNED NOT NULL,
+                member_username VARCHAR(45) NOT NULL,
+                assigned_by VARCHAR(45) NOT NULL DEFAULT '',
+                sort_order INT NOT NULL DEFAULT 0,
+                created_at DATETIME NOT NULL,
+                PRIMARY KEY (id),
+                UNIQUE KEY uq_kra_member (template_kra_id, member_username),
+                KEY idx_member (member_username)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        );
+    }
+
+    // Members the Chief can tag, drawn from the same department (secGroup).
+    public function get_taggable_members($secGroup)
+    {
+        $this->db->select('username, fName, lName, section');
+        $this->db->from('one_sgod_users');
+        $this->db->where('secGroup', $secGroup);
+        $this->db->where_not_in('section', array('System Administrator', 'Super Admin'));
+        $this->db->order_by('section', 'ASC');
+        $this->db->order_by('lName', 'ASC');
+        return $this->db->get()->result_array();
+    }
+
+    // template_kra_id => array of member usernames currently tagged.
+    public function get_kra_member_map()
+    {
+        $this->ensure_assignments_table();
+        $rows = $this->db->select('template_kra_id, member_username')->get('ipcrf_kra_assignments')->result_array();
+        $map = array();
+        foreach ($rows as $row) {
+            $map[(int) $row['template_kra_id']][] = $row['member_username'];
+        }
+        return $map;
+    }
+
+    // Replace the tagged members for one KRA. sort_order keeps each member's list ordered.
+    public function set_kra_members($kraId, $usernames, $assignedBy)
+    {
+        $this->ensure_assignments_table();
+        $kraId = (int) $kraId;
+        $usernames = is_array($usernames) ? array_values(array_unique(array_filter(array_map('trim', $usernames), 'strlen'))) : array();
+
+        // Remove assignments no longer selected.
+        if (empty($usernames)) {
+            $this->db->where('template_kra_id', $kraId)->delete('ipcrf_kra_assignments');
+            return;
+        }
+        $this->db->where('template_kra_id', $kraId)->where_not_in('member_username', $usernames)->delete('ipcrf_kra_assignments');
+
+        foreach ($usernames as $username) {
+            $exists = $this->db->where('template_kra_id', $kraId)->where('member_username', $username)->count_all_results('ipcrf_kra_assignments') > 0;
+            if ($exists) {
+                continue;
+            }
+            // Next position within this member's personal KRA list.
+            $order = $this->db->select_max('sort_order', 'mx')->where('member_username', $username)->get('ipcrf_kra_assignments')->row_array();
+            $this->db->insert('ipcrf_kra_assignments', array(
+                'template_kra_id' => $kraId,
+                'member_username' => $username,
+                'assigned_by' => (string) $assignedBy,
+                'sort_order' => ((int) ($order['mx'] ?? 0)) + 1,
+                'created_at' => date('Y-m-d H:i:s')
+            ));
+        }
+    }
+
+    // The KRAs (with objectives) assigned to one member, in personal order.
+    public function get_member_kras($username)
+    {
+        $this->ensure_assignments_table();
+        $username = trim((string) $username);
+        if ($username === '') {
+            return array();
+        }
+
+        $this->db->select('a.id AS assignment_id, a.sort_order, k.id AS kra_id, k.title');
+        $this->db->from('ipcrf_kra_assignments a');
+        $this->db->join('ipcrf_template_kras k', 'k.id = a.template_kra_id', 'inner');
+        $this->db->where('a.member_username', $username);
+        $this->db->order_by('a.sort_order', 'ASC');
+        $kras = $this->db->get()->result_array();
+
+        foreach ($kras as $index => $kra) {
+            $objectives = $this->db->where('template_kra_id', (int) $kra['kra_id'])->order_by('sort_order')->get('ipcrf_template_objectives')->result_array();
+            foreach ($objectives as &$objective) {
+                $objective['quality'] = $this->decode_json($objective['quality_json']);
+                $objective['efficiency'] = $this->decode_json($objective['efficiency_json']);
+                $objective['timeliness'] = $this->decode_json($objective['timeliness_json']);
+            }
+            unset($objective);
+            $kras[$index]['objectives'] = $objectives;
+        }
+        return $kras;
+    }
 }
