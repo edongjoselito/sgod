@@ -2514,24 +2514,30 @@ function usersList(){
 	$this->db->where_not_in('section', ['System Administrator', 'Super Admin']);
 	$result['data']=$this->db->get('one_sgod_users')->result();
 	$result['data1']=$this->SGODModel->get_all_by_row('secGroup','one_sgod_sections', $param);
-    $this->load->view('users',$result); 
+	$result['positions']=$this->SGODModel->get_positions();
+    $this->load->view('users',$result);
 	
 	if($this->input->post('submit'))
 	{
-	$param=$this->session->userdata('secGroup');	
+	$param=$this->session->userdata('secGroup');
 	$username=$this->input->post('email');
 	$password=sha1($this->input->post('password'));
 	$fName=$this->input->post('fName');
 	$lName=$this->input->post('lName');
 	$email=$this->input->post('email');
 	$section=$this->input->post('section');
+	$secPosition=$this->db->escape_str((string) $this->input->post('secPosition'));
 
-	if(!$this->is_valid_section_for_current_user($section)){
-		$this->session->set_flashdata('danger', 'You can only add users to sections under your department.');
-		redirect('Page/usersList');
+	// Section is optional for a System Administrator; only validate when a section is chosen.
+	$isSystemAdmin = ($this->session->userdata('section') === 'System Administrator');
+	if(!($isSystemAdmin && trim((string) $section) === '')){
+		if(!$this->is_valid_section_for_current_user($section)){
+			$this->session->set_flashdata('danger', 'You can only add users to sections under your department.');
+			redirect('Page/usersList');
+		}
 	}
- 
-	$que=$this->db->query("insert into one_sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup) values('$username','$password','$fName','$lName','avatar.png','$email','Active','$section','$param')");
+
+	$que=$this->db->query("insert into one_sgod_users(username, password, fName, lName, avatar, email, acctStat, section, secGroup, secPosition) values('$username','$password','$fName','$lName','avatar.png','$email','Active','$section','$param','$secPosition')");
 	$this->session->set_flashdata('msg', '<div class="alert alert-success text-center"><b>New account has been created successfully.</b></div>');
 	redirect('Page/usersList');
 	}			
@@ -2594,9 +2600,12 @@ function usersList(){
 	$password=sha1($this->input->post('password'));
 	$fName=$this->input->post('fName');
 	$mName=$this->input->post('mName');
+	$mName=$this->input->post('mName');
 	$lName=$this->input->post('lName');
 	$email=$this->input->post('IDNumber'); // Use IDNumber as email/username
+	$email=$this->input->post('IDNumber'); // Use IDNumber as email/username
 	$section=$this->input->post('section');
+	$secPosition=$this->db->escape_str((string) $this->input->post('secPosition'));
 
 	if(!$this->is_valid_section_for_current_user($section)){
 		$this->session->set_flashdata('danger', 'You can only add users to your section.');
@@ -2608,6 +2617,57 @@ function usersList(){
 	redirect('Page/usersListv2');
 	}			
 
+  }
+
+  function positions(){
+	if(!$this->session->userdata('secGroup')){
+		redirect('Login');
+	}
+
+	if($this->input->post('submit')){
+		$positionName = trim((string) $this->input->post('positionName'));
+		if($positionName === ''){
+			$this->session->set_flashdata('danger', 'Position name is required.');
+		}elseif($this->SGODModel->insert_position()){
+			$this->session->set_flashdata('success', 'Position added successfully!');
+		}else{
+			$this->session->set_flashdata('danger', 'Unable to save the position right now. Please try again.');
+		}
+		redirect('Page/positions');
+	}
+
+	$result['data']=$this->SGODModel->get_positions();
+	$this->load->view('positions',$result);
+  }
+
+  function update_position(){
+	if(!$this->session->userdata('secGroup')){
+		redirect('Login');
+	}
+
+	if($this->input->post('submit')){
+		$positionName = trim((string) $this->input->post('positionName'));
+		if($positionName === ''){
+			$this->session->set_flashdata('danger', 'Position name is required.');
+		}elseif($this->SGODModel->update_position()){
+			$this->session->set_flashdata('success', 'Position updated successfully!');
+		}else{
+			$this->session->set_flashdata('danger', 'Unable to update the position right now. Please try again.');
+		}
+	}
+	redirect('Page/positions');
+  }
+
+  function delete_position(){
+	if(!$this->session->userdata('secGroup')){
+		redirect('Login');
+	}
+
+	$id = $this->input->get('id');
+	$this->db->where('id', $id);
+	$this->db->delete('sgod_positions');
+	$this->session->set_flashdata('success', 'Position deleted successfully!');
+	redirect('Page/positions');
   }
 
   public function delete_account(){
@@ -2635,12 +2695,14 @@ public function update_user(){
 	$email = $this->input->post('email');
 	$section = $this->input->post('section');
 	$password = $this->input->post('password');
+	$secPosition = trim((string) $this->input->post('secPosition'));
 
 	$data = array(
 		'fName' => $fName,
 		'lName' => $lName,
 		'email' => $email,
-		'section' => $section
+		'section' => $section,
+		'secPosition' => $secPosition
 	);
 
 	// Update password only if provided

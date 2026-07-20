@@ -1467,8 +1467,29 @@ class SGODModel extends CI_Model
 		return $updateResult;
 	}
 
-	
+	// Positions area
 
+	public function get_positions(){
+		$this->db->order_by('positionName', 'ASC');
+		return $this->db->get('sgod_positions')->result();
+	}
+
+	public function insert_position(){
+		$data = array(
+			'positionName' => trim((string) $this->input->post('positionName'))
+		);
+
+		return $this->db->insert('sgod_positions', $data);
+	}
+
+	public function update_position(){
+		$data = array(
+			'positionName' => trim((string) $this->input->post('positionName'))
+		);
+
+		$this->db->where('id', $this->input->post('id'));
+		return $this->db->update('sgod_positions', $data);
+	}
 
 
 }

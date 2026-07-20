@@ -136,6 +136,13 @@
                     </li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Page/positions" class="waves-effect">
+                            <i class="mdi mdi-briefcase-outline"></i>
+                            <span> Position </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="usersList" class="waves-effect">
                             <i class="mdi mdi-account-multiple-outline"></i>
                             <span> Manage Users </span>
@@ -245,6 +252,13 @@
 
 
                     <li>
+                        <a href="<?= base_url(); ?>Page/positions" class="waves-effect">
+                            <i class="mdi mdi-briefcase-outline"></i>
+                            <span> Position </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="usersList" class="waves-effect">
                             <i class="mdi mdi-account-multiple-outline"></i>
                             <span> Manage Users </span>
@@ -300,6 +314,13 @@
                         <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/positions" class="waves-effect">
+                            <i class="mdi mdi-briefcase-outline"></i>
+                            <span> Position </span>
                         </a>
                     </li>
 

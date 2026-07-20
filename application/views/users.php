@@ -22,6 +22,12 @@ if (!empty($data)) {
 $managedSections = is_array($data1) ? count($data1) : 0;
 $coveredSections = count($coveredSectionsMap);
 
+$positionsList = (isset($positions) && is_array($positions)) ? $positions : array();
+$positionNameSet = array();
+foreach ($positionsList as $positionOption) {
+    $positionNameSet[(string) $positionOption->positionName] = true;
+}
+
 $metrics = array(
     array(
         'value' => $totalUsers,
@@ -80,6 +86,7 @@ $metrics = array(
         <link href="<?= base_url(); ?>assets/libs/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="<?= base_url(); ?>assets/libs/select2/select2.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/libs/select2/select2.min.css" rel="stylesheet" type="text/css" />
 
         <style>
@@ -603,6 +610,50 @@ $metrics = array(
                 color: #ffffff;
             }
 
+            /* Select2 look to match modern inputs */
+            .select2-container { width: 100% !important; }
+
+            .select2-container .select2-selection--single {
+                height: 48px;
+                border-radius: 14px;
+                border: 1px solid rgba(60, 64, 198, 0.14);
+                display: flex;
+                align-items: center;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 46px;
+                padding-left: 14px;
+                color: var(--users-ink);
+                font-weight: 600;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__arrow { height: 46px; }
+
+            .select2-container--default.select2-container--focus .select2-selection--single,
+            .select2-container--default.select2-container--open .select2-selection--single {
+                border-color: var(--users-blue);
+                box-shadow: 0 0 0 0.18rem rgba(60, 64, 198, 0.14);
+            }
+
+            .select2-dropdown {
+                border-radius: 14px;
+                border: 1px solid rgba(60, 64, 198, 0.14);
+                overflow: hidden;
+                box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+                z-index: 1060;
+            }
+
+            .select2-container--default .select2-results__option--highlighted[aria-selected] {
+                background: var(--users-blue);
+            }
+
+            .select2-container--default .select2-search--dropdown .select2-search__field {
+                border-radius: 10px;
+                border: 1px solid rgba(60, 64, 198, 0.18);
+                padding: 8px 10px;
+            }
+
             @keyframes fade-up {
                 from {
                     opacity: 0;
@@ -766,6 +817,7 @@ $metrics = array(
                                                         <th>Name</th>
                                                         <th>Username</th>
                                                         <th>Section</th>
+                                                        <th>Position</th>
                                                         <th>Status</th>
                                                         <th class="text-center">Manage</th>
                                                     </tr>
@@ -782,6 +834,8 @@ $metrics = array(
                                                             $email = !empty($row->email) ? (string) $row->email : $username;
                                                             $section = trim((string) $row->section) !== '' ? (string) $row->section : 'Unassigned';
                                                             $accountStatus = strtolower((string) $row->acctStat) === 'active' ? 'Active' : 'Inactive';
+                                                            $positionName = isset($row->secPosition) ? trim((string) $row->secPosition) : '';
+                                                            $positionDisplay = $positionName !== '' ? $positionName : 'Unassigned';
                                                             $statusClass = $accountStatus === 'Active' ? 'status-active' : 'status-inactive';
                                                             $toggleStatus = $accountStatus === 'Active' ? 'Inactive' : 'Active';
                                                             $toggleLabel = $accountStatus === 'Active' ? 'Deactivate user' : 'Activate user';
@@ -806,6 +860,12 @@ $metrics = array(
                                                                     <span class="section-chip">
                                                                         <i class="mdi mdi-office-building-outline"></i>
                                                                         <?= htmlspecialchars($section, ENT_QUOTES, 'UTF-8'); ?>
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <span class="section-chip">
+                                                                        <i class="mdi mdi-badge-account-horizontal-outline"></i>
+                                                                        <?= htmlspecialchars($positionDisplay, ENT_QUOTES, 'UTF-8'); ?>
                                                                     </span>
                                                                 </td>
                                                                 <td>
@@ -842,7 +902,7 @@ $metrics = array(
                                                         <?php endforeach; ?>
                                                     <?php else : ?>
                                                         <tr>
-                                                            <td colspan="5">
+                                                            <td colspan="6">
                                                                 <div class="empty-state">
                                                                     <i class="mdi mdi-account-search-outline"></i>
                                                                     <h5>No user accounts found</h5>
@@ -862,7 +922,7 @@ $metrics = array(
                 </div>
 
                 <div id="myModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                         <div class="modal-content">
                             <div class="modern-modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -899,22 +959,21 @@ $metrics = array(
                                                 <input type="text" name="mName" id="mName" class="form-control modern-input" readonly />
                                             </div>
                                         </div>
+
                                         <div class="form-group">
-                                            <label class="modern-label">Last Name</label>
-                                            <input type="text" name="lName" id="lName" class="form-control modern-input" required readonly />
+                                            <label class="modern-label">E-mail / Username</label>
+                                            <input type="text" name="email" class="form-control modern-input" />
+                                            <small class="input-note">This value is also used as the username for sign in.</small>
                                         </div>
-                                        <div class="form-group">
-                                            <label class="modern-label">E-mail/Username</label>
-                                            <input type="text" name="email" id="email" class="form-control modern-input" required readonly />
-                                            <small class="input-note">IDNumber is used as the username for sign in.</small>
-                                        </div>
+
                                         <div class="form-group">
                                             <label class="modern-label">Password</label>
-                                            <input type="password" name="password" class="form-control modern-input" required />
+                                            <input type="password" name="password" class="form-control modern-input" />
                                         </div>
+
                                         <div class="form-group mb-0">
                                             <label class="modern-label">Section</label>
-                                            <select class="form-control modern-input select2-section" name="section" id="sectionSelect">
+                                            <select class="form-control modern-input" name="section">
                                                 <option value=""></option>
                                                 <?php if (!empty($data1)) : ?>
                                                     <?php foreach ($data1 as $row) : ?>
@@ -948,7 +1007,7 @@ $metrics = array(
                         }
                         ?>
                         <div id="editModal<?= $index; ?>" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $index; ?>" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                                 <div class="modal-content">
                                     <div class="modern-modal-header">
                                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -980,23 +1039,46 @@ $metrics = array(
                                                     </div>
                                                 </div>
 
-                                                <div class="form-group">
-                                                    <label class="modern-label">Password</label>
-                                                    <input type="password" name="password" class="form-control modern-input" placeholder="Leave blank to keep the current password" />
-                                                    <small class="input-note">Leave this blank if you do not want to change the password here.</small>
+                                                <?php $rowSecPosition = isset($row->secPosition) ? (string) $row->secPosition : ''; ?>
+                                                <div class="form-row">
+                                                    <div class="form-group col-md-6">
+                                                        <label class="modern-label">Section</label>
+                                                        <select class="form-control modern-input" name="section">
+                                                            <?php if (!empty($data1)) : ?>
+                                                                <?php foreach ($data1 as $sec) : ?>
+                                                                    <option value="<?= htmlspecialchars($sec->sectionName, ENT_QUOTES, 'UTF-8'); ?>" <?= $sec->sectionName === $row->section ? 'selected' : ''; ?>>
+                                                                        <?= htmlspecialchars($sec->sectionName, ENT_QUOTES, 'UTF-8'); ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            <?php endif; ?>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-md-6">
+                                                        <label class="modern-label">Position</label>
+                                                        <select class="form-control modern-input js-position-select" name="secPosition" data-placeholder="Select a position">
+                                                            <option value=""></option>
+                                                            <?php foreach ($positionsList as $positionOption) : ?>
+                                                                <option value="<?= htmlspecialchars($positionOption->positionName, ENT_QUOTES, 'UTF-8'); ?>" <?= $positionOption->positionName === $rowSecPosition ? 'selected' : ''; ?>>
+                                                                    <?= htmlspecialchars($positionOption->positionName, ENT_QUOTES, 'UTF-8'); ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                            <?php if ($rowSecPosition !== '' && !array_key_exists($rowSecPosition, $positionNameSet)) : ?>
+                                                                <option value="<?= htmlspecialchars($rowSecPosition, ENT_QUOTES, 'UTF-8'); ?>" selected>
+                                                                    <?= htmlspecialchars($rowSecPosition, ENT_QUOTES, 'UTF-8'); ?>
+                                                                </option>
+                                                            <?php endif; ?>
+                                                        </select>
+                                                        <small class="input-note">
+                                                            Positions are managed under
+                                                            <a href="<?= base_url(); ?>Page/positions">Position</a>.
+                                                        </small>
+                                                    </div>
                                                 </div>
 
                                                 <div class="form-group mb-0">
-                                                    <label class="modern-label">Section</label>
-                                                    <select class="form-control modern-input" name="section">
-                                                        <?php if (!empty($data1)) : ?>
-                                                            <?php foreach ($data1 as $sec) : ?>
-                                                                <option value="<?= htmlspecialchars($sec->sectionName, ENT_QUOTES, 'UTF-8'); ?>" <?= $sec->sectionName === $row->section ? 'selected' : ''; ?>>
-                                                                    <?= htmlspecialchars($sec->sectionName, ENT_QUOTES, 'UTF-8'); ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        <?php endif; ?>
-                                                    </select>
+                                                    <label class="modern-label">Password</label>
+                                                    <input type="password" name="password" class="form-control modern-input" placeholder="Leave blank to keep the current password" />
+                                                    <small class="input-note">Leave this blank if you do not want to change the password here.</small>
                                                 </div>
                                             </div>
 
@@ -1013,7 +1095,7 @@ $metrics = array(
                         </div>
 
                         <div id="changePasswordModal<?= $index; ?>" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel<?= $index; ?>" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                                 <div class="modal-content">
                                     <div class="modern-modal-header">
                                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -1028,14 +1110,15 @@ $metrics = array(
                                                     <input type="text" class="form-control modern-input" value="<?= htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>" readonly />
                                                 </div>
 
-                                                <div class="form-group">
-                                                    <label class="modern-label">New Password</label>
-                                                    <input type="password" name="new_password" class="form-control modern-input" minlength="8" required />
-                                                </div>
-
-                                                <div class="form-group mb-0">
-                                                    <label class="modern-label">Confirm Password</label>
-                                                    <input type="password" name="confirm_password" class="form-control modern-input" minlength="8" required />
+                                                <div class="form-row">
+                                                    <div class="form-group col-md-6 mb-0">
+                                                        <label class="modern-label">New Password</label>
+                                                        <input type="password" name="new_password" class="form-control modern-input" minlength="8" required />
+                                                    </div>
+                                                    <div class="form-group col-md-6 mb-0">
+                                                        <label class="modern-label">Confirm Password</label>
+                                                        <input type="password" name="confirm_password" class="form-control modern-input" minlength="8" required />
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -1121,6 +1204,45 @@ $metrics = array(
                         $('#lName').val('');
                         $('#email').val('');
                     }
+                });
+
+<<<<<<< HEAD
+                $('.js-position-select').each(function () {
+                    var $select = $(this);
+                    $select.select2({
+                        placeholder: $select.data('placeholder') || 'Select a position',
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: $select.closest('.modal')
+                    });
+=======
+                $('#sectionSelect').select2({
+                    placeholder: '-- Select Section --',
+                    width: '100%',
+                    dropdownParent: $('#myModal')
+                });
+
+                $('#staffSelect').select2({
+                    placeholder: '-- Select Staff --',
+                    width: '100%',
+                    dropdownParent: $('#myModal')
+                });
+
+                $('#staffSelect').on('change', function() {
+                    const selectedOption = $(this).find('option:selected');
+
+                    if ($(this).val()) {
+                        $('#fName').val(selectedOption.data('fname') || '');
+                        $('#mName').val(selectedOption.data('mname') || '');
+                        $('#lName').val(selectedOption.data('lname') || '');
+                        $('#email').val(selectedOption.data('email') || '');
+                    } else {
+                        $('#fName').val('');
+                        $('#mName').val('');
+                        $('#lName').val('');
+                        $('#email').val('');
+                    }
+>>>>>>> d90f53e4bc54e1a6cb3ae582a18d8d166823d3e4
                 });
 
                 $(document).on('change', '.js-manage-select', function () {
