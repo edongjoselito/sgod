@@ -172,6 +172,7 @@ $taggedCount = count($taggedMembers);
                         <?php else : ?>
 
                         <div class="ipcr-hero">
+                            
                             <div class="ipcr-hero-body">
                                 <div class="row align-items-center">
                                     <div class="col-lg-8">

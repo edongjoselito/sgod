@@ -296,6 +296,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                         </div>
                         <div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal">Close History</button></div>
                     </div></div>
+                    
                 </div>
                 <?php else: ?>
                 <section class="ipcrf-panel ipcrf-personal-home">

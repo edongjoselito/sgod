@@ -19,6 +19,7 @@ if (!empty($data)) {
     }
 }
 
+
 $managedSections = is_array($data1) ? count($data1) : 0;
 $coveredSections = count($coveredSectionsMap);
 
