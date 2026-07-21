@@ -268,7 +268,9 @@
         var objectiveId = Number(objective.id || 0);
         var accCount = objectiveId > 0 && window.IPCRF_CONFIG && window.IPCRF_CONFIG.accCounts ? (window.IPCRF_CONFIG.accCounts[objectiveId] || 0) : 0;
         var accUrl = (window.IPCRF_CONFIG && window.IPCRF_CONFIG.urls && window.IPCRF_CONFIG.urls.accByObjectiveBase ? window.IPCRF_CONFIG.urls.accByObjectiveBase : '') + '/' + objectiveId;
-        html += '<a class="objective-accomplishment-link" href="' + escapeHtml(accUrl) + '" target="_blank" title="View ' + accCount + ' encoded accomplishment(s)"><i class="mdi mdi-clipboard-list-outline"></i><span class="badge badge-soft-primary">' + accCount + '</span></a>';
+        if (accCount > 0) {
+            html += '<a class="objective-accomplishment-link" href="' + escapeHtml(accUrl) + '" target="_blank" title="View ' + accCount + ' encoded accomplishment(s)"><i class="mdi mdi-clipboard-list-outline"></i><span class="badge badge-soft-primary">' + accCount + '</span></a>';
+        }
         if (isFull()) {
             html += '<div class="dropdown objective-more-menu"><button type="button" class="row-more-button js-row-menu-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="More objective options">•••</button><div class="dropdown-menu dropdown-menu-right"><button type="button" class="dropdown-item js-action" data-action="duplicate-objective" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Copy objective</button><button type="button" class="dropdown-item js-action" data-action="objective-up" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Move up</button><button type="button" class="dropdown-item js-action" data-action="objective-down" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Move down</button><div class="dropdown-divider"></div><button type="button" class="dropdown-item text-danger js-action" data-action="delete-objective" data-kra="' + kraIndex + '" data-objective="' + objectiveIndex + '">Delete objective</button></div></div>';
         }
