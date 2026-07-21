@@ -83,15 +83,6 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                     <span class="ipcrf-save-state is-saved" id="saveState" role="status" aria-live="polite"><i class="mdi mdi-check-circle-outline"></i><span>All changes saved</span></span>
                 </div>
 
-                <div class="incomplete-items-banner" id="incompleteItemsBanner" hidden>
-                    <span class="incomplete-items-banner-icon"><i class="mdi mdi-alert-outline"></i></span>
-                    <div class="incomplete-items-copy">
-                        <strong id="incompleteItemsHeadline">Some fields are still blank</strong>
-                        <span>Fields outlined in orange still need an entry. Open a section to see what is missing there.</span>
-                    </div>
-                    <div class="incomplete-section-buttons" id="incompleteSectionButtons"></div>
-                </div>
-
                 <?php if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED): ?>
                 <section class="return-remarks-notice" role="alert" aria-labelledby="returnRemarksTitle">
                     <span class="return-remarks-icon"><i class="mdi mdi-file-undo-outline"></i></span>
@@ -111,6 +102,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                         <section class="ipcrf-panel ipcrf-section ipcrf-document" id="employeeSection">
                             <div class="ipcrf-section-head">
                                 <div><h2>Employee Information</h2><p>Synced from the existing HRIS employee profile.</p></div>
+                                <span class="section-missing-slot"></span>
                                 <span class="badge badge-light"><?= htmlspecialchars($presetName, ENT_QUOTES, 'UTF-8'); ?> · Employee copy</span>
                             </div>
                             <div class="ipcrf-section-body">
@@ -144,6 +136,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                         <section class="ipcrf-panel ipcrf-section ipcrf-document" id="kraSection">
                             <div class="ipcrf-section-head">
                                 <div><h2>KRAs, Objectives and Performance Standards</h2><p>Each objective is shown in one row with standards, results, Q–E–T ratings and score.</p></div>
+                                <span class="section-missing-slot"></span>
                                 <button type="button" class="btn btn-sm btn-soft-primary" id="addKraBtn"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><i class="mdi mdi-plus mr-1"></i>Add New KRA</button>
                             </div>
                             <div class="ipcrf-section-body">
@@ -151,7 +144,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                                     <div class="guide-step"><span>1</span><div><strong>Create or edit a KRA</strong><small>Use Add New KRA, or click an existing KRA title to type.</small></div></div>
                                     <div class="guide-step"><span>2</span><div><strong>Add objectives</strong><small>Enter the objective, timeline and weight in a short dialog.</small></div></div>
                                     <div class="guide-step"><span>3</span><div><strong>Complete standards and results</strong><small>Click a Q, E or T standards cell; enter results directly in the row.</small></div></div>
-                                    <div class="guide-step"><span>4</span><div><strong>Review and submit</strong><small>Incomplete items trigger a warning; return to edit or submit anyway.</small></div></div>
+                                    <div class="guide-step"><span>4</span><div><strong>Review and submit</strong><small>A table you started shows a Missing badge; submitting reveals every remaining item.</small></div></div>
                                 </div>
                                 <div class="editing-legend">
                                     <span><b class="legend-edit">Click text</b> edits existing details like a document</span>
@@ -167,6 +160,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                         <section class="ipcrf-panel ipcrf-section ipcrf-document" id="competencySection">
                             <div class="ipcrf-section-head">
                                 <div><h2>Competency Management</h2><p>Preset competencies appear in document-style groups with one shared Rating column.</p></div>
+                                <span class="section-missing-slot"></span>
                                 <button type="button" class="btn btn-sm btn-soft-primary" id="addCompetencyBtn"<?= $edit_scope !== 'full' ? ' disabled' : ''; ?>><i class="mdi mdi-plus mr-1"></i>Add Competency</button>
                             </div>
                             <div class="ipcrf-section-body">
@@ -179,6 +173,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                         <section class="ipcrf-panel ipcrf-section ipcrf-document" id="developmentSection">
                             <div class="ipcrf-section-head">
                                 <div><h2>Development Plan</h2><p>Connect strengths and improvement needs with actionable learning interventions.</p></div>
+                                <span class="section-missing-slot"></span>
                                 <button type="button" class="btn btn-sm btn-soft-primary" id="addPlanBtn"<?= !in_array($edit_scope, array('full', 'rater'), TRUE) ? ' disabled' : ''; ?>><i class="mdi mdi-plus mr-1"></i>Add Development Entry</button>
                             </div>
                             <div class="ipcrf-section-body table-responsive">
@@ -283,7 +278,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                     <div class="modal-dialog modal-lg modal-dialog-centered" role="document"><div class="modal-content ipcrf-editor-modal">
                         <div class="modal-header"><div><span class="modal-kicker">Help and Legend</span><h5 class="modal-title" id="editorGuideTitle">How to Complete the IPCRF</h5></div><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
                         <div class="modal-body guide-modal-body">
-                            <ol><li><strong>Employee Information:</strong> confirm the compact HRIS information, assigned rater and review period.</li><li><strong>KRAs:</strong> use Add New KRA when needed, then click an existing KRA title to revise it.</li><li><strong>Objectives and Results:</strong> add an objective inside the correct KRA. Existing code, objective, timeline, weight and actual result edit directly like document text.</li><li><strong>Standards:</strong> click Quality, Efficiency or Timeliness in an objective row to view or edit all five levels.</li><li><strong>Ratings:</strong> the owner proposes Q, E and T ratings in Draft. The assigned rater reviews them after submission.</li><li><strong>Competencies:</strong> click names or indicators to edit, choose the single Rating, and add another competency only when needed.</li><li><strong>Development Plan:</strong> Add Development Entry opens a guided dialog. Both the employee and assigned rater can add or edit plan entries.</li><li><strong>Missing Items:</strong> individual fields outlined in orange show exactly what is still blank. The outline clears once the field is filled in.</li><li><strong>Return Paper:</strong> the assigned rater must explain the required corrections. A returned employee sees those remarks above the unlocked, editable form.</li><li><strong>Complete Rater Review:</strong> incomplete items produce a warning but still allow the rater to complete the review.</li></ol>
+                            <ol><li><strong>Employee Information:</strong> confirm the compact HRIS information, assigned rater and review period.</li><li><strong>KRAs:</strong> use Add New KRA when needed, then click an existing KRA title to revise it.</li><li><strong>Objectives and Results:</strong> add an objective inside the correct KRA. Existing code, objective, timeline, weight and actual result edit directly like document text.</li><li><strong>Standards:</strong> click Quality, Efficiency or Timeliness in an objective row to view or edit all five levels.</li><li><strong>Ratings:</strong> the owner proposes Q, E and T ratings in Draft. The assigned rater reviews them after submission.</li><li><strong>Competencies:</strong> click names or indicators to edit, choose the single Rating, and add another competency only when needed.</li><li><strong>Development Plan:</strong> Add Development Entry opens a guided dialog. Both the employee and assigned rater can add or edit plan entries.</li><li><strong>Missing Items:</strong> a <em>Missing</em> badge appears on the header of any table you have started but not finished — that KRA, that competency group, or the Development Plan. Tables you have not touched stay quiet until you submit, which reveals everything still outstanding. Click a badge to list what is blank there; the individual fields are outlined in orange until filled in.</li><li><strong>Return Paper:</strong> the assigned rater must explain the required corrections. A returned employee sees those remarks above the unlocked, editable form.</li><li><strong>Complete Rater Review:</strong> incomplete items produce a warning but still allow the rater to complete the review.</li></ol>
                             <div class="guide-note"><strong>Editing states:</strong> Draft and Returned records are editable by the employee. During rater review, ratings and the Development Plan are editable by the assigned rater. Validated and Locked records are read-only.</div>
                         </div>
                         <div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal">Got it</button></div>

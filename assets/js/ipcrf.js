@@ -308,6 +308,7 @@
                 html += '<span class="kra-tagged-badge" title="You were tagged into this KRA by the SGOD Chief."><i class="mdi mdi-tag-outline"></i>Tagged</span>';
             }
             html += '<span class="kra-meta">' + (kra.objectives || []).length + ' objective(s) · ' + weight.toFixed(2) + '%</span>';
+            html += '<span class="kra-missing-slot"></span>';
             html += '</span></span>';
             html += '<span class="icon-actions action-buttons">';
             if (isFull()) {
@@ -358,7 +359,7 @@
             });
             if (!rows.length) return;
             var groupTitle = category === 'Core Behavioral Competency' ? 'Core Behavioral Competencies' : (category === 'Core Skill' ? 'Core Skills' : (category === 'Leadership Competency' ? 'Leadership Competencies' : category));
-            html += '<details class="competency-group-card"><summary><span class="competency-group-label">Competency Group</span><strong>' + escapeHtml(groupTitle) + '</strong><span class="competency-group-count">' + rows.length + ' competency item(s)</span><span class="competency-group-actions">';
+            html += '<details class="competency-group-card" data-category="' + escapeAttr(category) + '"><summary><span class="competency-group-label">Competency Group</span><strong>' + escapeHtml(groupTitle) + '</strong><span class="competency-group-count">' + rows.length + ' competency item(s)</span><span class="competency-missing-slot"></span><span class="competency-group-actions">';
             if (isFull()) html += '<button type="button" class="action-text-btn add js-action" data-action="add-competency" data-category="' + escapeAttr(category) + '">+ Add Competency</button>';
             html += '<button type="button" class="action-text-btn details-toggle-button js-details-toggle" aria-expanded="false" aria-controls="competency-group-content-' + categoryIndex + '" title="Open this competency table"><i class="mdi mdi-chevron-down"></i><span class="js-details-toggle-label">Open Table</span></button></span>';
             html += '</summary><div class="competency-group-content" id="competency-group-content-' + categoryIndex + '"><div class="competency-content-guide"><span><strong>Click text to edit.</strong> Enter one behavioral indicator per line and choose one Rating.</span></div><div class="competency-table-scroll"><div class="competency-table-grid"><div class="competency-table-header"><span>Competency</span><span>Behavioral Indicators</span><span>Rating</span></div>';
@@ -414,36 +415,82 @@
         return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) && start <= end;
     }
 
+    function visibleWarningGroups() {
+        return reviewWarningGroups || [];
+    }
+
+    function findWarningGroup(key) {
+        var match = null;
+        (reviewWarningGroups || []).forEach(function (group) {
+            if (group.key === key) match = group;
+        });
+        return match;
+    }
+
+    function missingBadge(group) {
+        var count = group.items.length;
+        return '<button type="button" class="missing-badge js-missing-badge" data-key="' + escapeAttr(group.key) + '"'
+            + ' title="See what is still missing here">'
+            + '<i class="mdi mdi-alert-outline"></i>' + count + ' missing</button>';
+    }
+
+    // Each bucket is drawn on the table it belongs to: a KRA badge sits in that
+    // KRA's own header, a competency badge in that group's header, and the
+    // section-wide ones in the matching section head.
+    function renderMissingBadges(groups) {
+        $('.missing-badge').remove();
+        $('.section-missing-slot').empty();
+
+        groups.forEach(function (group) {
+            var badge = missingBadge(group);
+            if (group.scope === 'kra') {
+                $('#kra-' + group.ref).find('.kra-missing-slot').first().html(badge);
+            } else if (group.scope === 'competency') {
+                $('.competency-group-card').filter(function () {
+                    return String($(this).data('category')) === String(group.ref);
+                }).find('.competency-missing-slot').first().html(badge);
+            } else {
+                $('#' + group.section).find('.section-missing-slot').first().html(badge);
+            }
+        });
+    }
+
     function applyIncompleteHighlights() {
         $('.incomplete-item, .section-has-incomplete, .incomplete-focus-pulse')
             .removeClass('incomplete-item section-has-incomplete incomplete-focus-pulse');
 
-        var hasWarnings = (reviewWarnings || []).length > 0;
-        $('#incompleteItemsBanner').prop('hidden', !hasWarnings);
-        if (!hasWarnings) { return; }
+        var groups = visibleWarningGroups();
+        renderMissingBadges(groups);
+        if (!groups.length) { return; }
+
+        // Only outline fields belonging to a bucket that is currently shown, so an
+        // untouched KRA keeps its blank cells clean.
+        var showKra = {};
+        var showCompetency = {};
+        var showEmployee = false;
+        var showDevelopment = false;
+        groups.forEach(function (group) {
+            if (group.scope === 'kra') { showKra[String(group.ref)] = true; }
+            else if (group.scope === 'competency') { showCompetency[String(group.ref)] = true; }
+            else if (group.scope === 'employee') { showEmployee = true; }
+            else if (group.scope === 'development') { showDevelopment = true; }
+        });
 
         function mark($element) {
             if ($element && $element.length) { $element.addClass('incomplete-item'); }
         }
 
-        if (!hasValue(state.form.employee_id) || !hasValue(state.form.employee_name)) {
-            mark($('#employeeSection .employee-pdf-column').first().find('.employee-pdf-row').slice(0, 2));
-        }
-        if (!hasValue(state.form.rater_name)) { mark($('#raterAssignmentRow')); }
-        if (!hasValue(state.form.approving_authority_name)) { mark($('#authorityAssignmentRow')); }
-        if (!validPerformancePeriod()) { mark($('#periodAssignmentRow')); }
-
-        var objectiveCount = 0;
-        (state.kras || []).forEach(function (kra) {
-            objectiveCount += (kra.objectives || []).length;
-        });
-
-        if (!(state.kras || []).length) {
-            mark($('#kraContainer .kra-empty-objectives'));
-            $('#kraSection').addClass('section-has-incomplete');
+        if (showEmployee) {
+            if (!hasValue(state.form.employee_id) || !hasValue(state.form.employee_name)) {
+                mark($('#employeeSection .employee-pdf-column').first().find('.employee-pdf-row').slice(0, 2));
+            }
+            if (!hasValue(state.form.rater_name)) { mark($('#raterAssignmentRow')); }
+            if (!hasValue(state.form.approving_authority_name)) { mark($('#authorityAssignmentRow')); }
+            if (!validPerformancePeriod()) { mark($('#periodAssignmentRow')); }
         }
 
         (state.kras || []).forEach(function (kra, kraIndex) {
+            if (!showKra[String(kraIndex)]) { return; }
             var $kra = $('#kra-' + kraIndex);
             if (!hasValue(kra.title)) { mark($kra.children('summary')); }
             if (!(kra.objectives || []).length) { mark($kra); }
@@ -453,7 +500,7 @@
                 if (!hasValue(objective.objective)) { mark($cells.eq(1)); }
                 if (!hasValue(objective.timeline)) { mark($cells.eq(2)); }
                 // Only a blank weight is outlined. An off-target total is reported
-                // in the banner instead, so every weight cell is not lit up at once.
+                // in the KRA section badge instead of lighting up every weight cell.
                 if (Number(objective.weight || 0) <= 0) { mark($cells.eq(3)); }
                 if (standardCompletion(objective, 'quality') < 5) { mark($cells.eq(4)); }
                 if (standardCompletion(objective, 'efficiency') < 5) { mark($cells.eq(5)); }
@@ -465,16 +512,11 @@
                     if (Number(objective.timeliness_rating || 0) < 1) { mark($cells.eq(10)); }
                 }
             });
-
         });
-        if (objectiveCount === 0) { $('#kraSection').addClass('section-has-incomplete'); }
 
-        if (!(state.competencies || []).length) {
-            mark($('#competencyContainer'));
-            $('#competencySection').addClass('section-has-incomplete');
-        }
         $('.competency-group-card').each(function () {
             var $group = $(this);
+            if (!showCompetency[String($group.data('category'))]) { return; }
             $group.find('.competency-table-row').each(function () {
                 var $row = $(this);
                 var competency = state.competencies[Number($row.data('competency'))] || {};
@@ -485,16 +527,17 @@
             });
         });
 
-        if (!(state.development || []).length) {
-            mark($('#developmentContainer td').first());
-            $('#developmentSection').addClass('section-has-incomplete');
-        } else {
-            (state.development || []).forEach(function (plan, planIndex) {
-                var $cells = $('#developmentContainer tr').eq(planIndex).children('td');
-                ['strengths', 'improvement_needs', 'learning_objectives', 'interventions', 'target_timeline', 'responsible_person'].forEach(function (field, fieldIndex) {
-                    if (!hasValue(plan[field])) { mark($cells.eq(fieldIndex)); }
+        if (showDevelopment) {
+            if (!(state.development || []).length) {
+                mark($('#developmentContainer td').first());
+            } else {
+                (state.development || []).forEach(function (plan, planIndex) {
+                    var $cells = $('#developmentContainer tr').eq(planIndex).children('td');
+                    ['strengths', 'improvement_needs', 'learning_objectives', 'interventions', 'target_timeline', 'responsible_person'].forEach(function (field, fieldIndex) {
+                        if (!hasValue(plan[field])) { mark($cells.eq(fieldIndex)); }
+                    });
                 });
-            });
+            }
         }
 
         $('.ipcrf-section').each(function () {
@@ -503,14 +546,22 @@
         });
     }
 
-    // Scoped to one section when a section key is given, otherwise the whole form.
-    function focusFirstIncomplete(sectionKey) {
-        var group = sectionKey ? findWarningGroup(sectionKey) : null;
-        var $scope = group ? $('#' + group.section) : $(document);
+    // Scoped to one bucket when a key is given, otherwise the first thing outstanding.
+    function focusFirstIncomplete(key) {
+        var group = key ? findWarningGroup(key) : null;
+        var $scope = $(document);
+        if (group && group.scope === 'kra') {
+            $scope = $('#kra-' + group.ref);
+        } else if (group && group.scope === 'competency') {
+            $scope = $('.competency-group-card').filter(function () {
+                return String($(this).data('category')) === String(group.ref);
+            });
+        } else if (group) {
+            $scope = $('#' + group.section);
+        }
         var $first = $scope.find('.incomplete-item').first();
-        if (!$first.length) { $first = $scope.find('.section-has-incomplete').first(); }
-        if (!$first.length && group) { $first = $('#' + group.section); }
-        if (!$first.length) { $first = $('.incomplete-item, .section-has-incomplete').first(); }
+        if (!$first.length && $scope.length) { $first = $scope.first(); }
+        if (!$first.length) { $first = $('.incomplete-item').first(); }
         if (!$first.length) { return; }
         var $details = $first.closest('details');
         if ($details.length) {
@@ -522,48 +573,42 @@
         setTimeout(function () { $first.removeClass('incomplete-focus-pulse'); }, 2400);
     }
 
-    function findWarningGroup(sectionKey) {
-        var match = null;
-        (reviewWarningGroups || []).forEach(function (group) {
-            if (group.key === sectionKey) match = group;
-        });
-        return match;
-    }
-
     function renderMissingItems() {
-        var count = (reviewWarnings || []).length;
-        var groups = reviewWarningGroups || [];
+        var groups = visibleWarningGroups();
+        var count = 0;
+        groups.forEach(function (group) { count += group.items.length; });
         $('#missingItemsCount').text(count);
         $('#missingItemsBtn').prop('hidden', count === 0).toggle(count > 0);
-
-        $('#incompleteItemsHeadline').text(groups.length > 1
-            ? 'Some fields are still blank in ' + groups.length + ' sections'
-            : 'Some fields are still blank');
-        $('#incompleteSectionButtons').html(groups.map(function (group) {
-            return '<button type="button" class="incomplete-section-btn js-incomplete-section" data-section="' + escapeAttr(group.key) + '">'
-                + escapeHtml(group.label)
-                + '<span class="incomplete-section-count">' + group.items.length + '</span></button>';
-        }).join(''));
-
         applyIncompleteHighlights();
     }
 
-    function showMissingItems(sectionKey) {
-        if (!(reviewWarnings || []).length) {
-            renderMissingItems();
-            return;
+    function showMissingItems(key) {
+        var group = key ? findWarningGroup(key) : null;
+        var groups = group ? [group] : visibleWarningGroups();
+        if (!groups.length) { return; }
+
+        var html;
+        if (group) {
+            html = '<ul class="submission-warning-list">'
+                + group.items.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('')
+                + '</ul>';
+        } else {
+            html = '<ul class="submission-warning-list">' + groups.map(function (entry) {
+                return '<li><b>' + escapeHtml(entry.label) + '</b><ul>'
+                    + entry.items.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('')
+                    + '</ul></li>';
+            }).join('') + '</ul>';
         }
-        var group = sectionKey ? findWarningGroup(sectionKey) : null;
-        var warnings = group ? group.items : reviewWarnings;
-        var items = warnings.map(function (warning) { return '<li>' + escapeHtml(warning) + '</li>'; }).join('');
+
         Swal.fire({
             icon: 'warning',
-            title: group ? 'Missing in ' + group.label : 'Still missing',
-            html: '<p class="submission-warning-intro">' + (group ? 'Fill these in to finish this section.' : 'Fill these in to finish the form.') + ' Each one is outlined in orange in the form.</p><ul class="submission-warning-list">' + items + '</ul>',
+            title: group ? group.label : 'Still missing',
+            html: '<p class="submission-warning-intro">Fill these in to finish '
+                + (group ? 'this table' : 'the form') + '. Each one is outlined in orange.</p>' + html,
             confirmButtonText: 'Take me there',
             confirmButtonColor: '#b7791f'
         }).then(function (result) {
-            if (result.value) { focusFirstIncomplete(sectionKey); }
+            if (result.value) { focusFirstIncomplete(key); }
         });
     }
 
@@ -981,9 +1026,12 @@
         $('#missingItemsBtn').on('click', function () {
             saveDraft(false).then(function () { showMissingItems(); });
         });
-        $(document).on('click', '.js-incomplete-section', function () {
-            var sectionKey = $(this).data('section');
-            saveDraft(false).then(function () { showMissingItems(sectionKey); });
+        // A badge is bound to one table, so it opens only that table's list.
+        $(document).on('click', '.js-missing-badge', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var key = $(this).data('key');
+            saveDraft(false).then(function () { showMissingItems(key); });
         });
 
         $('#kraEditorForm').on('submit', function (event) {

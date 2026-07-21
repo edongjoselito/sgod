@@ -740,32 +740,23 @@ class Ipcrf extends CI_Controller
 
     private function review_warnings($bundle, $scope)
     {
-        if (!$this->warns_while_editing($bundle, $scope)) {
+        if (!$bundle || empty($bundle['form']) || !in_array($scope, array('full', 'rater'), TRUE)) {
             return array();
         }
         return $this->Ipcrf_model->validation_errors($bundle, $scope === 'rater' ? 'rater_approve' : 'submit_rater');
     }
 
+    /**
+     * Every bucket is sent down with its own `started` flag; the editor decides
+     * which ones to surface (only started tables while editing, all of them once
+     * submit is attempted). Nothing is filtered out here.
+     */
     private function review_warning_groups($bundle, $scope)
     {
-        if (!$this->warns_while_editing($bundle, $scope)) {
+        if (!$bundle || empty($bundle['form']) || !in_array($scope, array('full', 'rater'), TRUE)) {
             return array();
         }
         return array_values($this->Ipcrf_model->validation_groups($bundle, $scope === 'rater' ? 'rater_approve' : 'submit_rater'));
-    }
-
-    /**
-     * The in-editor missing-items banner only nags once the employee has actually
-     * started encoding. A freshly created form arrives pre-filled from the preset,
-     * and flagging it before any work is done is just noise. Submit-time validation
-     * in workflow() is unaffected — an untouched form is still caught there.
-     */
-    private function warns_while_editing($bundle, $scope)
-    {
-        if (!$bundle || empty($bundle['form']) || !in_array($scope, array('full', 'rater'), TRUE)) {
-            return FALSE;
-        }
-        return $this->Ipcrf_model->has_encoded_data($bundle);
     }
 
     private function actor()

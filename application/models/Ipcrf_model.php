@@ -879,54 +879,70 @@ class Ipcrf_model extends CI_Model
     }
 
     /**
-     * Same checks as validation_errors(), but kept in per-section buckets so the
-     * editor can show one "what is missing" button per section instead of a
-     * single combined list.
+     * Same checks as validation_errors(), but split into one bucket per table so
+     * the editor can flag exactly the table that is unfinished.
+     *
+     * Every table with something outstanding gets a bucket, so the editor can put
+     * a Missing badge on that table's own header.
      */
     public function validation_groups($bundle, $stage = 'current')
     {
-        $groups = array(
-            'employee' => array('key' => 'employee', 'label' => 'Employee Information', 'section' => 'employeeSection', 'items' => array()),
-            'kra' => array('key' => 'kra', 'label' => 'KRAs and Objectives', 'section' => 'kraSection', 'items' => array()),
-            'competency' => array('key' => 'competency', 'label' => 'Competency Management', 'section' => 'competencySection', 'items' => array()),
-            'development' => array('key' => 'development', 'label' => 'Development Plan', 'section' => 'developmentSection', 'items' => array())
-        );
+        $groups = array();
         if (!$bundle || empty($bundle['form'])) {
-            $groups['employee']['items'][] = 'IPCRF record was not found.';
-            return $this->filled_validation_groups($groups);
+            return array(array(
+                'key' => 'employee', 'scope' => 'employee', 'ref' => '',
+                'label' => 'Employee Information', 'section' => 'employeeSection',
+                'items' => array('IPCRF record was not found.')
+            ));
         }
         $form = $bundle['form'];
+        $status = $form['status'];
+        $needsEmployee = in_array($stage, array('submit_rater', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_DRAFT, self::STATUS_RETURNED), TRUE));
+        $needsRater = in_array($stage, array('rater_approve', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_SUBMITTED_RATER, self::STATUS_RATER_APPROVED), TRUE));
+        $needsFinal = in_array($stage, array('pmt_validate', 'lock', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_SUBMITTED_PMT, self::STATUS_PMT_VALIDATED, self::STATUS_LOCKED), TRUE));
+
+        // ---- Employee information -------------------------------------------------
+        $employeeItems = array();
         if (trim($form['employee_id']) === '' || trim($form['employee_name']) === '') {
-            $groups['employee']['items'][] = 'Employee information is incomplete.';
+            $employeeItems[] = 'Employee information is incomplete.';
         }
         if (trim($form['rater_name']) === '') {
-            $groups['employee']['items'][] = 'An assigned rater is required.';
+            $employeeItems[] = 'An assigned rater is required.';
         }
         if (trim((string) (isset($form['approving_authority_name']) ? $form['approving_authority_name'] : '')) === '') {
-            $groups['employee']['items'][] = 'An approving authority is required.';
+            $employeeItems[] = 'An approving authority is required.';
         }
         if (!$this->valid_date($form['period_start']) || !$this->valid_date($form['period_end']) || $form['period_start'] > $form['period_end']) {
-            $groups['employee']['items'][] = 'The performance period is invalid.';
+            $employeeItems[] = 'The performance period is invalid.';
         }
-        if (empty($bundle['kras'])) {
-            $groups['kra']['items'][] = 'At least one KRA is required.';
+        if ($employeeItems) {
+            $groups[] = array(
+                'key' => 'employee', 'scope' => 'employee', 'ref' => '',
+                'label' => 'Employee Information', 'section' => 'employeeSection',
+                'items' => $employeeItems
+            );
         }
 
-        $weight = 0;
+        // ---- One bucket per KRA ---------------------------------------------------
+        $totalWeight = 0;
         $objectiveCount = 0;
-        $titleMissing = 0;
-        $detailMissing = 0;
-        $weightMissing = 0;
-        $standardsMissing = 0;
-        $accomplishmentMissing = 0;
-        $ratingMissing = 0;
-        foreach ($bundle['kras'] as $kra) {
+        foreach ((array) $bundle['kras'] as $kraIndex => $kra) {
+            $items = array();
+            $detailMissing = 0;
+            $weightMissing = 0;
+            $standardsMissing = 0;
+            $accomplishmentMissing = 0;
+            $ratingMissing = 0;
+
             if (trim($kra['title']) === '') {
-                $titleMissing++;
+                $items[] = 'This KRA still needs a title.';
             }
-            foreach ($kra['objectives'] as $objective) {
+            if (!count((array) $kra['objectives'])) {
+                $items[] = 'This KRA has no objectives yet.';
+            }
+            foreach ((array) $kra['objectives'] as $objective) {
                 $objectiveCount++;
-                $weight += (float) $objective['weight'];
+                $totalWeight += (float) $objective['weight'];
                 if (trim($objective['objective']) === '' || trim($objective['timeline']) === '') {
                     $detailMissing++;
                 }
@@ -954,61 +970,111 @@ class Ipcrf_model extends CI_Model
                     $ratingMissing++;
                 }
             }
-        }
-        if ($objectiveCount === 0) {
-            $groups['kra']['items'][] = 'Add at least one objective.';
-        }
-        if (abs($weight - 100) > 0.009) {
-            $groups['kra']['items'][] = 'Objective weights add up to ' . number_format($weight, 2) . '% — they need to total 100%.';
-        }
-        if ($titleMissing) {
-            $groups['kra']['items'][] = $this->count_label($titleMissing, 'KRA still needs', 'KRAs still need') . ' a title.';
-        }
-        if ($detailMissing) {
-            $groups['kra']['items'][] = $this->count_label($detailMissing, 'objective still needs', 'objectives still need') . ' an objective or timeline.';
-        }
-        if ($weightMissing) {
-            $groups['kra']['items'][] = $this->count_label($weightMissing, 'objective still needs', 'objectives still need') . ' a weight.';
-        }
-        if ($standardsMissing) {
-            $groups['kra']['items'][] = $this->count_label($standardsMissing, 'objective is', 'objectives are') . ' missing Quality, Efficiency or Timeliness standards.';
+            if ($detailMissing) {
+                $items[] = $this->count_label($detailMissing, 'objective still needs', 'objectives still need') . ' an objective or timeline.';
+            }
+            if ($weightMissing) {
+                $items[] = $this->count_label($weightMissing, 'objective still needs', 'objectives still need') . ' a weight.';
+            }
+            if ($standardsMissing) {
+                $items[] = $this->count_label($standardsMissing, 'objective is', 'objectives are') . ' missing Quality, Efficiency or Timeliness standards.';
+            }
+            if (($needsEmployee || $needsRater) && $accomplishmentMissing) {
+                $items[] = $this->count_label($accomplishmentMissing, 'objective still needs', 'objectives still need') . ' an actual result.';
+            }
+            if ($needsRater && $ratingMissing) {
+                $items[] = $this->count_label($ratingMissing, 'objective still needs', 'objectives still need') . ' Q, E and T ratings.';
+            }
+            if ($items) {
+                $title = trim((string) $kra['title']);
+                $groups[] = array(
+                    'key' => 'kra:' . $kraIndex, 'scope' => 'kra', 'ref' => $kraIndex,
+                    'label' => $title !== '' ? $title : 'Untitled KRA',
+                    'section' => 'kraSection', 'items' => $items
+                );
+            }
         }
 
-        $status = $form['status'];
-        $needsEmployee = in_array($stage, array('submit_rater', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_DRAFT, self::STATUS_RETURNED), TRUE));
-        $needsRater = in_array($stage, array('rater_approve', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_SUBMITTED_RATER, self::STATUS_RATER_APPROVED), TRUE));
-        $needsFinal = in_array($stage, array('pmt_validate', 'lock', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_SUBMITTED_PMT, self::STATUS_PMT_VALIDATED, self::STATUS_LOCKED), TRUE));
-        if (($needsEmployee || $needsRater) && $accomplishmentMissing) {
-            $groups['kra']['items'][] = $this->count_label($accomplishmentMissing, 'objective still needs', 'objectives still need') . ' an actual result.';
+        // Form-wide KRA issues that belong to no single table.
+        $sectionItems = array();
+        if (empty($bundle['kras'])) {
+            $sectionItems[] = 'Add at least one KRA.';
         }
-        if ($needsRater && $ratingMissing) {
-            $groups['kra']['items'][] = $this->count_label($ratingMissing, 'objective still needs', 'objectives still need') . ' Q, E and T ratings.';
+        if ($objectiveCount === 0) {
+            $sectionItems[] = 'Add at least one objective.';
+        }
+        if ($objectiveCount > 0 && abs($totalWeight - 100) > 0.009) {
+            $sectionItems[] = 'Objective weights across all KRAs add up to ' . number_format($totalWeight, 2) . '% — they need to total 100%.';
+        }
+        if ($sectionItems) {
+            $groups[] = array(
+                'key' => 'kra-section', 'scope' => 'kra-section', 'ref' => '',
+                'label' => 'KRAs and Objectives', 'section' => 'kraSection',
+                'items' => $sectionItems
+            );
+        }
+
+        // ---- One bucket per competency group --------------------------------------
+        $needsCompetencyRating = $needsEmployee || $needsRater || $needsFinal;
+        $byCategory = array();
+        foreach ((array) $bundle['competencies'] as $competency) {
+            $category = trim((string) $competency['category']);
+            if ($category === '') {
+                $category = 'Other Competency';
+            }
+            if (!isset($byCategory[$category])) {
+                $byCategory[$category] = array();
+            }
+            $byCategory[$category][] = $competency;
+        }
+        foreach ($byCategory as $category => $rows) {
+            $items = array();
+            $detailMissing = 0;
+            $ratingMissing = 0;
+            foreach ($rows as $competency) {
+                if (trim($competency['name']) === '' || empty($competency['indicators'])) {
+                    $detailMissing++;
+                }
+                if ($needsCompetencyRating && (int) $competency['rating'] < 1) {
+                    $ratingMissing++;
+                }
+            }
+            if ($detailMissing) {
+                $items[] = $this->count_label($detailMissing, 'competency still needs', 'competencies still need') . ' a name or behavioral indicators.';
+            }
+            if ($ratingMissing) {
+                $items[] = $this->count_label($ratingMissing, 'competency still needs', 'competencies still need') . ' a rating.';
+            }
+            if ($items) {
+                $groups[] = array(
+                    'key' => 'competency:' . $category, 'scope' => 'competency', 'ref' => $category,
+                    'label' => $this->competency_group_label($category),
+                    'section' => 'competencySection', 'items' => $items
+                );
+            }
         }
         if (empty($bundle['competencies'])) {
-            $groups['competency']['items'][] = 'Add at least one competency.';
+            $groups[] = array(
+                'key' => 'competency-section', 'scope' => 'competency-section', 'ref' => '',
+                'label' => 'Competency Management', 'section' => 'competencySection',
+                'items' => array('Add at least one competency.')
+            );
         }
-        $needsCompetencyRating = $needsEmployee || $needsRater || $needsFinal;
-        $competencyDetailMissing = 0;
-        $competencyRatingMissing = 0;
-        foreach ($bundle['competencies'] as $competency) {
-            if (trim($competency['name']) === '' || empty($competency['indicators'])) {
-                $competencyDetailMissing++;
-            }
-            if ($needsCompetencyRating && (int) $competency['rating'] < 1) {
-                $competencyRatingMissing++;
-            }
-        }
-        if ($competencyDetailMissing) {
-            $groups['competency']['items'][] = $this->count_label($competencyDetailMissing, 'competency still needs', 'competencies still need') . ' a name or behavioral indicators.';
-        }
-        if ($competencyRatingMissing) {
-            $groups['competency']['items'][] = $this->count_label($competencyRatingMissing, 'competency still needs', 'competencies still need') . ' a rating.';
-        }
+
+        // ---- Development plan -----------------------------------------------------
+        $developmentItems = array();
+        $developmentStarted = FALSE;
         if (empty($bundle['development'])) {
-            $groups['development']['items'][] = 'Add at least one development plan entry.';
+            $developmentItems[] = 'Add at least one development plan entry.';
         } else {
             $developmentMissing = 0;
             foreach ($bundle['development'] as $plan) {
+                foreach (array('strengths', 'improvement_needs', 'learning_objectives', 'interventions', 'target_timeline', 'responsible_person', 'status_remarks') as $field) {
+                    if (trim((string) $plan[$field]) !== '') {
+                        $developmentStarted = TRUE;
+                        break;
+                    }
+                }
                 foreach (array('strengths', 'improvement_needs', 'learning_objectives', 'interventions', 'target_timeline', 'responsible_person') as $field) {
                     if (trim((string) $plan[$field]) === '') {
                         $developmentMissing++;
@@ -1017,10 +1083,42 @@ class Ipcrf_model extends CI_Model
                 }
             }
             if ($developmentMissing) {
-                $groups['development']['items'][] = $this->count_label($developmentMissing, 'development plan entry has', 'development plan entries have') . ' blank fields.';
+                $developmentItems[] = $this->count_label($developmentMissing, 'development plan entry has', 'development plan entries have') . ' blank fields.';
             }
         }
-        return $this->filled_validation_groups($groups);
+        if ($developmentItems) {
+            $groups[] = array(
+                'key' => 'development', 'scope' => 'development', 'ref' => '',
+                'label' => 'Development Plan', 'section' => 'developmentSection',
+                'items' => $developmentItems
+            );
+        }
+
+        return $groups;
+    }
+
+    private function competency_group_label($category)
+    {
+        $labels = array(
+            'Core Behavioral Competency' => 'Core Behavioral Competencies',
+            'Core Skill' => 'Core Skills',
+            'Leadership Competency' => 'Leadership Competencies'
+        );
+        return isset($labels[$category]) ? $labels[$category] : $category;
+    }
+
+    /**
+     * A preset objective arrives with its text, timeline, weight and standards
+     * already filled, so only the fields the employee supplies count as a touch.
+     */
+    private function objective_is_started($objective)
+    {
+        if (trim((string) $objective['accomplishment']) !== '') {
+            return TRUE;
+        }
+        return (float) $objective['quality_rating'] >= 1
+            || (float) $objective['efficiency_rating'] >= 1
+            || (float) $objective['timeliness_rating'] >= 1;
     }
 
     private function count_label($count, $singular, $plural)
@@ -1028,54 +1126,7 @@ class Ipcrf_model extends CI_Model
         return $count . ' ' . ($count === 1 ? $singular : $plural);
     }
 
-    /**
-     * TRUE once the employee has typed something of their own into the form.
-     * A brand-new IPCRF is pre-filled from the preset (KRA titles, objectives,
-     * timelines, weights, standards, competency names), so only the fields the
-     * preset leaves blank count as encoded: actual results, Q/E/T ratings,
-     * competency ratings and development plan entries. This keeps the editor
-     * from flagging missing items on a form nobody has started yet.
-     */
-    public function has_encoded_data($bundle)
-    {
-        if (!$bundle || empty($bundle['form'])) {
-            return FALSE;
-        }
-        foreach ((array) $bundle['kras'] as $kra) {
-            foreach ((array) $kra['objectives'] as $objective) {
-                if (trim((string) $objective['accomplishment']) !== '') {
-                    return TRUE;
-                }
-                if ((float) $objective['quality_rating'] >= 1 || (float) $objective['efficiency_rating'] >= 1 || (float) $objective['timeliness_rating'] >= 1) {
-                    return TRUE;
-                }
-            }
-        }
-        foreach ((array) $bundle['competencies'] as $competency) {
-            if ((int) $competency['rating'] >= 1) {
-                return TRUE;
-            }
-        }
-        foreach ((array) $bundle['development'] as $plan) {
-            foreach (array('strengths', 'improvement_needs', 'learning_objectives', 'interventions', 'target_timeline', 'responsible_person', 'status_remarks') as $field) {
-                if (trim((string) $plan[$field]) !== '') {
-                    return TRUE;
-                }
-            }
-        }
-        return FALSE;
-    }
 
-    private function filled_validation_groups($groups)
-    {
-        $filled = array();
-        foreach ($groups as $key => $group) {
-            if ($group['items']) {
-                $filled[$key] = $group;
-            }
-        }
-        return $filled;
-    }
 
     public function workflow_transition($formId, $toStatus, $remarks, $actor)
     {
