@@ -882,11 +882,8 @@ class Ipcrf_model extends CI_Model
      * Same checks as validation_errors(), but split into one bucket per table so
      * the editor can flag exactly the table that is unfinished.
      *
-     * Every bucket carries a `started` flag: TRUE once the employee has encoded
-     * something into that specific table. The editor shows a bucket only when it
-     * has started, so an untouched KRA or competency group stays quiet while a
-     * half-finished one right next to it is flagged. Submitting overrides this
-     * and shows everything (see the `showAllWarnings` path in ipcrf.js).
+     * Every table with something outstanding gets a bucket, so the editor can put
+     * a Missing badge on that table's own header.
      */
     public function validation_groups($bundle, $stage = 'current')
     {
@@ -895,7 +892,7 @@ class Ipcrf_model extends CI_Model
             return array(array(
                 'key' => 'employee', 'scope' => 'employee', 'ref' => '',
                 'label' => 'Employee Information', 'section' => 'employeeSection',
-                'started' => TRUE, 'items' => array('IPCRF record was not found.')
+                'items' => array('IPCRF record was not found.')
             ));
         }
         $form = $bundle['form'];
@@ -922,17 +919,15 @@ class Ipcrf_model extends CI_Model
             $groups[] = array(
                 'key' => 'employee', 'scope' => 'employee', 'ref' => '',
                 'label' => 'Employee Information', 'section' => 'employeeSection',
-                'started' => TRUE, 'items' => $employeeItems
+                'items' => $employeeItems
             );
         }
 
         // ---- One bucket per KRA ---------------------------------------------------
         $totalWeight = 0;
         $objectiveCount = 0;
-        $anyKraStarted = FALSE;
         foreach ((array) $bundle['kras'] as $kraIndex => $kra) {
             $items = array();
-            $started = FALSE;
             $detailMissing = 0;
             $weightMissing = 0;
             $standardsMissing = 0;
@@ -948,9 +943,6 @@ class Ipcrf_model extends CI_Model
             foreach ((array) $kra['objectives'] as $objective) {
                 $objectiveCount++;
                 $totalWeight += (float) $objective['weight'];
-                if ($this->objective_is_started($objective)) {
-                    $started = TRUE;
-                }
                 if (trim($objective['objective']) === '' || trim($objective['timeline']) === '') {
                     $detailMissing++;
                 }
@@ -993,15 +985,12 @@ class Ipcrf_model extends CI_Model
             if ($needsRater && $ratingMissing) {
                 $items[] = $this->count_label($ratingMissing, 'objective still needs', 'objectives still need') . ' Q, E and T ratings.';
             }
-            if ($started) {
-                $anyKraStarted = TRUE;
-            }
             if ($items) {
                 $title = trim((string) $kra['title']);
                 $groups[] = array(
                     'key' => 'kra:' . $kraIndex, 'scope' => 'kra', 'ref' => $kraIndex,
                     'label' => $title !== '' ? $title : 'Untitled KRA',
-                    'section' => 'kraSection', 'started' => $started, 'items' => $items
+                    'section' => 'kraSection', 'items' => $items
                 );
             }
         }
@@ -1021,7 +1010,7 @@ class Ipcrf_model extends CI_Model
             $groups[] = array(
                 'key' => 'kra-section', 'scope' => 'kra-section', 'ref' => '',
                 'label' => 'KRAs and Objectives', 'section' => 'kraSection',
-                'started' => $anyKraStarted, 'items' => $sectionItems
+                'items' => $sectionItems
             );
         }
 
@@ -1040,13 +1029,9 @@ class Ipcrf_model extends CI_Model
         }
         foreach ($byCategory as $category => $rows) {
             $items = array();
-            $started = FALSE;
             $detailMissing = 0;
             $ratingMissing = 0;
             foreach ($rows as $competency) {
-                if ((int) $competency['rating'] >= 1) {
-                    $started = TRUE;
-                }
                 if (trim($competency['name']) === '' || empty($competency['indicators'])) {
                     $detailMissing++;
                 }
@@ -1064,7 +1049,7 @@ class Ipcrf_model extends CI_Model
                 $groups[] = array(
                     'key' => 'competency:' . $category, 'scope' => 'competency', 'ref' => $category,
                     'label' => $this->competency_group_label($category),
-                    'section' => 'competencySection', 'started' => $started, 'items' => $items
+                    'section' => 'competencySection', 'items' => $items
                 );
             }
         }
@@ -1072,7 +1057,7 @@ class Ipcrf_model extends CI_Model
             $groups[] = array(
                 'key' => 'competency-section', 'scope' => 'competency-section', 'ref' => '',
                 'label' => 'Competency Management', 'section' => 'competencySection',
-                'started' => FALSE, 'items' => array('Add at least one competency.')
+                'items' => array('Add at least one competency.')
             );
         }
 
@@ -1105,7 +1090,7 @@ class Ipcrf_model extends CI_Model
             $groups[] = array(
                 'key' => 'development', 'scope' => 'development', 'ref' => '',
                 'label' => 'Development Plan', 'section' => 'developmentSection',
-                'started' => $developmentStarted, 'items' => $developmentItems
+                'items' => $developmentItems
             );
         }
 

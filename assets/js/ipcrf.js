@@ -11,8 +11,6 @@
     var activeSave = null;
     var reviewWarnings = config.reviewWarnings || [];
     var reviewWarningGroups = config.reviewWarningGroups || [];
-    // Editing shows only started tables; a submit attempt reveals everything.
-    var showAllWarnings = false;
 
     function setSaveState(status, message) {
         var icons = {
@@ -417,12 +415,8 @@
         return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) && start <= end;
     }
 
-    // While editing, only tables the employee has actually started are flagged.
-    // Attempting to submit flips this on so every outstanding item is shown.
     function visibleWarningGroups() {
-        return (reviewWarningGroups || []).filter(function (group) {
-            return showAllWarnings || group.started;
-        });
+        return reviewWarningGroups || [];
     }
 
     function findWarningGroup(key) {
@@ -1189,9 +1183,6 @@
                     if ((action === 'submit_rater' || action === 'rater_approve') && response.warning_only) {
                         reviewWarnings = response.errors || [];
                         reviewWarningGroups = response.error_groups || [];
-                        // Submitting reveals every outstanding table, including the
-                        // ones the employee has not touched yet.
-                        showAllWarnings = true;
                         renderMissingItems();
                         var warningItems = (response.error_groups || []).map(function (group) {
                             return '<li><b>' + escapeHtml(group.label) + '</b><ul>' + group.items.map(function (warning) {
