@@ -171,6 +171,8 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
 .kra-title-input { background: transparent; border: 0; color: var(--ip-navy); flex: 1; font-size: .88rem; font-weight: 800; min-width: 80px; outline: 0; padding: 4px; }
 .kra-title-input:focus { background: #fff; box-shadow: inset 0 -2px var(--ip-blue); }
 .kra-meta { color: var(--ip-muted); font-size: .68rem; font-weight: 700; white-space: nowrap; }
+.kra-tagged-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: rgba(19, 143, 108, .12); color: #0f8b6c; font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.kra-tagged-badge i { font-size: .8rem; }
 .icon-actions { display: flex; gap: 3px; }
 .btn-icon { align-items: center; background: transparent; border: 0; border-radius: 7px; color: #748097; display: inline-flex; height: 29px; justify-content: center; padding: 0; width: 29px; }
 .btn-icon:hover { background: var(--ip-blue-soft); color: var(--ip-blue); }
@@ -306,11 +308,13 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
 .ipcrf-document .objective-grid { grid-template-columns: 100px minmax(300px,1fr) 190px 100px; }
 .ipcrf-document .objective-grid .objective-text { grid-column: auto; }
 .kra-card { border: 1px solid #59616d; border-radius: 1px; margin-bottom: 8px; }
-.kra-card > summary { background: #dfe3e8; border-bottom: 1px solid #59616d; display: grid; grid-template-columns: auto minmax(260px,1fr) auto minmax(420px,auto); min-height: 43px; padding: 4px 7px; }
+.kra-card > summary { align-items: stretch; background: #dfe3e8; border-bottom: 1px solid #59616d; display: flex; gap: 8px; min-height: 43px; padding: 4px 7px; }
 .kra-card > summary:before { display: none; }
-.kra-pdf-label { align-items: center; background: #273856; color: #fff; display: inline-flex; font-family: Arial, Helvetica, sans-serif; font-size: .56rem; font-weight: 800; letter-spacing: .06em; margin: -4px 5px -4px -7px; padding: 0 8px; text-transform: uppercase; }
+.kra-pdf-label { align-items: center; background: #273856; color: #fff; display: inline-flex; flex: none; font-family: Arial, Helvetica, sans-serif; font-size: .56rem; font-weight: 800; letter-spacing: .06em; margin: -4px 5px -4px -7px; padding: 0 8px; text-transform: uppercase; white-space: nowrap; }
+.kra-heading { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; justify-content: center; min-width: 0; }
+.kra-subline { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; padding-left: 6px; }
 .kra-title-input { color: #172033; font-family: Georgia, 'Times New Roman', serif; font-size: .88rem; text-transform: uppercase; }
-.kra-title-display { color: #172033; font-family: Georgia, 'Times New Roman', serif; font-size: .88rem; padding: 7px 6px; text-transform: uppercase; }
+.kra-title-display { color: #172033; font-family: Georgia, 'Times New Roman', serif; font-size: .88rem; padding: 2px 6px; text-transform: uppercase; }
 .kra-meta { color: #303a4a; font-family: Arial, Helvetica, sans-serif; }
 .kra-content { padding: 0; }
 .pdf-objective-header { background: #f1f2f4; border-bottom: 1px solid #737b87; color: #303745; display: grid; font-family: Arial, Helvetica, sans-serif; font-size: .59rem; font-weight: 800; grid-template-columns: 70px minmax(240px,1fr) 170px 78px 235px; letter-spacing: .035em; text-align: center; text-transform: uppercase; }
@@ -327,6 +331,7 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
 .weight-chip { background: #f2f6f4; border-radius: 0; color: #12645e; justify-content: center; }
 .objective-card .icon-actions { justify-content: center; }
 .icon-actions.action-buttons { align-items: center; display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; padding: 5px !important; }
+.kra-card > summary > .action-buttons { flex: none; margin-left: auto; }
 .action-text-btn { background: #fff; border: 1px solid #9aa4b4; border-radius: 4px; color: #344258; font-family: Arial, Helvetica, sans-serif; font-size: .59rem; font-weight: 700; line-height: 1; min-height: 26px; padding: 5px 6px; white-space: nowrap; }
 .action-text-btn:hover { background: #edf2ff; border-color: #6f89d1; color: #21489f; }
 .action-text-btn.add { background: #e9f7f3; border-color: #72b9aa; color: #0b6f62; }
@@ -407,8 +412,8 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
 @media (max-width: 1180px) {
     .editor-quick-guide { grid-template-columns: repeat(2,minmax(0,1fr)); }
     .objective-dialog-grid { grid-template-columns: 120px minmax(280px,1fr); }
-    .kra-card > summary { grid-template-columns: auto minmax(220px,1fr) auto; }
-    .kra-card > summary .action-buttons { grid-column: 1 / -1; }
+    .kra-card > summary { flex-wrap: wrap; }
+    .kra-card > summary > .action-buttons { width: 100%; }
 }
 @media (max-width: 760px) {
     .employee-pdf-grid { grid-template-columns: 1fr; }
@@ -417,7 +422,6 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
     .objective-card > summary { grid-template-columns: 55px minmax(150px,1fr) 70px; }
     .objective-timeline { display: flex !important; }
     .objective-card .icon-actions { border-top: 1px solid #a4a9b1; grid-column: 1 / -1; }
-    .kra-card > summary { grid-template-columns: 1fr auto; }
     .kra-pdf-label { display: none; }
     .ipcrf-document .objective-grid { grid-template-columns: 1fr; }
     .editor-quick-guide, .objective-dialog-grid, .development-dialog-grid { grid-template-columns: 1fr; }

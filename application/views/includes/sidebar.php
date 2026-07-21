@@ -132,21 +132,7 @@
 
                     <li class="menu-title">Navigation</li>
 
-                    <li>
-                        <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
-                            <i class="mdi mdi-clipboard-text-outline"></i>
-                            <span> IPCRF Performance </span>
-                        </a>
-                    </li>
-
-                    <?php if ($hasAssignedKras): ?>
-                    <li>
-                        <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
-                            <i class="mdi mdi-clipboard-account-outline"></i>
-                            <span> My IPCR </span>
-                        </a>
-                    </li>
-                    <?php endif; ?>
+                 
 
                     <li>
                         <a href="<?= base_url(); ?><?= $adminDashboardRoute; ?>" class="waves-effect">
@@ -169,12 +155,23 @@
                         </a>
                     </li>
 
-                    <li>
+                      <li>
+                            <a href="javascript: void(0);" class="waves-effect">
+                                <i class="mdi mdi-clipboard-edit-outline"></i>
+                                <span> Manage IPCR </span>
+                                <span class="menu-arrow"></span>
+                            </a>
+                            <ul class="nav-second-level" aria-expanded="false">
+                                <li><a href="<?= base_url(); ?>Ipcrf/manage_template">IPCR Setup</a></li>
+                            </ul>
+                        </li>
+
+                    <!-- <li>
                         <a href="<?= base_url(); ?>Page/positions" class="waves-effect">
                             <i class="mdi mdi-briefcase-outline"></i>
                             <span> Position </span>
                         </a>
-                    </li>
+                    </li> -->
 
                     <li>
                         <a href="usersList" class="waves-effect">
@@ -1040,7 +1037,7 @@
                         </a>
                     </li>
 
-                    <?php if ($isSgodChief): ?>
+                    
                         <li>
                             <a href="javascript: void(0);" class="waves-effect">
                                 <i class="mdi mdi-clipboard-edit-outline"></i>
@@ -1052,7 +1049,7 @@
                                 <li><a href="<?= base_url(); ?>Ipcrf/manage_template">Preview &amp; Print</a></li>
                             </ul>
                         </li>
-                    <?php endif; ?>
+                   
 
                     <?php if ($isSectionHeadDashboardUser): ?>
                         <li>

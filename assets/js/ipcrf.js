@@ -292,7 +292,16 @@
             var weight = (kra.objectives || []).reduce(function (sum, objective) { return sum + Number(objective.weight || 0); }, 0);
             var isOpen = kraIndex === 0;
             html += '<details class="kra-card" id="kra-' + kraIndex + '"' + (isOpen ? ' open' : '') + '><summary>';
-            html += '<span class="kra-pdf-label">Key Result Area</span><strong class="kra-title-display js-kra-title" data-kra="' + kraIndex + '"' + (isFull() ? ' contenteditable="true" spellcheck="true" data-placeholder="KRA title"' : '') + '>' + escapeHtml(kra.title || '') + '</strong><span class="kra-meta">' + (kra.objectives || []).length + ' objective(s) · ' + weight.toFixed(2) + '%</span>';
+            html += '<span class="kra-pdf-label">Key Result Area</span>';
+            html += '<span class="kra-heading">';
+            html += '<strong class="kra-title-display js-kra-title" data-kra="' + kraIndex + '"' + (isFull() ? ' contenteditable="true" spellcheck="true" data-placeholder="KRA title"' : '') + '>' + escapeHtml(kra.title || '') + '</strong>';
+            // Secondary line: the tag marker and counts sit under the title, out of the way.
+            html += '<span class="kra-subline">';
+            if (Number(kra.template_kra_id || 0) > 0) {
+                html += '<span class="kra-tagged-badge" title="You were tagged into this KRA by the SGOD Chief."><i class="mdi mdi-tag-outline"></i>Tagged</span>';
+            }
+            html += '<span class="kra-meta">' + (kra.objectives || []).length + ' objective(s) · ' + weight.toFixed(2) + '%</span>';
+            html += '</span></span>';
             html += '<span class="icon-actions action-buttons">';
             if (isFull()) {
                 html += '<button type="button" class="action-text-btn add js-action" data-action="add-objective" data-kra="' + kraIndex + '">+ Add Objective</button><span class="dropdown"><button type="button" class="action-text-btn js-row-menu-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More •••</button><span class="dropdown-menu dropdown-menu-right"><button type="button" class="dropdown-item js-action" data-action="duplicate-kra" data-kra="' + kraIndex + '">Copy KRA</button><button type="button" class="dropdown-item js-action" data-action="kra-up" data-kra="' + kraIndex + '">Move KRA up</button><button type="button" class="dropdown-item js-action" data-action="kra-down" data-kra="' + kraIndex + '">Move KRA down</button><span class="dropdown-divider"></span><button type="button" class="dropdown-item text-danger js-action" data-action="delete-kra" data-kra="' + kraIndex + '">Delete KRA</button></span></span>';
@@ -832,6 +841,7 @@
         else if (action === 'duplicate-kra') {
             var kraCopy = JSON.parse(JSON.stringify(state.kras[k]));
             kraCopy.id = 0;
+            kraCopy.template_kra_id = 0; // A copy is the member's own KRA, not a tagged one.
             kraCopy.title += ' (Copy)';
             kraCopy.objectives.forEach(function (objective) { objective.id = 0; objective.evidence = []; });
             state.kras.splice(k + 1, 0, kraCopy);

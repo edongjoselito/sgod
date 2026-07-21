@@ -51,6 +51,13 @@ class Ipcrf extends CI_Controller
                     $form = $bundle['form'];
                 }
             }
+
+            // KRAs the SGOD Chief tagged this member into after the form was created
+            // are pulled in here, so a new tag shows up the next time it is opened.
+            if ($scope === 'full' && $this->Ipcrf_model->sync_assigned_kras($id, $form['employee_id']) > 0) {
+                $bundle = $this->Ipcrf_model->get_bundle($id);
+                $form = $bundle['form'];
+            }
         }
 
         $data = array(
@@ -883,6 +890,10 @@ class Ipcrf extends CI_Controller
         }
         if (trim((string) $this->input->post('objective')) === '') {
             $this->session->set_flashdata('danger', 'Objective description is required.');
+            redirect('Ipcrf/manage_template');
+        }
+        if (trim((string) $this->input->post('code')) === '') {
+            $this->session->set_flashdata('danger', 'Objective code is required.');
             redirect('Ipcrf/manage_template');
         }
         $this->Ipcrf_model->save_template_objective($kraId, $objectiveId, array(

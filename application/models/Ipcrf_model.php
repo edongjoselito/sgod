@@ -84,6 +84,7 @@ class Ipcrf_model extends CI_Model
             "CREATE TABLE IF NOT EXISTS ipcrf_kras (
                 id INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 form_id INT UNSIGNED NOT NULL,
+                template_kra_id INT UNSIGNED NOT NULL DEFAULT 0,
                 title VARCHAR(255) NOT NULL,
                 sort_order INT NOT NULL DEFAULT 0,
                 is_deleted TINYINT(1) NOT NULL DEFAULT 0,
@@ -196,113 +197,34 @@ class Ipcrf_model extends CI_Model
             $this->db->query("ALTER TABLE ipcrf_forms ADD approving_authority_position VARCHAR(180) NOT NULL DEFAULT '' AFTER approving_authority_name");
         }
 
+        // Links a form KRA back to the template KRA it was tagged from. 0 means the
+        // member added the KRA themselves, so the tag sync leaves it alone.
+        if (!$this->db->field_exists('template_kra_id', 'ipcrf_kras')) {
+            $this->db->query("ALTER TABLE ipcrf_kras ADD template_kra_id INT UNSIGNED NOT NULL DEFAULT 0 AFTER form_id");
+        }
+
         if ((int) $this->db->count_all('ipcrf_templates') === 0) {
             $this->seed_default_template();
         }
     }
 
-    private function rating_scale($five, $four, $three, $two, $one)
-    {
-        return array('5' => $five, '4' => $four, '3' => $three, '2' => $two, '1' => $one);
-    }
-
-    private function percentage_scale($label)
-    {
-        return $this->rating_scale(
-            $label . ' for 100% of the target',
-            $label . ' for 90%–99% of the target',
-            $label . ' for 80%–89% of the target',
-            $label . ' for 70%–79% of the target',
-            $label . ' for 69% and below of the target'
-        );
-    }
-
-    private function error_scale()
-    {
-        return $this->rating_scale('Completed with no error', 'Completed with 1 error', 'Completed with 2 errors', 'Completed with 3 errors', 'Completed with 4 or more errors');
-    }
-
-    private function quarter_scale($last = 'No update provided')
-    {
-        return $this->rating_scale('Provided every quarter', 'Provided for 3 quarters', 'Provided for 2 quarters', 'Provided for 1 quarter', $last);
-    }
-
-    private function period_scale()
-    {
-        return $this->rating_scale('Completed within the specified period', 'Completed 1 month after the specified period', 'Completed 2 months after the specified period', 'Completed 3 months after the specified period', 'Completed 4 months or more after the specified period');
-    }
-
+    // Seeds an empty shell only: KRAs and objectives are authored by the SGOD
+    // Chief in Ipcrf/manage_template, so nothing is pre-set here. Competencies
+    // stay seeded — they are the same DepEd list for every member.
     private function seed_default_template()
     {
         $now = date('Y-m-d H:i:s');
         $this->db->trans_start();
         $this->db->insert('ipcrf_templates', array(
-            'name' => 'SGOD IPCRF 2025 Preset',
-            'year' => 2025,
-            'description' => 'Master preset transcribed from the supplied six-page SGOD IPCRF 2025 form.',
+            'name' => 'SGOD IPCRF ' . date('Y'),
+            'year' => (int) date('Y'),
+            'description' => '',
             'is_active' => 1,
             'created_by' => 'system',
             'created_at' => $now,
             'updated_at' => $now
         ));
         $templateId = (int) $this->db->insert_id();
-
-        $period = 'January to December 2025';
-        $campaignQ = $this->rating_scale('Implemented at least 5 advocacy campaigns', 'Implemented 4 advocacy campaigns', 'Implemented 3 advocacy campaigns', 'Implemented 2 advocacy campaigns', 'Implemented 1 advocacy campaign');
-        $campaignE = $this->rating_scale('Gathered pledges/resources after 5 advocacy campaigns', 'Gathered pledges/resources after 4 advocacy campaigns', 'Gathered pledges/resources after 3 advocacy campaigns', 'Gathered pledges/resources after 2 advocacy campaigns', 'Gathered pledges/resources after 1 advocacy campaign');
-        $partnershipQ = $this->rating_scale('Established at least 50 partnership engagements', 'Established 40–49 partnership engagements', 'Established 30–39 partnership engagements', 'Established 20–29 partnership engagements', 'Established fewer than 20 partnership engagements');
-        $partnershipE = $this->rating_scale('Partnerships generated from 100% of districts', 'Partnerships generated from 90%–99% of districts', 'Partnerships generated from 80%–89% of districts', 'Partnerships generated from 70%–79% of districts', 'Partnerships generated from 69% and below of districts');
-        $proposalQ = $this->rating_scale('Prepared partnership proposals for at least 5 activities', 'Prepared proposals for 4 activities', 'Prepared proposals for 3 activities', 'Prepared proposals for 2 activities', 'Prepared proposal for 1 activity');
-        $approvalE = $this->percentage_scale('Proposals approved');
-        $programQ = $this->rating_scale('Monitored, analyzed and provided recommendations for at least 5 special programs/projects', 'Completed for 4 programs/projects', 'Completed for 3 programs/projects', 'Completed for 2 programs/projects', 'Completed for 1 program/project');
-        $programE = $this->percentage_scale('Districts covered');
-        $timely = $this->period_scale();
-
-        $kras = array(
-            array('title' => 'I – RESOURCING', 'objectives' => array(
-                array('1.1', 'Prepare and implement advocacy campaign programs to increase awareness of stakeholders and gather resource support for basic education.', 10, $campaignQ, $campaignE, $timely),
-                array('1.2', 'Establish and/or strengthen linkages, engagements and partnerships with stakeholders to ensure continuous support for basic education.', 5, $partnershipQ, $partnershipE, $timely),
-                array('1.3', 'Monitor progress and outcome of projects and partnerships to identify areas for continuous improvement and sustaining partnerships, and submit report to the SDS.', 5, $programQ, $programE, $timely),
-                array('1.4', 'Prepare final draft of partnership proposals for recommendation to the SDS.', 10, $proposalQ, $approvalE, $timely),
-                array('1.5', 'Prepare final draft of Memorandum of Agreement/Understanding for recommendation to the SDS.', 5, $this->rating_scale('Prepared at least 5 MOUs/MOAs', 'Prepared 4 MOUs/MOAs', 'Prepared 3 MOUs/MOAs', 'Prepared 2 MOUs/MOAs', 'Prepared 1 MOU/MOA'), $approvalE, $timely),
-                array('1.6', 'Accept donations (e.g. equipment and tools) from program/project partners for proper utilization.', 5, $this->rating_scale('Accepted 100% of donations', 'Accepted 90%–99% of donations', 'Accepted 80%–89% of donations', 'Accepted 70%–79% of donations', 'Accepted less than 70% of donations'), $this->percentage_scale('Donations with proof of acceptance'), $timely)
-            )),
-            array('title' => 'II – SUSTAINED PARTNERSHIP', 'objectives' => array(
-                array('2.1', 'Finalize write-up and provide to stakeholders the status and progress of programs and projects to provide feedback and generate continuous support.', 10, $this->percentage_scale('Program/project updates provided'), $this->error_scale(), $this->quarter_scale()),
-                array('2.2', 'Prepare and submit report on programs supported by stakeholders to management as feedback on progress, status and resource requirements.', 10, $this->percentage_scale('Program/project reports prepared'), $this->error_scale(), $this->quarter_scale()),
-                array('2.3', 'Prepare and provide final report of accomplishments of programs supported by stakeholders to provide feedback and generate continuous support.', 5, $this->percentage_scale('Final accomplishment reports prepared and provided'), $this->error_scale(), $this->quarter_scale()),
-                array('2.4', 'Monitor and ensure implementation of policies, standards and guidelines for outcomes-focused resource mobilization to maintain integrity and credibility of the schools division to its partners.', 10, $this->percentage_scale('School partnership standards monitored'), $this->error_scale(), $this->quarter_scale()),
-                array('2.5', 'Design approach and method for monitoring implementation of programs and projects focused on resource mobilization and submit report to management.', 5, $this->percentage_scale('District monitoring method designed'), $this->error_scale(), $this->quarter_scale('No monitoring list provided')),
-                array('2.6', 'Capacitate schools in forging partnership linkages.', 5, $this->percentage_scale('Schools capacitated'), $this->percentage_scale('Schools generating partnerships after capacity building'), $timely)
-            )),
-            array('title' => 'III – RESEARCH AND DEVELOPMENT', 'objectives' => array(
-                array('3.1', 'Conduct action research on factors contributing to successful participation and provision of resources for school governance.', 5, $this->rating_scale('Research completed with all required parts', 'Research lacks 1 required part', 'Research lacks 2 required parts', 'Research lacks 3 required parts', 'Research lacks 4 or more required parts'), $this->error_scale(), $timely)
-            )),
-            array('title' => 'IV – TECHNICAL ASSISTANCE', 'objectives' => array(
-                array('4.1', 'Provide technical assistance to schools and learning centers by responding to identified needs in relation to social mobilization, governance and operations.', 5, $this->rating_scale('Provided technical assistance for at least 5 special programs/projects', 'Provided assistance for 4 programs/projects', 'Provided assistance for 3 programs/projects', 'Provided assistance for 2 programs/projects', 'Provided assistance for 1 program/project'), $programE, $timely)
-            )),
-            array('title' => 'V – PLUS FACTOR', 'objectives' => array(
-                array('5.1', 'Conceptualize, develop and deploy innovative digital systems to address operational and governance requirements of different sections beyond Social Mobilization.', 5, $this->rating_scale('Innovation fully addresses the identified requirements', 'Innovation addresses most requirements', 'Innovation addresses the essential requirements', 'Innovation partially addresses requirements', 'Innovation does not yet address the essential requirements'), $this->rating_scale('Deployed with optimal use of available resources', 'Deployed with minor resource issues', 'Deployed with acceptable resource use', 'Deployed with significant resource issues', 'Not successfully deployed'), $timely)
-            ))
-        );
-
-        foreach ($kras as $kraOrder => $kra) {
-            $this->db->insert('ipcrf_template_kras', array('template_id' => $templateId, 'title' => $kra['title'], 'sort_order' => $kraOrder + 1));
-            $kraId = (int) $this->db->insert_id();
-            foreach ($kra['objectives'] as $objectiveOrder => $objective) {
-                $this->db->insert('ipcrf_template_objectives', array(
-                    'template_kra_id' => $kraId,
-                    'code' => $objective[0],
-                    'objective' => $objective[1],
-                    'timeline' => $period,
-                    'weight' => $objective[2],
-                    'quality_json' => json_encode($objective[3]),
-                    'efficiency_json' => json_encode($objective[4]),
-                    'timeliness_json' => json_encode($objective[5]),
-                    'sort_order' => $objectiveOrder + 1
-                ));
-            }
-        }
 
         $competencies = array(
             array('Core Behavioral Competency', 'Self-Management', array('Sets personal goals and direction, needs and development.', 'Understands personal actions and behavior that are clear and purposive and takes into account personal goals and values congruent to those of the organization.', 'Displays emotional maturity and enthusiasm for, and is challenged by, higher goals.', 'Prioritizes work tasks and schedules through Gantt charts, checklists and similar tools to achieve goals.', 'Sets high-quality, challenging and realistic goals for self and others.')),
@@ -711,21 +633,12 @@ class Ipcrf_model extends CI_Model
         $this->db->where('form_id', (int) $formId)->update('ipcrf_objectives', array('is_deleted' => 1));
         $this->db->where('form_id', (int) $formId)->update('ipcrf_competencies', array('is_deleted' => 1));
 
-        $templateKras = $this->db->where('template_id', (int) $templateId)->order_by('sort_order')->get('ipcrf_template_kras')->result_array();
+        // Only the KRAs the SGOD Chief tagged this member into are copied in — not
+        // the whole template. Untagged members start with an empty KRA section and
+        // build their own.
+        $templateKras = $this->assigned_template_kras($targetForm ? $targetForm['employee_id'] : '', (int) $templateId);
         foreach ($templateKras as $kra) {
-            $this->db->insert('ipcrf_kras', array('form_id' => $formId, 'title' => $kra['title'], 'sort_order' => $kra['sort_order'], 'is_deleted' => 0));
-            $kraId = (int) $this->db->insert_id();
-            $objectives = $this->db->where('template_kra_id', $kra['id'])->order_by('sort_order')->get('ipcrf_template_objectives')->result_array();
-            foreach ($objectives as $objective) {
-                $timeline = preg_replace('/\b' . preg_quote((string) $template['year'], '/') . '\b/', $targetYear, $objective['timeline']);
-                $this->db->insert('ipcrf_objectives', array(
-                    'form_id' => $formId, 'kra_id' => $kraId, 'code' => $objective['code'], 'objective' => $objective['objective'],
-                    'timeline' => $timeline, 'weight' => $objective['weight'], 'quality_json' => $objective['quality_json'],
-                    'efficiency_json' => $objective['efficiency_json'], 'timeliness_json' => $objective['timeliness_json'],
-                    'accomplishment' => '', 'quality_rating' => 0, 'efficiency_rating' => 0, 'timeliness_rating' => 0,
-                    'sort_order' => $objective['sort_order'], 'is_deleted' => 0
-                ));
-            }
+            $this->copy_template_kra_into_form($formId, $kra, $kra['sort_order'], (string) $template['year'], $targetYear);
         }
 
         $competencies = $this->db->where('template_id', (int) $templateId)->order_by('sort_order')->get('ipcrf_template_competencies')->result_array();
@@ -1265,6 +1178,14 @@ class Ipcrf_model extends CI_Model
         );
 
         if ((int) $objectiveId > 0) {
+            // Forms that omit a field (e.g. the KRA workspace, which only edits
+            // code/objective/timeline) must not blank out the stored value.
+            $optional = array('weight' => 'weight', 'quality' => 'quality_json', 'efficiency' => 'efficiency_json', 'timeliness' => 'timeliness_json');
+            foreach ($optional as $key => $column) {
+                if (!array_key_exists($key, $data) || $data[$key] === NULL) {
+                    unset($payload[$column]);
+                }
+            }
             $this->db->where('id', (int) $objectiveId)->update('ipcrf_template_objectives', $payload);
             return (int) $objectiveId;
         }
@@ -1430,6 +1351,117 @@ class Ipcrf_model extends CI_Model
                 'created_at' => date('Y-m-d H:i:s')
             ));
         }
+    }
+
+    /**
+     * Template KRAs tagged to the person behind an HRIS employee id.
+     *
+     * Tags are stored against one_sgod_users.username while forms are keyed by
+     * hris_staff.IDNumber, so each tagged username is put through
+     * resolve_employee_id() — the same bridge the rest of the module uses — and
+     * kept when it lands on this employee.
+     */
+    public function assigned_template_kras($employeeId, $templateId = 0)
+    {
+        $this->ensure_assignments_table();
+        $employeeId = trim((string) $employeeId);
+        if ($employeeId === '') {
+            return array();
+        }
+
+        $this->db->select('k.id, k.template_id, k.title, a.member_username, a.sort_order');
+        $this->db->from('ipcrf_kra_assignments a');
+        $this->db->join('ipcrf_template_kras k', 'k.id = a.template_kra_id', 'inner');
+        if ((int) $templateId > 0) {
+            $this->db->where('k.template_id', (int) $templateId);
+        }
+        $this->db->order_by('a.sort_order', 'ASC');
+        $rows = $this->db->get()->result_array();
+
+        $resolved = array();
+        $kras = array();
+        foreach ($rows as $row) {
+            $username = (string) $row['member_username'];
+            if (!array_key_exists($username, $resolved)) {
+                $resolved[$username] = $this->resolve_employee_id($username);
+            }
+            // One person may hold several usernames; de-duplicate by template KRA.
+            if ($resolved[$username] === $employeeId) {
+                $kras[(int) $row['id']] = $row;
+            }
+        }
+        return array_values($kras);
+    }
+
+    private function copy_template_kra_into_form($formId, $templateKra, $sortOrder, $templateYear, $targetYear)
+    {
+        $this->db->insert('ipcrf_kras', array(
+            'form_id' => (int) $formId,
+            'template_kra_id' => (int) $templateKra['id'],
+            'title' => $templateKra['title'],
+            'sort_order' => (int) $sortOrder,
+            'is_deleted' => 0
+        ));
+        $kraId = (int) $this->db->insert_id();
+
+        $objectives = $this->db->where('template_kra_id', (int) $templateKra['id'])->order_by('sort_order')->get('ipcrf_template_objectives')->result_array();
+        foreach ($objectives as $objective) {
+            $timeline = preg_replace('/\b' . preg_quote((string) $templateYear, '/') . '\b/', $targetYear, (string) $objective['timeline']);
+            $this->db->insert('ipcrf_objectives', array(
+                'form_id' => (int) $formId, 'kra_id' => $kraId, 'code' => $objective['code'], 'objective' => $objective['objective'],
+                'timeline' => $timeline, 'weight' => $objective['weight'], 'quality_json' => $objective['quality_json'],
+                'efficiency_json' => $objective['efficiency_json'], 'timeliness_json' => $objective['timeliness_json'],
+                'accomplishment' => '', 'quality_rating' => 0, 'efficiency_rating' => 0, 'timeliness_rating' => 0,
+                'sort_order' => $objective['sort_order'], 'is_deleted' => 0
+            ));
+        }
+        return $kraId;
+    }
+
+    /**
+     * Pull any newly tagged KRAs into an existing form, appended after whatever is
+     * already there. Idempotent: a template KRA that has ever been copied into this
+     * form is skipped, so a member who removed one does not get it back on every
+     * page load, and their own KRAs (template_kra_id = 0) are never touched.
+     * Returns the number of KRAs added.
+     */
+    public function sync_assigned_kras($formId, $employeeId)
+    {
+        $formId = (int) $formId;
+        $assigned = $this->assigned_template_kras($employeeId);
+        if (empty($assigned)) {
+            return 0;
+        }
+
+        $seen = array();
+        $existing = $this->db->select('template_kra_id')->where('form_id', $formId)->where('template_kra_id >', 0)->get('ipcrf_kras')->result_array();
+        foreach ($existing as $row) {
+            $seen[(int) $row['template_kra_id']] = TRUE;
+        }
+
+        $pending = array();
+        foreach ($assigned as $kra) {
+            if (!isset($seen[(int) $kra['id']])) {
+                $pending[] = $kra;
+            }
+        }
+        if (empty($pending)) {
+            return 0;
+        }
+
+        $form = $this->get_form($formId);
+        $targetYear = $form ? date('Y', strtotime($form['period_start'])) : date('Y');
+        $maxRow = $this->db->select_max('sort_order', 'mx')->where('form_id', $formId)->get('ipcrf_kras')->row_array();
+        $sortOrder = (int) ($maxRow['mx'] ?? 0);
+
+        $this->db->trans_start();
+        foreach ($pending as $kra) {
+            $template = $this->db->select('year')->where('id', (int) $kra['template_id'])->get('ipcrf_templates', 1)->row_array();
+            $this->copy_template_kra_into_form($formId, $kra, ++$sortOrder, (string) ($template['year'] ?? $targetYear), $targetYear);
+        }
+        $this->db->trans_complete();
+
+        return $this->db->trans_status() ? count($pending) : 0;
     }
 
     // The KRAs (with objectives) assigned to one member, in personal order.
