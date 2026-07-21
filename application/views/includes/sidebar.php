@@ -573,6 +573,12 @@
                         </ul>
                     </li>
                     <li>
+                        <a href="<?= base_url(); ?>Research/temp_permits" class="waves-effect">
+                            <i class="mdi mdi-file-document-outline"></i>
+                            <span> Temp. Permits </span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
                             <i class="ion ion-ios-paper"></i>
                             <span> Memo </span>

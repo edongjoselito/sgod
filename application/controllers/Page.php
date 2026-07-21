@@ -669,6 +669,15 @@ class Page extends CI_Controller{
     }
   }
 
+  public function temp_permits(){
+    if ($this->session->userdata('section') !== 'Research') {
+      show_error('Access Denied', 403);
+      return;
+    }
+
+    $this->load->view('temp_permits');
+  }
+
   function YFP(){
     if($this->redirect_section_head_dashboard_if_needed()){
 		return;

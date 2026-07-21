@@ -770,13 +770,15 @@ class Brigada extends CI_Controller
         $data['can_manage_partners'] = $this->session->userdata('position') !== 'School';
         $data['data'] = $this->db->order_by('name', 'ASC')->get('brigada_partners')->result();
 
-        $this->load->view('templates/head');
-        $this->load->view('templates/header');
         $this->load->view('pages/' . $page, $data);
-        $this->load->view('templates/footer');
     }
 
     public function settings_partners() {
+        if (strtoupper($this->input->method(TRUE)) !== 'POST') {
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
         $check = $this->Common->one_cond_row('brigada_partners','name',$this->input->post('name'),'contact_person',$this->input->post('contact_person'));
 
         $config['allowed_types'] = 'jpg|png';
@@ -794,7 +796,7 @@ class Brigada extends CI_Controller
         }
        
         
-        redirect($_SERVER['HTTP_REFERER']);
+        redirect(base_url() . 'Brigada/list_of_partners');
     }
 
     public function partners_update()
@@ -805,27 +807,16 @@ class Brigada extends CI_Controller
             return;
         }
 
-        $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        ', '</div>');
+        if (strtoupper($this->input->method(TRUE)) !== 'POST') {
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
         $this->form_validation->set_rules('name', 'Name', 'required');
 
         if ($this->form_validation->run() == FALSE) {
-
-            $page = "brigada_partners_update";
-
-            if (!file_exists(APPPATH . 'views/pages/' . $page . '.php')) {
-                show_404();
-            }
-
-            $data['title'] = "Partners Update";
-            $data['data'] = $this->Common->one_cond_row('brigada_partners','id',$this->uri->segment(3));
-
-            $this->load->view('templates/head');
-            $this->load->view('templates/header');
-            $this->load->view('pages/' . $page, $data);
-            $this->load->view('templates/footer');
-
+            $this->session->set_flashdata('danger', 'Partner name is required.');
+            redirect(base_url() . 'Brigada/list_of_partners');
         }else{
             $this->BrigadaModel->update_partners();
             $this->session->set_flashdata('success', 'Successfully Updated.');

@@ -1,7 +1,16 @@
-<?php include('templates/head.php'); ?>
-<?php include('templates/header.php'); ?>
-
-<style>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <?php include('includes/page-title.php'); ?>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
+        <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" id="bootstrap-stylesheet" />
+        <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+        <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-stylesheet" />
+        <link href="<?= base_url(); ?>assets/css/dashboard-unified.css" rel="stylesheet" type="text/css" />
+        <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
   * { box-sizing: border-box; }
@@ -55,6 +64,7 @@
     font-family: var(--font);
     color: var(--c-ink);
     max-width: 100%;
+    margin-top: 0;
   }
 
   /* ── PAGE HEADER ── */
@@ -692,7 +702,86 @@
   /* Restore vertical scrolling */
   html, body { overflow-y: auto !important; height: auto !important; }
   .content-page, .content { overflow: visible !important; height: auto !important; }
-</style>
+
+            :root {
+                --memo-navy: #272b8c;
+                --memo-blue: #3c40c6;
+                --memo-ink: #23275d;
+                --memo-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+            }
+
+            body {
+                background:
+                    radial-gradient(circle at top left, rgba(60, 64, 198, 0.10), transparent 24%),
+                    linear-gradient(180deg, #f4f8fc 0%, #eef4fa 100%);
+            }
+
+            .content-page {
+                background: transparent;
+            }
+
+            .memo-shell {
+                position: relative;
+                padding-bottom: 28px;
+            }
+
+            .memo-shell::before {
+                content: "";
+                position: absolute;
+                inset: 24px 0 auto;
+                height: 240px;
+                border-radius: 30px;
+                background: linear-gradient(135deg, rgba(60, 64, 198, 0.11), rgba(122, 128, 255, 0.10));
+                z-index: 0;
+            }
+
+            .memo-shell > * {
+                position: relative;
+                z-index: 1;
+            }
+
+            .memo-hero {
+                margin-top: 20px;
+                border-radius: 28px;
+                overflow: hidden;
+                color: #ffffff;
+                box-shadow: var(--memo-shadow);
+                background:
+                    radial-gradient(circle at top right, rgba(255, 255, 255, 0.16), transparent 32%),
+                    linear-gradient(135deg, #272b8c 0%, #3c40c6 58%, #6f74ff 100%);
+            }
+
+            .memo-hero-body {
+                padding: 32px;
+            }
+
+            .memo-eyebrow {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                font-size: 0.8rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .memo-title {
+                margin: 18px 0 12px;
+                color: #ffffff;
+                font-size: clamp(2rem, 3vw, 2.7rem);
+                line-height: 1.05;
+                font-weight: 700;
+                letter-spacing: -0.03em;
+            }
+        </style>
+    </head>
+    <body class="dashboard-root-theme">
+        <div id="wrapper">
+            <?php include('includes/top-bar.php'); ?>
+            <?php include('includes/sidebar.php'); ?>
 
 <!-- ============================================================== -->
 <!-- Page Content -->
@@ -700,7 +789,7 @@
 
 <div class="content-page">
   <div class="content">
-    <div class="container-fluid">
+    <main class="container-fluid dashboard-shell">
 
       <!-- Flash Messages -->
       <?php if ($this->session->flashdata('success')): ?>
@@ -1018,11 +1107,15 @@
         </div>
 
       </div>
-    </div>
+    </main>
   </div>
 
-  <?php include('templates/footer.php'); ?>
+  <?php include('includes/footer.php'); ?>
 </div>
+</div>
+
+<script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
+<script src="<?= base_url(); ?>assets/js/app.min.js"></script>
 
 <script>
   function brigSearchTable() {
@@ -1082,3 +1175,5 @@
     document.body.removeChild(link);
   }
 </script>
+</body>
+</html>
