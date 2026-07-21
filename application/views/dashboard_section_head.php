@@ -42,6 +42,13 @@ $summaryCards = array(
         'context' => 'View submitted reports',
         'icon' => 'mdi-file-check-outline',
         'href' => base_url() . 'Page/viewSecAccomplishments'
+    ),
+    array(
+        'value' => 'Add',
+        'label' => 'Activity Design',
+        'context' => 'DepEd-aligned activity entry',
+        'icon' => 'mdi-clipboard-edit-outline',
+        'href' => base_url() . 'Page/activity_design_add'
     )
 );
 

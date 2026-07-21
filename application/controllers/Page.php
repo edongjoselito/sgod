@@ -983,6 +983,160 @@ class Page extends CI_Controller{
     )));
   }
 
+  function activity_design(){
+    $this->auto_migrate_activity_design_table();
+    $username = $this->session->userdata('username');
+    $result['entries'] = $this->db->where('username', $username)->order_by('created_at', 'DESC')->get('one_sgod_activity_designs')->result();
+    $this->load->view('activity_design', $result);
+  }
+
+  function activity_design_add(){
+    $this->auto_migrate_activity_design_table();
+    $result['next_no'] = $this->build_next_activity_design_no();
+    $this->load->view('activity_design_form', $result);
+  }
+
+  function activity_design_edit($id = 0){
+    $this->auto_migrate_activity_design_table();
+    $username = $this->session->userdata('username');
+    $id = (int) $id;
+    $result['entry'] = $this->db->where('id', $id)->where('username', $username)->get('one_sgod_activity_designs')->row();
+    $this->load->view('activity_design_form', $result);
+  }
+
+  function activity_design_save(){
+    $this->auto_migrate_activity_design_table();
+    $id = (int) $this->input->post('id');
+    $username = $this->session->userdata('username');
+
+    $data = array(
+      'title' => $this->input->post('title', TRUE),
+      'activity_date' => $this->input->post('activity_date', TRUE),
+      'venue' => $this->input->post('venue', TRUE),
+      'rationale' => $this->input->post('rationale', TRUE),
+      'objectives' => $this->input->post('objectives', TRUE),
+      'fund_source' => $this->input->post('fund_source', TRUE),
+      'updated_at' => date('Y-m-d H:i:s')
+    );
+
+    $budget = array();
+    $particulars = $this->input->post('budget_particulars', TRUE);
+    $amounts = $this->input->post('budget_amount', TRUE);
+    $units = $this->input->post('budget_unit', TRUE);
+    $quantities = $this->input->post('budget_qty', TRUE);
+    $totals = $this->input->post('budget_total', TRUE);
+
+    if (is_array($particulars)) {
+      foreach ($particulars as $i => $particular) {
+        $particular = trim((string) $particular);
+        if ($particular === '') {
+          continue;
+        }
+        $budget[] = array(
+          'particulars' => $particular,
+          'amount' => (float) (is_array($amounts) && isset($amounts[$i]) ? $amounts[$i] : 0),
+          'unit' => (string) (is_array($units) && isset($units[$i]) ? $units[$i] : ''),
+          'qty' => (float) (is_array($quantities) && isset($quantities[$i]) ? $quantities[$i] : 0),
+          'total_amount' => (float) (is_array($totals) && isset($totals[$i]) ? $totals[$i] : 0)
+        );
+      }
+    }
+    $data['budget_lines'] = json_encode($budget);
+
+    if ($id > 0) {
+      $existing = $this->db->where('id', $id)->where('username', $username)->get('one_sgod_activity_designs')->row();
+      if (!$existing) {
+        redirect('Page/activity_design');
+        return;
+      }
+      $this->db->where('id', $id)->update('one_sgod_activity_designs', $data);
+    } else {
+      $data['username'] = $username;
+      $data['created_at'] = date('Y-m-d H:i:s');
+      $data['activity_design_no'] = $this->build_next_activity_design_no();
+      $this->db->insert('one_sgod_activity_designs', $data);
+    }
+    redirect('Page/activity_design');
+  }
+
+  function activity_design_print($id = 0){
+    $this->auto_migrate_activity_design_table();
+    $username = $this->session->userdata('username');
+    $id = (int) $id;
+    $result['entry'] = $this->db->where('id', $id)->where('username', $username)->get('one_sgod_activity_designs')->row();
+    if (empty($result['entry'])) {
+      show_404();
+      return;
+    }
+    $this->load->view('activity_design_print', $result);
+  }
+
+  function activity_design_delete($id = 0){
+    $this->auto_migrate_activity_design_table();
+    $username = $this->session->userdata('username');
+    $id = (int) $id;
+    $entry = $this->db->where('id', $id)->where('username', $username)->get('one_sgod_activity_designs')->row();
+    if (!empty($entry)) {
+      $this->db->where('id', $id)->where('username', $username)->delete('one_sgod_activity_designs');
+      $this->session->set_flashdata('success', 'Activity design deleted successfully.');
+    } else {
+      $this->session->set_flashdata('danger', 'Activity design not found or access denied.');
+    }
+    redirect('Page/activity_design');
+  }
+
+  private function auto_migrate_activity_design_table(){
+    $this->load->dbforge();
+    if (!$this->db->table_exists('one_sgod_activity_designs')) {
+      $fields = array(
+        'id' => array('type' => 'INT', 'constraint' => 11, 'unsigned' => TRUE, 'auto_increment' => TRUE),
+        'username' => array('type' => 'VARCHAR', 'constraint' => 255),
+        'title' => array('type' => 'VARCHAR', 'constraint' => 500),
+        'activity_date' => array('type' => 'DATE', 'null' => TRUE),
+        'venue' => array('type' => 'VARCHAR', 'constraint' => 255, 'null' => TRUE),
+        'rationale' => array('type' => 'TEXT', 'null' => TRUE),
+        'objectives' => array('type' => 'TEXT', 'null' => TRUE),
+        'budget_lines' => array('type' => 'TEXT', 'null' => TRUE),
+        'fund_source' => array('type' => 'VARCHAR', 'constraint' => 255, 'null' => TRUE),
+        'activity_design_no' => array('type' => 'VARCHAR', 'constraint' => 50, 'null' => TRUE),
+        'created_at' => array('type' => 'DATETIME', 'null' => TRUE),
+        'updated_at' => array('type' => 'DATETIME', 'null' => TRUE),
+      );
+      $this->dbforge->add_field($fields);
+      $this->dbforge->add_key('id', TRUE);
+      $this->dbforge->create_table('one_sgod_activity_designs', TRUE);
+      return;
+    }
+
+    $newColumns = array(
+      'activity_date' => array('type' => 'DATE', 'null' => TRUE),
+      'venue' => array('type' => 'VARCHAR', 'constraint' => 255, 'null' => TRUE),
+      'rationale' => array('type' => 'TEXT', 'null' => TRUE),
+      'objectives' => array('type' => 'TEXT', 'null' => TRUE),
+      'budget_lines' => array('type' => 'TEXT', 'null' => TRUE),
+      'fund_source' => array('type' => 'VARCHAR', 'constraint' => 255, 'null' => TRUE),
+      'activity_design_no' => array('type' => 'VARCHAR', 'constraint' => 50, 'null' => TRUE),
+    );
+    foreach ($newColumns as $column => $definition) {
+      if (!$this->db->field_exists($column, 'one_sgod_activity_designs')) {
+        $this->dbforge->add_column('one_sgod_activity_designs', array($column => $definition));
+      }
+    }
+  }
+
+  private function build_next_activity_design_no(){
+    $year = date('Y');
+    $secGroup = strtoupper(trim((string) $this->session->userdata('secGroup')));
+    $prefix = ($secGroup === '') ? 'SGOD' : $secGroup;
+    $prefix .= '-' . $year . '-';
+    $row = $this->db->select("MAX(CAST(SUBSTRING_INDEX(activity_design_no, '-', -1) AS UNSIGNED)) AS max_seq", FALSE)
+      ->like('activity_design_no', $prefix, 'after')
+      ->get('one_sgod_activity_designs')
+      ->row_array();
+    $nextSeq = !empty($row['max_seq']) ? ((int) $row['max_seq'] + 1) : 1;
+    return $prefix . sprintf('%03d', $nextSeq);
+  }
+
   function app(){
 	$result['data']=$this->SGODModel->get_all('app_school');
     $this->load->view('app',$result);  

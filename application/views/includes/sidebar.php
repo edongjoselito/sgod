@@ -146,6 +146,13 @@
                             <span> Memo </span>
                         </a>
                     </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
+                        </a>
+                    </li>
                     
 
                     <li>
@@ -157,7 +164,7 @@
 
                       <li>
                             <a href="javascript: void(0);" class="waves-effect">
-                                <i class="mdi mdi-clipboard-edit-outline"></i>
+                                <i class="mdi mdi-pencil"></i>
                                 <span> Manage IPCR </span>
                                 <span class="menu-arrow"></span>
                             </a>
@@ -238,6 +245,13 @@
                         <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
                             <i class="ion ion-ios-paper"></i>
                             <span> Memo </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
                         </a>
                     </li>
 
@@ -355,6 +369,13 @@
                         <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
                             <i class="ion ion-ios-paper"></i>
                             <span> Memo </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
                         </a>
                     </li>
 
@@ -557,6 +578,13 @@
                             <span> Memo </span>
                         </a>
                     </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
+                        </a>
+                    </li>
                     <li>
                         <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
@@ -620,6 +648,13 @@
                         <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
                             <i class="ion ion-ios-paper"></i>
                             <span> Memo </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
                         </a>
                     </li>
                     <li>
@@ -687,6 +722,13 @@
                             <span> Memo </span>
                         </a>
                     </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
+                        </a>
+                    </li>
                     <li>
                         <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
@@ -750,6 +792,13 @@
                         <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
                             <i class="ion ion-ios-paper"></i>
                             <span> Memo </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
                         </a>
                     </li>
                     <li>
@@ -817,6 +866,13 @@
                             <span> Memo </span>
                         </a>
                     </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
+                        </a>
+                    </li>
                     <li>
                         <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
@@ -880,6 +936,13 @@
                         <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
                             <i class="ion ion-ios-paper"></i>
                             <span> Memo </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
                         </a>
                     </li>
 
@@ -961,6 +1024,13 @@
                             <span> Memo </span>
                         </a>
                     </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
+                        </a>
+                    </li>
                     <li>
                         <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
                             <i class="mdi mdi-office-building"></i>
@@ -1027,10 +1097,17 @@
                         </a>
                     </li>
 
+                    <li>
+                        <a href="<?= base_url(); ?>Page/activity_design" class="waves-effect">
+                            <i class="mdi mdi-pencil"></i>
+                            <span> Activity Design </span>
+                        </a>
+                    </li>
+
                     
                         <li>
                             <a href="javascript: void(0);" class="waves-effect">
-                                <i class="mdi mdi-clipboard-edit-outline"></i>
+                                <i class="mdi mdi-pencil"></i>
                                 <span> Manage IPCR </span>
                                 <span class="menu-arrow"></span>
                             </a>
