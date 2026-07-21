@@ -9,6 +9,8 @@ $activityDateToValue = $this->input->post('activityDateTo') ? (string) $this->in
 $activityValue = $this->input->post('activity') ? (string) $this->input->post('activity') : '';
 $categoryValue = $this->input->post('activityCategory') ? (string) $this->input->post('activityCategory') : 'Accomplishment';
 $venueValue = $this->input->post('venue') ? (string) $this->input->post('venue') : '';
+$kraIdValue = $this->input->post('kra_id') ? (int) $this->input->post('kra_id') : 0;
+$objectiveIdValue = $this->input->post('objective_id') ? (int) $this->input->post('objective_id') : 0;
 $perIndicatorsValue = $this->input->post('perIndicators') ? (string) $this->input->post('perIndicators') : '';
 $targetValue = $this->input->post('target') ? (string) $this->input->post('target') : '';
 $achievedValue = $this->input->post('achieved') ? (string) $this->input->post('achieved') : '';
@@ -597,41 +599,14 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                         <i class="mdi mdi-clipboard-plus-outline"></i>
                                         New Entry
                                     </span>
-                                    <h1 class="accom-title">Add Section Accomplishment</h1>
-                                    <div class="hero-meta">
-                                        <span class="hero-chip"><i class="mdi mdi-office-building-outline"></i> <?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <?php if ($secGroupName !== '') { ?>
-                                            <span class="hero-chip"><i class="mdi mdi-account-group-outline"></i> <?= htmlspecialchars($secGroupName, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <?php } ?>
-                                    </div>
-                                </div>
-
-                                <div class="hero-actions">
-                                    <a href="<?= base_url(); ?>Page/viewSecAccomplishments" class="hero-action">
-                                        <i class="mdi mdi-arrow-left"></i>
-                                        Back to Records
-                                    </a>
-                                    <button
-                                        type="button"
-                                        class="hero-action hero-action--secondary"
-                                        data-toggle="modal"
-                                        data-target="#weeklyReportModal"
-                                        data-report-url="<?= htmlspecialchars($weeklyReportUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                    >
-                                        <i class="mdi mdi-calendar-week-outline"></i>
-                                        Weekly Report
-                                    </button>
+                                    <h1 class="accom-title">Add Accomplishment</h1>
                                 </div>
                             </div>
                         </div>
 
                         <div class="row">
-                            <div class="col-xl-8">
+                            <div class="col-xl-12">
                                 <div class="panel-card">
-                                    <div class="panel-kicker">Entry Form</div>
-                                    <h4 class="panel-title">Complete the accomplishment details</h4>
-                                    <p class="panel-copy">Fields marked with an asterisk are required. Everything else can be added as needed for fuller reporting.</p>
-
                                     <?php if ($uploadError !== '') { ?>
                                         <div class="alert alert-warning inline-alert" role="alert">
                                             <?= htmlspecialchars($uploadError, ENT_QUOTES, 'UTF-8'); ?>
@@ -687,6 +662,34 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                                     <label class="field-label" for="venue">Venue</label>
                                                     <input type="text" class="field-input" id="venue" name="venue" value="<?= htmlspecialchars($venueValue, ENT_QUOTES, 'UTF-8'); ?>">
                                                 </div>
+
+                                                <div class="field-span-6">
+                                                    <label class="field-label" for="kra_id">KRA</label>
+                                                    <select class="field-input" id="kra_id" name="kra_id">
+                                                        <option value="">-- Select KRA --</option>
+                                                        <?php if (!empty($kraOptions)) : ?>
+                                                            <?php foreach ($kraOptions as $kra) : ?>
+                                                                <option value="<?= (int) $kra->id; ?>" <?= (int) ($kraIdValue ?? 0) === (int) $kra->id ? 'selected' : ''; ?>>
+                                                                    <?= htmlspecialchars($kra->title, ENT_QUOTES, 'UTF-8'); ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        <?php endif; ?>
+                                                    </select>
+                                                </div>
+
+                                                <div class="field-span-6">
+                                                    <label class="field-label" for="objective_id">Objective</label>
+                                                    <select class="field-input" id="objective_id" name="objective_id">
+                                                        <option value="">-- Select Objective --</option>
+                                                        <?php if (!empty($objectiveOptions)) : ?>
+                                                            <?php foreach ($objectiveOptions as $objective) : ?>
+                                                                <option value="<?= (int) $objective->id; ?>" data-kra="<?= (int) $objective->template_kra_id; ?>" <?= (int) ($objectiveIdValue ?? 0) === (int) $objective->id ? 'selected' : ''; ?>>
+                                                                    <?= htmlspecialchars($objective->code . ' - ' . $objective->objective, ENT_QUOTES, 'UTF-8'); ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        <?php endif; ?>
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -728,50 +731,6 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                 </div>
                             </div>
 
-                            <div class="col-xl-4">
-                                <div class="panel-card aside-card">
-                                    <div class="panel-kicker">Snapshot</div>
-                                    <h4 class="panel-title">Current entry context</h4>
-                                    <p class="panel-copy">A quick reminder of where this accomplishment will be filed once you save it.</p>
-
-                                    <div class="aside-list">
-                                        <div class="aside-item">
-                                            <span class="aside-item-label">Section</span>
-                                            <span class="aside-item-value"><?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        </div>
-                                        <div class="aside-item">
-                                            <span class="aside-item-label">Office Group</span>
-                                            <span class="aside-item-value"><?= htmlspecialchars($secGroupName !== '' ? $secGroupName : 'Not specified', ENT_QUOTES, 'UTF-8'); ?></span>
-                                        </div>
-                                        <div class="aside-item">
-                                            <span class="aside-item-label">Scope</span>
-                                            <span class="aside-item-value"><?= htmlspecialchars($selectedAccomplishmentScope === 'personal' ? 'Personal Accomplishments' : 'Section Accomplishments', ENT_QUOTES, 'UTF-8'); ?></span>
-                                        </div>
-                                        <div class="aside-item">
-                                            <span class="aside-item-label">Activity Range</span>
-                                            <span class="aside-item-value"><?= htmlspecialchars($activityRangeSummary, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="panel-card">
-                                    <div class="panel-kicker">Tips</div>
-                                    <h4 class="panel-title">Helpful entry reminders</h4>
-                                    <p class="panel-copy">A few small details make accomplishment reports much easier to review later.</p>
-
-                                    <div class="tips-stack">
-                                        <div class="tip-card">
-                                            <div class="tip-title">Be specific with the activity</div>
-                                            <p class="tip-copy">Use a clear title and include enough context so the accomplishment is easy to identify in future reports.</p>
-                                        </div>
-
-                                        <div class="tip-card">
-                                            <div class="tip-title">Keep links and notes together</div>
-                                            <p class="tip-copy">Supporting links, notes, and remarks are easier to revisit when they are saved alongside the main accomplishment entry.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -833,6 +792,32 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                 weeklyReportModal.on('hidden.bs.modal', function () {
                     weeklyReportModal.find('.weekly-report-frame').attr('src', 'about:blank');
                 });
+
+                var kraSelect = $('#kra_id');
+                var objectiveSelect = $('#objective_id');
+                var allObjectives = objectiveSelect.find('option[data-kra]').clone();
+
+                function filterObjectives(kraId) {
+                    var selectedObjective = objectiveSelect.val();
+                    objectiveSelect.empty().append('<option value="">-- Select Objective --</option>');
+                    allObjectives.each(function () {
+                        var option = $(this);
+                        if (!kraId || String(option.data('kra')) === String(kraId)) {
+                            objectiveSelect.append(option.clone());
+                        }
+                    });
+                    if (selectedObjective && objectiveSelect.find('option[value="' + selectedObjective + '"]').length) {
+                        objectiveSelect.val(selectedObjective);
+                    } else {
+                        objectiveSelect.val('');
+                    }
+                }
+
+                kraSelect.on('change', function () {
+                    filterObjectives($(this).val());
+                });
+
+                filterObjectives(kraSelect.val());
             })(jQuery);
         </script>
 

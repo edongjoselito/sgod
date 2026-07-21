@@ -69,7 +69,8 @@ class Ipcrf extends CI_Controller
             'current_employee' => $this->Ipcrf_model->get_employee($viewerId),
             'actor' => $viewerId,
             'is_admin' => $this->Ipcrf_model->is_admin(),
-            'is_pmt' => $this->Ipcrf_model->is_pmt()
+            'is_pmt' => $this->Ipcrf_model->is_pmt(),
+            'acc_counts' => $this->get_accomplishment_counts_by_objective()
         );
         $this->load->view('ipcrf/editor', $data);
     }
@@ -947,5 +948,19 @@ class Ipcrf extends CI_Controller
             $this->session->set_flashdata('success', 'Competency removed.');
         }
         redirect('Ipcrf/manage_template');
+    }
+
+    private function get_accomplishment_counts_by_objective()
+    {
+        $counts = array();
+        $rows = $this->db->select('objective_id, COUNT(*) as cnt')
+            ->where('objective_id >', 0)
+            ->group_by('objective_id')
+            ->get('one_sgod_accomplishments')
+            ->result_array();
+        foreach ($rows as $row) {
+            $counts[(int) $row['objective_id']] = (int) $row['cnt'];
+        }
+        return $counts;
     }
 }

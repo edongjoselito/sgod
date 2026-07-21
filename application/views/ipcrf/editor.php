@@ -391,6 +391,7 @@ window.IPCRF_CONFIG = <?= json_encode(array(
     'isAdmin' => $is_admin,
     'isPmt' => $is_pmt,
     'reviewWarnings' => $review_warnings,
+    'accCounts' => isset($acc_counts) ? $acc_counts : array(),
     'urls' => array(
         'employeeSearch' => site_url('Ipcrf/employee_search'),
         'create' => site_url('Ipcrf/create'),
@@ -399,7 +400,8 @@ window.IPCRF_CONFIG = <?= json_encode(array(
         'loadPreset' => $hasForm ? site_url('Ipcrf/load_preset/' . (int) $form['id']) : '',
         'workflow' => $hasForm ? site_url('Ipcrf/workflow/' . (int) $form['id']) : '',
         'uploadEvidence' => $hasForm ? site_url('Ipcrf/upload_evidence/' . (int) $form['id']) : '',
-        'deleteEvidenceBase' => $hasForm ? site_url('Ipcrf/delete_evidence/' . (int) $form['id']) : ''
+        'deleteEvidenceBase' => $hasForm ? site_url('Ipcrf/delete_evidence/' . (int) $form['id']) : '',
+        'accByObjectiveBase' => site_url('Page/accomplishments_by_objective')
     )
 ), $jsonFlags); ?>;
 </script>

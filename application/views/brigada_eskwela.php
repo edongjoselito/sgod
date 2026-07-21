@@ -460,19 +460,13 @@ $brigadaSections = array(
 
                         <div class="brigada-hero">
                             <div class="brigada-hero-body">
-                                <div class="brigada-eyebrow">
-                                    <i class="mdi mdi-school-outline"></i>
-                                    <span>Social Mobilization and Networking</span>
-                                </div>
                                 <h1 class="brigada-title">Brigada Eskwela</h1>
                                 <p class="brigada-subtitle">
-                                    Track Brigada Eskwela-related accomplishment entries and memos from one SMN-only workspace.
+                                    Track Brigada Eskwela-related accomplishment entries and memos in one workspace.
                                 </p>
                                 <div class="brigada-meta">
                                     <?php if ($latestActivityDate !== ''): ?>
                                         Latest related activity: <?= brigada_escape($latestActivityDate); ?>
-                                    <?php else: ?>
-                                        Visible only to Social Mobilization and Networking members and section heads.
                                     <?php endif; ?>
                                 </div>
                                 <div class="brigada-actions">
@@ -521,7 +515,7 @@ $brigadaSections = array(
                                     <div class="card-body">
                                         <div class="summary-label">Memos</div>
                                         <div class="summary-value"><?= number_format($brigadaMemoCount); ?></div>
-                                        <div class="summary-copy">Division memos with Brigada Eskwela references available to your SGOD group.</div>
+                                        <div class="summary-copy">Division memos with Brigada Eskwela references available to your group.</div>
                                     </div>
                                 </div>
                             </div>

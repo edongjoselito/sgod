@@ -7,6 +7,7 @@ class Page extends CI_Controller{
 	$this->load->helper('url', 'form');	
 	$this->load->library('form_validation');
     $this->load->model('SGODModel');
+    $this->load->model('Ipcrf_model');
 	
     if($this->session->userdata('logged_in') !== TRUE){
       redirect('login');
@@ -84,6 +85,80 @@ class Page extends CI_Controller{
 	}
 
 	$this->db->query("UPDATE one_sgod_accomplishments SET accomplishmentScope = 'section' WHERE accomplishmentScope IS NULL OR TRIM(accomplishmentScope) = ''");
+  }
+
+  private function ensure_kra_objective_columns(){
+	if(!$this->db->field_exists('kra_id', 'one_sgod_accomplishments')){
+		$this->db->query("ALTER TABLE one_sgod_accomplishments ADD COLUMN kra_id INT UNSIGNED NOT NULL DEFAULT 0 AFTER venue");
+	}
+	if(!$this->db->field_exists('objective_id', 'one_sgod_accomplishments')){
+		$this->db->query("ALTER TABLE one_sgod_accomplishments ADD COLUMN objective_id INT UNSIGNED NOT NULL DEFAULT 0 AFTER kra_id");
+	}
+  }
+
+  private function ensure_ipcrf_objective_template_id(){
+	if(!$this->db->field_exists('template_id', 'ipcrf_template_objectives')){
+		$this->db->query("ALTER TABLE ipcrf_template_objectives ADD COLUMN template_id INT UNSIGNED NOT NULL DEFAULT 0 AFTER template_kra_id");
+	}
+	$this->db->query("UPDATE ipcrf_template_objectives o JOIN ipcrf_template_kras k ON k.id = o.template_kra_id SET o.template_id = k.template_id WHERE o.template_id = 0 OR o.template_id IS NULL");
+  }
+
+  private function get_active_template_id(){
+	$template = $this->db->where('is_active', 1)->order_by('year', 'DESC')->get('ipcrf_templates', 1)->row();
+	return $template ? (int) $template->id : 0;
+  }
+
+  private function get_current_employee_id(){
+	$username = trim((string) $this->session->userdata('username'));
+	if($username === '') return '';
+	return $this->Ipcrf_model->resolve_employee_id($username);
+  }
+
+  private function get_current_ipcrf_form_id(){
+	$employeeId = $this->get_current_employee_id();
+	if($employeeId === '') return 0;
+	$form = $this->db->where('employee_id', $employeeId)->order_by('period_start', 'DESC')->get('ipcrf_forms', 1)->row();
+	return $form ? (int) $form->id : 0;
+  }
+
+  private function get_active_kras(){
+	$formId = $this->get_current_ipcrf_form_id();
+	if($formId > 0){
+		$kras = $this->db->where('form_id', $formId)->where('is_deleted', 0)->order_by('sort_order')->get('ipcrf_kras')->result();
+		if(!empty($kras)) return $kras;
+	}
+
+	// Fallback to assigned template KRAs when no form exists yet.
+	$templateId = $this->get_active_template_id();
+	$employeeId = $this->get_current_employee_id();
+	if($templateId === 0 || $employeeId === '') return array();
+	$kras = $this->Ipcrf_model->assigned_template_kras($employeeId, $templateId);
+	return array_map(function($kra){ return (object) $kra; }, $kras);
+  }
+
+  private function get_active_objectives(){
+	$formId = $this->get_current_ipcrf_form_id();
+	if($formId > 0){
+		$objectives = $this->db->where('form_id', $formId)->where('is_deleted', 0)->order_by('sort_order')->get('ipcrf_objectives')->result();
+		if(!empty($objectives)){
+			foreach($objectives as $objective){
+				$objective->template_kra_id = (int) $objective->kra_id;
+				$objective->objective = (string) $objective->objective;
+			}
+			return $objectives;
+		}
+	}
+
+	// Fallback to template objectives for assigned template KRAs.
+	$templateId = $this->get_active_template_id();
+	if($templateId === 0) return array();
+	$kraIds = array();
+	foreach($this->get_active_kras() as $kra){
+		$kraIds[] = (int) $kra->id;
+	}
+	if(empty($kraIds)) return array();
+	$this->db->where_in('template_kra_id', $kraIds);
+	return $this->db->order_by('sort_order')->get('ipcrf_template_objectives')->result();
   }
 
   private function upload_accomplishment_report($fieldName = 'attachment_file'){
@@ -2341,6 +2416,10 @@ public function memo_delete(){
 	function addAccomplishments(){
 		$result = array();
 		$this->ensure_accomplishment_scope_column();
+		$this->ensure_kra_objective_columns();
+		$this->ensure_ipcrf_objective_template_id();
+		$result['kraOptions'] = $this->get_active_kras();
+		$result['objectiveOptions'] = $this->get_active_objectives();
 
 		if($this->input->post('submit'))
 	  {
@@ -2367,6 +2446,8 @@ public function memo_delete(){
 	  $particulars=trim((string) $this->input->post('particulars'));	 
 	  $activityCategory=trim((string) $this->input->post('activityCategory'));
 	  $venue=trim((string) $this->input->post('venue'));
+	  $kraId = (int) $this->input->post('kra_id');
+	  $objectiveId = (int) $this->input->post('objective_id');
 	  $targetDate=$activityDateFrom;
 	  $dateConducted=$this->format_activity_date_range($activityDateFrom, $activityDateTo);
 	  $resources=trim((string) $this->input->post('resources'));
@@ -2391,6 +2472,8 @@ public function memo_delete(){
 		'particulars' => $particulars,
 		'activityCategory' => $activityCategory,
 		'venue' => $venue,
+		'kra_id' => $kraId,
+		'objective_id' => $objectiveId,
 		'targetDate' => $targetDate,
 		'dateConducted' => $dateConducted,
 		'encoder' => $encoder,
@@ -2418,7 +2501,7 @@ public function memo_delete(){
 	  }
 	  
 	  $this->load->view('sect_accomplishments_add', $result);
-	  }
+  }
   
   function updateAccomplishments(){
 	$id=$this->input->get('id');
@@ -3118,4 +3201,18 @@ private function is_super_admin_managed_account($username){
 				redirect('Page/announcement');
 			}
 	}
+
+  function accomplishments_by_objective($objectiveId = 0){
+	$objectiveId = (int) $objectiveId;
+	if($objectiveId === 0){
+		$objectiveId = (int) $this->input->get('objective_id');
+	}
+	$secGroup = $this->session->userdata('secGroup');
+	$section = $this->session->userdata('section');
+	$this->db->where('objective_id', $objectiveId);
+	$this->db->order_by('dateConducted', 'DESC');
+	$result['data'] = $this->db->get('one_sgod_accomplishments')->result();
+	$result['objectiveId'] = $objectiveId;
+	$this->load->view('accomplishments_by_objective', $result);
+  }
 }
