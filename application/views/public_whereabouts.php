@@ -1016,10 +1016,160 @@ $tickerEmployees = $totalEmployees > 0 ? array_merge($employees, $employees) : [
                     width: 100%;
                 }
             }
+        .kiosk-exit {
+            display: none;
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 100;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(244, 92, 67, 0.86);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+        }
+
+        .kiosk-mode .kiosk-exit { display: inline-flex; }
+
+        /* Flat, high-contrast theme */
+        body {
+            background: #0d1b2a;
+            color: #ffffff;
+            font-size: 18px;
+        }
+
+        body::before,
+        body::after {
+            display: none;
+        }
+
+        .toolbar,
+        .summary-card,
+        .spotlight-panel,
+        .board-panel,
+        .ticker-shell {
+            background: #1b263b;
+            border-color: rgba(255, 255, 255, 0.14);
+            backdrop-filter: none;
+        }
+
+        .summary-card-total { background: #0ea5e9; }
+        .summary-card-office { background: #10b981; }
+        .summary-card-official { background: #6366f1; }
+        .summary-card-field { background: #f59e0b; }
+        .summary-card-leave { background: #f43f5e; }
+
+        .summary-value,
+        .summary-label {
+            color: #ffffff;
+        }
+
+        .status-in-office { background: #10b981; }
+        .status-out-of-office { background: #ef4444; }
+        .status-on-official-business { background: #6366f1; }
+        .status-on-leave { background: #f43f5e; }
+        .status-on-field-work { background: #0ea5e9; }
+
+        .spotlight-card {
+            background: #1b263b;
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .spotlight-card::before,
+        .summary-card::after,
+        .ticker-label::before {
+            display: none;
+        }
+
+        .spotlight-avatar-shell,
+        .employee-avatar {
+            background: #334155;
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .spotlight-identity h3,
+        .field-value,
+        .employee-identity strong,
+        .ticker-item strong,
+        .board-empty p {
+            color: #ffffff;
+        }
+
+        .spotlight-identity p,
+        .field-label,
+        .employee-identity span,
+        .employee-snippet strong,
+        .board-empty i,
+        .ticker-item,
+        .spotlight-section-pill,
+        .board-caption {
+            color: #e2e8f0;
+        }
+
+        .field-value-muted,
+        .employee-snippet span,
+        .standby-note {
+            color: #cbd5e1;
+        }
+
+        .spotlight-field {
+            background: #0f172a;
+        }
+
+        .employee-card {
+            background: #1e293b;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .employee-card:hover,
+        .employee-card:focus,
+        .employee-card.active {
+            background: #334155;
+            border-color: rgba(122, 244, 255, 0.4);
+        }
+
+        .toolbar-control,
+        .toolbar-button {
+            background: #334155;
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+
+        .status-badge {
+            color: #ffffff;
+        }
+
+        body.standby-mode .spotlight-fields {
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        body.standby-mode .spotlight-field {
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        body.standby-mode .spotlight-field .field-value {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 5;
+            overflow: hidden;
+            word-break: break-word;
+        }
+
+        .standby-note {
+            display: none !important;
+        }
         </style>
     </head>
 
-    <body class="<?= $standbyDefault ? 'standby-mode' : ''; ?>">
+    <body class="<?= (($kioskMode || $standbyDefault) ? 'standby-mode' : '') . ($kioskMode ? ' kiosk-mode' : ''); ?>">
         <main class="board-shell">
             <section class="ticker-shell">
                 <div class="ticker-label">Live Feed</div>
@@ -1081,6 +1231,10 @@ $tickerEmployees = $totalEmployees > 0 ? array_merge($employees, $employees) : [
                     <button type="button" class="toolbar-button toolbar-button-secondary" onclick="resetView()">
                         <i class="mdi mdi-refresh"></i>
                         Reset Board
+                    </button>
+                    <button type="button" class="toolbar-button toolbar-button-secondary" onclick="enterKioskMode()">
+                        <i class="mdi mdi-monitor"></i>
+                        Kiosk View
                     </button>
                 </div>
             </section>
@@ -1251,6 +1405,10 @@ $tickerEmployees = $totalEmployees > 0 ? array_merge($employees, $employees) : [
 
         </main>
 
+        <button type="button" id="kioskExitButton" class="kiosk-exit" onclick="exitKioskMode()">
+            <i class="mdi mdi-close"></i> Exit Kiosk
+        </button>
+
         <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
         <script>
             const TODAY_DATE = '<?= $currentDate; ?>';
@@ -1258,6 +1416,7 @@ $tickerEmployees = $totalEmployees > 0 ? array_merge($employees, $employees) : [
             const PAGE_URL = '<?= base_url(); ?>Page/public_whereabouts';
             const DEFAULT_AVATAR_URL = '<?= htmlspecialchars($defaultAvatarUrl, ENT_QUOTES, 'UTF-8'); ?>';
             const MANILA_TIMEZONE = 'Asia/Manila';
+            const KIOSK_MODE = <?= $kioskMode ? 'true' : 'false'; ?>;
             const searchInput = document.getElementById('searchInput');
             const sectionFilter = document.getElementById('sectionFilter');
             const datePicker = document.getElementById('datePicker');
@@ -1286,7 +1445,7 @@ $tickerEmployees = $totalEmployees > 0 ? array_merge($employees, $employees) : [
             const spotlightAvatarFallback = document.getElementById('spotlightAvatarFallback');
             const employeeCards = Array.from(document.querySelectorAll('.employee-card'));
 
-            let standbyMode = <?= $standbyDefault ? 'true' : 'false'; ?>;
+            let standbyMode = <?= ($kioskMode || $standbyDefault) ? 'true' : 'false'; ?>;
             let spotlightIndex = 0;
             let standbyRotationInterval = null;
             let idleTimeout = null;
@@ -1629,6 +1788,15 @@ $tickerEmployees = $totalEmployees > 0 ? array_merge($employees, $employees) : [
                 window.location.href = PAGE_URL + '?date=' + encodeURIComponent(date);
             }
 
+            function enterKioskMode() {
+                window.location.href = PAGE_URL + '?kiosk=1&date=' + TODAY_DATE;
+            }
+
+            function exitKioskMode() {
+                const date = datePicker.value || TODAY_DATE;
+                window.location.href = PAGE_URL + '?date=' + encodeURIComponent(date);
+            }
+
             function resetView() {
                 if (datePicker.value !== TODAY_DATE) {
                     window.location.href = PAGE_URL + '?date=' + TODAY_DATE;
@@ -1652,7 +1820,7 @@ $tickerEmployees = $totalEmployees > 0 ? array_merge($employees, $employees) : [
             }
 
             function handleWakeInteraction(event) {
-                if (isBooting || employeeCards.length === 0) {
+                if (KIOSK_MODE || isBooting || employeeCards.length === 0) {
                     return;
                 }
 
@@ -1726,6 +1894,9 @@ $tickerEmployees = $totalEmployees > 0 ? array_merge($employees, $employees) : [
 
                 if (standbyMode && datePicker.value === TODAY_DATE) {
                     startStandbyRotation();
+                    if (KIOSK_MODE) {
+                        enterBrowserFullscreen();
+                    }
                 } else {
                     exitStandbyMode();
                 }

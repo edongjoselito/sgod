@@ -2,6 +2,19 @@
 class SGODModel extends CI_Model 
 {
 
+	public function __construct()
+	{
+		parent::__construct();
+		$this->ensure_sgod_memo_table();
+	}
+
+	private function ensure_sgod_memo_table()
+	{
+		if (!$this->db->table_exists('one_sgod_memo') && $this->db->table_exists('sgod_memo')) {
+			$this->db->query('RENAME TABLE sgod_memo TO one_sgod_memo');
+		}
+	}
+
 	function cPublic(){
 		$query=$this->db->query("select count(recID) as schoolCounts from schools where schoolType='Public'");
 		return $query->result();
