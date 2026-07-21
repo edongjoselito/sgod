@@ -39,8 +39,9 @@
                                             <i class="mdi mdi-printer-outline"></i> Print
                                         </a>
                                     </div>
-                                    <h4 class="page-title">Accomplishments for Objective</h4>
-                                    <p class="text-muted">Objective ID: <?= (int) $objectiveId; ?></p>
+                                    <h4 class="page-title">Accomplishments by Objective</h4>
+                                    <p class="text-muted mb-1"><strong>KRA:</strong> <?= htmlspecialchars($kraTitle, ENT_QUOTES, 'UTF-8'); ?></p>
+                                    <p class="text-muted"><strong>Objective:</strong> <?= htmlspecialchars($objectiveText, ENT_QUOTES, 'UTF-8'); ?></p>
                                 </div>
                             </div>
                         </div>

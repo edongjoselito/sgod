@@ -3213,6 +3213,12 @@ private function is_super_admin_managed_account($username){
 	$this->db->order_by('dateConducted', 'DESC');
 	$result['data'] = $this->db->get('one_sgod_accomplishments')->result();
 	$result['objectiveId'] = $objectiveId;
+
+	$objective = $this->db->where('id', $objectiveId)->get('ipcrf_objectives', 1)->row();
+	$result['objectiveText'] = $objective ? trim((string) ($objective->code . ' - ' . $objective->objective)) : 'Objective ID: ' . $objectiveId;
+	$kra = ($objective && (int) $objective->kra_id > 0) ? $this->db->where('id', (int) $objective->kra_id)->get('ipcrf_kras', 1)->row() : null;
+	$result['kraTitle'] = $kra ? trim((string) $kra->title) : 'KRA not found';
+
 	$this->load->view('accomplishments_by_objective', $result);
   }
 }
