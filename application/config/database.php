@@ -10,8 +10,8 @@ $db['default'] = array(
 
 	'hostname' => '127.0.0.1',
 	'username' => 'root',
-	'password' => 'compu7er',
-	'database' => 'depedmis_hris',
+	'password' => 'moth34board',
+	'database' => 'depedmis_one',
 
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',

@@ -334,12 +334,6 @@ $overallCompetencyAverage = $averageRatings($bundle['competencies']);
             </tbody>
         </table>
 
-        <?php if (!empty($bundle['history'])): ?>
-            <div class="workflow-title">Workflow History</div>
-            <table class="workflow"><thead><tr><th>Workflow Stage</th><th>Action By</th><th>Date</th><th>Remarks</th></tr></thead><tbody>
-                <?php foreach (array_reverse($bundle['history']) as $history): ?><tr><td><?= $e($history['to_status']); ?></td><td><?= $e($history['acted_by_name'] ?: $history['acted_by']); ?></td><td><?= $e($history['acted_at']); ?></td><td><?= $e($history['remarks']); ?></td></tr><?php endforeach; ?>
-            </tbody></table>
-        <?php endif; ?>
 
         <div class="certification">I certify that the performance information and development plan shown in this Individual Performance Commitment and Review Form have been reviewed according to the approved performance management process.
             <div class="signature-row">

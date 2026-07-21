@@ -745,19 +745,9 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
                                             Section Head Dashboard
                                         </span>
                                         <h1 class="hero-title"><?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></h1>
-                                        <p class="hero-subtitle">Monitor schedules, schools, accomplishments, and section activity from one workspace.</p>
                                     </div>
                                 </div>
 
-                                <div class="col-lg-4">
-                                    <div class="hero-profile">
-                                        <span class="hero-avatar"><?= htmlspecialchars($sectionHeadInitials, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <div class="hero-profile-copy">
-                                            <strong><?= htmlspecialchars($sectionHeadName !== '' ? $sectionHeadName : 'Section Head', ENT_QUOTES, 'UTF-8'); ?></strong>
-                                            <span><?= htmlspecialchars($sectionHeadPosition, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </section>
 

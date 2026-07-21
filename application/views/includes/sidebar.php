@@ -953,10 +953,10 @@
                             <span class="menu-arrow"></span>
                         </a>
                         <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/brigada_eskwela#school-preparedness">School Preparedness</a></li>
-                            <li><a href="<?= base_url(); ?>Page/brigada_eskwela#spc-report">SPC Report</a></li>
-                            <li><a href="<?= base_url(); ?>Page/brigada_eskwela#summary-report">Summary Report</a></li>
-                            <li><a href="<?= base_url(); ?>Page/brigada_eskwela#partners">Partners</a></li>
+                            <li><a href="<?= base_url(); ?>Brigada/spc_districts">School Preparedness</a></li>
+                            <li><a href="<?= base_url(); ?>Brigada/spc_admin_report">SPC Report</a></li>
+                            <li><a href="<?= base_url(); ?>Brigada/brigada_summary_v2">Summary Report</a></li>
+                            <li><a href="<?= base_url(); ?>Brigada/list_of_partners">Partners</a></li>
                         </ul>
                     </li>
 
