@@ -841,12 +841,14 @@ class Page extends CI_Controller{
     if (empty($date) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
       $date=$manilaNow->format('Y-m-d');
     }
+    $kiosk = $this->input->get('kiosk', TRUE);
     $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
     $this->output->set_header('Cache-Control: post-check=0, pre-check=0', FALSE);
     $this->output->set_header('Pragma: no-cache');
     $this->output->set_header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
     $result['data']=$this->SGODModel->get_all_whereabouts_by_date($date);
     $result['selectedDate']=$date;
+    $result['kioskMode'] = ($kiosk === '1' || $kiosk === 'true');
     $this->load->view('public_whereabouts',$result);
   }
 
