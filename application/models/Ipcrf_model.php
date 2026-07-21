@@ -870,46 +870,81 @@ class Ipcrf_model extends CI_Model
     public function validation_errors($bundle, $stage = 'current')
     {
         $errors = array();
+        foreach ($this->validation_groups($bundle, $stage) as $group) {
+            foreach ($group['items'] as $item) {
+                $errors[] = $item;
+            }
+        }
+        return $errors;
+    }
+
+    /**
+     * Same checks as validation_errors(), but kept in per-section buckets so the
+     * editor can show one "what is missing" button per section instead of a
+     * single combined list.
+     */
+    public function validation_groups($bundle, $stage = 'current')
+    {
+        $groups = array(
+            'employee' => array('key' => 'employee', 'label' => 'Employee Information', 'section' => 'employeeSection', 'items' => array()),
+            'kra' => array('key' => 'kra', 'label' => 'KRAs and Objectives', 'section' => 'kraSection', 'items' => array()),
+            'competency' => array('key' => 'competency', 'label' => 'Competency Management', 'section' => 'competencySection', 'items' => array()),
+            'development' => array('key' => 'development', 'label' => 'Development Plan', 'section' => 'developmentSection', 'items' => array())
+        );
         if (!$bundle || empty($bundle['form'])) {
-            return array('IPCRF record was not found.');
+            $groups['employee']['items'][] = 'IPCRF record was not found.';
+            return $this->filled_validation_groups($groups);
         }
         $form = $bundle['form'];
         if (trim($form['employee_id']) === '' || trim($form['employee_name']) === '') {
-            $errors[] = 'Employee information is incomplete.';
+            $groups['employee']['items'][] = 'Employee information is incomplete.';
         }
         if (trim($form['rater_name']) === '') {
-            $errors[] = 'An assigned rater is required.';
+            $groups['employee']['items'][] = 'An assigned rater is required.';
         }
         if (trim((string) (isset($form['approving_authority_name']) ? $form['approving_authority_name'] : '')) === '') {
-            $errors[] = 'An approving authority is required.';
+            $groups['employee']['items'][] = 'An approving authority is required.';
         }
         if (!$this->valid_date($form['period_start']) || !$this->valid_date($form['period_end']) || $form['period_start'] > $form['period_end']) {
-            $errors[] = 'The performance period is invalid.';
+            $groups['employee']['items'][] = 'The performance period is invalid.';
         }
         if (empty($bundle['kras'])) {
-            $errors[] = 'At least one KRA is required.';
+            $groups['kra']['items'][] = 'At least one KRA is required.';
         }
 
         $weight = 0;
         $objectiveCount = 0;
-        $structuralMissing = 0;
+        $titleMissing = 0;
+        $detailMissing = 0;
+        $weightMissing = 0;
+        $standardsMissing = 0;
         $accomplishmentMissing = 0;
         $ratingMissing = 0;
         foreach ($bundle['kras'] as $kra) {
             if (trim($kra['title']) === '') {
-                $structuralMissing++;
+                $titleMissing++;
             }
             foreach ($kra['objectives'] as $objective) {
                 $objectiveCount++;
                 $weight += (float) $objective['weight'];
-                if (trim($objective['objective']) === '' || trim($objective['timeline']) === '' || (float) $objective['weight'] <= 0) {
-                    $structuralMissing++;
+                if (trim($objective['objective']) === '' || trim($objective['timeline']) === '') {
+                    $detailMissing++;
                 }
+                if ((float) $objective['weight'] <= 0) {
+                    $weightMissing++;
+                }
+                // Counted once per objective, not once per blank level, so the
+                // number means something to the person reading it.
                 foreach (array('quality', 'efficiency', 'timeliness') as $dimension) {
+                    $incompleteDimension = FALSE;
                     foreach (array('5', '4', '3', '2', '1') as $level) {
                         if (empty($objective[$dimension][$level])) {
-                            $structuralMissing++;
+                            $incompleteDimension = TRUE;
                         }
+                    }
+                    if ($incompleteDimension) {
+                        $standardsMissing++;
+                        break;
                     }
                 }
                 if (trim((string) $objective['accomplishment']) === '') {
@@ -921,13 +956,22 @@ class Ipcrf_model extends CI_Model
             }
         }
         if ($objectiveCount === 0) {
-            $errors[] = 'At least one objective is required.';
+            $groups['kra']['items'][] = 'Add at least one objective.';
         }
         if (abs($weight - 100) > 0.009) {
-            $errors[] = 'Total objective weight must be exactly 100%; current total is ' . number_format($weight, 2) . '%.';
+            $groups['kra']['items'][] = 'Objective weights add up to ' . number_format($weight, 2) . '% — they need to total 100%.';
         }
-        if ($structuralMissing) {
-            $errors[] = $structuralMissing . ' required KRA/objective/indicator field(s) are incomplete.';
+        if ($titleMissing) {
+            $groups['kra']['items'][] = $this->count_label($titleMissing, 'KRA still needs', 'KRAs still need') . ' a title.';
+        }
+        if ($detailMissing) {
+            $groups['kra']['items'][] = $this->count_label($detailMissing, 'objective still needs', 'objectives still need') . ' an objective or timeline.';
+        }
+        if ($weightMissing) {
+            $groups['kra']['items'][] = $this->count_label($weightMissing, 'objective still needs', 'objectives still need') . ' a weight.';
+        }
+        if ($standardsMissing) {
+            $groups['kra']['items'][] = $this->count_label($standardsMissing, 'objective is', 'objectives are') . ' missing Quality, Efficiency or Timeliness standards.';
         }
 
         $status = $form['status'];
@@ -935,43 +979,102 @@ class Ipcrf_model extends CI_Model
         $needsRater = in_array($stage, array('rater_approve', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_SUBMITTED_RATER, self::STATUS_RATER_APPROVED), TRUE));
         $needsFinal = in_array($stage, array('pmt_validate', 'lock', 'all'), TRUE) || ($stage === 'current' && in_array($status, array(self::STATUS_SUBMITTED_PMT, self::STATUS_PMT_VALIDATED, self::STATUS_LOCKED), TRUE));
         if (($needsEmployee || $needsRater) && $accomplishmentMissing) {
-            $errors[] = $accomplishmentMissing . ' objective accomplishment(s) are blank.';
+            $groups['kra']['items'][] = $this->count_label($accomplishmentMissing, 'objective still needs', 'objectives still need') . ' an actual result.';
         }
         if ($needsRater && $ratingMissing) {
-            $errors[] = $ratingMissing . ' objective(s) do not have complete Quality, Efficiency and Timeliness ratings.';
+            $groups['kra']['items'][] = $this->count_label($ratingMissing, 'objective still needs', 'objectives still need') . ' Q, E and T ratings.';
         }
         if (empty($bundle['competencies'])) {
-            $errors[] = 'At least one competency is required.';
+            $groups['competency']['items'][] = 'Add at least one competency.';
         }
         $needsCompetencyRating = $needsEmployee || $needsRater || $needsFinal;
-        $competencyMissing = 0;
+        $competencyDetailMissing = 0;
+        $competencyRatingMissing = 0;
         foreach ($bundle['competencies'] as $competency) {
             if (trim($competency['name']) === '' || empty($competency['indicators'])) {
-                $competencyMissing++;
+                $competencyDetailMissing++;
             }
             if ($needsCompetencyRating && (int) $competency['rating'] < 1) {
-                $competencyMissing++;
+                $competencyRatingMissing++;
             }
         }
-        if ($competencyMissing) {
-            $errors[] = $competencyMissing . ' competency name, indicator, or rating field(s) are incomplete.';
+        if ($competencyDetailMissing) {
+            $groups['competency']['items'][] = $this->count_label($competencyDetailMissing, 'competency still needs', 'competencies still need') . ' a name or behavioral indicators.';
+        }
+        if ($competencyRatingMissing) {
+            $groups['competency']['items'][] = $this->count_label($competencyRatingMissing, 'competency still needs', 'competencies still need') . ' a rating.';
         }
         if (empty($bundle['development'])) {
-            $errors[] = 'At least one Development Plan entry is required.';
+            $groups['development']['items'][] = 'Add at least one development plan entry.';
         } else {
             $developmentMissing = 0;
             foreach ($bundle['development'] as $plan) {
                 foreach (array('strengths', 'improvement_needs', 'learning_objectives', 'interventions', 'target_timeline', 'responsible_person') as $field) {
                     if (trim((string) $plan[$field]) === '') {
                         $developmentMissing++;
+                        break;
                     }
                 }
             }
             if ($developmentMissing) {
-                $errors[] = $developmentMissing . ' Development Plan field(s) are incomplete.';
+                $groups['development']['items'][] = $this->count_label($developmentMissing, 'development plan entry has', 'development plan entries have') . ' blank fields.';
             }
         }
-        return $errors;
+        return $this->filled_validation_groups($groups);
+    }
+
+    private function count_label($count, $singular, $plural)
+    {
+        return $count . ' ' . ($count === 1 ? $singular : $plural);
+    }
+
+    /**
+     * TRUE once the employee has typed something of their own into the form.
+     * A brand-new IPCRF is pre-filled from the preset (KRA titles, objectives,
+     * timelines, weights, standards, competency names), so only the fields the
+     * preset leaves blank count as encoded: actual results, Q/E/T ratings,
+     * competency ratings and development plan entries. This keeps the editor
+     * from flagging missing items on a form nobody has started yet.
+     */
+    public function has_encoded_data($bundle)
+    {
+        if (!$bundle || empty($bundle['form'])) {
+            return FALSE;
+        }
+        foreach ((array) $bundle['kras'] as $kra) {
+            foreach ((array) $kra['objectives'] as $objective) {
+                if (trim((string) $objective['accomplishment']) !== '') {
+                    return TRUE;
+                }
+                if ((float) $objective['quality_rating'] >= 1 || (float) $objective['efficiency_rating'] >= 1 || (float) $objective['timeliness_rating'] >= 1) {
+                    return TRUE;
+                }
+            }
+        }
+        foreach ((array) $bundle['competencies'] as $competency) {
+            if ((int) $competency['rating'] >= 1) {
+                return TRUE;
+            }
+        }
+        foreach ((array) $bundle['development'] as $plan) {
+            foreach (array('strengths', 'improvement_needs', 'learning_objectives', 'interventions', 'target_timeline', 'responsible_person', 'status_remarks') as $field) {
+                if (trim((string) $plan[$field]) !== '') {
+                    return TRUE;
+                }
+            }
+        }
+        return FALSE;
+    }
+
+    private function filled_validation_groups($groups)
+    {
+        $filled = array();
+        foreach ($groups as $key => $group) {
+            if ($group['items']) {
+                $filled[$key] = $group;
+            }
+        }
+        return $filled;
     }
 
     public function workflow_transition($formId, $toStatus, $remarks, $actor)
