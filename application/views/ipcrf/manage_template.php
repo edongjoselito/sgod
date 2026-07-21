@@ -102,7 +102,6 @@ $taggedCount = count($taggedMembers);
             .ipcr-table .col-code { width: 56px; white-space: nowrap; font-weight: 700; }
             .ipcr-table .col-actions { width: 96px; }
             .obj-desc { font-weight: 600; }
-            .obj-timeline { display: block; margin-top: 6px; color: var(--ipcr-muted); font-size: 0.8rem; }
 
             .icon-btn {
                 display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 9px;
@@ -255,7 +254,7 @@ $taggedCount = count($taggedMembers);
                                                 <table class="ipcr-table">
                                                     <thead>
                                                         <tr>
-                                                            <th class="col-code">Code</th>
+                                                            <th class="col-code">Order</th>
                                                             <th>Objective</th>
                                                             <th class="col-actions text-center">Actions</th>
                                                         </tr>
@@ -269,9 +268,6 @@ $taggedCount = count($taggedMembers);
                                                                     <td class="col-code"><?= htmlspecialchars($objective['code'], ENT_QUOTES, 'UTF-8'); ?></td>
                                                                     <td>
                                                                         <span class="obj-desc"><?= htmlspecialchars($objective['objective'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                                                        <?php if (trim((string) $objective['timeline']) !== '') : ?>
-                                                                            <span class="obj-timeline"><i class="mdi mdi-clock-outline"></i> <?= htmlspecialchars($objective['timeline'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                                                        <?php endif; ?>
                                                                     </td>
                                                                     <td class="col-actions text-center">
                                                                         <button type="button" class="icon-btn edit mb-1" data-toggle="modal" data-target="#objectiveModal"
@@ -328,11 +324,8 @@ $taggedCount = count($taggedMembers);
                             <input type="hidden" name="kra_id" id="obj_kra_id" value="">
                             <input type="hidden" name="objective_id" id="obj_id" value="">
                             <div class="form-row">
-                                <div class="form-group col-md-3"><label class="lbl">Code</label><input type="text" name="code" id="obj_code" class="form-control" required></div>
-                                <div class="form-group col-md-9"><label class="lbl">Timeline</label><input type="text" name="timeline" id="obj_timeline" class="form-control" placeholder="e.g. January to December 2025"></div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-12 mb-0"><label class="lbl">Objective</label><input type="text" name="objective" id="obj_objective" class="form-control" required></div>
+                                <div class="form-group col-md-3 mb-0"><label class="lbl">Order</label><input type="text" name="code" id="obj_code" class="form-control" required></div>
+                                <div class="form-group col-md-9 mb-0"><label class="lbl">Objective</label><input type="text" name="objective" id="obj_objective" class="form-control" required></div>
                             </div>
                         </div>
                         <div class="modal-body-ipcr d-flex justify-content-end" style="gap:10px; padding-top:0;">
@@ -391,7 +384,6 @@ $taggedCount = count($taggedMembers);
                 document.getElementById('obj_id').value = obj ? obj.id : '';
                 document.getElementById('obj_code').value = obj ? (obj.code || '') : '';
                 document.getElementById('obj_objective').value = obj ? (obj.objective || '') : '';
-                document.getElementById('obj_timeline').value = obj ? (obj.timeline || '') : '';
                 document.getElementById('objectiveModalTitle').textContent = obj ? 'Edit Objective' : 'Add Objective';
             }
 

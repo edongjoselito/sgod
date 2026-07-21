@@ -893,7 +893,7 @@ class Ipcrf extends CI_Controller
             redirect('Ipcrf/manage_template');
         }
         if (trim((string) $this->input->post('code')) === '') {
-            $this->session->set_flashdata('danger', 'Objective code is required.');
+            $this->session->set_flashdata('danger', 'Objective order is required.');
             redirect('Ipcrf/manage_template');
         }
         $this->Ipcrf_model->save_template_objective($kraId, $objectiveId, array(

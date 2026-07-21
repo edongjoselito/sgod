@@ -87,15 +87,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?>Page/super_admin" class="waves-effect">
@@ -201,14 +200,14 @@
                         </a>
                     </li>
 
-                    <?php if ($hasAssignedKras): ?>
+                    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?>Page/sgod" class="waves-effect">
@@ -323,14 +322,14 @@
                         </a>
                     </li>
 
-                    <?php if ($hasAssignedKras): ?>
+                    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -398,15 +397,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?>Page/School" class="waves-effect">
@@ -464,15 +462,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -526,15 +523,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -592,15 +588,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -658,15 +653,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -724,15 +718,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -790,15 +783,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -856,15 +848,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -936,15 +927,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
@@ -1002,15 +992,14 @@
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
-
-                    <?php if ($hasAssignedKras): ?>
+    <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
                             <i class="mdi mdi-clipboard-account-outline"></i>
                             <span> My IPCR </span>
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <li>
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">

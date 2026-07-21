@@ -1179,8 +1179,8 @@ class Ipcrf_model extends CI_Model
 
         if ((int) $objectiveId > 0) {
             // Forms that omit a field (e.g. the KRA workspace, which only edits
-            // code/objective/timeline) must not blank out the stored value.
-            $optional = array('weight' => 'weight', 'quality' => 'quality_json', 'efficiency' => 'efficiency_json', 'timeliness' => 'timeliness_json');
+            // code/objective) must not blank out the stored value.
+            $optional = array('timeline' => 'timeline', 'weight' => 'weight', 'quality' => 'quality_json', 'efficiency' => 'efficiency_json', 'timeliness' => 'timeliness_json');
             foreach ($optional as $key => $column) {
                 if (!array_key_exists($key, $data) || $data[$key] === NULL) {
                     unset($payload[$column]);
