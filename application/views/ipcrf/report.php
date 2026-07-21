@@ -102,6 +102,7 @@ $overallCompetencyAverage = $averageRatings($bundle['competencies']);
         th { background: #dedfe1; font-size: 6.1pt; text-align: center; text-transform: uppercase; vertical-align: middle; }
         .performance-table { font-family: Georgia, 'Times New Roman', serif; font-size: 5.8pt; table-layout: fixed; }
         .performance-table .kra { background: #eceef1; font-size: 6.4pt; font-weight: 800; letter-spacing: .02em; text-align: center; text-transform: uppercase; vertical-align: middle; }
+        .performance-table .kra-group-start > td { border-top: 1.1px solid #111; }
         .performance-table .objective { font-size: 6.15pt; line-height: 1.2; }
         .performance-table .standards { font-size: 5.15pt; line-height: 1.12; padding: 0; }
         .performance-table .standards div { align-items: stretch; border-bottom: .45px solid #999; display: grid; grid-template-columns: 5mm 1fr; min-height: 5mm; }
@@ -205,15 +206,15 @@ $overallCompetencyAverage = $averageRatings($bundle['competencies']);
                 <tr><td colspan="13" class="empty-row">No performance objectives have been entered.</td></tr>
             <?php else: ?>
             <?php foreach ($kraObjectiveGroups as $objectives): ?>
-                <?php foreach ($objectives as $objective):
+                <?php foreach ($objectives as $objectiveIndex => $objective):
                     $q = (float) $objective['quality_rating'];
                     $ef = (float) $objective['efficiency_rating'];
                     $t = (float) $objective['timeliness_rating'];
                     $rating = ($q > 0 && $ef > 0 && $t > 0) ? ($q + $ef + $t) / 3 : 0;
                     $score = $rating > 0 ? $rating * ((float) $objective['weight'] / 100) : 0;
                 ?>
-                    <tr>
-                        <td class="kra"><?= $e($objective['kra_title']); ?></td>
+                    <tr<?= $objectiveIndex === 0 ? ' class="kra-group-start"' : ''; ?>>
+                        <?php if ($objectiveIndex === 0): ?><td class="kra" rowspan="<?= count($objectives); ?>"><?= $e($objective['kra_title']); ?></td><?php endif; ?>
                         <td class="objective"><b><?= $e($objective['code']); ?></b> <?= nl2br($e($objective['objective'])); ?></td>
                         <td class="center"><?= $e($objective['timeline']); ?></td>
                         <td class="center"><b><?= number_format((float) $objective['weight'], 2); ?>%</b></td>

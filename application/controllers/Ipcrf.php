@@ -64,6 +64,7 @@ class Ipcrf extends CI_Controller
             'bundle' => $bundle,
             'edit_scope' => $scope,
             'review_warnings' => $bundle ? $this->review_warnings($bundle, $scope) : array(),
+            'review_warning_groups' => $bundle ? $this->review_warning_groups($bundle, $scope) : array(),
             'templates' => $this->Ipcrf_model->get_templates(),
             'recent_forms' => $this->Ipcrf_model->personal_forms($viewerId),
             'current_employee' => $this->Ipcrf_model->get_employee($viewerId),
@@ -369,7 +370,8 @@ class Ipcrf extends CI_Controller
             'success' => TRUE,
             'message' => 'Preset copied into the employee IPCRF.',
             'bundle' => $bundle,
-            'review_warnings' => $this->review_warnings($bundle, 'full')
+            'review_warnings' => $this->review_warnings($bundle, 'full'),
+            'review_warning_groups' => $this->review_warning_groups($bundle, 'full')
         ));
     }
 
@@ -413,6 +415,7 @@ class Ipcrf extends CI_Controller
             'message' => 'Changes saved.',
             'bundle' => $savedBundle,
             'review_warnings' => $this->review_warnings($savedBundle, $scope),
+            'review_warning_groups' => $this->review_warning_groups($savedBundle, $scope),
             'saved_at' => date('g:i A')
         ));
     }
@@ -482,7 +485,8 @@ class Ipcrf extends CI_Controller
             return;
         }
         if ($validationStage !== '') {
-            $errors = $this->Ipcrf_model->validation_errors($this->Ipcrf_model->get_bundle($id), $validationStage);
+            $validationBundle = $this->Ipcrf_model->get_bundle($id);
+            $errors = $this->Ipcrf_model->validation_errors($validationBundle, $validationStage);
             if ($errors) {
                 if (in_array($action, array('submit_rater', 'rater_approve'), TRUE)) {
                     if (!$warningsConfirmed) {
@@ -492,7 +496,8 @@ class Ipcrf extends CI_Controller
                             'message' => $action === 'rater_approve'
                                 ? 'Some review information is incomplete. Review the warnings, return the form, or complete the review anyway.'
                                 : 'Some IPCRF information is incomplete. Review the warnings or submit anyway.',
-                            'errors' => $errors
+                            'errors' => $errors,
+                            'error_groups' => array_values($this->Ipcrf_model->validation_groups($validationBundle, $validationStage))
                         ), 409);
                         return;
                     }
@@ -735,10 +740,32 @@ class Ipcrf extends CI_Controller
 
     private function review_warnings($bundle, $scope)
     {
-        if (!$bundle || empty($bundle['form']) || !in_array($scope, array('full', 'rater'), TRUE)) {
+        if (!$this->warns_while_editing($bundle, $scope)) {
             return array();
         }
         return $this->Ipcrf_model->validation_errors($bundle, $scope === 'rater' ? 'rater_approve' : 'submit_rater');
+    }
+
+    private function review_warning_groups($bundle, $scope)
+    {
+        if (!$this->warns_while_editing($bundle, $scope)) {
+            return array();
+        }
+        return array_values($this->Ipcrf_model->validation_groups($bundle, $scope === 'rater' ? 'rater_approve' : 'submit_rater'));
+    }
+
+    /**
+     * The in-editor missing-items banner only nags once the employee has actually
+     * started encoding. A freshly created form arrives pre-filled from the preset,
+     * and flagging it before any work is done is just noise. Submit-time validation
+     * in workflow() is unaffected — an untouched form is still caught there.
+     */
+    private function warns_while_editing($bundle, $scope)
+    {
+        if (!$bundle || empty($bundle['form']) || !in_array($scope, array('full', 'rater'), TRUE)) {
+            return FALSE;
+        }
+        return $this->Ipcrf_model->has_encoded_data($bundle);
     }
 
     private function actor()

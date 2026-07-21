@@ -10,6 +10,7 @@
     var dirty = false;
     var activeSave = null;
     var reviewWarnings = config.reviewWarnings || [];
+    var reviewWarningGroups = config.reviewWarningGroups || [];
 
     function setSaveState(status, message) {
         var icons = {
@@ -357,9 +358,9 @@
             });
             if (!rows.length) return;
             var groupTitle = category === 'Core Behavioral Competency' ? 'Core Behavioral Competencies' : (category === 'Core Skill' ? 'Core Skills' : (category === 'Leadership Competency' ? 'Leadership Competencies' : category));
-            html += '<details class="competency-group-card" open><summary><span class="competency-group-label">Competency Group</span><strong>' + escapeHtml(groupTitle) + '</strong><span class="competency-group-count">' + rows.length + ' competency item(s)</span><span class="competency-group-actions">';
+            html += '<details class="competency-group-card"><summary><span class="competency-group-label">Competency Group</span><strong>' + escapeHtml(groupTitle) + '</strong><span class="competency-group-count">' + rows.length + ' competency item(s)</span><span class="competency-group-actions">';
             if (isFull()) html += '<button type="button" class="action-text-btn add js-action" data-action="add-competency" data-category="' + escapeAttr(category) + '">+ Add Competency</button>';
-            html += '<button type="button" class="action-text-btn details-toggle-button js-details-toggle" aria-expanded="true" aria-controls="competency-group-content-' + categoryIndex + '" title="Fold this competency table"><i class="mdi mdi-chevron-up"></i><span class="js-details-toggle-label">Fold Table</span></button></span>';
+            html += '<button type="button" class="action-text-btn details-toggle-button js-details-toggle" aria-expanded="false" aria-controls="competency-group-content-' + categoryIndex + '" title="Open this competency table"><i class="mdi mdi-chevron-down"></i><span class="js-details-toggle-label">Open Table</span></button></span>';
             html += '</summary><div class="competency-group-content" id="competency-group-content-' + categoryIndex + '"><div class="competency-content-guide"><span><strong>Click text to edit.</strong> Enter one behavioral indicator per line and choose one Rating.</span></div><div class="competency-table-scroll"><div class="competency-table-grid"><div class="competency-table-header"><span>Competency</span><span>Behavioral Indicators</span><span>Rating</span></div>';
             rows.forEach(function (row) { html += renderCompetencyRow(row.index, row.competency); });
             html += '</div></div>';
@@ -414,8 +415,8 @@
     }
 
     function applyIncompleteHighlights() {
-        $('.incomplete-item, .incomplete-column, .section-has-incomplete, .incomplete-focus-pulse')
-            .removeClass('incomplete-item incomplete-column section-has-incomplete incomplete-focus-pulse');
+        $('.incomplete-item, .section-has-incomplete, .incomplete-focus-pulse')
+            .removeClass('incomplete-item section-has-incomplete incomplete-focus-pulse');
 
         var hasWarnings = (reviewWarnings || []).length > 0;
         $('#incompleteItemsBanner').prop('hidden', !hasWarnings);
@@ -432,15 +433,10 @@
         if (!hasValue(state.form.approving_authority_name)) { mark($('#authorityAssignmentRow')); }
         if (!validPerformancePeriod()) { mark($('#periodAssignmentRow')); }
 
-        var totalWeight = 0;
         var objectiveCount = 0;
         (state.kras || []).forEach(function (kra) {
-            (kra.objectives || []).forEach(function (objective) {
-                objectiveCount++;
-                totalWeight += Number(objective.weight || 0);
-            });
+            objectiveCount += (kra.objectives || []).length;
         });
-        var totalWeightIncomplete = Math.abs(totalWeight - 100) > 0.009;
 
         if (!(state.kras || []).length) {
             mark($('#kraContainer .kra-empty-objectives'));
@@ -456,7 +452,9 @@
                 var $cells = $kra.find('.objective-row[data-objective="' + objectiveIndex + '"]').children('div');
                 if (!hasValue(objective.objective)) { mark($cells.eq(1)); }
                 if (!hasValue(objective.timeline)) { mark($cells.eq(2)); }
-                if (Number(objective.weight || 0) <= 0 || totalWeightIncomplete) { mark($cells.eq(3)); }
+                // Only a blank weight is outlined. An off-target total is reported
+                // in the banner instead, so every weight cell is not lit up at once.
+                if (Number(objective.weight || 0) <= 0) { mark($cells.eq(3)); }
                 if (standardCompletion(objective, 'quality') < 5) { mark($cells.eq(4)); }
                 if (standardCompletion(objective, 'efficiency') < 5) { mark($cells.eq(5)); }
                 if (standardCompletion(objective, 'timeliness') < 5) { mark($cells.eq(6)); }
@@ -468,15 +466,6 @@
                 }
             });
 
-            var objectiveIssueColumns = {};
-            $kra.find('.objective-row').each(function () {
-                $(this).children('.incomplete-item').each(function () { objectiveIssueColumns[$(this).index()] = true; });
-            });
-            Object.keys(objectiveIssueColumns).forEach(function (columnIndex) {
-                var index = Number(columnIndex);
-                $kra.find('.pdf-objective-header span').eq(index).addClass('incomplete-column');
-                $kra.find('.objective-row').each(function () { $(this).children('div').eq(index).addClass('incomplete-column'); });
-            });
         });
         if (objectiveCount === 0) { $('#kraSection').addClass('section-has-incomplete'); }
 
@@ -494,15 +483,6 @@
                 if (!(competency.indicators || []).length) { mark($cells.eq(1)); }
                 if (Number(competency.rating || 0) < 1) { mark($cells.eq(2)); }
             });
-            var competencyIssueColumns = {};
-            $group.find('.competency-table-row').each(function () {
-                $(this).children('.incomplete-item').each(function () { competencyIssueColumns[$(this).index()] = true; });
-            });
-            Object.keys(competencyIssueColumns).forEach(function (columnIndex) {
-                var index = Number(columnIndex);
-                $group.find('.competency-table-header span').eq(index).addClass('incomplete-column');
-                $group.find('.competency-table-row').each(function () { $(this).children('div').eq(index).addClass('incomplete-column'); });
-            });
         });
 
         if (!(state.development || []).length) {
@@ -515,26 +495,22 @@
                     if (!hasValue(plan[field])) { mark($cells.eq(fieldIndex)); }
                 });
             });
-            var developmentIssueColumns = {};
-            $('#developmentContainer tr').each(function () {
-                $(this).children('.incomplete-item').each(function () { developmentIssueColumns[$(this).index()] = true; });
-            });
-            Object.keys(developmentIssueColumns).forEach(function (columnIndex) {
-                var index = Number(columnIndex);
-                $('#developmentSection thead th').eq(index).addClass('incomplete-column');
-                $('#developmentContainer tr').each(function () { $(this).children('td').eq(index).addClass('incomplete-column'); });
-            });
         }
 
         $('.ipcrf-section').each(function () {
             var $section = $(this);
-            if ($section.find('.incomplete-item, .incomplete-column').length) { $section.addClass('section-has-incomplete'); }
+            if ($section.find('.incomplete-item').length) { $section.addClass('section-has-incomplete'); }
         });
     }
 
-    function focusFirstIncomplete() {
-        var $first = $('.incomplete-item').first();
-        if (!$first.length) { $first = $('.section-has-incomplete').first(); }
+    // Scoped to one section when a section key is given, otherwise the whole form.
+    function focusFirstIncomplete(sectionKey) {
+        var group = sectionKey ? findWarningGroup(sectionKey) : null;
+        var $scope = group ? $('#' + group.section) : $(document);
+        var $first = $scope.find('.incomplete-item').first();
+        if (!$first.length) { $first = $scope.find('.section-has-incomplete').first(); }
+        if (!$first.length && group) { $first = $('#' + group.section); }
+        if (!$first.length) { $first = $('.incomplete-item, .section-has-incomplete').first(); }
         if (!$first.length) { return; }
         var $details = $first.closest('details');
         if ($details.length) {
@@ -546,27 +522,48 @@
         setTimeout(function () { $first.removeClass('incomplete-focus-pulse'); }, 2400);
     }
 
+    function findWarningGroup(sectionKey) {
+        var match = null;
+        (reviewWarningGroups || []).forEach(function (group) {
+            if (group.key === sectionKey) match = group;
+        });
+        return match;
+    }
+
     function renderMissingItems() {
         var count = (reviewWarnings || []).length;
+        var groups = reviewWarningGroups || [];
         $('#missingItemsCount').text(count);
         $('#missingItemsBtn').prop('hidden', count === 0).toggle(count > 0);
+
+        $('#incompleteItemsHeadline').text(groups.length > 1
+            ? 'Some fields are still blank in ' + groups.length + ' sections'
+            : 'Some fields are still blank');
+        $('#incompleteSectionButtons').html(groups.map(function (group) {
+            return '<button type="button" class="incomplete-section-btn js-incomplete-section" data-section="' + escapeAttr(group.key) + '">'
+                + escapeHtml(group.label)
+                + '<span class="incomplete-section-count">' + group.items.length + '</span></button>';
+        }).join(''));
+
         applyIncompleteHighlights();
     }
 
-    function showMissingItems() {
+    function showMissingItems(sectionKey) {
         if (!(reviewWarnings || []).length) {
             renderMissingItems();
             return;
         }
-        var items = reviewWarnings.map(function (warning) { return '<li>' + escapeHtml(warning) + '</li>'; }).join('');
+        var group = sectionKey ? findWarningGroup(sectionKey) : null;
+        var warnings = group ? group.items : reviewWarnings;
+        var items = warnings.map(function (warning) { return '<li>' + escapeHtml(warning) + '</li>'; }).join('');
         Swal.fire({
             icon: 'warning',
-            title: 'Incomplete items found',
-            html: '<p class="submission-warning-intro">These items are still incomplete. Orange fields and columns show where corrections are needed.</p><ul class="submission-warning-list">' + items + '</ul>',
-            confirmButtonText: 'Show First Incomplete Field',
-            confirmButtonColor: '#d97706'
+            title: group ? 'Missing in ' + group.label : 'Still missing',
+            html: '<p class="submission-warning-intro">' + (group ? 'Fill these in to finish this section.' : 'Fill these in to finish the form.') + ' Each one is outlined in orange in the form.</p><ul class="submission-warning-list">' + items + '</ul>',
+            confirmButtonText: 'Take me there',
+            confirmButtonColor: '#b7791f'
         }).then(function (result) {
-            if (result.value) { focusFirstIncomplete(); }
+            if (result.value) { focusFirstIncomplete(sectionKey); }
         });
     }
 
@@ -661,6 +658,7 @@
         }).done(function (response) {
             mergeServerIds(response.bundle);
             reviewWarnings = response.review_warnings || [];
+            reviewWarningGroups = response.review_warning_groups || [];
             renderMissingItems();
             if (pendingSave || dirty) {
                 setSaveState('saving', 'Saving latest changes…');
@@ -980,8 +978,12 @@
         $('#addCompetencyBtn').on('click', function () { openCompetencyEditor('Core Behavioral Competency'); });
         $('#addPlanBtn').on('click', openDevelopmentEditor);
         $('#saveDraftBtn').on('click', function () { saveDraft(true); });
-        $('#missingItemsBtn, #reviewIncompleteItemsBtn').on('click', function () {
-            saveDraft(false).then(showMissingItems);
+        $('#missingItemsBtn').on('click', function () {
+            saveDraft(false).then(function () { showMissingItems(); });
+        });
+        $(document).on('click', '.js-incomplete-section', function () {
+            var sectionKey = $(this).data('section');
+            saveDraft(false).then(function () { showMissingItems(sectionKey); });
         });
 
         $('#kraEditorForm').on('submit', function (event) {
@@ -1071,6 +1073,12 @@
                 setTimeout(function () {
                     var row = document.querySelector('.competency-table-row[data-competency="' + competencyIndex + '"]');
                     if (row) {
+                        // Competency groups render folded, so open the one holding the new row.
+                        var $group = $(row).closest('details');
+                        if ($group.length) {
+                            $group.prop('open', true);
+                            syncDetailsToggle($group.get(0));
+                        }
                         row.classList.add('competency-row-highlight');
                         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         setTimeout(function () { row.classList.remove('competency-row-highlight'); }, 1800);
@@ -1110,7 +1118,7 @@
             Swal.fire({ title: 'Load IPCRF preset', text: 'The preset is copied into this employee form and replaces its current KRAs and competencies.', input: 'select', inputOptions: options, showCancelButton: true, confirmButtonText: 'Load Preset', confirmButtonColor: '#3157c8' }).then(function (result) {
                 if (!result.value) return;
                 $.post(config.urls.loadPreset, { template_id: result.value }, null, 'json').done(function (response) {
-                    state = response.bundle; reviewWarnings = response.review_warnings || []; renderAll(); toastr.success(response.message);
+                    state = response.bundle; reviewWarnings = response.review_warnings || []; reviewWarningGroups = response.review_warning_groups || []; renderAll(); toastr.success(response.message);
                 }).fail(function (xhr) { showError(xhr, 'The preset could not be loaded.'); });
             });
         });
@@ -1126,13 +1134,18 @@
                     var response = xhr && xhr.responseJSON ? xhr.responseJSON : {};
                     if ((action === 'submit_rater' || action === 'rater_approve') && response.warning_only) {
                         reviewWarnings = response.errors || [];
+                        reviewWarningGroups = response.error_groups || [];
                         renderMissingItems();
-                        var warningItems = (response.errors || []).map(function (warning) { return '<li>' + escapeHtml(warning) + '</li>'; }).join('');
+                        var warningItems = (response.error_groups || []).map(function (group) {
+                            return '<li><b>' + escapeHtml(group.label) + '</b><ul>' + group.items.map(function (warning) {
+                                return '<li>' + escapeHtml(warning) + '</li>';
+                            }).join('') + '</ul></li>';
+                        }).join('');
                         var completingReview = action === 'rater_approve';
                         Swal.fire({
                             icon: 'warning',
-                            title: completingReview ? 'Complete review with incomplete items?' : 'Incomplete information found',
-                            html: '<p class="submission-warning-intro">' + (completingReview ? 'You may review the orange fields, use Return Paper with clear remarks, or complete the rater review anyway.' : 'You may return to the orange fields and complete these items, or submit the IPCRF to the rater anyway.') + '</p><ul class="submission-warning-list">' + warningItems + '</ul>',
+                            title: completingReview ? 'Complete review with blank fields?' : 'Some fields are still blank',
+                            html: '<p class="submission-warning-intro">' + (completingReview ? 'You can fill in the fields outlined in orange, use Return Paper with clear remarks, or complete the rater review anyway.' : 'You can fill in the fields outlined in orange, or submit the IPCRF to the rater anyway.') + '</p><ul class="submission-warning-list">' + warningItems + '</ul>',
                             showCancelButton: true,
                             confirmButtonText: completingReview ? 'Complete Anyway' : 'Submit Anyway',
                             cancelButtonText: completingReview ? 'Review / Return' : 'Review Form',

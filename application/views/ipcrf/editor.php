@@ -85,8 +85,11 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
 
                 <div class="incomplete-items-banner" id="incompleteItemsBanner" hidden>
                     <span class="incomplete-items-banner-icon"><i class="mdi mdi-alert-outline"></i></span>
-                    <div><strong>Incomplete items found</strong><span>Orange columns and fields below need attention before continuing.</span></div>
-                    <button type="button" class="btn" id="reviewIncompleteItemsBtn">Review incomplete items</button>
+                    <div class="incomplete-items-copy">
+                        <strong id="incompleteItemsHeadline">Some fields are still blank</strong>
+                        <span>Fields outlined in orange still need an entry. Open a section to see what is missing there.</span>
+                    </div>
+                    <div class="incomplete-section-buttons" id="incompleteSectionButtons"></div>
                 </div>
 
                 <?php if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED): ?>
@@ -280,7 +283,7 @@ if ($isEmployeeOwner && $status === Ipcrf_model::STATUS_RETURNED) {
                     <div class="modal-dialog modal-lg modal-dialog-centered" role="document"><div class="modal-content ipcrf-editor-modal">
                         <div class="modal-header"><div><span class="modal-kicker">Help and Legend</span><h5 class="modal-title" id="editorGuideTitle">How to Complete the IPCRF</h5></div><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
                         <div class="modal-body guide-modal-body">
-                            <ol><li><strong>Employee Information:</strong> confirm the compact HRIS information, assigned rater and review period.</li><li><strong>KRAs:</strong> use Add New KRA when needed, then click an existing KRA title to revise it.</li><li><strong>Objectives and Results:</strong> add an objective inside the correct KRA. Existing code, objective, timeline, weight and actual result edit directly like document text.</li><li><strong>Standards:</strong> click Quality, Efficiency or Timeliness in an objective row to view or edit all five levels.</li><li><strong>Ratings:</strong> the owner proposes Q, E and T ratings in Draft. The assigned rater reviews them after submission.</li><li><strong>Competencies:</strong> click names or indicators to edit, choose the single Rating, and add another competency only when needed.</li><li><strong>Development Plan:</strong> Add Development Entry opens a guided dialog. Both the employee and assigned rater can add or edit plan entries.</li><li><strong>Missing Items:</strong> orange fields and columns identify exactly where information is incomplete.</li><li><strong>Return Paper:</strong> the assigned rater must explain the required corrections. A returned employee sees those remarks above the unlocked, editable form.</li><li><strong>Complete Rater Review:</strong> incomplete items produce a warning but still allow the rater to complete the review.</li></ol>
+                            <ol><li><strong>Employee Information:</strong> confirm the compact HRIS information, assigned rater and review period.</li><li><strong>KRAs:</strong> use Add New KRA when needed, then click an existing KRA title to revise it.</li><li><strong>Objectives and Results:</strong> add an objective inside the correct KRA. Existing code, objective, timeline, weight and actual result edit directly like document text.</li><li><strong>Standards:</strong> click Quality, Efficiency or Timeliness in an objective row to view or edit all five levels.</li><li><strong>Ratings:</strong> the owner proposes Q, E and T ratings in Draft. The assigned rater reviews them after submission.</li><li><strong>Competencies:</strong> click names or indicators to edit, choose the single Rating, and add another competency only when needed.</li><li><strong>Development Plan:</strong> Add Development Entry opens a guided dialog. Both the employee and assigned rater can add or edit plan entries.</li><li><strong>Missing Items:</strong> individual fields outlined in orange show exactly what is still blank. The outline clears once the field is filled in.</li><li><strong>Return Paper:</strong> the assigned rater must explain the required corrections. A returned employee sees those remarks above the unlocked, editable form.</li><li><strong>Complete Rater Review:</strong> incomplete items produce a warning but still allow the rater to complete the review.</li></ol>
                             <div class="guide-note"><strong>Editing states:</strong> Draft and Returned records are editable by the employee. During rater review, ratings and the Development Plan are editable by the assigned rater. Validated and Locked records are read-only.</div>
                         </div>
                         <div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal">Got it</button></div>
@@ -392,6 +395,7 @@ window.IPCRF_CONFIG = <?= json_encode(array(
     'isPmt' => $is_pmt,
     'reviewWarnings' => $review_warnings,
     'accCounts' => isset($acc_counts) ? $acc_counts : array(),
+    'reviewWarningGroups' => $review_warning_groups,
     'urls' => array(
         'employeeSearch' => site_url('Ipcrf/employee_search'),
         'create' => site_url('Ipcrf/create'),

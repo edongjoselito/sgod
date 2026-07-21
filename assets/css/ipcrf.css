@@ -408,6 +408,8 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
 .submission-warning-list { background: #fff8e8; border: 1px solid #e2c87f; color: #684f1e; font-size: .75rem; margin: 0; max-height: 240px; overflow-y: auto; padding: 9px 12px 9px 29px; text-align: left; }
 .submission-warning-list li { margin-bottom: 5px; }
 .submission-warning-list li:last-child { margin-bottom: 0; }
+.submission-warning-list ul { margin: 3px 0 0; padding-left: 18px; }
+.submission-warning-list ul li { font-size: .72rem; margin-bottom: 2px; }
 
 @media (max-width: 1180px) {
     .editor-quick-guide { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -584,42 +586,40 @@ textarea.ipcrf-input { line-height: 1.45; resize: vertical; }
 .competency-dialog-grid { display: grid; gap: 13px; grid-template-columns: 1fr 1.5fr; }
 .competency-dialog-indicators { grid-column: 1 / -1; }
 
-/* Incomplete item guidance */
-.incomplete-items-banner { align-items: center; background: linear-gradient(135deg,#fff4d8,#ffe7b0); border: 1px solid #e3a328; border-left: 6px solid #d97706; box-shadow: 0 8px 20px rgba(180,102,10,.12); color: #633c08; display: flex; gap: 11px; margin: -2px 0 13px; padding: 10px 12px; }
+/* Incomplete item guidance — only the individual blank cell is outlined in orange.
+   Whole columns are never tinted, and a filled cell simply loses the class and
+   returns to the normal blue-grey table styling. */
+.incomplete-items-banner { align-items: center; background: #fbfcfe; border: 1px solid #d5dce6; border-left: 4px solid #e08c1a; color: #33415c; display: flex; gap: 11px; margin: -2px 0 13px; padding: 10px 12px; }
 .incomplete-items-banner[hidden] { display: none; }
-.incomplete-items-banner-icon { align-items: center; background: #d97706; color: #fff; display: inline-flex; flex: 0 0 36px; font-size: 1.15rem; height: 36px; justify-content: center; }
-.incomplete-items-banner > div { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.incomplete-items-banner-icon { align-items: center; color: #e08c1a; display: inline-flex; flex: 0 0 24px; font-size: 1.15rem; height: 24px; justify-content: center; }
+.incomplete-items-copy { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .incomplete-items-banner strong { font-size: .78rem; }
-.incomplete-items-banner > div span { color: #80551b; font-size: .65rem; margin-top: 2px; }
-.incomplete-items-banner .btn { background: #fff; border: 1px solid #c78416; color: #754507; font-size: .67rem; font-weight: 800; white-space: nowrap; }
-.incomplete-items-banner .btn:hover { background: #6f4309; color: #fff; }
-.ipcrf-section.section-has-incomplete { border-color: #df9318; box-shadow: 0 0 0 2px rgba(217,119,6,.16), 0 10px 24px rgba(180,102,10,.10); }
-.ipcrf-section.section-has-incomplete > .ipcrf-section-head { background: #fff0cf; border-bottom-color: #d99a28; }
-.objective-row > .incomplete-column,
-.competency-table-row > .incomplete-column,
-.development-table td.incomplete-column { background: #fff4dc !important; }
-.pdf-objective-header > .incomplete-column,
-.competency-table-header > .incomplete-column,
-.development-table th.incomplete-column { background: #f6b94c !important; color: #4c2d02 !important; }
+.incomplete-items-copy span { color: var(--ip-muted); font-size: .65rem; margin-top: 2px; }
+.incomplete-section-buttons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.incomplete-section-btn { align-items: center; background: #fff; border: 1px solid #b8c0cc; color: #3f4a5c; display: inline-flex; font-size: .67rem; font-weight: 700; gap: 6px; padding: 6px 10px; white-space: nowrap; }
+.incomplete-section-btn:hover { background: #eef2f8; border-color: #8b97a8; color: #273244; }
+.incomplete-section-count { background: #eef1f6; border: 1px solid #d3dae4; border-radius: 999px; color: #4a5568; font-size: .6rem; font-weight: 800; line-height: 1; min-width: 17px; padding: 3px 5px; text-align: center; }
+.incomplete-section-btn:hover .incomplete-section-count { background: #fff; }
+.ipcrf-section.section-has-incomplete { border-color: #d5dce6; }
 .objective-row > .incomplete-item,
 .competency-table-row > .incomplete-item,
 .development-table td.incomplete-item,
-.employee-pdf-row.incomplete-item { background: #ffe2a8 !important; box-shadow: inset 0 0 0 2px #e58b08; }
-.employee-pdf-row.incomplete-item label { background: #f6b94c; color: #4c2d02; }
+.employee-pdf-row.incomplete-item { box-shadow: inset 0 0 0 1.5px #e08c1a; }
 .kra-card.incomplete-item,
 .kra-card > summary.incomplete-item,
 #kraContainer > .incomplete-item,
 #competencyContainer.incomplete-item,
-#developmentContainer.incomplete-item { background: #ffe7b8 !important; box-shadow: inset 0 0 0 2px #e58b08; }
+#developmentContainer.incomplete-item { box-shadow: inset 0 0 0 1.5px #e08c1a; }
 .incomplete-focus-pulse { animation: incompleteAttentionPulse .75s ease-in-out 3; }
 @keyframes incompleteAttentionPulse {
-    0%, 100% { box-shadow: inset 0 0 0 2px #e58b08, 0 0 0 0 rgba(217,119,6,.15); }
-    50% { box-shadow: inset 0 0 0 3px #d46500, 0 0 0 7px rgba(217,119,6,.24); }
+    0%, 100% { box-shadow: inset 0 0 0 1.5px #e08c1a, 0 0 0 0 rgba(224,140,26,.16); }
+    50% { box-shadow: inset 0 0 0 2.5px #c9760c, 0 0 0 6px rgba(224,140,26,.22); }
 }
 
 @media (max-width: 700px) {
     .incomplete-items-banner { align-items: flex-start; flex-wrap: wrap; }
-    .incomplete-items-banner .btn { margin-left: 47px; white-space: normal; }
+    .incomplete-section-buttons { justify-content: flex-start; margin-left: 35px; }
+    .incomplete-section-btn { white-space: normal; }
 }
 
 @media (max-width: 850px) {
