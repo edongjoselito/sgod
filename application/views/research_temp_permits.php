@@ -21,21 +21,31 @@
     $researcherCount = count($researchers);
 ?>
 
-<!-- DataTables styles (use existing bundled paths) -->
-<link rel="stylesheet" href="<?= base_url('assets/libs/datatables/dataTables.bootstrap4.min.css'); ?>">
-<link rel="stylesheet" href="<?= base_url('assets/libs/datatables/responsive.bootstrap4.min.css'); ?>">
-
-<style>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <?php include('includes/page-title.php'); ?>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
+        <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" id="bootstrap-stylesheet" />
+        <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+        <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-stylesheet" />
+        <link href="<?= base_url(); ?>assets/css/dashboard-unified.css" rel="stylesheet" type="text/css" />
+        <link href="<?= base_url(); ?>assets/libs/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <style>
     /* ===== Temporary Permits – scoped styling ===== */
     .permits-hero{
         position:relative;
-        border-radius:.75rem;
+        border-radius:24px;
         padding:1.9rem 1.9rem;
         margin-bottom:1.5rem;
-        background:linear-gradient(135deg,#3bc0c3 0%,#2a8f92 100%);
+        background:radial-gradient(circle at 85% 15%, rgba(255,255,255,.23), transparent 26%),linear-gradient(135deg,#272b8c 0%,#3c40c6 62%,#6c70ef 100%);
         color:#fff;
         overflow:hidden;
-        box-shadow:0 12px 28px rgba(59,192,195,.28);
+        box-shadow:0 20px 45px rgba(39,43,140,.20);
     }
     .permits-hero::after{
         content:"";position:absolute;top:-70px;right:-40px;
@@ -102,11 +112,16 @@
     .search-wrap .form-control{border-left:none;}
     .search-wrap .form-control:focus{box-shadow:none;border-color:#ced4da;}
 </style>
+    </head>
+    <body class="dashboard-root-theme">
+        <div id="wrapper">
+            <?php include('includes/top-bar.php'); ?>
+            <?php include('includes/sidebar.php'); ?>
 
 <div class="content-page">
     <div class="content">
 
-        <div class="container-fluid">
+        <main class="container-fluid dashboard-shell">
 
             <!-- ===================== HERO ===================== -->
             <div class="permits-hero">
@@ -233,11 +248,19 @@
                 </div>
             </div>
 
-        </div>
+        </main>
 
     </div>
+    <?php include('includes/footer.php'); ?>
+</div>
 </div>
 
+<script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
+<script src="<?= base_url(); ?>assets/libs/datatables/jquery.dataTables.min.js"></script>
+<script src="<?= base_url(); ?>assets/libs/datatables/dataTables.bootstrap4.min.js"></script>
+<script src="<?= base_url(); ?>assets/libs/datatables/dataTables.responsive.min.js"></script>
+<script src="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.js"></script>
+<script src="<?= base_url(); ?>assets/js/app.min.js"></script>
 <script>
     // Wait for all global assets (vendor + DataTables) to finish loading
     window.addEventListener('load', function () {
@@ -280,3 +303,5 @@
         });
     });
 </script>
+</body>
+</html>

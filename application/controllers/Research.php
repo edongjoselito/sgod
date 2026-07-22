@@ -161,10 +161,7 @@ class Research extends CI_Controller
         $data['temp_permit_count'] = $this->ResearchModel->total_requests();
         $data['research_requests'] = $this->ResearchModel->all_requests();
 
-        $this->load->view('templates/head');
-        $this->load->view('templates/header');
         $this->load->view('research_temp_permits', $data);
-        $this->load->view('templates/footer');
     }
 
     /* =========================

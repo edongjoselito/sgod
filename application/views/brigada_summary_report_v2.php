@@ -1034,7 +1034,7 @@
                   <?php foreach ($data as $school_id => $school_data): ?>
                     <tr>
                       <td class="td-idx"><?= $c++; ?></td>
-                      <td class="td-school"><?= htmlspecialchars($school_data['schoolName']); ?></td>
+                      <td class="td-school"><?= htmlspecialchars((string) $school_data['schoolName']); ?></td>
 
                       <?php
                         $school_total_records = 0;

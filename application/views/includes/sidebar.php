@@ -17,6 +17,9 @@
                 'Youth Formation Program' => 'Page/yfp',
             );
             $sectionDashboardRoute = $sectionDashboardRoutes[$currentSidebarSection] ?? 'Page/user_dashboard';
+            if (stripos($currentSidebarSection, 'drrm') !== false) {
+                $sectionDashboardRoute = 'Page/DRRM';
+            }
             $isSectionHeadDashboardUser = FALSE;
             $ipcrfSidebarEmployeeId = $currentSidebarUsername;
             $hasIpcrfRaterAssignments = FALSE;
@@ -610,7 +613,7 @@
             </div>
             <!-- End Sidebar -->
 
-        <?php elseif ($this->session->userdata('section') === 'Disaster Risk Reduction Management (DRRM) Section'): ?>
+        <?php elseif (stripos($currentSidebarSection, 'drrm') !== false): ?>
             <div id="sidebar-menu">
                 <ul class="metismenu" id="side-menu">
 
@@ -654,6 +657,13 @@
                         <a href="<?= base_url(); ?>Page/memo" class="waves-effect">
                             <i class="ion ion-ios-paper"></i>
                             <span> Memo </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/radar" class="waves-effect">
+                            <i class="mdi mdi-radar"></i>
+                            <span> RADAR </span>
                         </a>
                     </li>
 

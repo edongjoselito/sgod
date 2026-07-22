@@ -533,6 +533,14 @@ class Page extends CI_Controller{
     }
   }
 
+  function radar(){
+    if (stripos(trim((string) $this->session->userdata('section')), 'drrm') === false) {
+      echo "Access Denied";
+      return;
+    }
+    $this->load->view('radar', array('title' => 'RADAR'));
+  }
+
   function SHNS(){
     if($this->redirect_section_head_dashboard_if_needed()){
 		return;

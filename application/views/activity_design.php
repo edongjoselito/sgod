@@ -183,9 +183,16 @@ $esc = function ($value) {
                                                         <td><?= $esc($entry->venue); ?></td>
                                                         <td><?= $esc($entry->fund_source); ?></td>
                                                         <td class="text-right">
-                                                            <a href="<?= base_url(); ?>Page/activity_design_edit/<?= (int) $entry->id; ?>" class="btn btn-sm btn-light">Edit</a>
-                                                            <a href="<?= base_url(); ?>Page/activity_design_print/<?= (int) $entry->id; ?>" target="_blank" class="btn btn-sm btn-success">Print</a>
-                                                            <a href="<?= base_url(); ?>Page/activity_design_delete/<?= (int) $entry->id; ?>" onclick="return confirm('Are you sure you want to delete this activity design?');" class="btn btn-sm btn-danger">Delete</a>
+                                                            <div class="dropdown d-inline-block">
+                                                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton<?= (int) $entry->id; ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                    Actions
+                                                                </button>
+                                                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton<?= (int) $entry->id; ?>">
+                                                                    <a class="dropdown-item" href="<?= base_url(); ?>Page/activity_design_edit/<?= (int) $entry->id; ?>">Edit</a>
+                                                                    <a class="dropdown-item" href="<?= base_url(); ?>Page/activity_design_print/<?= (int) $entry->id; ?>" target="_blank">Print</a>
+                                                                    <a class="dropdown-item text-danger" href="<?= base_url(); ?>Page/activity_design_delete/<?= (int) $entry->id; ?>" onclick="return confirm('Are you sure you want to delete this activity design?');">Delete</a>
+                                                                </div>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
