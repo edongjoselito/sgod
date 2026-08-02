@@ -63,6 +63,7 @@ if (!empty($nameParts)) {
 $sectionHeadInitials = $sectionHeadInitials !== '' ? $sectionHeadInitials : 'SH';
 $dashboardDate = date('l, F j, Y');
 $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
+$managedSections = isset($managedSections) ? (array) $managedSections : array();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -167,6 +168,36 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
                 color: rgba(255, 255, 255, 0.78);
                 font-size: 0.94rem;
                 line-height: 1.55;
+            }
+
+            .managed-section-switcher {
+                display: inline-flex;
+                align-items: center;
+                gap: 9px;
+                margin-top: 16px;
+                padding: 8px 10px 8px 13px;
+                border: 1px solid rgba(255, 255, 255, 0.22);
+                border-radius: 12px;
+                background: rgba(15, 19, 95, 0.18);
+            }
+
+            .managed-section-switcher label {
+                margin: 0;
+                color: rgba(255, 255, 255, 0.82);
+                font-size: 0.78rem;
+                font-weight: 700;
+            }
+
+            .managed-section-switcher select {
+                min-width: 220px;
+                height: 34px;
+                border: 0;
+                border-radius: 8px;
+                padding: 0 30px 0 10px;
+                color: var(--dashboard-ink);
+                background: #fff;
+                font-size: 0.82rem;
+                font-weight: 700;
             }
 
             .hero-profile {
@@ -657,6 +688,9 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
                     font-size: 0.85rem;
                 }
 
+                .managed-section-switcher { display:flex; }
+                .managed-section-switcher select { min-width:0; flex:1; }
+
                 .hero-profile {
                     min-width: 0;
                     width: 100%;
@@ -745,6 +779,18 @@ $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
                                             Section Head Dashboard
                                         </span>
                                         <h1 class="hero-title"><?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></h1>
+                                        <?php if (count($managedSections) > 1): ?>
+                                            <form class="managed-section-switcher" method="post" action="<?= base_url(); ?>Page/switch_managed_section">
+                                                <label for="managed-section">Managing Section</label>
+                                                <select id="managed-section" name="section" onchange="this.form.submit()">
+                                                    <?php foreach ($managedSections as $managedSection): ?>
+                                                        <?php $managedName = trim((string) ($managedSection->sectionName ?? '')); ?>
+                                                        <option value="<?= htmlspecialchars($managedName, ENT_QUOTES, 'UTF-8'); ?>"<?= $managedName === $sectionName ? ' selected' : ''; ?>><?= htmlspecialchars($managedName, ENT_QUOTES, 'UTF-8'); ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <noscript><button type="submit" class="btn btn-sm btn-light">Switch</button></noscript>
+                                            </form>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
 

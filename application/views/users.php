@@ -1,5 +1,6 @@
 <?php
 $currentGroup = strtoupper((string) $this->session->userdata('secGroup'));
+$isSmnUser = $this->session->userdata('section') === 'Social Mobilization and Networking';
 $totalUsers = is_array($data) ? count($data) : 0;
 $activeUsers = 0;
 $inactiveUsers = 0;
@@ -838,6 +839,7 @@ $metrics = array(
                                                             $positionName = isset($row->secPosition) ? trim((string) $row->secPosition) : '';
                                                             $positionDisplay = $positionName !== '' ? $positionName : 'Unassigned';
                                                             $statusClass = $accountStatus === 'Active' ? 'status-active' : 'status-inactive';
+                                                            $partnerReadOnly = $this->session->userdata('section') === 'Social Mobilization and Networking' && $section === 'Partner';
                                                             $toggleStatus = $accountStatus === 'Active' ? 'Inactive' : 'Active';
                                                             $toggleLabel = $accountStatus === 'Active' ? 'Deactivate user' : 'Activate user';
                                                             $toggleUrl = base_url() . 'Page/deactivate_user?username=' . rawurlencode($username) . '&status=' . rawurlencode($toggleStatus);
@@ -876,6 +878,9 @@ $metrics = array(
                                                                     </span>
                                                                 </td>
                                                                 <td class="text-center">
+                                                                    <?php if ($partnerReadOnly) : ?>
+                                                                        <span class="text-muted small">Partner account<br>view only</span>
+                                                                    <?php else : ?>
                                                                     <div class="manage-combo">
                                                                         <div class="manage-select-wrap">
                                                                             <i class="mdi mdi-tune-variant manage-select-icon"></i>
@@ -898,6 +903,7 @@ $metrics = array(
                                                                             <i class="mdi mdi-chevron-down manage-select-arrow"></i>
                                                                         </div>
                                                                     </div>
+                                                                    <?php endif; ?>
                                                                 </td>
                                                             </tr>
                                                         <?php endforeach; ?>
@@ -933,7 +939,11 @@ $metrics = array(
                             <div class="modern-modal-body">
                                 <form method="post">
                                     <div class="form-card">
-                                        <div class="form-group">
+                                        <?php if ($isSmnUser) : ?>
+                                            <div class="form-group"><label class="modern-label">Account Level</label><select class="form-control modern-input" name="accountLevel" id="accountLevel"><option value="Section User">Section User</option><option value="Partner">Partner</option></select></div>
+                                            <div class="form-group d-none" id="partnerPickerWrap"><label class="modern-label">Select Brigada Partner <span class="text-danger">*</span></label><select class="form-control modern-input" name="partner_id" id="partnerSelect"><option value="">-- Search partner name --</option><?php foreach ((array) ($partnerOptions ?? array()) as $partnerOption) : ?><option value="<?= (int) $partnerOption->id; ?>" data-contact="<?= htmlspecialchars($partnerOption->contact_person, ENT_QUOTES, 'UTF-8'); ?>" data-email="<?= htmlspecialchars($partnerOption->contact, ENT_QUOTES, 'UTF-8'); ?>"><?= htmlspecialchars($partnerOption->name . ($partnerOption->contact_person ? ' — ' . $partnerOption->contact_person : ''), ENT_QUOTES, 'UTF-8'); ?></option><?php endforeach; ?></select><small class="input-note">Only partners with a registered email address can receive a portal account.</small></div>
+                                        <?php endif; ?>
+                                        <div class="form-group" id="staffPickerWrap">
                                             <label class="modern-label">Select Staff from HRIS <span class="text-danger">*</span></label>
                                             <select class="form-control modern-input" name="IDNumber" id="staffSelect" required>
                                                 <option value="">-- Select Staff --</option>
@@ -963,8 +973,8 @@ $metrics = array(
 
                                         <div class="form-group">
                                             <label class="modern-label">E-mail / Username</label>
-                                            <input type="text" name="email" class="form-control modern-input" />
-                                            <small class="input-note">This value is also used as the username for sign in.</small>
+                                            <input type="email" name="email" id="email" class="form-control modern-input" autocomplete="email" />
+                                            <small class="input-note">This value is also used as the username for sign in and is saved to the partner record when needed.</small>
                                         </div>
 
                                         <div class="form-group">
@@ -974,7 +984,7 @@ $metrics = array(
 
                                         <div class="form-group mb-0">
                                             <label class="modern-label">Section</label>
-                                            <select class="form-control modern-input" name="section">
+                                            <select class="form-control modern-input" name="section" id="sectionSelect">
                                                 <option value=""></option>
                                                 <?php if (!empty($data1)) : ?>
                                                     <?php foreach ($data1 as $row) : ?>
@@ -983,6 +993,7 @@ $metrics = array(
                                                         </option>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
+                                                <?php if ($isSmnUser) : ?><option value="Partner">Partner</option><?php endif; ?>
                                             </select>
                                         </div>
                                     </div>
@@ -1207,7 +1218,6 @@ $metrics = array(
                     }
                 });
 
-<<<<<<< HEAD
                 $('.js-position-select').each(function () {
                     var $select = $(this);
                     $select.select2({
@@ -1216,35 +1226,36 @@ $metrics = array(
                         width: '100%',
                         dropdownParent: $select.closest('.modal')
                     });
-=======
-                $('#sectionSelect').select2({
-                    placeholder: '-- Select Section --',
+                });
+
+                $('#partnerSelect').select2({
+                    placeholder: '-- Search partner name --',
                     width: '100%',
                     dropdownParent: $('#myModal')
                 });
 
-                $('#staffSelect').select2({
-                    placeholder: '-- Select Staff --',
-                    width: '100%',
-                    dropdownParent: $('#myModal')
+                function setPartnerAccountMode() {
+                    var isPartner = $('#accountLevel').val() === 'Partner';
+                    $('#partnerPickerWrap').toggleClass('d-none', !isPartner);
+                    $('#staffPickerWrap').toggleClass('d-none', isPartner);
+                    $('#partnerSelect').prop('required', isPartner);
+                    $('#staffSelect').prop('required', !isPartner);
+                    $('#email').prop('required', isPartner);
+                    $('#sectionSelect').val(isPartner ? 'Partner' : '').trigger('change');
+                    $('#sectionSelect').prop('disabled', isPartner);
+                    if (isPartner) { $('#fName, #mName, #lName, #email').val(''); }
+                }
+                $('#accountLevel').on('change', setPartnerAccountMode);
+                $('#partnerSelect').on('change', function () {
+                    var contactName = String($(this).find('option:selected').data('contact') || '').trim().split(/\s+/);
+                    var contactDetails = String($(this).find('option:selected').data('email') || '');
+                    var emailMatch = contactDetails.match(/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i);
+                    $('#fName').val(contactName[0] || '');
+                    $('#mName').val(contactName.length > 2 ? contactName.slice(1, -1).join(' ') : '');
+                    $('#lName').val(contactName.length > 1 ? contactName[contactName.length - 1] : '');
+                    $('#email').val(emailMatch ? emailMatch[0] : '');
                 });
-
-                $('#staffSelect').on('change', function() {
-                    const selectedOption = $(this).find('option:selected');
-
-                    if ($(this).val()) {
-                        $('#fName').val(selectedOption.data('fname') || '');
-                        $('#mName').val(selectedOption.data('mname') || '');
-                        $('#lName').val(selectedOption.data('lname') || '');
-                        $('#email').val(selectedOption.data('email') || '');
-                    } else {
-                        $('#fName').val('');
-                        $('#mName').val('');
-                        $('#lName').val('');
-                        $('#email').val('');
-                    }
->>>>>>> d90f53e4bc54e1a6cb3ae582a18d8d166823d3e4
-                });
+                if ($('#accountLevel').length) { setPartnerAccountMode(); }
 
                 $(document).on('change', '.js-manage-select', function () {
                     const $select = $(this);

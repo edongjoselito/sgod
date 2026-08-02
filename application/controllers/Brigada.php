@@ -766,11 +766,145 @@ class Brigada extends CI_Controller
             show_404();
         }
 
-		$data['title'] = "Partners";
+        $data['title'] = "Partners";
         $data['can_manage_partners'] = $this->session->userdata('position') !== 'School';
         $data['data'] = $this->db->order_by('name', 'ASC')->get('brigada_partners')->result();
+        $data['typeSummary'] = $this->db->select('general_type, COUNT(*) AS partner_count', FALSE)->group_by('general_type')->order_by('partner_count', 'DESC')->get('brigada_partners')->result();
 
         $this->load->view('pages/' . $page, $data);
+    }
+
+    public function partner_donation_details($partnerId = 0)
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot view partner donation details.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $partner = $this->db->where('id', (int) $partnerId)->get('brigada_partners', 1)->row();
+        if (!$partner) {
+            $this->session->set_flashdata('danger', 'Partner record not found.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $this->db->select('r.*');
+        $this->db->from('brigada_contribution_report r');
+        if ($this->db->table_exists('brigada_contribution_type')) {
+            $this->db->select("REPLACE(c.name, '_', ' ') AS contribution_type", FALSE);
+            $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
+        }
+        if ($this->db->table_exists('schools')) {
+            $this->db->select('s.schoolName, s.sitio, s.brgy, s.city, s.province');
+            $this->db->join('schools s', 's.schoolID = r.school_id', 'left');
+        }
+        $data['donations'] = $this->db->where('r.partners_id', (int) $partner->id)->order_by('r.c_date', 'DESC')->get()->result();
+        $data['partner'] = $partner;
+        $data['title'] = 'Partner Donation Details';
+        $this->load->view('pages/brigada_partner_donation_details', $data);
+    }
+
+    public function all_donation_details()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot view all donation details.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $selectedPartnerType = trim((string) $this->input->get('partner_type', TRUE));
+
+        $this->db->select('r.*, p.name AS partner_name, p.general_type AS partner_type_key');
+        $this->db->from('brigada_contribution_report r');
+        $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+        if ($selectedPartnerType !== '') {
+            $this->db->where('p.general_type', $selectedPartnerType);
+        }
+        if ($this->db->table_exists('brigada_contribution_type')) {
+            $this->db->select("REPLACE(c.name, '_', ' ') AS contribution_type", FALSE);
+            $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
+        }
+        if ($this->db->table_exists('schools')) {
+            $this->db->select('s.schoolName, s.sitio, s.brgy, s.city, s.province');
+            $this->db->join('schools s', 's.schoolID = r.school_id', 'left');
+        }
+        $data['donations'] = $this->db->order_by('r.c_date', 'DESC')->get()->result();
+        $this->db->select_sum('r.amount', 'total_amount');
+        $this->db->from('brigada_contribution_report r');
+        if ($selectedPartnerType !== '') {
+            $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+            $this->db->where('p.general_type', $selectedPartnerType);
+        }
+        $total = $this->db->get()->row();
+        $data['totalAmount'] = (float) ($total->total_amount ?? 0);
+        $this->db->select('COUNT(*) AS record_count, SUM(COALESCE(r.amount, 0)) AS total_amount, p.general_type AS partner_type_key, REPLACE(COALESCE(NULLIF(p.general_type, \'\'), \'Unspecified\'), \'_\', \' \') AS partner_type', FALSE);
+        $this->db->from('brigada_contribution_report r');
+        $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+        $this->db->group_by('p.general_type');
+        $data['typeSummary'] = $this->db->order_by('total_amount', 'DESC')->get()->result();
+        $data['selectedPartnerType'] = $selectedPartnerType;
+        $data['title'] = 'All Donation Details';
+        $this->load->view('pages/brigada_all_donation_details', $data);
+    }
+
+    public function donation_type_details()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot view donation details.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $partnerType = trim((string) $this->input->get('partner_type', TRUE));
+        $selectedContributionType = trim((string) $this->input->get('contribution_type', TRUE));
+        if ($partnerType === '') {
+            redirect(base_url() . 'Brigada/all_donation_details');
+            return;
+        }
+
+        $this->db->select('r.*, p.name AS partner_name');
+        $this->db->from('brigada_contribution_report r');
+        $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+        $this->db->where('p.general_type', $partnerType);
+        if ($this->db->table_exists('brigada_contribution_type')) {
+            $this->db->select("REPLACE(c.name, '_', ' ') AS contribution_type", FALSE);
+            $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
+            if ($selectedContributionType !== '') {
+                $this->db->where('c.name', $selectedContributionType);
+            }
+        }
+        if ($this->db->table_exists('schools')) {
+            $this->db->select('s.schoolName, s.sitio, s.brgy, s.city, s.province');
+            $this->db->join('schools s', 's.schoolID = r.school_id', 'left');
+        }
+        $data['donations'] = $this->db->order_by('r.c_date', 'DESC')->get()->result();
+
+        $this->db->select_sum('r.amount', 'total_amount');
+        $this->db->from('brigada_contribution_report r');
+        $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+        $this->db->where('p.general_type', $partnerType);
+        if ($selectedContributionType !== '' && $this->db->table_exists('brigada_contribution_type')) {
+            $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
+            $this->db->where('c.name', $selectedContributionType);
+        }
+        $total = $this->db->get()->row();
+        $data['totalAmount'] = (float) ($total->total_amount ?? 0);
+
+        $data['contributionSummary'] = [];
+        if ($this->db->table_exists('brigada_contribution_type')) {
+            $this->db->select('COALESCE(NULLIF(c.name, \'\'), \'Unspecified\') AS contribution_type, COUNT(*) AS record_count, SUM(COALESCE(r.amount, 0)) AS total_amount', FALSE);
+            $this->db->from('brigada_contribution_report r');
+            $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+            $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
+            $this->db->where('p.general_type', $partnerType);
+            $this->db->group_by('c.name');
+            $data['contributionSummary'] = $this->db->order_by('record_count', 'DESC')->get()->result();
+        }
+        $data['partnerType'] = $partnerType;
+        $data['selectedContributionType'] = $selectedContributionType;
+        $data['title'] = 'Donation Type Details';
+        $this->load->view('pages/brigada_donation_type_details', $data);
     }
 
     public function settings_partners() {
@@ -779,24 +913,135 @@ class Brigada extends CI_Controller
             return;
         }
 
-        $check = $this->Common->one_cond_row('brigada_partners','name',$this->input->post('name'),'contact_person',$this->input->post('contact_person'));
+        $organization = trim((string) $this->input->post('organization', TRUE));
+        $firstName = trim((string) $this->input->post('first_name', TRUE));
+        $lastName = trim((string) $this->input->post('last_name', TRUE));
+        $email = strtolower(trim((string) $this->input->post('email', TRUE)));
+        $phone = trim((string) $this->input->post('phone', TRUE));
+        $address = trim((string) $this->input->post('address', TRUE));
+        $generalType = trim((string) $this->input->post('general_type', TRUE));
+        $specificType = trim((string) $this->input->post('specific_type', TRUE));
+        $password = (string) $this->input->post('password', FALSE);
+        $confirmPassword = (string) $this->input->post('password_confirm', FALSE);
 
-        $config['allowed_types'] = 'jpg|png';
-        $config['upload_path'] = './uploads/brigada_partners_logo';
-        $new_name = $_FILES["file"]['name'];
-        $config['file_name'] = $new_name;
-        $this->load->library('upload', $config);
-        
-        $this->upload->do_upload('file');
-        if(empty($check)){
-            $this->BrigadaModel->partners();
-            $this->session->set_flashdata('success', 'Successfully Saved.');
-        }else{
-           $this->session->set_flashdata('danger', ' Duplicate entry: Partner name and contact person already exist.'); 
+        if($organization === '' || $firstName === '' || $lastName === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8 || $password !== $confirmPassword){
+            $this->session->set_flashdata('danger', 'Complete all required account fields. Passwords must match and contain at least 8 characters.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
         }
-       
-        
+
+        $contactPerson = trim($firstName . ' ' . $lastName);
+        $existingPartner = $this->Common->one_cond_row('brigada_partners', 'name', $organization, 'contact_person', $contactPerson);
+        if($existingPartner || $this->partner_email_exists($email)){
+            $this->session->set_flashdata('danger', 'A partner or portal account with these details already exists.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $filename = '';
+        if(!empty($_FILES['file']['name'])){
+            $config = array(
+                'allowed_types' => 'jpg|jpeg|png',
+                'upload_path' => './uploads/brigada_partners_logo',
+                'encrypt_name' => TRUE
+            );
+            $this->load->library('upload', $config);
+            if(!$this->upload->do_upload('file')){
+                $this->session->set_flashdata('danger', trim(strip_tags($this->upload->display_errors('', ''))) ?: 'The partner logo could not be uploaded.');
+                redirect(base_url() . 'Brigada/list_of_partners');
+                return;
+            }
+            $filename = (string) $this->upload->data('file_name');
+        }
+
+        if(!$this->db->field_exists('account_username', 'brigada_partners')){
+            $this->db->query("ALTER TABLE brigada_partners ADD COLUMN account_username VARCHAR(255) NOT NULL DEFAULT ''");
+        }
+
+        $this->db->trans_begin();
+        $loginInserted = $this->db->insert('one_sgod_users', array(
+            'username' => $email, 'password' => sha1($password), 'fName' => $firstName, 'mName' => '', 'lName' => $lastName,
+            'avatar' => 'avatar.png', 'email' => $email, 'acctStat' => 'Active', 'section' => 'Partner', 'secGroup' => 'Partner'
+        ));
+        $userData = array(
+            'username' => $email, 'password' => sha1($password), 'position' => 'Partner', 'fname' => $firstName, 'mname' => '',
+            'lname' => $lastName, 'address' => $address, 'sex' => '', 'image' => 'avatar.png', 'user_id' => $email,
+            'status' => 1, 'sp' => 0, 'egroup' => 0, 'd_id' => 0
+        );
+        if($this->db->field_exists('role', 'users')){
+            $userData['role'] = 'Partner';
+        }
+        $userInserted = $loginInserted && $this->db->insert('users', $userData);
+        $partnerInserted = $userInserted && $this->db->insert('brigada_partners', array(
+            'name' => $organization, 'address' => $address, 'contact_person' => $contactPerson,
+            'contact' => $phone !== '' ? $phone . ' | ' . $email : $email,
+            'general_type' => $generalType, 'specific_type' => $specificType, 'file' => $filename,
+            'account_username' => $email
+        ));
+        if(!$loginInserted || !$userInserted || !$partnerInserted || $this->db->trans_status() === FALSE){
+            $this->db->trans_rollback();
+            $this->session->set_flashdata('danger', 'The partner and portal account could not be created. Please try again.');
+        }else{
+            $this->db->trans_commit();
+            $portalUrl = site_url('Login');
+            $this->load->config('email');
+            $this->load->library('email');
+            $mailMessage = '<p>Dear ' . htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8') . ',</p>'
+                . '<p>Your Brigada Eskwela partner portal account has been created.</p>'
+                . '<p><strong>System link:</strong> <a href="' . htmlspecialchars($portalUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($portalUrl, ENT_QUOTES, 'UTF-8') . '</a><br>'
+                . '<strong>Username:</strong> ' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . '<br>'
+                . '<strong>Temporary password:</strong> ' . htmlspecialchars($password, ENT_QUOTES, 'UTF-8') . '</p>'
+                . '<p>Please keep these credentials secure.</p>'
+                . '<p>Regards,<br>SDO Davao Oriental</p>';
+            $this->email->from('softtechservices.net@gmail.com', 'SDO Davao Oriental')
+                ->to($email)
+                ->subject('Your Brigada Eskwela Partner Portal Account')
+                ->message($mailMessage);
+            $emailSent = $this->email->send();
+            $this->session->set_flashdata('success', $emailSent
+                ? 'Partner and portal account created. Login credentials were emailed to the partner.'
+                : 'Partner and portal account created, but the welcome email could not be sent. Please provide the credentials securely.');
+        }
         redirect(base_url() . 'Brigada/list_of_partners');
+    }
+
+    public function partner_email_available()
+    {
+        $email = strtolower(trim((string) $this->input->get_post('email', TRUE)));
+        $available = filter_var($email, FILTER_VALIDATE_EMAIL) && !$this->partner_email_exists($email);
+        $this->output->set_content_type('application/json')->set_output(json_encode(array(
+            'valid' => filter_var($email, FILTER_VALIDATE_EMAIL) !== FALSE,
+            'available' => $available
+        )));
+    }
+
+    private function partner_email_exists($email)
+    {
+        $email = strtolower(trim((string) $email));
+        if($email === ''){
+            return FALSE;
+        }
+
+        foreach(array('users', 'one_sgod_users', 'sgod_users') as $table){
+            if(!$this->db->table_exists($table)){
+                continue;
+            }
+            $hasUsername = $this->db->field_exists('username', $table);
+            $hasEmail = $this->db->field_exists('email', $table);
+            if($hasUsername && $hasEmail){
+                $this->db->group_start()->where('username', $email)->or_where('email', $email)->group_end();
+            }elseif($hasUsername){
+                $this->db->where('username', $email);
+            }elseif($hasEmail){
+                $this->db->where('email', $email);
+            }else{
+                continue;
+            }
+            if($this->db->get($table, 1)->num_rows() > 0){
+                return TRUE;
+            }
+        }
+        return FALSE;
     }
 
     public function partners_update()

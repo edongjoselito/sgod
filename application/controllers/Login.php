@@ -40,7 +40,180 @@ class Login extends CI_Controller{
   }
  
   function index(){
-    $this->load->view('home_page');
+    $this->load->view('home_page', $this->get_home_page_data());
+  }
+
+  private function get_home_page_data(){
+    $data = array();
+    $data['sgodSections'] = $this->SGODModel->viewSectionsChecking('SGOD');
+    $data['partnerLogos'] = array();
+
+    if(!$this->db->table_exists('brigada_partners') || !$this->db->field_exists('file', 'brigada_partners')){
+      return $data;
+    }
+
+    $partners = $this->db->select('name, file')->where("file IS NOT NULL AND TRIM(file) != ''", NULL, FALSE)->order_by('name', 'ASC')->get('brigada_partners')->result();
+    $logoDirectory = FCPATH . 'uploads/brigada_partners_logo/';
+    foreach($partners as $partner){
+      $fileName = basename(trim((string) $partner->file));
+      if($fileName !== '' && is_file($logoDirectory . $fileName)){
+        $data['partnerLogos'][] = (object) array('name' => $partner->name, 'file' => $fileName);
+      }
+    }
+
+    return $data;
+  }
+
+  private function remember_partner_signup_values(){
+    $this->session->set_flashdata('partner_signup_values', array(
+      'organization' => trim((string) $this->input->post('organization', TRUE)),
+      'first_name' => trim((string) $this->input->post('first_name', TRUE)),
+      'last_name' => trim((string) $this->input->post('last_name', TRUE)),
+      'email' => trim((string) $this->input->post('email', TRUE)),
+      'phone' => trim((string) $this->input->post('phone', TRUE)),
+      'address' => trim((string) $this->input->post('address', TRUE)),
+      'general_type' => trim((string) $this->input->post('general_type', TRUE)),
+      'specific_type' => trim((string) $this->input->post('specific_type', TRUE))
+    ));
+  }
+
+  public function partner_captcha(){
+    $characters = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    $captcha = '';
+    for($index = 0; $index < 5; $index++){
+      $captcha .= $characters[random_int(0, strlen($characters) - 1)];
+    }
+    $this->session->set_userdata('partner_signup_captcha', $captcha);
+    $this->output->set_content_type('image/svg+xml')->set_header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    $this->output->set_output('<svg xmlns="http://www.w3.org/2000/svg" width="150" height="48" viewBox="0 0 150 48"><rect width="150" height="48" rx="5" fill="#edf5fa"/><path d="M4 10 L145 39 M11 42 L140 8" stroke="#9db8ca" stroke-width="1"/><text x="75" y="32" text-anchor="middle" fill="#062a4d" font-family="monospace" font-size="25" font-weight="700" letter-spacing="5">' . $captcha . '</text></svg>');
+  }
+
+  public function partner_email_available(){
+    $email = strtolower(trim((string) $this->input->get_post('email', TRUE)));
+    $available = FALSE;
+    if(filter_var($email, FILTER_VALIDATE_EMAIL)){
+      $inLogin = $this->db->where('username', $email)->get('one_sgod_users', 1)->num_rows() > 0;
+      $inUsers = $this->db->where('username', $email)->get('users', 1)->num_rows() > 0;
+      $available = !$inLogin && !$inUsers;
+    }
+    $this->output->set_content_type('application/json')->set_output(json_encode(array('valid' => filter_var($email, FILTER_VALIDATE_EMAIL) !== FALSE, 'available' => $available)));
+  }
+
+  /**
+   * Public Brigada Eskwela partner account registration.  Partner profile data
+   * lives in brigada_partners, while one_sgod_users keeps the portal login
+   * account.  The users row is retained as the system-wide user profile.
+   */
+  public function partner_signup(){
+    if(strtoupper($this->input->method(TRUE)) !== 'POST'){
+      redirect('Login');
+      return;
+    }
+
+    $organization = trim((string) $this->input->post('organization', TRUE));
+    $firstName = trim((string) $this->input->post('first_name', TRUE));
+    $lastName = trim((string) $this->input->post('last_name', TRUE));
+    $email = strtolower(trim((string) $this->input->post('email', TRUE)));
+    $phone = trim((string) $this->input->post('phone', TRUE));
+    $address = trim((string) $this->input->post('address', TRUE));
+    $generalType = trim((string) $this->input->post('general_type', TRUE));
+    $specificType = trim((string) $this->input->post('specific_type', TRUE));
+    $password = (string) $this->input->post('password', FALSE);
+    $confirmPassword = (string) $this->input->post('password_confirm', FALSE);
+
+    if($organization === '' || $firstName === '' || $lastName === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8 || $password !== $confirmPassword){
+      $this->remember_partner_signup_values();
+      $this->session->set_flashdata('partner_signup_error', 'Please complete all required fields. Passwords must match and contain at least 8 characters.');
+      redirect('Login');
+      return;
+    }
+
+    $captcha = strtoupper(trim((string) $this->input->post('captcha', TRUE)));
+    $expectedCaptcha = (string) $this->session->userdata('partner_signup_captcha');
+    $this->session->unset_userdata('partner_signup_captcha');
+    if($expectedCaptcha === '' || !hash_equals($expectedCaptcha, $captcha)){
+      $this->remember_partner_signup_values();
+      $this->session->set_flashdata('partner_signup_error', 'The security code did not match. Please try again.');
+      redirect('Login');
+      return;
+    }
+
+    // Older installations do not have a direct link between a partner record
+    // and its account. Add it once, without affecting existing partners.
+    if(!$this->db->field_exists('account_username', 'brigada_partners')){
+      $this->db->query("ALTER TABLE brigada_partners ADD COLUMN account_username VARCHAR(255) NOT NULL DEFAULT ''");
+    }
+    $hasPartnerAccountColumn = $this->db->field_exists('account_username', 'brigada_partners');
+
+    $existingLogin = $this->db->where('username', $email)->get('one_sgod_users', 1)->num_rows() > 0;
+    $existingUser = $this->db->where('username', $email)->get('users', 1)->num_rows() > 0;
+    if($existingLogin || $existingUser){
+      $this->remember_partner_signup_values();
+      $this->session->set_flashdata('partner_signup_error', 'An account with this email address already exists. Please sign in instead.');
+      redirect('Login');
+      return;
+    }
+
+    $this->db->trans_begin();
+    $loginInserted = $this->db->insert('one_sgod_users', array(
+      'username' => $email,
+      'password' => sha1($password),
+      'fName' => $firstName,
+      'mName' => '',
+      'lName' => $lastName,
+      'avatar' => 'avatar.png',
+      'email' => $email,
+      'acctStat' => 'Active',
+      'section' => 'Partner',
+      'secGroup' => 'Partner'
+    ));
+    $userData = array(
+      'username' => $email,
+      'password' => sha1($password),
+      'position' => 'Partner',
+      'fname' => $firstName,
+      'mname' => '',
+      'lname' => $lastName,
+      'address' => $address,
+      'sex' => '',
+      'image' => 'avatar.png',
+      'user_id' => $email,
+      'status' => 1,
+      'sp' => 0,
+      'egroup' => 0,
+      'd_id' => 0
+    );
+    // Some deployments expose an explicit role field in addition to the
+    // legacy position column. Set both whenever that column is available.
+    if($this->db->field_exists('role', 'users')){
+      $userData['role'] = 'Partner';
+    }
+    $userInserted = $loginInserted && $this->db->insert('users', $userData);
+    $partnerData = array(
+      'name' => $organization,
+      'address' => $address,
+      'contact_person' => trim($firstName . ' ' . $lastName),
+      'contact' => $phone !== '' ? $phone . ' | ' . $email : $email,
+      'general_type' => $generalType,
+      'specific_type' => $specificType,
+      'file' => ''
+    );
+    if($hasPartnerAccountColumn){
+      $partnerData['account_username'] = $email;
+    }
+    $partnerInserted = $userInserted && $this->db->insert('brigada_partners', $partnerData);
+
+    if(!$loginInserted || !$userInserted || !$partnerInserted || $this->db->trans_status() === FALSE){
+      $this->db->trans_rollback();
+      $this->remember_partner_signup_values();
+      $this->session->set_flashdata('partner_signup_error', 'We could not create your partner account. Please try again.');
+      redirect('Login');
+      return;
+    }
+
+    $this->db->trans_commit();
+    $this->session->set_flashdata('partner_signup_success', 'Your partner account has been created. You can sign in now.');
+    redirect('Login');
   }
 
 function registration(){
@@ -98,12 +271,55 @@ function registration(){
   
 
   function auth(){
-    $username    = $this->input->post('username',TRUE);
-    $password = sha1($this->input->post('password',TRUE));
+    $username = trim((string) $this->input->post('username', TRUE));
+    $password = (string) $this->input->post('password', FALSE);
+    $loginSource = $this->input->post('login_source', TRUE) === 'deped_mis' ? 'deped_mis' : 'sgod';
+    $data = NULL;
 
-    $validate = $this->Login_model->validate($username,$password);
-    if($validate->num_rows() > 0){
-        $data  = $validate->row_array();
+    if($loginSource === 'deped_mis'){
+        $this->db->group_start()->where('username', $username)->or_where('user_id', $username);
+        if($this->db->field_exists('email', 'users')){
+            $this->db->or_where('email', $username);
+        }
+        $this->db->group_end();
+        $misUser = $this->db->get('users', 1)->row_array();
+        $storedPassword = isset($misUser['password']) ? (string) $misUser['password'] : '';
+        // MIS installations contain bcrypt records as well as older SHA-1 and
+        // MD5 records. Some legacy bcrypt records were created from SHA-1 input.
+        $passwordMatches = $storedPassword !== '' && (
+            password_verify($password, $storedPassword) ||
+            password_verify(sha1($password), $storedPassword) ||
+            hash_equals($storedPassword, sha1($password)) ||
+            hash_equals($storedPassword, md5($password)) ||
+            hash_equals($storedPassword, $password)
+        );
+        if($misUser && $passwordMatches){
+            $isSchoolAccount = strtolower(trim((string) ($misUser['position'] ?? ''))) === 'school';
+            $data = array(
+                'username' => $misUser['username'],
+                'fName' => $misUser['fname'] ?? '',
+                'mName' => $misUser['mname'] ?? '',
+                'lName' => $misUser['lname'] ?? '',
+                'avatar' => !empty($misUser['image']) ? $misUser['image'] : 'avatar.png',
+                'email' => '',
+                'section' => $isSchoolAccount ? 'School' : 'DepEd MIS',
+                'secGroup' => $isSchoolAccount ? 'School' : 'DepEd MIS',
+                'position' => $misUser['position'] ?? ''
+            );
+        }
+    }else{
+        $validate = $this->Login_model->validate($username, sha1($password));
+        if($validate->num_rows() > 0){
+            $data = $validate->row_array();
+        }elseif($this->db->field_exists('email', 'one_sgod_users')){
+            $emailValidate = $this->db->where('email', $username)->where('password', sha1($password))->get('one_sgod_users', 1);
+            if($emailValidate->num_rows() > 0){
+                $data = $emailValidate->row_array();
+            }
+        }
+    }
+
+    if($data !== NULL){
         $username  = $data['username'];
 		 $fName  = $data['fName'];
          $mName  = $data['mName'];
@@ -122,12 +338,17 @@ function registration(){
             'section'     => $section,
             'secGroup'     => $secGroup,
             'identifier'     => $secGroup,
+            'login_source' => $loginSource,
+            'position' => $data['position'] ?? '',
             'logged_in' => TRUE
         );
         $this->session->set_userdata($user_data);
         //  access login for admin
         if($section === 'Super Admin'){
             redirect('page/super_admin');
+
+        }elseif($section === 'Partner'){
+            redirect('page/partner_dashboard');
 
         }elseif($section === 'System Administrator'){
             if($secGroup === 'CID'){
@@ -217,7 +438,10 @@ function registration(){
         }
 
 } else {
-    echo $this->session->set_flashdata('msg', 'The username or password is incorrect!');
+    $message = $loginSource === 'deped_mis'
+        ? 'The DepEd MIS username or password is incorrect.'
+        : 'The SGOD ONE username or password is incorrect.';
+    echo $this->session->set_flashdata('msg', $message);
     redirect('Login/');
 }
 }
@@ -225,7 +449,7 @@ function registration(){
 function login(){
     //$result['data']=$this->Login_model->loginImage();
     //$this->output->cache(60);
-    $this->load->view('home_page');
+    $this->load->view('home_page', $this->get_home_page_data());
   }
 
  

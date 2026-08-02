@@ -1,32 +1,37 @@
 <?php
-$schoolAccountName = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter(array(
-    $this->session->userdata('fName'),
-    $this->session->userdata('mName'),
-    $this->session->userdata('lName')
-)))));
-$schoolName = trim((string) ($this->session->userdata('schoolName') ?: $schoolAccountName ?: 'School'));
 $schoolId = trim((string) $this->session->userdata('username'));
+$schoolName = trim((string) ($school->schoolName ?? $this->session->userdata('fName') ?? 'School'));
+$schoolType = trim((string) ($school->schoolType ?? ''));
+$district = trim((string) ($school->district ?? ''));
+$location = implode(', ', array_filter(array(trim((string) ($school->brgy ?? '')), trim((string) ($school->city ?? '')), trim((string) ($school->province ?? '')))));
+$profileChecklist = array('schoolName', 'schoolType', 'schoolEmail', 'district', 'province', 'city', 'brgy', 'sitio', 'adminFName', 'adminLName', 'adminDesignation', 'adminMobile', 'adminEmail', 'ownership', 'ownerName', 'ownerEmail', 'ownerContactNo', 'presidentName', 'boardChairperson', 'corporateSecretary', 'schoolAdministrator', 'principalName', 'stationCode', 'yearEstab', 'recogNo', 'permitNo', 'permit_issuing_office', 'permit_status', 'shs_tracks_offered');
+$profileCompleted = 0;
+foreach ($profileChecklist as $profileField) {
+    if (trim((string) ($school->{$profileField} ?? '')) !== '') {
+        $profileCompleted++;
+    }
+}
+$profileCompletion = count($profileChecklist) ? (int) round(($profileCompleted / count($profileChecklist)) * 100) : 0;
 $dashboardConfig = array(
     'eyebrow' => 'School Dashboard',
     'eyebrow_icon' => 'mdi-school-outline',
     'title' => $schoolName,
-    'subtitle' => 'Monitor implementation plans, planning references, and daily school activity from one workspace.',
+    'subtitle' => 'View your school profile and keep your account information up to date.',
     'profile_name' => $schoolName,
     'profile_role' => $schoolId !== '' ? 'School ID ' . $schoolId : 'School Account',
-    'metrics' => array(
-        array('value' => $data->num_rows(), 'label' => 'AIP', 'context' => 'Annual implementation plans', 'icon' => 'mdi-clipboard-text-outline', 'href' => base_url() . 'Page/aip'),
-        array('value' => $pillar->num_rows(), 'label' => 'Pillars', 'context' => 'Planning pillars', 'icon' => 'mdi-view-column-outline'),
-        array('value' => $pias->num_rows(), 'label' => 'PIAs', 'context' => 'Priority improvement areas', 'icon' => 'mdi-target-account'),
-        array('value' => $domain->num_rows(), 'label' => 'Domains', 'context' => 'Planning domains', 'icon' => 'mdi-chart-donut')
+    'hero_progress' => array(
+        'value' => $profileCompletion,
+        'label' => 'Profile Data Accomplishment',
+        'context' => $profileCompleted . ' of ' . count($profileChecklist) . ' profile details completed'
     ),
+    'metrics' => array(),
     'quick_links_title' => 'School Tools',
-    'quick_links_caption' => 'Open frequently used planning and profile pages',
+    'quick_links_caption' => 'Open the tools available to your School account',
+    'quick_links_overlap' => TRUE,
     'quick_links' => array(
         array('label' => 'School Profile', 'context' => 'Review the school information on record.', 'href' => base_url() . 'Page/school_profile/' . rawurlencode($schoolId), 'icon' => 'mdi-card-account-details-outline'),
-        array('label' => 'Annual Implementation Plan', 'context' => 'Open and manage the school AIP.', 'href' => base_url() . 'Page/aip', 'icon' => 'mdi-clipboard-text-outline'),
-        array('label' => 'School Operating Plan', 'context' => 'Open the school operating plan.', 'href' => base_url() . 'Page/sop', 'icon' => 'mdi-file-chart-outline'),
-        array('label' => 'Procurement Plan', 'context' => 'Open the annual procurement plan.', 'href' => base_url() . 'Page/view_app', 'icon' => 'mdi-cart-outline')
-    )
+        array('label' => 'Edit School Profile', 'context' => 'Update your school contact and profile details.', 'href' => base_url() . 'Page/school_profile_edit', 'icon' => 'mdi-pencil-outline')
+    ),
+    'show_whereabouts' => FALSE
 );
-
 include(__DIR__ . '/includes/dashboard_standard.php');

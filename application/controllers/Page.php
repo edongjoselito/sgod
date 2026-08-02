@@ -407,16 +407,31 @@ class Page extends CI_Controller{
 		return NULL;
 	}
 
-	$sectionRecord = $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionHead', $username, 'secGroup', $secGroup);
+	$this->db->where('sectionHead', $username);
+	$this->db->where('secGroup', $secGroup);
+	if($section !== ''){
+		$this->db->where('sectionName', $section);
+	}
+	$sectionRecord = $this->db->get('one_sgod_sections', 1)->row();
 	if(!$sectionRecord){
 		return NULL;
 	}
 
-	if($section !== '' && trim((string) $sectionRecord->sectionName) !== $section){
-		return NULL;
-	}
-
 	return $sectionRecord;
+  }
+
+  private function get_section_head_sections_for_user($username, $secGroup){
+	$username = trim((string) $username);
+	$secGroup = trim((string) $secGroup);
+	if($username === '' || $secGroup === ''){
+		return array();
+	}
+	return $this->db->select('id, sectionName, sectionHeadPosition')
+		->where('sectionHead', $username)
+		->where('secGroup', $secGroup)
+		->order_by('sectionName', 'ASC')
+		->get('one_sgod_sections')
+		->result();
   }
 
   private function get_current_section_head_record(){
@@ -470,12 +485,8 @@ class Page extends CI_Controller{
   }
 
   function School(){
-    //Allowing access to Admin only
     if($this->session->userdata('section')==='School'){
-		$result['data']=$this->SGODModel->one_cond_count('one_sgod_aip','school_id',$this->session->username);
-		$result['pillar']=$this->SGODModel->count_table_row('one_sgod_settings_pillar');
-		$result['domain']=$this->SGODModel->count_table_row('one_sgod_settings_domain');
-		$result['pias']=$this->SGODModel->one_cond_count('one_sgod_settings_pias','school_id',$this->session->username);
+		$result['school'] = $this->db->where('schoolID', $this->session->userdata('username'))->get('schools', 1)->row();
 		$this->load->view('dashboard_school', $result);
     }else{
         echo "Access Denied";
@@ -539,6 +550,90 @@ class Page extends CI_Controller{
       return;
     }
     $this->load->view('radar', array('title' => 'RADAR'));
+  }
+
+  private function can_access_pmcf(){
+    $section = strtolower(trim((string) $this->session->userdata('section')));
+    $secGroup = strtolower(trim((string) $this->session->userdata('secGroup')));
+    return $secGroup === 'cid'
+      || strpos($secGroup, 'curriculum implementation') !== false
+      || $section === 'cid'
+      || strpos($section, 'curriculum implementation') !== false;
+  }
+
+  private function require_pmcf_access(){
+    if ($this->can_access_pmcf()) {
+      return TRUE;
+    }
+    show_error('Access Denied', 403);
+    return FALSE;
+  }
+
+  function pmcf(){
+    if (!$this->require_pmcf_access()) { return; }
+    $this->auto_migrate_pmcf_table();
+    $data['title'] = 'PMCF';
+    $this->db->where('username', $this->session->userdata('username'));
+    $data['records'] = $this->db->order_by('id', 'DESC')->get('one_pmcf')->result();
+    $this->load->view('pmcf', $data);
+  }
+
+  function pmcf_report(){
+    if (!$this->require_pmcf_access()) { return; }
+    $this->auto_migrate_pmcf_table();
+    $data['title'] = 'PMCF Report';
+    $this->db->where('username', $this->session->userdata('username'));
+    $data['records'] = $this->db->order_by('id', 'DESC')->get('one_pmcf')->result();
+    $this->load->view('pmcf_report', $data);
+  }
+
+  function pmcf_add(){
+    if (!$this->require_pmcf_access()) { return; }
+    $this->auto_migrate_pmcf_table();
+
+    if ($this->input->post('submit')) {
+      if (empty($this->input->post('teacher_observed')) || empty($this->input->post('date_observed'))) {
+        $this->session->set_flashdata('error', 'Teacher Observed and Date Observed are required.');
+        redirect('Page/pmcf_add');
+      }
+      $data = array(
+        'teacher_observed' => $this->input->post('teacher_observed', TRUE),
+        'grade_level' => $this->input->post('grade_level', TRUE),
+        'section' => $this->input->post('section', TRUE),
+        'district' => $this->input->post('district', TRUE),
+        'school' => $this->input->post('school', TRUE),
+        'quarter' => $this->input->post('quarter', TRUE),
+        'date_observed' => $this->input->post('date_observed', TRUE),
+        'time_observed' => $this->input->post('time_observed', TRUE),
+        'subject_area' => $this->input->post('subject_area', TRUE),
+        'instructional_supervisor' => $this->input->post('instructional_supervisor', TRUE),
+        'designation' => $this->input->post('designation', TRUE),
+        'significant_incidents_description' => $this->input->post('significant_incidents_description', TRUE),
+        'impact_on_job' => $this->input->post('impact_on_job', TRUE),
+        'coaching_mechanisms' => $this->input->post('coaching_mechanisms', TRUE),
+        'coaching_mechanisms_others' => $this->input->post('coaching_mechanisms_others', TRUE),
+        'feedback_recommendation' => $this->input->post('feedback_recommendation', TRUE),
+        'progress_to_date' => $this->input->post('progress_to_date', TRUE),
+        'username' => $this->session->userdata('username'),
+        'user_section' => $this->session->userdata('section'),
+        'secGroup' => $this->session->userdata('secGroup'),
+        'created_at' => date('Y-m-d H:i:s'),
+        'updated_at' => date('Y-m-d H:i:s')
+      );
+      if (empty($data['date_observed'])) { $data['date_observed'] = NULL; }
+      if (empty($data['time_observed'])) { $data['time_observed'] = ''; }
+      if ($this->db->insert('one_pmcf', $data)) {
+        $this->session->set_flashdata('success', 'PMCF saved successfully.');
+      } else {
+        $this->session->set_flashdata('error', 'Failed to save PMCF. Please try again.');
+      }
+      redirect('Page/pmcf_add');
+    }
+
+    $data['title'] = 'Add PMCF';
+    $data['districts'] = $this->db->query("SELECT DISTINCT district FROM schools WHERE district != '' ORDER BY district ASC")->result();
+    $data['schools'] = $this->db->query("SELECT district, schoolName FROM schools WHERE schoolName != '' ORDER BY schoolName ASC")->result();
+    $this->load->view('pmcf_add', $data);
   }
 
   function SHNS(){
@@ -719,7 +814,26 @@ class Page extends CI_Controller{
 	$result['sectionRecord'] = $sectionRecord;
 	$result['currentAvatar'] = $profileState['currentAvatar'];
 	$result['shouldPromptAvatarUpdate'] = $profileState['shouldPromptAvatarUpdate'];
+	$result['managedSections'] = $this->get_section_head_sections_for_user(
+		$this->session->userdata('username'),
+		$this->session->userdata('secGroup')
+	);
 	$this->load->view('dashboard_section_head', $result);
+  }
+
+  function switch_managed_section(){
+	$sectionName = trim((string) $this->input->post('section', TRUE));
+	$sectionRecord = $this->get_section_head_record_for_user(
+		$this->session->userdata('username'),
+		$sectionName,
+		$this->session->userdata('secGroup')
+	);
+	if(!$sectionRecord){
+		show_error('Access Denied', 403);
+		return;
+	}
+	$this->session->set_userdata('section', trim((string) $sectionRecord->sectionName));
+	redirect('Page/section_head_dashboard');
   }
 
   function user_dashboard(){
@@ -739,6 +853,106 @@ class Page extends CI_Controller{
     $result['currentAvatar']=$profileState['currentAvatar'];
     $result['shouldPromptAvatarUpdate']=$profileState['shouldPromptAvatarUpdate'];
     $this->load->view('dashboard_user',$result);
+  }
+
+  public function partner_dashboard(){
+    if($this->session->userdata('section') !== 'Partner'){
+      show_error('Access Denied', 403);
+      return;
+    }
+
+    $username = trim((string) $this->session->userdata('username'));
+    $partner = NULL;
+    if($this->db->table_exists('brigada_partners')){
+      if($this->db->field_exists('account_username', 'brigada_partners')){
+        $partner = $this->db->where('account_username', $username)->get('brigada_partners', 1)->row();
+      }
+      // Supports partner accounts created before the account_username link.
+      if(!$partner){
+        $partner = $this->db->like('contact', $username)->get('brigada_partners', 1)->row();
+      }
+    }
+
+    $contributionCount = 0;
+    if($partner && $this->db->table_exists('brigada_contribution_report')){
+      $contributionCount = $this->db->where('partners_id', (int) $partner->id)->count_all_results('brigada_contribution_report');
+    }
+
+    $this->load->view('dashboard_partner', array(
+      'partner' => $partner,
+      'contributionCount' => $contributionCount
+    ));
+  }
+
+  public function partner_template($type = ''){
+    if($this->session->userdata('section') !== 'Partner'){
+      show_error('Access Denied', 403);
+      return;
+    }
+
+    $templates = array(
+      'moa' => array(
+        'filename' => 'Adopt-a-School_Memorandum_of_Agreement.doc',
+        'title' => 'MEMORANDUM OF AGREEMENT',
+        'body' => '<p>This Memorandum of Agreement is entered into this ____ day of __________ 20__, by and between:</p><p><strong>THE DEPARTMENT OF EDUCATION, SCHOOLS DIVISION OFFICE OF DAVAO ORIENTAL</strong>, through <strong>____________________________</strong>, in coordination with <strong>____________________________ School</strong>, hereinafter referred to as the <strong>DEPED PARTY</strong>;</p><p>and</p><p><strong>____________________________</strong>, represented by <strong>____________________________</strong>, with address at <strong>____________________________</strong>, hereinafter referred to as the <strong>PARTNER</strong>.</p><p><strong>1. Purpose.</strong> The parties agree to support the Adopt-a-School Program / Brigada Eskwela initiative described as: ________________________________________________.</p><p><strong>2. Partner contribution.</strong> The PARTNER shall provide: ________________________________________________ with an estimated value of Php ____________.</p><p><strong>3. DepEd responsibilities.</strong> The DEPED PARTY shall coordinate implementation, receive and account for accepted support, and ensure its use for the agreed school purpose.</p><p><strong>4. Effectivity.</strong> This Agreement takes effect upon signing and remains in force until ____________________.</p><br><p>Signed:</p><table><tr><td>____________________________<br>For the PARTNER</td><td>____________________________<br>For DepEd / School</td></tr></table>'
+      ),
+      'deed_of_donation' => array(
+        'filename' => 'Adopt-a-School_Deed_of_Donation.doc',
+        'title' => 'DEED OF DONATION',
+        'body' => '<p>KNOW ALL MEN BY THESE PRESENTS:</p><p>This Deed of Donation is made by <strong>____________________________</strong>, represented by <strong>____________________________</strong>, with address at <strong>____________________________</strong>, hereinafter called the <strong>DONOR</strong>, in favor of the <strong>DEPARTMENT OF EDUCATION</strong>, through <strong>____________________________ School</strong>, represented by <strong>____________________________</strong>, hereinafter called the <strong>DONEE</strong>.</p><p>The DONOR freely and voluntarily donates the following, free from liens and encumbrances, for the benefit of learners:</p><table><tr><th>Quantity</th><th>Unit</th><th>Complete description / specifications</th><th>Estimated value</th></tr><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></table><p>Total estimated value: Php ____________________.</p><p>The DONEE accepts this donation subject to applicable DepEd, government accounting, property, and auditing rules.</p><br><p>IN WITNESS WHEREOF, the parties have signed this deed on ____________________.</p><table><tr><td>____________________________<br>DONOR / Authorized Representative</td><td>____________________________<br>DONEE / School Head</td></tr></table>'
+      ),
+      'deed_of_acceptance' => array(
+        'filename' => 'Adopt-a-School_Deed_of_Acceptance.doc',
+        'title' => 'DEED OF ACCEPTANCE',
+        'body' => '<p>The <strong>DEPARTMENT OF EDUCATION</strong>, through <strong>____________________________ School</strong>, represented by <strong>____________________________</strong>, hereby accepts the donation from <strong>____________________________</strong> through the Adopt-a-School Program / Brigada Eskwela.</p><p>The accepted donation is described below:</p><table><tr><th>Quantity</th><th>Unit</th><th>Complete description / specifications</th><th>Estimated value</th></tr><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></table><p>The school acknowledges the donor\'s support and will record, safeguard, and use the accepted items in accordance with applicable rules and for the intended educational purpose.</p><br><p>Accepted this ____ day of __________ 20__ at ____________________.</p><table><tr><td>____________________________<br>School Head / Authorized DepEd Representative</td><td>____________________________<br>Witness</td></tr></table>'
+      ),
+      'requirements_checklist' => array(
+        'filename' => 'Adopt-a-School_Requirements_Checklist.doc',
+        'title' => 'ADOPT-A-SCHOOL PROGRAM REQUIREMENTS CHECKLIST',
+        'body' => '<p><strong>Partner / organization:</strong> ________________________________ &nbsp;&nbsp;&nbsp; <strong>Date:</strong> ____________________</p><p>Use this checklist when preparing an Adopt-a-School Program or Brigada Eskwela partnership. Confirm the final documentary requirements with the SDO Davao Oriental Social Mobilization and Networking team.</p><table><tr><th style="width:10%">Done</th><th>Requirement</th><th>Notes / reference</th></tr><tr><td>☐</td><td>Initial coordination with the recipient school and SDO partnership focal person</td><td></td></tr><tr><td>☐</td><td>Project or donation description, implementation scope, and proposed schedule</td><td></td></tr><tr><td>☐</td><td>Partner organization profile and authorized representative details</td><td></td></tr><tr><td>☐</td><td>Memorandum of Agreement, when required for the partnership</td><td></td></tr><tr><td>☐</td><td>Deed of Donation with an itemized list, quantities, specifications, and estimated values</td><td></td></tr><tr><td>☐</td><td>Deed / Certificate of Acceptance signed by the authorized school or DepEd representative</td><td></td></tr><tr><td>☐</td><td>Turnover, delivery, or completion documentation and photos, when applicable</td><td></td></tr><tr><td>☐</td><td>Supporting documents for any tax incentive application, if applicable</td><td></td></tr><tr><td>☐</td><td>Required copies submitted to the school and SDO partnership coordinator</td><td></td></tr></table><p><strong>SDO review notes:</strong> ____________________________________________________________________________________</p>'
+      )
+    );
+    if(!isset($templates[$type])){
+      show_404();
+      return;
+    }
+
+    $template = $templates[$type];
+    $document = '<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;font-size:12pt;line-height:1.5;margin:1in}h1{text-align:center;font-size:16pt;margin-bottom:28px}table{width:100%;border-collapse:collapse;margin:18px 0}th,td{border:1px solid #222;padding:9px;vertical-align:top}td{height:48px}</style></head><body><h1>' . $template['title'] . '</h1>' . $template['body'] . '<p style="margin-top:36px;font-size:10pt"><em>Template only. Complete the details and secure review/approval from the appropriate SDO Davao Oriental offices before execution.</em></p></body></html>';
+    $this->output->set_content_type('application/msword')->set_header('Content-Disposition: attachment; filename="' . $template['filename'] . '"')->set_output($document);
+  }
+
+  public function partner_donations(){
+    if($this->session->userdata('section') !== 'Partner'){
+      show_error('Access Denied', 403);
+      return;
+    }
+
+    $username = trim((string) $this->session->userdata('username'));
+    $partner = NULL;
+    if($this->db->field_exists('account_username', 'brigada_partners')){
+      $partner = $this->db->where('account_username', $username)->get('brigada_partners', 1)->row();
+    }
+    if(!$partner){
+      $partner = $this->db->like('contact', $username)->get('brigada_partners', 1)->row();
+    }
+
+    $donations = array();
+    if($partner && $this->db->table_exists('brigada_contribution_report')){
+      $this->db->select('r.*');
+      $this->db->from('brigada_contribution_report r');
+      if($this->db->table_exists('schools')){
+        $this->db->select('s.schoolName AS school_name, s.sitio AS school_sitio, s.brgy AS school_brgy, s.city AS school_city, s.province AS school_province');
+        $this->db->join('schools s', 's.schoolID = r.school_id', 'left');
+      }
+      if($this->db->table_exists('brigada_contribution_type')){
+        $this->db->select('c.name AS contribution_type');
+        $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
+      }
+      $this->db->where('r.partners_id', (int) $partner->id)->order_by('r.c_date', 'DESC');
+      $donations = $this->db->get()->result();
+    }
+    $this->load->view('partner_donations', array('partner' => $partner, 'donations' => $donations));
   }
 
   public function upload_user_profile_picture(){
@@ -2726,18 +2940,444 @@ public function memo_delete(){
 
   function schools(){
 	  $result['data']=$this->SGODModel->schools();
+	  $result['canManageSchools'] = $this->can_manage_schools();
 	$this->load->view('schools',$result);
 	}
 
-	function schoolDashoard(){
+  private function can_manage_schools(){
+	$section = strtolower(trim((string) $this->session->userdata('section')));
+	return strpos($section, 'school management') !== false
+		|| strpos($section, 'monitoring and evaluation') !== false
+		|| $section === 'smme';
+  }
+
+  private function require_school_management_access(){
+	if($this->can_manage_schools()){
+		return TRUE;
+	}
+	show_error('Access Denied', 403);
+	return FALSE;
+  }
+
+  private function school_account_email_exists($email){
+	$email = trim((string) $email);
+	if($email === ''){ return FALSE; }
+	if($this->db->field_exists('email', 'one_sgod_users') && $this->db->where('email', $email)->count_all_results('one_sgod_users') > 0){
+		return TRUE;
+	}
+	if($this->db->field_exists('email', 'users') && $this->db->where('email', $email)->count_all_results('users') > 0){
+		return TRUE;
+	}
+	return $this->db->where('username', $email)->count_all_results('users') > 0;
+  }
+
+  function school_account_email_available(){
+	if(!$this->require_school_management_access()){ return; }
+	$email = trim((string) $this->input->get('email', TRUE));
+	$this->output->set_content_type('application/json')->set_output(json_encode(array(
+		'valid' => filter_var($email, FILTER_VALIDATE_EMAIL) !== FALSE,
+		'available' => filter_var($email, FILTER_VALIDATE_EMAIL) !== FALSE && !$this->school_account_email_exists($email)
+	)));
+  }
+
+  function school_save(){
+	if(!$this->require_school_management_access()){ return; }
+	$originalSchoolId = trim((string) $this->input->post('original_school_id', TRUE));
+	$schoolId = trim((string) $this->input->post('schoolID', TRUE));
+	$schoolName = trim((string) $this->input->post('schoolName', TRUE));
+	$accountPassword = (string) $this->input->post('account_password', FALSE);
+	$accountEmail = trim((string) $this->input->post('account_email', TRUE));
+	if($schoolId === '' || $schoolName === ''){
+		$this->session->set_flashdata('danger', 'School ID and School Name are required.');
+		redirect('Page/schools');
+		return;
+	}
+
+	if($originalSchoolId === ''){
+		if($this->db->where('schoolID', $schoolId)->count_all_results('schools') > 0){
+			$this->session->set_flashdata('danger', 'That School ID already exists.');
+			redirect('Page/schools');
+			return;
+		}
+		if(strlen($accountPassword) < 6){
+			$this->session->set_flashdata('danger', 'Set an account password with at least 6 characters.');
+			redirect('Page/schools');
+			return;
+		}
+		if(filter_var($accountEmail, FILTER_VALIDATE_EMAIL) === FALSE || $this->school_account_email_exists($accountEmail)){
+			$this->session->set_flashdata('danger', 'Enter an available email address for the School account.');
+			redirect('Page/schools');
+			return;
+		}
+		if($this->db->where('username', $schoolId)->count_all_results('users') > 0 || $this->db->where('username', $schoolId)->count_all_results('one_sgod_users') > 0){
+			$this->session->set_flashdata('danger', 'That School ID is already used by an account.');
+			redirect('Page/schools');
+			return;
+		}
+	} elseif($schoolId !== $originalSchoolId) {
+		if($this->db->where('schoolID', $schoolId)->where('schoolID !=', $originalSchoolId)->count_all_results('schools') > 0){
+			$this->session->set_flashdata('danger', 'That School ID already exists.');
+			redirect('Page/schools');
+			return;
+		}
+	}
+
+	$allowedFields = array('schoolID', 'schoolName', 'schoolType', 'district', 'sitio', 'brgy', 'city', 'province', 'adminFName', 'adminMName', 'adminLName', 'adminDesignation', 'permitNo', 'recogNo');
+	$payload = array();
+	foreach($allowedFields as $field){
+		if($this->db->field_exists($field, 'schools')){
+			$payload[$field] = trim((string) $this->input->post($field, TRUE));
+		}
+	}
+	if($originalSchoolId === ''){
+		$this->db->trans_begin();
+		$schoolInserted = $this->db->insert('schools', $payload);
+		$schoolAccount = array(
+			'username' => $schoolId, 'password' => sha1($accountPassword), 'fName' => $schoolName,
+			'mName' => '', 'lName' => '', 'avatar' => 'avatar.png', 'email' => $accountEmail,
+			'acctStat' => 'Active', 'section' => 'School', 'secGroup' => 'School'
+		);
+		$loginInserted = $schoolInserted && $this->db->insert('one_sgod_users', $schoolAccount);
+		$userAccount = array(
+			'username' => $schoolId, 'password' => sha1($accountPassword), 'position' => 'School',
+			'fname' => $schoolName, 'mname' => '', 'lname' => '', 'address' => trim((string) ($payload['city'] ?? '')),
+			'sex' => '', 'image' => 'avatar.png', 'user_id' => $schoolId, 'status' => 1,
+			'sp' => 0, 'egroup' => 0, 'd_id' => 0
+		);
+		if($this->db->field_exists('role', 'users')){ $userAccount['role'] = 'School'; }
+		if($this->db->field_exists('email', 'users')){ $userAccount['email'] = $accountEmail; }
+		$userInserted = $loginInserted && $this->db->insert('users', $userAccount);
+		if(!$userInserted || $this->db->trans_status() === FALSE){
+			$this->db->trans_rollback();
+			$this->session->set_flashdata('danger', 'The school account could not be created.');
+		} else {
+			$this->db->trans_commit();
+			$this->load->config('email');
+			$this->load->library('email');
+			$loginUrl = base_url() . 'Login';
+			$mailMessage = '<p>Hello ' . htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') . ',</p>'
+				. '<p>Your School dashboard account has been created.</p>'
+				. '<p><strong>Login URL:</strong> <a href="' . htmlspecialchars($loginUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($loginUrl, ENT_QUOTES, 'UTF-8') . '</a><br>'
+				. '<strong>Username / School ID:</strong> ' . htmlspecialchars($schoolId, ENT_QUOTES, 'UTF-8') . '<br>'
+				. '<strong>Email:</strong> ' . htmlspecialchars($accountEmail, ENT_QUOTES, 'UTF-8') . '<br>'
+				. '<strong>Password:</strong> ' . htmlspecialchars($accountPassword, ENT_QUOTES, 'UTF-8') . '</p>'
+				. '<p>Please keep these credentials secure.</p>';
+			$this->email->from('softtechservices.net@gmail.com', 'SDO Davao Oriental')->to($accountEmail)->subject('Your School Dashboard Account')->message($mailMessage);
+			$emailSent = $this->email->send();
+			$this->session->set_flashdata('success', $emailSent ? 'School and School account created. Login credentials were emailed to the School.' : 'School account created, but the credentials email could not be sent.');
+		}
+	} else {
+		$this->db->trans_begin();
+		$this->db->where('schoolID', $originalSchoolId)->update('schools', $payload);
+		if($schoolId !== $originalSchoolId){
+			$this->db->where('username', $originalSchoolId)->where('section', 'School')->update('one_sgod_users', array('username' => $schoolId));
+			$this->db->where('username', $originalSchoolId)->where('position', 'School')->update('users', array('username' => $schoolId, 'user_id' => $schoolId));
+		}
+		$this->db->where('username', $schoolId)->where('section', 'School')->update('one_sgod_users', array('fName' => $schoolName));
+		$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('fname' => $schoolName));
+		if($this->db->trans_status() === FALSE){ $this->db->trans_rollback(); } else { $this->db->trans_commit(); }
+		$this->session->set_flashdata('success', 'School record updated successfully.');
+	}
+	redirect('Page/schools');
+  }
+
+  function school_delete(){
+	if(!$this->require_school_management_access()){ return; }
+	$schoolId = trim((string) $this->input->post('school_id', TRUE));
+	if($schoolId !== ''){
+		$this->db->trans_begin();
+		$this->db->where('schoolID', $schoolId)->delete('schools');
+		$this->db->where('username', $schoolId)->where('section', 'School')->delete('one_sgod_users');
+		$this->db->where('username', $schoolId)->where('position', 'School')->delete('users');
+		if($this->db->trans_status() === FALSE){
+			$this->db->trans_rollback();
+			$this->session->set_flashdata('danger', 'The school record could not be deleted.');
+		} else {
+			$this->db->trans_commit();
+			$this->session->set_flashdata('success', 'School record and its account were deleted.');
+		}
+	}
+	redirect('Page/schools');
+  }
+
+  function schoolDashoard(){
 		$schoolID=$this->input->get('schoolid');
 		$result['data']=$this->SGODModel->schoolDetails($schoolID);
 	$this->load->view('schools_dashboard',$result);
 	}
 
+	function school_personnel(){
+		if($this->session->userdata('section') !== 'School'){
+			show_error('Access Denied', 403); return;
+		}
+		$this->ensure_school_personnel_table();
+		$schoolId = (string) $this->session->userdata('username');
+		$result['personnel'] = $this->db->where('school_id', $schoolId)->order_by('full_name', 'ASC')->get('one_school_personnel')->result();
+		$editId = (int) $this->input->get('edit');
+		$result['editPersonnel'] = $editId ? $this->db->where('id', $editId)->where('school_id', $schoolId)->get('one_school_personnel', 1)->row() : null;
+		$result['totals'] = array(
+			'total' => $this->db->where('school_id', $schoolId)->count_all_results('one_school_personnel'),
+			'licensed' => $this->db->where(array('school_id' => $schoolId, 'personnel_type' => 'Teaching', 'licensed' => 1))->count_all_results('one_school_personnel'),
+			'non_licensed' => $this->db->where(array('school_id' => $schoolId, 'personnel_type' => 'Teaching', 'licensed' => 0))->count_all_results('one_school_personnel'),
+			'full_time' => $this->db->where(array('school_id' => $schoolId, 'personnel_type' => 'Teaching', 'employment_status' => 'Full-time'))->count_all_results('one_school_personnel'),
+			'part_time' => $this->db->where(array('school_id' => $schoolId, 'personnel_type' => 'Teaching', 'employment_status' => 'Part-time'))->count_all_results('one_school_personnel')
+		);
+		$this->load->view('school_personnel', $result);
+	}
+
+	function school_personnel_save(){
+		if($this->session->userdata('section') !== 'School'){
+			show_error('Access Denied', 403); return;
+		}
+		$this->ensure_school_personnel_table();
+		$firstName = trim((string) $this->input->post('first_name', TRUE));
+		$middleName = trim((string) $this->input->post('middle_name', TRUE));
+		$lastName = trim((string) $this->input->post('last_name', TRUE));
+		$fullName = trim(implode(' ', array_filter(array($firstName, $middleName, $lastName))));
+		if($fullName === '') $fullName = trim((string) $this->input->post('full_name', TRUE));
+		if($fullName === ''){
+			$this->session->set_flashdata('danger', 'Personnel name is required.'); redirect('Page/school_personnel'); return;
+		}
+		$payload = array(
+			'school_id' => (string) $this->session->userdata('username'),
+			'employee_no' => trim((string) $this->input->post('employee_no', TRUE)),
+			'full_name' => $fullName,
+			'first_name' => $firstName,
+			'middle_name' => $middleName,
+			'last_name' => $lastName,
+			'sex' => trim((string) $this->input->post('sex', TRUE)),
+			'position_title' => trim((string) $this->input->post('position_title', TRUE)),
+			'personnel_type' => $this->input->post('personnel_type', TRUE) === 'Non-Teaching' ? 'Non-Teaching' : 'Teaching',
+			'licensed' => $this->input->post('licensed') ? 1 : 0,
+			'employment_status' => $this->input->post('employment_status', TRUE) === 'Part-time' ? 'Part-time' : 'Full-time',
+			'highest_education' => trim((string) $this->input->post('highest_education', TRUE)),
+			'education_course' => trim((string) $this->input->post('education_course', TRUE)),
+			'major_specialization' => trim((string) $this->input->post('major_specialization', TRUE)),
+			'prc_license_no' => trim((string) $this->input->post('prc_license_no', TRUE)),
+			'prc_expiration' => trim((string) $this->input->post('prc_expiration', TRUE)),
+			'non_teaching_role' => trim((string) $this->input->post('non_teaching_role', TRUE)),
+			'non_teaching_other' => trim((string) $this->input->post('non_teaching_other', TRUE)),
+			'email' => trim((string) $this->input->post('email', TRUE)),
+			'mobile_no' => trim((string) $this->input->post('mobile_no', TRUE))
+		);
+		if($payload['email'] !== '' && !filter_var($payload['email'], FILTER_VALIDATE_EMAIL)){
+			$this->session->set_flashdata('danger', 'Enter a valid email address.'); redirect('Page/school_personnel'); return;
+		}
+		$recordId = (int) $this->input->post('id');
+		if($recordId){
+			$this->db->where('id', $recordId)->where('school_id', (string) $this->session->userdata('username'))->update('one_school_personnel', $payload);
+			$this->session->set_flashdata('success', 'Personnel record updated successfully.');
+		} else {
+			$this->db->insert('one_school_personnel', $payload);
+			$this->session->set_flashdata('success', 'Personnel record added successfully.');
+		}
+		redirect('Page/school_personnel');
+	}
+
+	function school_personnel_delete($id = 0){
+		if($this->session->userdata('section') !== 'School'){
+			show_error('Access Denied', 403); return;
+		}
+		$this->ensure_school_personnel_table();
+		$this->db->where('id', (int) $id)->where('school_id', (string) $this->session->userdata('username'))->delete('one_school_personnel');
+		$this->session->set_flashdata('success', 'Personnel record removed.'); redirect('Page/school_personnel');
+	}
+
+	function school_personnel_details($id = 0){
+		if($this->session->userdata('section') !== 'School'){
+			show_error('Access Denied', 403); return;
+		}
+		$this->ensure_school_personnel_table();
+		$result['personnel'] = $this->db->where('id', (int) $id)->where('school_id', (string) $this->session->userdata('username'))->get('one_school_personnel', 1)->row();
+		if(!$result['personnel']){ show_404(); return; }
+		$this->load->view('school_personnel_details', $result);
+	}
+
+	function school_enrollment_details(){
+		if($this->session->userdata('section') !== 'School') { show_error('Access Denied', 403); return; }
+		$this->ensure_school_enrollment_table();
+		$schoolId = (string) $this->session->userdata('username');
+		$selectedSchoolYear = trim((string) $this->input->get('school_year', TRUE));
+		$listQuery = $this->db->where('school_id', $schoolId);
+		if($selectedSchoolYear !== '') $listQuery->where('school_year', $selectedSchoolYear);
+		$result['enrollments'] = $listQuery->order_by('school_year', 'DESC')->order_by('semester', 'ASC')->order_by('grade_level', 'ASC')->get('one_school_enrollment_details')->result();
+		$result['schoolYears'] = $this->db->select('school_year')->where('school_id', $schoolId)->group_by('school_year')->order_by('school_year', 'DESC')->get('one_school_enrollment_details')->result();
+		$result['selectedSchoolYear'] = $selectedSchoolYear;
+		$editId = (int) $this->input->get('edit');
+		$result['editEnrollment'] = $editId ? $this->db->where('id', $editId)->where('school_id', $schoolId)->get('one_school_enrollment_details', 1)->row() : null;
+		$maleQuery = $this->db->select_sum('male_count')->where('school_id', $schoolId); if($selectedSchoolYear !== '') $maleQuery->where('school_year', $selectedSchoolYear);
+		$femaleQuery = $this->db->select_sum('female_count')->where('school_id', $schoolId); if($selectedSchoolYear !== '') $femaleQuery->where('school_year', $selectedSchoolYear);
+		$result['totals'] = array('male' => (int) $maleQuery->get('one_school_enrollment_details')->row()->male_count, 'female' => (int) $femaleQuery->get('one_school_enrollment_details')->row()->female_count);
+		$this->load->view('school_enrollment_details', $result);
+	}
+
+	function school_enrollment_save(){
+		if($this->session->userdata('section') !== 'School') { show_error('Access Denied', 403); return; }
+		$this->ensure_school_enrollment_table();
+		$schoolYear = trim((string) $this->input->post('school_year', TRUE));
+		$gradeLevel = trim((string) $this->input->post('grade_level', TRUE));
+		if($schoolYear === '' || $gradeLevel === '') { $this->session->set_flashdata('danger', 'School Year and Grade Level are required.'); redirect('Page/school_enrollment_details'); return; }
+		$payload = array('school_id' => (string) $this->session->userdata('username'), 'school_year' => $schoolYear, 'semester' => 'Annual', 'grade_level' => $gradeLevel, 'male_count' => max(0, (int) $this->input->post('male_count')), 'female_count' => max(0, (int) $this->input->post('female_count')));
+		$recordId = (int) $this->input->post('id');
+		if($recordId){
+			$this->db->where('id', $recordId)->where('school_id', $payload['school_id'])->update('one_school_enrollment_details', $payload);
+			$this->session->set_flashdata('success', 'Enrollment details updated successfully.');
+		} else {
+			$this->db->insert('one_school_enrollment_details', $payload);
+			$this->session->set_flashdata('success', 'Enrollment details saved successfully.');
+		}
+		redirect('Page/school_enrollment_details');
+	}
+
+	function school_enrollment_delete($id = 0){
+		if($this->session->userdata('section') !== 'School') { show_error('Access Denied', 403); return; }
+		$this->ensure_school_enrollment_table();
+		$this->db->where('id', (int) $id)->where('school_id', (string) $this->session->userdata('username'))->delete('one_school_enrollment_details');
+		$this->session->set_flashdata('success', 'Enrollment detail removed.'); redirect('Page/school_enrollment_details');
+	}
+
+	private function ensure_school_enrollment_table(){
+		$this->db->query('CREATE TABLE IF NOT EXISTS one_school_enrollment_details (id INT UNSIGNED NOT NULL AUTO_INCREMENT, school_id VARCHAR(50) NOT NULL, school_year VARCHAR(20) NOT NULL, semester VARCHAR(50) NOT NULL, grade_level VARCHAR(100) NOT NULL, male_count INT NOT NULL DEFAULT 0, female_count INT NOT NULL DEFAULT 0, created_at DATETIME NULL, PRIMARY KEY (id), KEY one_school_enrollment_school_id (school_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+	}
+
+	private function ensure_school_personnel_table(){
+		$this->db->query('CREATE TABLE IF NOT EXISTS one_school_personnel (id INT UNSIGNED NOT NULL AUTO_INCREMENT, school_id VARCHAR(50) NOT NULL, employee_no VARCHAR(100) NULL, full_name VARCHAR(255) NOT NULL, first_name VARCHAR(100) NULL, middle_name VARCHAR(100) NULL, last_name VARCHAR(100) NULL, sex VARCHAR(20) NULL, position_title VARCHAR(255) NULL, personnel_type VARCHAR(30) NOT NULL DEFAULT \'Teaching\', licensed TINYINT(1) NOT NULL DEFAULT 0, employment_status VARCHAR(30) NOT NULL DEFAULT \'Full-time\', highest_education VARCHAR(255) NULL, education_course VARCHAR(255) NULL, major_specialization VARCHAR(255) NULL, prc_license_no VARCHAR(100) NULL, prc_expiration DATE NULL, non_teaching_role VARCHAR(100) NULL, non_teaching_other VARCHAR(255) NULL, email VARCHAR(255) NULL, mobile_no VARCHAR(100) NULL, created_at DATETIME NULL, PRIMARY KEY (id), KEY one_school_personnel_school_id (school_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+		$columns = array('first_name' => 'VARCHAR(100) NULL', 'middle_name' => 'VARCHAR(100) NULL', 'last_name' => 'VARCHAR(100) NULL', 'highest_education' => 'VARCHAR(255) NULL', 'education_course' => 'VARCHAR(255) NULL', 'major_specialization' => 'VARCHAR(255) NULL', 'prc_license_no' => 'VARCHAR(100) NULL', 'prc_expiration' => 'DATE NULL', 'non_teaching_role' => 'VARCHAR(100) NULL', 'non_teaching_other' => 'VARCHAR(255) NULL');
+		foreach($columns as $column => $definition){
+			if(!$this->db->field_exists($column, 'one_school_personnel')) $this->db->query('ALTER TABLE one_school_personnel ADD COLUMN ' . $column . ' ' . $definition);
+		}
+		if($this->db->table_exists('school_personnel')){
+			$this->db->query('INSERT IGNORE INTO one_school_personnel (id, school_id, employee_no, full_name, sex, position_title, personnel_type, licensed, employment_status, email, mobile_no, created_at) SELECT id, school_id, employee_no, full_name, sex, position_title, personnel_type, licensed, employment_status, email, mobile_no, created_at FROM school_personnel');
+		}
+	}
+
 	function school_profile($param){
+		if($this->session->userdata('section') === 'School' && (string) $param !== (string) $this->session->userdata('username')){
+			show_error('Access Denied', 403);
+			return;
+		}
+		$this->ensure_school_profile_schema();
 		$result['data']=$this->SGODModel->schoolDetails($param);
 		$this->load->view('school_profile',$result);
+	}
+
+	function school_profile_edit(){
+		if($this->session->userdata('section') !== 'School'){
+			show_error('Access Denied', 403);
+			return;
+		}
+		$this->ensure_school_profile_schema();
+		$result['school'] = $this->db->where('schoolID', $this->session->userdata('username'))->get('schools', 1)->row();
+		$result['districts'] = $this->db->select('district')->where('district !=', '')->group_by('district')->order_by('district', 'ASC')->get('schools')->result();
+		$result['addressRows'] = $this->db->table_exists('settings_address') ? $this->db->get('settings_address')->result_array() : array();
+		$result['accountEmail'] = '';
+		if($this->db->field_exists('email', 'users')){
+			$account = $this->db->select('email')->where('username', $this->session->userdata('username'))->where('position', 'School')->get('users', 1)->row();
+			$result['accountEmail'] = trim((string) ($account->email ?? ''));
+		}
+		$this->load->view('school_profile_edit', $result);
+	}
+
+	function school_profile_update(){
+		if($this->session->userdata('section') !== 'School'){
+			show_error('Access Denied', 403);
+			return;
+		}
+		$schoolId = (string) $this->session->userdata('username');
+		$this->ensure_school_profile_schema();
+		$fields = array('schoolName', 'schoolEmail', 'schoolType', 'district', 'sitio', 'brgy', 'city', 'province', 'educational_levels_offered', 'adminFName', 'adminMName', 'adminLName', 'adminDesignation', 'adminEmail', 'adminMobile', 'adminTel', 'ownership', 'landOwnership', 'schoolCategory', 'ownerName', 'ownerEmail', 'ownerContactNo', 'presidentName', 'presidentEmail', 'presidentContactNo', 'boardChairperson', 'boardChairpersonEmail', 'boardChairpersonContactNo', 'corporateSecretary', 'corporateSecretaryEmail', 'corporateSecretaryContactNo', 'schoolAdministrator', 'schoolAdministratorEmail', 'schoolAdministratorContactNo', 'principalName', 'principalEmail', 'principalContactNo', 'stationCode', 'yearEstab', 'recogNo', 'permitNo', 'permit_issued_date', 'permit_expiry_date', 'permit_issuing_office', 'permit_status', 'peac_member', 'esc_recipient', 'voucher_program', 'shs_tracks_offered', 'government_recognition_details');
+		$payload = array();
+		foreach($fields as $field){
+			if($this->db->field_exists($field, 'schools')){
+				$payload[$field] = in_array($field, array('educational_levels_offered', 'shs_tracks_offered'), TRUE)
+					? implode(', ', array_filter(array_map('trim', (array) $this->input->post('educational_levels_offered', TRUE))))
+					: trim((string) $this->input->post($field, TRUE));
+				if($field === 'shs_tracks_offered'){
+					$payload[$field] = implode(', ', array_filter(array_map('trim', (array) $this->input->post('shs_tracks_offered', TRUE))));
+				}
+				if(in_array($field, array('peac_member', 'esc_recipient', 'voucher_program'), TRUE)){
+					$payload[$field] = $this->input->post($field) ? 1 : 0;
+				}
+			}
+		}
+		if(empty($payload['schoolName'])){
+			$this->session->set_flashdata('danger', 'School Name is required.');
+			redirect('Page/school_profile_edit');
+			return;
+		}
+		$schoolEmail = trim((string) ($payload['schoolEmail'] ?? ''));
+		if($schoolEmail !== '' && filter_var($schoolEmail, FILTER_VALIDATE_EMAIL) === FALSE){
+			$this->session->set_flashdata('danger', 'Enter a valid School Email address.');
+			redirect('Page/school_profile_edit');
+			return;
+		}
+		$this->db->where('schoolID', $schoolId)->update('schools', $payload);
+		$this->db->where('username', $schoolId)->where('section', 'School')->update('one_sgod_users', array('fName' => $payload['schoolName']));
+		$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('fname' => $payload['schoolName']));
+		if($schoolEmail !== ''){
+			if($this->db->field_exists('email', 'one_sgod_users')){
+				$this->db->where('username', $schoolId)->where('section', 'School')->update('one_sgod_users', array('email' => $schoolEmail));
+			}
+			if($this->db->field_exists('email', 'users')){
+				$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('email' => $schoolEmail));
+			}
+		}
+		$this->session->set_userdata('fName', $payload['schoolName']);
+		$this->session->set_flashdata('success', 'School profile updated successfully.');
+		redirect('Page/School');
+	}
+
+	private function ensure_school_educational_levels_column(){
+		if(!$this->db->field_exists('educational_levels_offered', 'schools')){
+			$this->db->query('ALTER TABLE schools ADD COLUMN educational_levels_offered TEXT NULL');
+		}
+	}
+
+	private function ensure_school_profile_schema(){
+		$this->ensure_school_educational_levels_column();
+		$this->ensure_school_recognition_columns();
+		$this->ensure_school_profile_detail_columns();
+	}
+
+	private function ensure_school_recognition_columns(){
+		$columns = array(
+			'permitNo' => 'VARCHAR(255) NULL',
+			'permit_issued_date' => 'DATE NULL',
+			'permit_expiry_date' => 'DATE NULL',
+			'permit_issuing_office' => 'VARCHAR(255) NULL',
+			'permit_status' => 'VARCHAR(100) NULL',
+			'peac_member' => 'TINYINT(1) NOT NULL DEFAULT 0',
+			'esc_recipient' => 'TINYINT(1) NOT NULL DEFAULT 0',
+			'voucher_program' => 'TINYINT(1) NOT NULL DEFAULT 0',
+			'shs_tracks_offered' => 'TEXT NULL',
+			'government_recognition_details' => 'TEXT NULL'
+		);
+		foreach($columns as $column => $definition){
+			if(!$this->db->field_exists($column, 'schools')){
+				$this->db->query('ALTER TABLE schools ADD COLUMN ' . $column . ' ' . $definition);
+			}
+		}
+	}
+
+	private function ensure_school_profile_detail_columns(){
+		$columns = array(
+			'adminEmail' => 'VARCHAR(255) NULL',
+			'ownership' => 'VARCHAR(255) NULL',
+			'landOwnership' => 'VARCHAR(255) NULL',
+			'schoolCategory' => 'VARCHAR(255) NULL',
+			'ownerName' => 'VARCHAR(255) NULL', 'ownerEmail' => 'VARCHAR(255) NULL', 'ownerContactNo' => 'VARCHAR(100) NULL',
+			'presidentName' => 'VARCHAR(255) NULL', 'presidentEmail' => 'VARCHAR(255) NULL', 'presidentContactNo' => 'VARCHAR(100) NULL',
+			'boardChairperson' => 'VARCHAR(255) NULL', 'boardChairpersonEmail' => 'VARCHAR(255) NULL', 'boardChairpersonContactNo' => 'VARCHAR(100) NULL',
+			'corporateSecretary' => 'VARCHAR(255) NULL', 'corporateSecretaryEmail' => 'VARCHAR(255) NULL', 'corporateSecretaryContactNo' => 'VARCHAR(100) NULL',
+			'schoolAdministrator' => 'VARCHAR(255) NULL', 'schoolAdministratorEmail' => 'VARCHAR(255) NULL', 'schoolAdministratorContactNo' => 'VARCHAR(100) NULL',
+			'principalName' => 'VARCHAR(255) NULL', 'principalEmail' => 'VARCHAR(255) NULL', 'principalContactNo' => 'VARCHAR(100) NULL',
+			'stationCode' => 'VARCHAR(100) NULL', 'yearEstab' => 'VARCHAR(20) NULL', 'recogNo' => 'VARCHAR(255) NULL'
+		);
+		foreach($columns as $column => $definition){
+			if(!$this->db->field_exists($column, 'schools')){
+				$this->db->query('ALTER TABLE schools ADD COLUMN ' . $column . ' ' . $definition);
+			}
+		}
 	}
 
 
@@ -2841,8 +3481,28 @@ function usersList(){
 	$secGroup=$this->session->userdata('secGroup');
 	$section=$this->session->userdata('section');
 
-	$result['data']=$this->SGODModel->get_all_by_row2('secGroup','one_sgod_users', $secGroup, 'section', $section);
+	// SMN is the office that manages external partnerships. Give it a
+	// read-only directory view of Partner-level accounts, which use their own
+	// Partner secGroup, while keeping all other sections scoped as before.
+	if($section === 'Social Mobilization and Networking'){
+		$this->db->group_start()
+			->group_start()
+				->where('secGroup', $secGroup)
+				->where('section', $section)
+			->group_end()
+			->or_where('section', 'Partner')
+		->group_end()
+		->order_by('section', 'ASC')
+		->order_by('lName', 'ASC');
+		$result['data'] = $this->db->get('one_sgod_users')->result();
+	}else{
+		$result['data']=$this->SGODModel->get_all_by_row2('secGroup','one_sgod_users', $secGroup, 'section', $section);
+	}
 	$result['data1']=$this->SGODModel->get_all_by_row2('secGroup','one_sgod_sections', $secGroup, 'sectionName', $section);
+	$result['partnerOptions'] = array();
+	if($section === 'Social Mobilization and Networking' && $this->db->table_exists('brigada_partners')){
+		$result['partnerOptions'] = $this->db->select('id, name, contact_person, contact')->order_by('name', 'ASC')->get('brigada_partners')->result();
+	}
 	
 	// Fetch staff from hris_staff table
 	$result['staffOptions'] = $this->db->get('hris_staff')->result();
@@ -2851,6 +3511,56 @@ function usersList(){
 	
 	if($this->input->post('submit'))
 	{
+	if($section === 'Social Mobilization and Networking' && $this->input->post('accountLevel') === 'Partner'){
+		$partnerId = (int) $this->input->post('partner_id');
+		$partner = $this->db->where('id', $partnerId)->get('brigada_partners', 1)->row();
+		if(!$partner){
+			$this->session->set_flashdata('danger', 'Please select a registered Brigada partner.');
+			redirect('Page/usersListv2');
+			return;
+		}
+		$enteredEmail = strtolower(trim((string) $this->input->post('email', TRUE)));
+		preg_match('/[A-Z0-9._%+\\-]+@[A-Z0-9.\\-]+\\.[A-Z]{2,}/i', (string) $partner->contact, $emailMatch);
+		$email = $enteredEmail !== '' ? $enteredEmail : (isset($emailMatch[0]) ? strtolower($emailMatch[0]) : '');
+		if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+			$this->session->set_flashdata('danger', 'Enter a valid email address for the selected partner before creating its account.');
+			redirect('Page/usersListv2');
+			return;
+		}
+		if($this->db->where('username', $email)->get('one_sgod_users', 1)->num_rows() > 0){
+			$this->session->set_flashdata('danger', 'This partner already has a portal account.');
+			redirect('Page/usersListv2');
+			return;
+		}
+		$nameParts = preg_split('/\\s+/', trim((string) $partner->contact_person));
+		$fName = !empty($nameParts[0]) ? $nameParts[0] : $partner->name;
+		$lName = count($nameParts) > 1 ? end($nameParts) : '';
+		$mName = count($nameParts) > 2 ? implode(' ', array_slice($nameParts, 1, -1)) : '';
+		$password = (string) $this->input->post('password');
+		if(strlen($password) < 8){
+			$this->session->set_flashdata('danger', 'Set a password with at least 8 characters for the partner account.');
+			redirect('Page/usersListv2');
+			return;
+		}
+		$this->db->trans_start();
+		$this->db->insert('one_sgod_users', array('username' => $email, 'password' => sha1($password), 'fName' => $fName, 'mName' => $mName, 'lName' => $lName, 'avatar' => 'avatar.png', 'email' => $email, 'acctStat' => 'Active', 'section' => 'Partner', 'secGroup' => 'Partner'));
+		if($enteredEmail !== '' && empty($emailMatch[0])){
+			$contact = trim((string) $partner->contact);
+			$this->db->where('id', $partnerId)->update('brigada_partners', array('contact' => $contact === '' ? $email : $contact . ' | ' . $email));
+		}
+		if($this->db->field_exists('account_username', 'brigada_partners')){
+			$this->db->where('id', $partnerId)->update('brigada_partners', array('account_username' => $email));
+		}
+		$this->db->trans_complete();
+		if($this->db->trans_status() === FALSE){
+			$this->session->set_flashdata('danger', 'The partner account could not be created. Please try again.');
+			redirect('Page/usersListv2');
+			return;
+		}
+		$this->session->set_flashdata('success', 'Partner portal account created successfully.');
+		redirect('Page/usersListv2');
+		return;
+	}
 	$param=$this->session->userdata('secGroup');	
 	$username=$this->input->post('IDNumber'); // Use IDNumber as username
 	$password=sha1($this->input->post('password'));
@@ -3163,6 +3873,107 @@ public function auto_migrate_whereabouts_table(){
 	$this->dbforge->add_field($fields);
 	$this->dbforge->add_key('id', TRUE);
 	$this->dbforge->create_table('one_sgod_employee_whereabouts', TRUE);
+}
+
+public function auto_migrate_pmcf_table(){
+	$this->load->dbforge();
+
+	$fields = array(
+		'id' => array(
+			'type' => 'INT',
+			'constraint' => 11,
+			'unsigned' => TRUE,
+			'auto_increment' => TRUE
+		),
+		'teacher_observed' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'grade_level' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 50
+		),
+		'section' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 100
+		),
+		'district' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'school' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'quarter' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 50
+		),
+		'date_observed' => array(
+			'type' => 'DATE',
+			'null' => TRUE
+		),
+		'time_observed' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 50,
+			'null' => TRUE
+		),
+		'subject_area' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'instructional_supervisor' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'designation' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'significant_incidents_description' => array(
+			'type' => 'TEXT'
+		),
+		'impact_on_job' => array(
+			'type' => 'TEXT'
+		),
+		'coaching_mechanisms' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'coaching_mechanisms_others' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255,
+			'null' => TRUE
+		),
+		'feedback_recommendation' => array(
+			'type' => 'TEXT'
+		),
+		'progress_to_date' => array(
+			'type' => 'TEXT'
+		),
+		'username' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 100
+		),
+		'user_section' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 255
+		),
+		'secGroup' => array(
+			'type' => 'VARCHAR',
+			'constraint' => 50
+		),
+		'created_at' => array(
+			'type' => 'DATETIME'
+		),
+		'updated_at' => array(
+			'type' => 'DATETIME'
+		)
+	);
+
+	$this->dbforge->add_field($fields);
+	$this->dbforge->add_key('id', TRUE);
+	$this->dbforge->create_table('one_pmcf', TRUE);
 }
 
 private function is_valid_section_for_current_user($section){

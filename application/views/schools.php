@@ -3,6 +3,7 @@ $requestedType = $this->input->get('type') ? trim((string) $this->input->get('ty
 $requestedTypeLower = strtolower($requestedType);
 $activeDirectoryFilter = in_array($requestedTypeLower, array('public', 'private'), true) ? ucfirst($requestedTypeLower) : 'All';
 $records = is_array($data) ? $data : array();
+$canManageSchools = !empty($canManageSchools);
 
 if (!function_exists('schools_escape')) {
     function schools_escape($value)
@@ -653,7 +654,10 @@ $metricCards = array(
                                 </div>
 
                                 <div class="hero-actions">
-                                    <p class="hero-actions-copy">Choose a view without leaving the page.</p>
+                                    <p class="hero-actions-copy"><?= $canManageSchools ? 'Manage school records for the SMME section.' : 'Choose a view without leaving the page.'; ?></p>
+                                    <?php if ($canManageSchools): ?>
+                                        <button type="button" class="btn btn-light font-weight-bold" data-toggle="modal" data-target="#schoolModal" data-school-mode="add"><i class="mdi mdi-plus-circle-outline mr-1"></i> Add School</button>
+                                    <?php endif; ?>
                                     <div class="directory-filter-group" id="heroDirectoryFilters">
                                         <button type="button" class="directory-filter-btn" data-filter="All">
                                             <i class="mdi mdi-view-grid-outline"></i>
@@ -671,6 +675,9 @@ $metricCards = array(
                                 </div>
                             </div>
                         </div>
+
+                        <?php if ($this->session->flashdata('success')): ?><div class="alert alert-success mt-3"><?= schools_escape($this->session->flashdata('success')); ?></div><?php endif; ?>
+                        <?php if ($this->session->flashdata('danger')): ?><div class="alert alert-danger mt-3"><?= schools_escape($this->session->flashdata('danger')); ?></div><?php endif; ?>
 
                         <div class="row mt-4">
                             <?php foreach ($metricCards as $metric) { ?>
@@ -802,6 +809,10 @@ $metricCards = array(
                                                             <i class="mdi mdi-arrow-right-circle-outline"></i>
                                                             View Dashboard
                                                         </a>
+                                                        <?php if ($canManageSchools): ?>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary mt-2 js-edit-school" data-toggle="modal" data-target="#schoolModal" data-school-id="<?= schools_escape($schoolId); ?>" data-school-name="<?= schools_escape($schoolName); ?>" data-school-type="<?= schools_escape($schoolType); ?>" data-district="<?= schools_escape($district); ?>" data-sitio="<?= schools_escape($schoolRow->sitio ?? ''); ?>" data-brgy="<?= schools_escape($schoolRow->brgy ?? ''); ?>" data-city="<?= schools_escape($schoolRow->city ?? ''); ?>" data-province="<?= schools_escape($schoolRow->province ?? ''); ?>" data-admin-first="<?= schools_escape($schoolRow->adminFName ?? ''); ?>" data-admin-middle="<?= schools_escape($schoolRow->adminMName ?? ''); ?>" data-admin-last="<?= schools_escape($schoolRow->adminLName ?? ''); ?>" data-admin-designation="<?= schools_escape($designation); ?>" data-permit-no="<?= schools_escape($permitNo); ?>" data-recognition-no="<?= schools_escape($recognitionNo); ?>"><i class="mdi mdi-pencil-outline"></i> Edit</button>
+                                                            <form method="post" action="<?= base_url(); ?>Page/school_delete" class="mt-1" onsubmit="return confirm('Delete this school record?');"><input type="hidden" name="school_id" value="<?= schools_escape($schoolId); ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can-outline"></i> Delete</button></form>
+                                                        <?php endif; ?>
                                                     </td>
                                                 </tr>
                                             <?php } ?>
@@ -822,6 +833,26 @@ $metricCards = array(
                         </div>
                     </div>
                 </div>
+
+                <?php if ($canManageSchools): ?>
+                    <div class="modal fade" id="schoolModal" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog modal-lg" role="document"><div class="modal-content">
+                            <form method="post" action="<?= base_url(); ?>Page/school_save" id="schoolForm">
+                                <div class="modal-header"><h5 class="modal-title" id="schoolModalTitle">Add School</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+                                <div class="modal-body">
+                                    <input type="hidden" name="original_school_id" id="originalSchoolId">
+                                    <div class="form-row"><div class="form-group col-md-4"><label>School ID</label><input class="form-control" name="schoolID" id="schoolIdInput" required></div><div class="form-group col-md-5"><label>School Name</label><input class="form-control" name="schoolName" id="schoolNameInput" required></div><div class="form-group col-md-3"><label>Type</label><select class="form-control" name="schoolType" id="schoolTypeInput"><option value="Public">Public</option><option value="Private">Private</option><option value="Other">Other</option></select></div></div>
+                                    <div class="form-group" id="schoolAccountEmailGroup"><label>School Account Email</label><input class="form-control" type="email" name="account_email" id="schoolAccountEmail" autocomplete="email"><small class="form-text" id="schoolEmailStatus">Required for account credentials and login.</small></div>
+                                    <div class="form-group" id="schoolAccountPasswordGroup"><label>School Account Password</label><div class="input-group"><input class="form-control" type="password" name="account_password" id="schoolAccountPassword" minlength="6" autocomplete="new-password"><div class="input-group-append"><button class="btn btn-outline-secondary" type="button" id="toggleSchoolPassword" aria-label="Show password"><i class="mdi mdi-eye-outline"></i></button></div></div><div class="mt-2"><button class="btn btn-sm btn-outline-primary" type="button" id="generateSchoolPassword"><i class="mdi mdi-refresh"></i> Generate Password</button></div><small class="form-text text-muted">The School ID or email can be used to sign in to the School dashboard.</small></div>
+                                    <div class="form-row"><div class="form-group col-md-4"><label>District</label><input class="form-control" name="district" id="schoolDistrictInput"></div><div class="form-group col-md-4"><label>City / Municipality</label><input class="form-control" name="city" id="schoolCityInput"></div><div class="form-group col-md-4"><label>Province</label><input class="form-control" name="province" id="schoolProvinceInput"></div></div>
+                                    <div class="form-row"><div class="form-group col-md-6"><label>Sitio</label><input class="form-control" name="sitio" id="schoolSitioInput"></div><div class="form-group col-md-6"><label>Barangay</label><input class="form-control" name="brgy" id="schoolBrgyInput"></div></div>
+                                    <hr><div class="form-row"><div class="form-group col-md-4"><label>School Head First Name</label><input class="form-control" name="adminFName" id="schoolAdminFirstInput"></div><div class="form-group col-md-4"><label>Middle Name</label><input class="form-control" name="adminMName" id="schoolAdminMiddleInput"></div><div class="form-group col-md-4"><label>Last Name</label><input class="form-control" name="adminLName" id="schoolAdminLastInput"></div></div>
+                                    <div class="form-row"><div class="form-group col-md-4"><label>Designation</label><input class="form-control" name="adminDesignation" id="schoolDesignationInput"></div><div class="form-group col-md-4"><label>Permit No.</label><input class="form-control" name="permitNo" id="schoolPermitInput"></div><div class="form-group col-md-4"><label>Recognition No.</label><input class="form-control" name="recogNo" id="schoolRecognitionInput"></div></div>
+                                </div><div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save School</button></div>
+                            </form>
+                        </div></div>
+                    </div>
+                <?php endif; ?>
 
                 <?php include('includes/footer.php'); ?>
             </div>
@@ -918,6 +949,62 @@ $metricCards = array(
                 });
 
                 applyDirectoryFilter(initialFilter);
+
+                <?php if ($canManageSchools): ?>
+                function setSchoolField(id, value) { $(id).val(value || ''); }
+                $('#schoolModal').on('show.bs.modal', function (event) {
+                    var trigger = $(event.relatedTarget);
+                    var isEdit = trigger.hasClass('js-edit-school');
+                    $('#schoolModalTitle').text(isEdit ? 'Edit School' : 'Add School');
+                    $('#schoolAccountEmailGroup').toggle(!isEdit);
+                    $('#schoolAccountEmail').prop('required', !isEdit).val('');
+                    $('#schoolEmailStatus').removeClass('text-danger text-success').text('Required for account credentials and login.');
+                    $('#schoolAccountPasswordGroup').toggle(!isEdit);
+                    $('#schoolAccountPassword').prop('required', !isEdit).val('');
+                    setSchoolField('#originalSchoolId', isEdit ? trigger.data('school-id') : '');
+                    setSchoolField('#schoolIdInput', isEdit ? trigger.data('school-id') : '');
+                    setSchoolField('#schoolNameInput', isEdit ? trigger.data('school-name') : '');
+                    setSchoolField('#schoolTypeInput', isEdit ? trigger.data('school-type') : 'Public');
+                    setSchoolField('#schoolDistrictInput', isEdit ? trigger.data('district') : '');
+                    setSchoolField('#schoolSitioInput', isEdit ? trigger.data('sitio') : '');
+                    setSchoolField('#schoolBrgyInput', isEdit ? trigger.data('brgy') : '');
+                    setSchoolField('#schoolCityInput', isEdit ? trigger.data('city') : '');
+                    setSchoolField('#schoolProvinceInput', isEdit ? trigger.data('province') : '');
+                    setSchoolField('#schoolAdminFirstInput', isEdit ? trigger.data('admin-first') : '');
+                    setSchoolField('#schoolAdminMiddleInput', isEdit ? trigger.data('admin-middle') : '');
+                    setSchoolField('#schoolAdminLastInput', isEdit ? trigger.data('admin-last') : '');
+                    setSchoolField('#schoolDesignationInput', isEdit ? trigger.data('admin-designation') : '');
+                    setSchoolField('#schoolPermitInput', isEdit ? trigger.data('permit-no') : '');
+                    setSchoolField('#schoolRecognitionInput', isEdit ? trigger.data('recognition-no') : '');
+                });
+
+                function generateSchoolPassword() {
+                    var characters = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+                    var values = new Uint32Array(14);
+                    window.crypto.getRandomValues(values);
+                    var password = Array.prototype.map.call(values, function (value) { return characters[value % characters.length]; }).join('');
+                    $('#schoolAccountPassword').val(password).attr('type', 'text');
+                    $('#toggleSchoolPassword i').attr('class', 'mdi mdi-eye-off-outline');
+                }
+                $('#generateSchoolPassword').on('click', generateSchoolPassword);
+                $('#toggleSchoolPassword').on('click', function () {
+                    var input = $('#schoolAccountPassword');
+                    var visible = input.attr('type') === 'text';
+                    input.attr('type', visible ? 'password' : 'text');
+                    $(this).find('i').attr('class', visible ? 'mdi mdi-eye-outline' : 'mdi mdi-eye-off-outline');
+                });
+                $('#schoolAccountEmail').on('blur', function () {
+                    var email = $.trim($(this).val());
+                    if (!email) return;
+                    $('#schoolEmailStatus').removeClass('text-danger text-success').text('Checking email availability…');
+                    $.getJSON('<?= base_url(); ?>Page/school_account_email_available', { email: email })
+                        .done(function (response) {
+                            var available = response && response.available;
+                            $('#schoolEmailStatus').toggleClass('text-success', available).toggleClass('text-danger', !available).text(available ? 'Email address is available.' : 'Use a valid email address that is not already registered.');
+                        })
+                        .fail(function () { $('#schoolEmailStatus').addClass('text-danger').text('Unable to check this email address.'); });
+                });
+                <?php endif; ?>
             });
         </script>
     </body>

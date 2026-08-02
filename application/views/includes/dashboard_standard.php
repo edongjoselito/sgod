@@ -20,6 +20,7 @@ $dashboardDistribution = isset($dashboardConfig['distribution']) && is_array($da
     ? $dashboardConfig['distribution']
     : null;
 $dashboardShowWhereabouts = !array_key_exists('show_whereabouts', $dashboardConfig) || !empty($dashboardConfig['show_whereabouts']);
+$dashboardHeroProgress = isset($dashboardConfig['hero_progress']) && is_array($dashboardConfig['hero_progress']) ? $dashboardConfig['hero_progress'] : null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -57,13 +58,13 @@ $dashboardShowWhereabouts = !array_key_exists('show_whereabouts', $dashboardConf
                                     </div>
                                 </div>
 
-                                <?php if ($dashboardProfileName !== '' || $dashboardProfileRole !== '') { ?>
+                                <?php if ($dashboardHeroProgress || $dashboardProfileName !== '' || $dashboardProfileRole !== '') { ?>
                                     <div class="col-lg-4">
                                         <div class="hero-profile">
-                                            <span class="hero-avatar"><?= $dashboardEsc($dashboardInitials); ?></span>
+                                            <span class="hero-avatar"><?= $dashboardEsc($dashboardHeroProgress ? ((int) ($dashboardHeroProgress['value'] ?? 0)) . '%' : $dashboardInitials); ?></span>
                                             <div class="hero-profile-copy">
-                                                <strong><?= $dashboardEsc($dashboardProfileName !== '' ? $dashboardProfileName : 'Dashboard User'); ?></strong>
-                                                <span><?= $dashboardEsc($dashboardProfileRole !== '' ? $dashboardProfileRole : 'User'); ?></span>
+                                                <strong><?= $dashboardEsc($dashboardHeroProgress ? ($dashboardHeroProgress['label'] ?? 'Profile Completion') : ($dashboardProfileName !== '' ? $dashboardProfileName : 'Dashboard User')); ?></strong>
+                                                <span><?= $dashboardEsc($dashboardHeroProgress ? ($dashboardHeroProgress['context'] ?? 'Complete your profile') : ($dashboardProfileRole !== '' ? $dashboardProfileRole : 'User')); ?></span>
                                             </div>
                                         </div>
                                     </div>
@@ -120,7 +121,7 @@ $dashboardShowWhereabouts = !array_key_exists('show_whereabouts', $dashboardConf
                         <?php } ?>
 
                         <?php if (!empty($dashboardQuickLinks)) { ?>
-                            <div class="row dashboard-main-row">
+                            <div class="row dashboard-main-row<?= !empty($dashboardConfig['quick_links_overlap']) ? ' dashboard-quick-links-overlap' : ''; ?>">
                                 <div class="col-12">
                                     <section class="dashboard-card">
                                         <div class="card-heading">

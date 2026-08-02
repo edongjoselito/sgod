@@ -4,6 +4,14 @@
         <?php
             $currentSidebarSection = trim((string) $this->session->userdata('section'));
             $currentSidebarSecGroup = trim((string) $this->session->userdata('secGroup'));
+            $currentSidebarSectionLower = strtolower($currentSidebarSection);
+            $currentSidebarSecGroupLower = strtolower($currentSidebarSecGroup);
+            $isCidSidebar = (
+                $currentSidebarSecGroupLower === 'cid'
+                || strpos($currentSidebarSecGroupLower, 'curriculum implementation') !== false
+                || $currentSidebarSectionLower === 'cid'
+                || strpos($currentSidebarSectionLower, 'curriculum implementation') !== false
+            );
             $currentSidebarUsername = trim((string) $this->session->userdata('username'));
             $sectionDashboardRoutes = array(
                 'School Management Monitoring and Evaluation' => 'Page/SMME',
@@ -51,8 +59,13 @@
                 $currentSidebarSecGroup !== '' &&
                 !in_array($currentSidebarSection, array('Super Admin', 'System Administrator', 'Chief - SGOD', 'School'), TRUE)
             ) {
-                $sidebarSectionHeadRecord = $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionHead', $currentSidebarUsername, 'secGroup', $currentSidebarSecGroup);
-                if ($sidebarSectionHeadRecord && trim((string) $sidebarSectionHeadRecord->sectionName) === $currentSidebarSection) {
+                $sidebarSectionHeadRecord = $this->db
+                    ->where('sectionHead', $currentSidebarUsername)
+                    ->where('secGroup', $currentSidebarSecGroup)
+                    ->where('sectionName', $currentSidebarSection)
+                    ->get('one_sgod_sections', 1)
+                    ->row();
+                if ($sidebarSectionHeadRecord) {
                     $isSectionHeadDashboardUser = TRUE;
                     $sectionDashboardRoute = 'Page/section_head_dashboard';
                 }
@@ -75,6 +88,27 @@
             }
         ?>
 
+        <?php if (!$isCidSidebar): ?>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    document.querySelectorAll('.left-side-menu a[href$="Page/pmcf"]').forEach(function (link) {
+                        var item = link.closest('li');
+                        if (item) item.remove();
+                    });
+                });
+            </script>
+        <?php endif; ?>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.left-side-menu a[href*="Ipcrf"]').forEach(function (link) {
+                    var item = link.closest('li');
+                    if (item) item.remove();
+                });
+            });
+        </script>
+        <style>.left-side-menu li[data-ipcr-menu-group], .left-side-menu a[href*="Ipcrf"] { display:none !important; }</style>
+
         <!--- Sidemenu -->
         <!-- Super Admin -->
         <?php if ($this->session->userdata('section') === 'Super Admin'): ?>
@@ -84,12 +118,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -103,6 +140,13 @@
                         <a href="<?= base_url(); ?>Page/super_admin" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
                         </a>
                     </li>
 
@@ -134,12 +178,20 @@
 
                     <li class="menu-title">Navigation</li>
 
+
                  
 
                     <li>
                         <a href="<?= base_url(); ?><?= $adminDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
                         </a>
                     </li>
 
@@ -165,16 +217,6 @@
                         </a>
                     </li>
 
-                      <li>
-                            <a href="javascript: void(0);" class="waves-effect">
-                                <i class="mdi mdi-pencil"></i>
-                                <span> Manage IPCR </span>
-                                <span class="menu-arrow"></span>
-                            </a>
-                            <ul class="nav-second-level" aria-expanded="false">
-                                <li><a href="<?= base_url(); ?>Ipcrf/manage_template">IPCR Setup</a></li>
-                            </ul>
-                        </li>
 
                     <!-- <li>
                         <a href="<?= base_url(); ?>Page/positions" class="waves-effect">
@@ -203,12 +245,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
 
                     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
@@ -223,6 +268,13 @@
                         <a href="<?= base_url(); ?>Page/sgod" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
                         </a>
                     </li>
                     <li>
@@ -332,12 +384,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
 
                     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
@@ -354,6 +409,13 @@
                             <span> Dashboard </span>
                         </a>
 
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
                     </li>
 
                     <li>
@@ -415,12 +477,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -437,6 +502,13 @@
                         </a>
 
                     </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
+                    </li>
                     <li>
                         <a href="<?= base_url(); ?>Page/school_profile/<?= $this->session->username; ?>" class="waves-effect">
                             <i class="fas fa-school"></i>
@@ -445,31 +517,17 @@
 
                     </li>
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
-                            <i class="fas fa-scroll"></i>
-                            <spa>Implementation Plan</span>
-                                <span class="menu-arrow"></span>
+                        <a href="<?= base_url(); ?>Page/school_personnel" class="waves-effect">
+                            <i class="mdi mdi-account-group-outline"></i>
+                            <span> Personnel </span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/aip_filter">AIP</a></li>
-                            <li><a href="<?= base_url(); ?>Page/sop">SOP</a></li>
-                            <li><a href="<?= base_url(); ?>Page/view_app">APP</a></li>
-                        </ul>
                     </li>
-
                     <li>
-                        <a href="javascript: void(0);" class="waves-effect">
+                        <a href="<?= base_url(); ?>Page/school_enrollment_details" class="waves-effect">
                             <i class="mdi mdi-account-multiple-outline"></i>
-                            <span>Settings</span>
-                            <span class="menu-arrow"></span>
-
+                            <span> Enrollment Details </span>
                         </a>
-                        <ul class="nav-second-level" aria-expanded="false">
-                            <li><a href="<?= base_url(); ?>Page/settings_pias">PIAs</a></li>
-                            <li><a href="<?= base_url(); ?>Page/settings_bs">Budget Source</a></li>
-                        </ul>
                     </li>
-
                 </ul>
 
             </div>
@@ -480,12 +538,16 @@
 
                     <li class="menu-title">Navigation</li>
 
+                    
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -502,6 +564,14 @@
                         </a>
 
                     </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
+                    </li>
+
 
                     <li>
                         <a href="javascript: void(0);" class="waves-effect">
@@ -541,12 +611,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -562,6 +635,13 @@
                             <span> Dashboard </span>
                         </a>
 
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
                     </li>
 
                     <li>
@@ -619,12 +699,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -640,6 +723,13 @@
                             <span> Dashboard </span>
                         </a>
 
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
                     </li>
 
                     <li>
@@ -698,12 +788,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -719,6 +812,13 @@
                             <span> Dashboard </span>
                         </a>
 
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
                     </li>
 
                     <li>
@@ -770,12 +870,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -791,6 +894,13 @@
                             <span> Dashboard </span>
                         </a>
 
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
                     </li>
 
                     <li>
@@ -842,12 +952,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -863,6 +976,13 @@
                             <span> Dashboard </span>
                         </a>
 
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
                     </li>
 
                     <li>
@@ -914,12 +1034,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -935,6 +1058,13 @@
                             <span> Dashboard </span>
                         </a>
 
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
                     </li>
 
                     <li>
@@ -1000,12 +1130,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -1021,6 +1154,13 @@
                             <span> Dashboard </span>
                         </a>
 
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
+                        </a>
                     </li>
 
                     <li>
@@ -1072,12 +1212,15 @@
 
                     <li class="menu-title">Navigation</li>
 
+
+                    <?php if (!$isCidSidebar): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf" class="waves-effect">
                             <i class="mdi mdi-clipboard-text-outline"></i>
                             <span> IPCRF Performance </span>
                         </a>
                     </li>
+                    <?php endif; ?>
     <!-- <?php if ($hasAssignedKras): ?>
                     <li>
                         <a href="<?= base_url(); ?>Ipcrf/my_kras" class="waves-effect">
@@ -1091,6 +1234,13 @@
                         <a href="<?= base_url(); ?><?= $sectionDashboardRoute; ?>" class="waves-effect">
                             <i class="mdi mdi-view-dashboard"></i>
                             <span> Dashboard </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url(); ?>Page/pmcf" class="waves-effect">
+                            <i class="mdi mdi-file-document-box-outline"></i>
+                            <span> PMCF </span>
                         </a>
                     </li>
 
@@ -1120,20 +1270,6 @@
                         </a>
                     </li>
 
-                    
-                        <li>
-                            <a href="javascript: void(0);" class="waves-effect">
-                                <i class="mdi mdi-pencil"></i>
-                                <span> Manage IPCR </span>
-                                <span class="menu-arrow"></span>
-                            </a>
-                            <ul class="nav-second-level" aria-expanded="false">
-                                <li><a href="<?= base_url(); ?>Ipcrf/manage_template">IPCR Setup</a></li>
-                                <li><a href="<?= base_url(); ?>Ipcrf/manage_template">Preview &amp; Print</a></li>
-                            </ul>
-                        </li>
-                   
-
                     <?php if ($isSectionHeadDashboardUser): ?>
                         <li>
                             <a href="<?= base_url(); ?>Page/schools" class="waves-effect">
@@ -1157,7 +1293,7 @@
         <?php endif; ?>
 
         <script>
-        (function () {
+        if (false) (function () {
             var menu = document.getElementById('side-menu');
             if (!menu) return;
             var personalUrl = <?= json_encode(site_url('Ipcrf')); ?>;

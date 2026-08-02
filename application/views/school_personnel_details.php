@@ -1,0 +1,32 @@
+<?php $esc = function($value){ return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }; ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Personnel Profile</title>
+    <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet">
+    <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet">
+    <link href="<?= base_url(); ?>assets/css/dashboard-unified.css" rel="stylesheet">
+    <style>
+        html,body{height:auto!important;overflow-y:auto!important}#wrapper{height:auto!important;min-height:100vh!important;overflow:hidden!important}.content-page,.content{height:auto!important;min-height:100vh!important;overflow:visible!important}.profile-sheet{width:100%;max-width:none;margin:0;padding:25px 15px}.profile-header{padding:30px;color:#fff;border-radius:20px 20px 0 0;background:linear-gradient(135deg,#272b8c,#3c40c6)}.profile-header h1{color:#fff!important}.profile-card{border:0;border-radius:0 0 20px 20px;box-shadow:0 16px 38px rgba(15,23,42,.08)}.profile-card .card-body{padding:30px}.section-title{margin:22px 0 10px;color:#272b8c;font-size:.85rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.detail{padding:14px;border:1px solid #e7e9f3;border-radius:10px;background:#fbfcff}.detail span{display:block;color:#76809a;font-size:.72rem;font-weight:800;text-transform:uppercase}.detail strong{display:block;margin-top:5px;color:#27324b;word-break:break-word}.print-signatures{display:none}@media(max-width:700px){.detail-grid{grid-template-columns:1fr}}@page{size:A4 portrait;margin:14mm}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.navbar-custom,.left-side-menu,.footer,.no-print{display:none!important}body{color:#111;font-size:10.5pt}.content-page{margin:0!important;padding:0!important}.profile-sheet{max-width:none;margin:0;padding:0}.profile-header{padding:0 0 12px!important;color:#111!important;background:#fff!important;border-bottom:2px solid #272b8c!important}.profile-header::before{content:'DEPED SDO DAVAO ORIENTAL\A SCHOOL PERSONNEL PROFILE';white-space:pre-line;display:block;margin-bottom:10px;color:#272b8c;font-size:9pt;font-weight:800;letter-spacing:.06em}.profile-card{box-shadow:none}.profile-card .card-body{padding:14px 0!important}.section-title{margin:16px 0 8px!important;padding-bottom:4px;border-bottom:1px solid #b7bfd2;color:#111!important}.detail-grid{gap:7px!important;break-inside:avoid}.detail{padding:8px!important;border-color:#c8cedb!important;background:#fff!important;break-inside:avoid}.detail span{color:#555!important}.detail strong{color:#111!important;font-size:10pt}.print-signatures{display:flex;justify-content:space-between;gap:40px;margin-top:38px;break-inside:avoid}.signature{width:30%;padding-top:28px;border-top:1px solid #333;text-align:center;font-size:9pt}.signature span{display:block;margin-top:4px;color:#555;font-size:8pt}}
+    </style>
+</head>
+<body class="dashboard-root-theme"><div id="wrapper">
+    <?php include(__DIR__ . '/includes/top-bar.php'); ?>
+    <?php include(__DIR__ . '/includes/sidebar.php'); ?>
+    <div class="content-page"><div class="content"><main class="profile-sheet">
+        <div class="no-print mb-3"><a class="btn btn-light" href="<?= base_url(); ?>Page/school_personnel">← Back to Personnel</a><button class="btn btn-primary" onclick="window.print()"><i class="mdi mdi-printer"></i> Print Profile</button></div>
+        <section class="profile-header"><h1 class="h3 mb-1"><?= $esc($personnel->full_name); ?></h1><p class="mb-0">School Personnel Profile</p></section>
+        <section class="card profile-card"><div class="card-body">
+            <div class="section-title">Basic Information</div><div class="detail-grid">
+                <div class="detail"><span>Employee No.</span><strong><?= $esc($personnel->employee_no ?: 'Not specified'); ?></strong></div><div class="detail"><span>Sex</span><strong><?= $esc($personnel->sex ?: 'Not specified'); ?></strong></div><div class="detail"><span>Personnel Type</span><strong><?= $esc($personnel->personnel_type); ?></strong></div><div class="detail"><span>Position / Role</span><strong><?= $esc($personnel->position_title ?: ($personnel->non_teaching_role ?: 'Not specified')); ?></strong></div><div class="detail"><span>Employment Status</span><strong><?= $esc($personnel->employment_status); ?></strong></div><div class="detail"><span>License Status</span><strong><?= !empty($personnel->licensed) ? 'Licensed' : 'Non-Licensed'; ?></strong></div>
+            </div>
+            <div class="section-title">Education and License</div><div class="detail-grid">
+                <div class="detail"><span>Highest Educational Attainment</span><strong><?= $esc($personnel->highest_education ?: 'Not specified'); ?></strong></div><div class="detail"><span>Course / Degree</span><strong><?= $esc($personnel->education_course ?: 'Not specified'); ?></strong></div><div class="detail"><span>Major / Specialization</span><strong><?= $esc($personnel->major_specialization ?: 'Not specified'); ?></strong></div><div class="detail"><span>PRC License Number</span><strong><?= $esc($personnel->prc_license_no ?: 'Not specified'); ?></strong></div><div class="detail"><span>PRC Expiration</span><strong><?= $esc($personnel->prc_expiration ?: 'Not specified'); ?></strong></div>
+            </div>
+            <div class="section-title">Contact Information</div><div class="detail-grid"><div class="detail"><span>Email</span><strong><?= $esc($personnel->email ?: 'Not specified'); ?></strong></div><div class="detail"><span>Mobile Number</span><strong><?= $esc($personnel->mobile_no ?: 'Not specified'); ?></strong></div></div>
+            <div class="print-signatures"><div class="signature">Prepared by<span>School Personnel In-Charge</span></div><div class="signature">Verified by<span>School Head / Administrator</span></div><div class="signature">Date<span><?= date('F j, Y'); ?></span></div></div>
+        </div></section>
+    </main></div><?php include(__DIR__ . '/includes/footer.php'); ?></div>
+</div><script src="<?= base_url(); ?>assets/js/vendor.min.js"></script><script src="<?= base_url(); ?>assets/js/app.min.js"></script></body></html>

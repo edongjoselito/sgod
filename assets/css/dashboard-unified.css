@@ -260,6 +260,12 @@ body.dashboard-root-theme {
     margin: 14px 7px 0;
 }
 
+.dashboard-shell .dashboard-main-row.dashboard-quick-links-overlap {
+    position: relative;
+    z-index: 2;
+    margin-top: -33px;
+}
+
 .dashboard-insights-row > [class*="col-"],
 .dashboard-main-row > [class*="col-"] {
     padding-right: 8px;
