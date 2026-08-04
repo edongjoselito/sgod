@@ -837,13 +837,13 @@ $metricCards = array(
                 <?php if ($canManageSchools): ?>
                     <div class="modal fade" id="schoolModal" tabindex="-1" role="dialog" aria-hidden="true">
                         <div class="modal-dialog modal-lg" role="document"><div class="modal-content">
-                            <form method="post" action="<?= base_url(); ?>Page/school_save" id="schoolForm">
+                            <form method="post" action="<?= base_url(); ?>Page/school_save" id="schoolForm" novalidate>
                                 <div class="modal-header"><h5 class="modal-title" id="schoolModalTitle">Add School</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
                                 <div class="modal-body">
                                     <input type="hidden" name="original_school_id" id="originalSchoolId">
-                                    <div class="form-row"><div class="form-group col-md-4"><label>School ID</label><input class="form-control" name="schoolID" id="schoolIdInput" required></div><div class="form-group col-md-5"><label>School Name</label><input class="form-control" name="schoolName" id="schoolNameInput" required></div><div class="form-group col-md-3"><label>Type</label><select class="form-control" name="schoolType" id="schoolTypeInput"><option value="Public">Public</option><option value="Private">Private</option><option value="Other">Other</option></select></div></div>
-                                    <div class="form-group" id="schoolAccountEmailGroup"><label>School Account Email</label><input class="form-control" type="email" name="account_email" id="schoolAccountEmail" autocomplete="email"><small class="form-text" id="schoolEmailStatus">Required for account credentials and login.</small></div>
-                                    <div class="form-group" id="schoolAccountPasswordGroup"><label>School Account Password</label><div class="input-group"><input class="form-control" type="password" name="account_password" id="schoolAccountPassword" minlength="6" autocomplete="new-password"><div class="input-group-append"><button class="btn btn-outline-secondary" type="button" id="toggleSchoolPassword" aria-label="Show password"><i class="mdi mdi-eye-outline"></i></button></div></div><div class="mt-2"><button class="btn btn-sm btn-outline-primary" type="button" id="generateSchoolPassword"><i class="mdi mdi-refresh"></i> Generate Password</button></div><small class="form-text text-muted">The School ID or email can be used to sign in to the School dashboard.</small></div>
+                                    <div class="form-row"><div class="form-group col-md-4"><label>School ID <small class="text-muted">(optional)</small></label><input class="form-control" name="schoolID" id="schoolIdInput"></div><div class="form-group col-md-5"><label>School Name <span class="text-danger">*</span></label><input class="form-control" name="schoolName" id="schoolNameInput" required><div class="invalid-feedback">Enter the School Name.</div></div><div class="form-group col-md-3"><label>Type</label><select class="form-control" name="schoolType" id="schoolTypeInput"><option value="Public">Public</option><option value="Private">Private</option><option value="Other">Other</option></select></div></div>
+                                    <div class="form-group" id="schoolAccountEmailGroup"><label>School Account Email <span class="text-danger">*</span></label><input class="form-control" type="email" name="account_email" id="schoolAccountEmail" autocomplete="email" required><div class="invalid-feedback">Enter a valid School Account Email.</div><small class="form-text" id="schoolEmailStatus">Required for account credentials and login. It is used as the School ID when that field is blank.</small></div>
+                                    <div class="form-group" id="schoolAccountPasswordGroup"><label>School Account Password <span class="text-danger">*</span></label><div class="input-group"><input class="form-control" type="password" name="account_password" id="schoolAccountPassword" minlength="6" autocomplete="new-password"><div class="input-group-append"><button class="btn btn-outline-secondary" type="button" id="toggleSchoolPassword" aria-label="Show password"><i class="mdi mdi-eye-outline"></i></button></div></div><div class="invalid-feedback d-none" id="schoolPasswordFeedback">Use at least 6 characters for the password.</div><div class="mt-2"><button class="btn btn-sm btn-outline-primary" type="button" id="generateSchoolPassword"><i class="mdi mdi-refresh"></i> Generate Password</button></div><small class="form-text text-muted">The School ID or email can be used to sign in to the School dashboard.</small></div>
                                     <div class="form-row"><div class="form-group col-md-4"><label>District</label><input class="form-control" name="district" id="schoolDistrictInput"></div><div class="form-group col-md-4"><label>City / Municipality</label><input class="form-control" name="city" id="schoolCityInput"></div><div class="form-group col-md-4"><label>Province</label><input class="form-control" name="province" id="schoolProvinceInput"></div></div>
                                     <div class="form-row"><div class="form-group col-md-6"><label>Sitio</label><input class="form-control" name="sitio" id="schoolSitioInput"></div><div class="form-group col-md-6"><label>Barangay</label><input class="form-control" name="brgy" id="schoolBrgyInput"></div></div>
                                     <hr><div class="form-row"><div class="form-group col-md-4"><label>School Head First Name</label><input class="form-control" name="adminFName" id="schoolAdminFirstInput"></div><div class="form-group col-md-4"><label>Middle Name</label><input class="form-control" name="adminMName" id="schoolAdminMiddleInput"></div><div class="form-group col-md-4"><label>Last Name</label><input class="form-control" name="adminLName" id="schoolAdminLastInput"></div></div>
@@ -875,6 +875,7 @@ $metricCards = array(
                     Public: 'Public schools',
                     Private: 'Private schools'
                 };
+                var activeSchoolTypeFilter = 'All';
 
                 var table = $('#schoolsTable').DataTable({
                     destroy: true,
@@ -901,6 +902,16 @@ $metricCards = array(
                             next: '&rsaquo;'
                         }
                     }
+                });
+
+                // Normalize the Type column before comparing it. The rendered cell
+                // includes icon markup and whitespace, so an exact raw search fails.
+                $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                    if (settings.nTable.id !== 'schoolsTable' || activeSchoolTypeFilter === 'All') {
+                        return true;
+                    }
+                    var schoolType = $('<div>').html(data[1] || '').text().replace(/\s+/g, ' ').trim().toLowerCase();
+                    return schoolType === activeSchoolTypeFilter.toLowerCase();
                 });
 
                 function setActiveFilterButtons(filter) {
@@ -931,9 +942,8 @@ $metricCards = array(
 
                 function applyDirectoryFilter(filter) {
                     var safeFilter = filter === 'Public' || filter === 'Private' ? filter : 'All';
-                    var regex = safeFilter === 'All' ? '' : '^' + safeFilter + '$';
-
-                    table.column(1).search(regex, true, false).draw();
+                    activeSchoolTypeFilter = safeFilter;
+                    table.column(1).search('').draw();
                     setActiveFilterButtons(safeFilter);
                     updateSummary(safeFilter);
                     updateUrl(safeFilter);
@@ -956,8 +966,10 @@ $metricCards = array(
                     var trigger = $(event.relatedTarget);
                     var isEdit = trigger.hasClass('js-edit-school');
                     $('#schoolModalTitle').text(isEdit ? 'Edit School' : 'Add School');
+					$('#schoolForm').removeClass('was-validated');
                     $('#schoolAccountEmailGroup').toggle(!isEdit);
                     $('#schoolAccountEmail').prop('required', !isEdit).val('');
+					$('#schoolIdInput').prop('required', false);
                     $('#schoolEmailStatus').removeClass('text-danger text-success').text('Required for account credentials and login.');
                     $('#schoolAccountPasswordGroup').toggle(!isEdit);
                     $('#schoolAccountPassword').prop('required', !isEdit).val('');
@@ -977,6 +989,19 @@ $metricCards = array(
                     setSchoolField('#schoolPermitInput', isEdit ? trigger.data('permit-no') : '');
                     setSchoolField('#schoolRecognitionInput', isEdit ? trigger.data('recognition-no') : '');
                 });
+
+				$('#schoolForm').on('submit', function (event) {
+					var isNewSchool = !$.trim($('#originalSchoolId').val());
+					var password = $('#schoolAccountPassword').val();
+					var passwordIsValid = !isNewSchool || password.length >= 6;
+					$('#schoolPasswordFeedback').toggleClass('d-block', !passwordIsValid).toggleClass('d-none', passwordIsValid);
+					if (!this.checkValidity() || !passwordIsValid) {
+						event.preventDefault();
+						event.stopPropagation();
+						$(this).addClass('was-validated');
+						return false;
+					}
+				});
 
                 function generateSchoolPassword() {
                     var characters = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';

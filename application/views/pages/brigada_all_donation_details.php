@@ -66,7 +66,6 @@ $selectedTypeLabel = trim((string) ($selectedPartnerType ?? ''));
                         <a class="summary-card" href="<?= base_url(); ?>Brigada/donation_type_details<?= $typeKey !== '' ? '?partner_type=' . rawurlencode($typeKey) : ''; ?>" title="View donation details for <?= $esc($summary->partner_type ?? 'Unspecified'); ?>">
                             <span><?= $esc($summary->partner_type ?? 'Unspecified'); ?></span>
                             <strong>₱<?= number_format((float) ($summary->total_amount ?? 0), 2); ?></strong>
-                            <small><?= (int) ($summary->record_count ?? 0); ?> record<?= (int) ($summary->record_count ?? 0) === 1 ? '' : 's'; ?> · View details</small>
                         </a>
                     <?php endforeach; ?>
                 </section>

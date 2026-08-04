@@ -28,7 +28,8 @@ $esc = function ($value) {
     .memo-eyebrow { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; }
     .memo-title { margin:18px 0 12px; color:#fff; font-size:clamp(2rem,3vw,2.7rem); line-height:1.05; font-weight:700; letter-spacing:-.03em; }
     .memo-subtitle { margin:0; color:rgba(255,255,255,.82); font-size:1rem; }
-    .hero-add-btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:13px 20px; border:0; border-radius:16px; color:var(--memo-navy); background:linear-gradient(135deg,#fff 0%,#eef7ff 100%); font-weight:700; cursor:pointer; transition:transform .25s ease,box-shadow .25s ease; }
+    .hero-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; }
+    .hero-add-btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:13px 20px; margin:0!important; border:0; border-radius:16px; color:var(--memo-navy); background:linear-gradient(135deg,#fff 0%,#eef7ff 100%); font-weight:700; cursor:pointer; transition:transform .25s ease,box-shadow .25s ease; }
     .hero-add-btn:hover { color:var(--memo-navy); transform:translateY(-2px); box-shadow:0 14px 32px rgba(17,24,39,.12); text-decoration:none; }
     .partners-card { margin-top:24px; border:0; border-radius:22px; box-shadow:var(--memo-shadow); overflow:hidden; }
     .partners-card .card-body { padding:26px; }
@@ -47,7 +48,7 @@ $esc = function ($value) {
     .partner-add-header { border-bottom:1px solid #e8ecf5; }.partner-add-footer { justify-content:flex-end; border-top:1px solid #e8ecf5; }
     .partner-add-title { margin:0; color:var(--memo-ink); font-size:1.15rem; font-weight:700; }.partner-add-close { margin:0; color:#68708a; font-size:1.7rem; font-weight:400; line-height:1; cursor:pointer; }
     .partner-add-body { padding:24px; overflow-y:auto; }
-    @media (max-width:767px) { .memo-hero-body,.partners-card .card-body { padding:22px; } }
+    @media (max-width:767px) { .memo-hero-body,.partners-card .card-body { padding:22px; } .hero-actions { justify-content:flex-start; } .hero-add-btn { flex:1 1 190px; } }
 </style>
     </head>
     <body class="dashboard-root-theme">
@@ -65,9 +66,11 @@ $esc = function ($value) {
                     <p class="memo-subtitle">Manage the organizations and individuals supporting school initiatives.</p>
                 </div>
                 <?php if (!empty($can_manage_partners)): ?>
-                    <div class="col-md-4 text-md-right mt-3 mt-md-0">
-                        <a href="<?= base_url(); ?>Brigada/all_donation_details" class="hero-add-btn mr-2"><i class="mdi mdi-format-list-bulleted"></i> View All Donations</a>
-                        <label for="partnerAddToggle" class="hero-add-btn"><i class="mdi mdi-plus"></i> Add Partner</label>
+                    <div class="col-md-4 mt-3 mt-md-0">
+                        <div class="hero-actions">
+                            <a href="<?= base_url(); ?>Brigada/all_donation_details" class="hero-add-btn"><i class="mdi mdi-format-list-bulleted"></i> View All Donations</a>
+                            <label for="partnerAddToggle" class="hero-add-btn"><i class="mdi mdi-plus"></i> Add Partner</label>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div></div></div></div></div>

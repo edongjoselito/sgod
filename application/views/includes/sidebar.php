@@ -6,6 +6,12 @@
             $currentSidebarSecGroup = trim((string) $this->session->userdata('secGroup'));
             $currentSidebarSectionLower = strtolower($currentSidebarSection);
             $currentSidebarSecGroupLower = strtolower($currentSidebarSecGroup);
+            // Section-head switching can use either the full SMME name or its abbreviation.
+            $isSmmeSidebar = (
+                $currentSidebarSectionLower === 'smme'
+                || strpos($currentSidebarSectionLower, 'school management') !== false
+                || strpos($currentSidebarSectionLower, 'monitoring and evaluation') !== false
+            );
             $isCidSidebar = (
                 $currentSidebarSecGroupLower === 'cid'
                 || strpos($currentSidebarSecGroupLower, 'curriculum implementation') !== false
@@ -378,7 +384,7 @@
 
             </div>
             <!-- End Sidebar -->
-        <?php elseif ($this->session->userdata('section') === 'School Management Monitoring and Evaluation'): ?>
+        <?php elseif ($isSmmeSidebar): ?>
             <div id="sidebar-menu">
                 <ul class="metismenu" id="side-menu">
 
@@ -450,6 +456,24 @@
                             <i class="mdi mdi-office-building"></i>
                             <span> Schools </span>
                         </a>
+                    </li>
+
+                    <li>
+                        <a href="javascript: void(0);" class="waves-effect">
+                            <i class="mdi mdi-trophy-outline"></i>
+                            <span> PBEI Recognition </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul class="nav-second-level" aria-expanded="false">
+                            <li><a href="<?= base_url(); ?>Page/pbei_school_submissions">Schools Submissions</a></li>
+                            <li>
+                                <a href="javascript: void(0);">Settings <span class="menu-arrow"></span></a>
+                                <ul class="nav-third-level" aria-expanded="false">
+                                    <li><a href="<?= base_url(); ?>Page/pbei_requirements">Requirements</a></li>
+                                    <li><a href="<?= base_url(); ?>Page/pbei_evaluation_areas">Evaluation Areas</a></li>
+                                </ul>
+                            </li>
+                        </ul>
                     </li>
 
                     <li>
@@ -527,6 +551,17 @@
                             <i class="mdi mdi-account-multiple-outline"></i>
                             <span> Enrollment Details </span>
                         </a>
+                    </li>
+                    <li>
+                        <a href="javascript: void(0);" class="waves-effect">
+                            <i class="mdi mdi-trophy-outline"></i>
+                            <span> PBEI </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul class="nav-second-level" aria-expanded="false">
+                            <li><a href="<?= base_url(); ?>Page/school_pbei_requirements">Mandatory Requirements</a></li>
+                            <li><a href="<?= base_url(); ?>Page/pbei_data_privacy_compliance">Data Privacy Compliance</a></li>
+                        </ul>
                     </li>
                 </ul>
 
@@ -1093,6 +1128,13 @@
                     </li>
 
                     <li>
+                        <a href="<?= base_url(); ?>Page/section_head_issues_concerns" class="waves-effect">
+                            <i class="mdi mdi-alert-circle-outline"></i>
+                            <span> Issues / Concerns </span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="javascript: void(0);" class="waves-effect">
                             <i class="mdi mdi-school-outline"></i>
                             <span> Brigada Eskwela </span>
@@ -1293,6 +1335,20 @@
         <?php endif; ?>
 
         <script>
+        // Keep Issues / Concerns available in every role-specific sidebar.
+        document.addEventListener('DOMContentLoaded', function () {
+            var menu = document.getElementById('side-menu');
+            var issuesUrl = <?= json_encode(site_url('Page/section_head_issues_concerns')); ?>;
+            if (!menu || menu.querySelector('a[href="' + issuesUrl + '"]')) return;
+            var item = document.createElement('li');
+            var link = document.createElement('a');
+            link.href = issuesUrl;
+            link.className = 'waves-effect';
+            link.innerHTML = '<i class="mdi mdi-alert-circle-outline"></i><span> Issues / Concerns </span>';
+            item.appendChild(link);
+            menu.appendChild(item);
+        });
+
         if (false) (function () {
             var menu = document.getElementById('side-menu');
             if (!menu) return;

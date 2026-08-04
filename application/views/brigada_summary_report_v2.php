@@ -205,6 +205,63 @@
     font-weight: 700;
   }
 
+  .brig-stat-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 158px;
+    justify-content: center;
+  }
+
+  .brig-stat-card::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    background: var(--c-primary);
+  }
+
+  .brig-stat-card:nth-child(2)::after { background: var(--c-success); }
+  .brig-stat-card:nth-child(3)::after { background: var(--c-warning); }
+  .brig-stat-card:nth-child(4)::after { background: var(--c-purple); }
+
+  .brig-stat-card::before {
+    content: "";
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    right: -42px;
+    top: -42px;
+    border-radius: 50%;
+    background: var(--c-primary-light);
+    opacity: .55;
+  }
+
+  .brig-stat-card:nth-child(2)::before { background: var(--c-success-light); }
+  .brig-stat-card:nth-child(3)::before { background: var(--c-warning-light); }
+  .brig-stat-card:nth-child(4)::before { background: var(--c-purple-light); }
+
+  .brig-stat-card > * { position: relative; z-index: 1; }
+  .brig-stat-value { font-size: 32px; }
+  .brig-stat-link { color: inherit; text-decoration: none; cursor: pointer; }
+  .brig-stat-link:hover, .brig-stat-link:focus { color: inherit; text-decoration: none; border-color: var(--c-border-strong); }
+
+  .brig-filter-bar-top {
+    border-top: 0;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .brig-filter-intro {
+    display: flex;
+    flex-direction: column;
+    min-width: 125px;
+    padding-right: 4px;
+  }
+
+  .brig-filter-intro span { font-size: 13px; font-weight: 800; color: var(--c-ink); }
+  .brig-filter-intro small { margin-top: 2px; color: var(--c-ink-muted); font-size: 10px; }
+
   .brig-partner-summary-head {
     padding: 18px 24px 14px;
     background: #fff;
@@ -815,6 +872,35 @@
           <span class="brig-header-badge">V2 &nbsp;·&nbsp; DepEd Monitoring</span>
         </div>
 
+        <!-- ── FILTER BAR ── -->
+        <form method="GET" action="<?= base_url(); ?>Brigada/brigada_summary_v2">
+          <div class="brig-filter-bar brig-filter-bar-top">
+            <div class="brig-filter-intro"><span>Report filters</span><small>Choose the reporting period</small></div>
+            <span class="brig-filter-label">Month</span>
+            <select name="month" class="brig-filter-select">
+              <option value="">All Months</option>
+              <?php
+                $months = [1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June', 7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December'];
+                $cur_month = isset($filter_month) ? $filter_month : date('n');
+                foreach ($months as $mn => $ml) { $sel = ($mn == $cur_month) ? 'selected' : ''; echo "<option value=\"$mn\" $sel>$ml</option>"; }
+              ?>
+            </select>
+            <span class="brig-filter-label">Year</span>
+            <select name="year" class="brig-filter-select">
+              <?php
+                $cur_year = isset($filter_year) ? $filter_year : date('Y');
+                for ($y = date('Y'); $y >= (date('Y') - 5); $y--) { $sel = ($y == $cur_year) ? 'selected' : ''; echo "<option value=\"$y\" $sel>$y</option>"; }
+              ?>
+            </select>
+            <div class="brig-filter-divider"></div>
+            <button type="submit" class="brig-btn brig-btn-primary">Apply Filter</button>
+            <a href="<?= base_url(); ?>Brigada/brigada_summary_v2" class="brig-btn brig-btn-ghost">Reset</a>
+            <div class="brig-filter-spacer"></div>
+            <button type="button" class="brig-btn brig-btn-success" onclick="brigExportExcel('brig-main-table','brigada_summary_v2_<?= date('Y-m-d'); ?>')">Export Excel</button>
+            <button type="button" class="brig-btn brig-btn-ghost" onclick="window.print()">Print</button>
+          </div>
+        </form>
+
         <!-- ── STAT CARDS ── -->
         <?php
           $stat_total_records    = 0;
@@ -835,26 +921,26 @@
           }
         ?>
         <div class="brig-stats-row">
-          <div class="brig-stat-card">
+          <a class="brig-stat-card brig-stat-link" href="<?= base_url(); ?>Brigada/brigada_summary_v2_details?month=<?= (int)$cur_month; ?>&year=<?= (int)$cur_year; ?>&card=records" title="View total record details">
             <div class="brig-stat-icon blue">&#9783;</div>
             <div class="brig-stat-value"><?= number_format($stat_total_records); ?></div>
             <div class="brig-stat-label">Total Records</div>
-          </div>
-          <div class="brig-stat-card">
+          </a>
+          <a class="brig-stat-card brig-stat-link" href="<?= base_url(); ?>Brigada/brigada_summary_v2_details?month=<?= (int)$cur_month; ?>&year=<?= (int)$cur_year; ?>&card=resources" title="View resource details">
             <div class="brig-stat-icon green">&#8369;</div>
             <div class="brig-stat-value">&#8369;<?= number_format($stat_total_resources, 0); ?></div>
             <div class="brig-stat-label">Total Resources</div>
-          </div>
-          <div class="brig-stat-card">
+          </a>
+          <a class="brig-stat-card brig-stat-link" href="<?= base_url(); ?>Brigada/brigada_summary_v2_details?month=<?= (int)$cur_month; ?>&year=<?= (int)$cur_year; ?>&card=volunteers" title="View volunteer details">
             <div class="brig-stat-icon amber">&#128100;</div>
             <div class="brig-stat-value"><?= number_format($stat_total_volunteers); ?></div>
             <div class="brig-stat-label">Total Volunteers</div>
-          </div>
-          <div class="brig-stat-card">
+          </a>
+          <a class="brig-stat-card brig-stat-link" href="<?= base_url(); ?>Brigada/brigada_summary_v2_details?month=<?= (int)$cur_month; ?>&year=<?= (int)$cur_year; ?>&card=days" title="View reporting-day details">
             <div class="brig-stat-icon purple">&#128197;</div>
             <div class="brig-stat-value"><?= $stat_total_days; ?></div>
             <div class="brig-stat-label">Total Days</div>
-          </div>
+          </a>
         </div>
 
         <?php
@@ -876,17 +962,17 @@
         <div class="brig-partner-summary-head">
           <div class="brig-section-title">General Partner Type Summary</div>
           <div class="brig-section-sub">
-            Distinct partners with contribution records for the selected period
+            Contribution records for the selected period
           </div>
         </div>
 
         <div class="brig-stats-row">
           <?php foreach ($partner_type_labels as $type_key => $type_label): ?>
-            <div class="brig-stat-card">
+            <a class="brig-stat-card brig-stat-link" href="<?= base_url(); ?>Brigada/brigada_summary_v2_details?month=<?= (int)$cur_month; ?>&year=<?= (int)$cur_year; ?>&scope=general&type=<?= rawurlencode($type_key); ?>" title="View <?= htmlspecialchars($type_label); ?> partner details">
               <div class="brig-stat-icon <?= $partner_type_icons[$type_key]; ?>">&#128101;</div>
               <div class="brig-stat-value"><?= number_format($partner_type_counts[$type_key] ?? 0); ?></div>
               <div class="brig-stat-label"><?= htmlspecialchars($type_label); ?></div>
-            </div>
+            </a>
           <?php endforeach; ?>
         </div>
 
@@ -907,70 +993,19 @@
         <div class="brig-partner-summary-head">
           <div class="brig-section-title">Specific Partner Type Summary</div>
           <div class="brig-section-sub">
-            Distinct partners with contribution records for the selected period
+            Contribution records for the selected period
           </div>
         </div>
 
         <div class="brig-stats-row brig-stats-row-3">
           <?php foreach ($specific_partner_type_labels as $type_key => $type_label): ?>
-            <div class="brig-stat-card">
+            <a class="brig-stat-card brig-stat-link" href="<?= base_url(); ?>Brigada/brigada_summary_v2_details?month=<?= (int)$cur_month; ?>&year=<?= (int)$cur_year; ?>&scope=specific&type=<?= rawurlencode($type_key); ?>" title="View <?= htmlspecialchars($type_label); ?> partner details">
               <div class="brig-stat-icon <?= $specific_partner_type_icons[$type_key]; ?>">&#128101;</div>
               <div class="brig-stat-value"><?= number_format($specific_partner_type_counts[$type_key] ?? 0); ?></div>
               <div class="brig-stat-label"><?= htmlspecialchars($type_label); ?></div>
-            </div>
+            </a>
           <?php endforeach; ?>
         </div>
-
-        <!-- ── FILTER BAR ── -->
-        <form method="GET" action="<?= base_url(); ?>Brigada/brigada_summary_v2">
-          <div class="brig-filter-bar">
-            <span class="brig-filter-label">Month</span>
-            <select name="month" class="brig-filter-select">
-              <option value="">All Months</option>
-              <?php
-                $months = [1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
-                           7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December'];
-                $cur_month = isset($filter_month) ? $filter_month : date('n');
-                foreach ($months as $mn => $ml) {
-                  $sel = ($mn == $cur_month) ? 'selected' : '';
-                  echo "<option value=\"$mn\" $sel>$ml</option>";
-                }
-              ?>
-            </select>
-
-            <span class="brig-filter-label">Year</span>
-            <select name="year" class="brig-filter-select">
-              <?php
-                $cur_year = isset($filter_year) ? $filter_year : date('Y');
-                for ($y = date('Y'); $y >= (date('Y') - 5); $y--) {
-                  $sel = ($y == $cur_year) ? 'selected' : '';
-                  echo "<option value=\"$y\" $sel>$y</option>";
-                }
-              ?>
-            </select>
-
-            <div class="brig-filter-divider"></div>
-
-            <button type="submit" class="brig-btn brig-btn-primary">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-              Apply Filter
-            </button>
-
-            <a href="<?= base_url(); ?>Brigada/brigada_summary_v2" class="brig-btn brig-btn-ghost">Reset</a>
-
-            <div class="brig-filter-spacer"></div>
-
-            <button type="button" class="brig-btn brig-btn-success" onclick="brigExportExcel('brig-main-table','brigada_summary_v2_<?= date('Y-m-d'); ?>')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Export Excel
-            </button>
-
-            <button type="button" class="brig-btn brig-btn-ghost" onclick="window.print()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-              Print
-            </button>
-          </div>
-        </form>
 
         <!-- ── SECTION HEADER ── -->
         <div class="brig-section-head">

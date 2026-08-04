@@ -821,6 +821,78 @@ class Page extends CI_Controller{
 	$this->load->view('dashboard_section_head', $result);
   }
 
+  function section_head_issues_concerns(){
+	$this->ensure_section_issues_concerns_table();
+	$section = trim((string) $this->session->userdata('section'));
+	$secGroup = trim((string) $this->session->userdata('secGroup'));
+	$selectedYear = trim((string) $this->input->get('year', TRUE));
+	if($selectedYear === '') $selectedYear = date('Y');
+	$result['availableYears'] = $this->db->select('applicable_year')->where('section_name', $section)->where('sec_group', $secGroup)->group_by('applicable_year')->order_by('applicable_year', 'DESC')->get('section_issues_concerns')->result();
+	$result['records'] = $this->db->where('section_name', $section)->where('sec_group', $secGroup)->where('applicable_year', $selectedYear)->order_by('id', 'DESC')->get('section_issues_concerns')->result();
+	$result['sectionName'] = $section;
+	$result['selectedYear'] = $selectedYear;
+	$this->load->view('section_head_issues_concerns', $result);
+  }
+
+  function section_head_issues_concern_details($id = 0){
+	$this->ensure_section_issues_concerns_table();
+	$section = trim((string) $this->session->userdata('section'));
+	$secGroup = trim((string) $this->session->userdata('secGroup'));
+	$record = $this->db->where('id', (int) $id)
+		->where('section_name', $section)
+		->where('sec_group', $secGroup)
+		->get('section_issues_concerns')->row();
+	if(!$record){ show_404(); return; }
+	$preparedBy = trim(implode(' ', array_filter(array(
+		trim((string) $this->session->userdata('fName')),
+		trim((string) $this->session->userdata('mName')),
+		trim((string) $this->session->userdata('lName'))
+	))));
+	$this->load->view('section_head_issues_concern_details', array(
+		'record' => $record,
+		'sectionName' => $section,
+		'preparedBy' => $preparedBy !== '' ? $preparedBy : (string) $this->session->userdata('username')
+	));
+  }
+
+  function section_head_issues_concerns_save(){
+	$this->ensure_section_issues_concerns_table();
+	$section = trim((string) $this->session->userdata('section'));
+	$secGroup = trim((string) $this->session->userdata('secGroup'));
+	$payload = array(
+		'applicable_year' => trim((string) $this->input->post('applicable_year', TRUE)) ?: date('Y'),
+		'issue_concern' => trim((string) $this->input->post('issue_concern', TRUE)),
+		'degree_of_priority' => trim((string) $this->input->post('degree_of_priority', TRUE)),
+		'probable_causes' => trim((string) $this->input->post('probable_causes', TRUE)),
+		'affected_performance' => trim((string) $this->input->post('affected_performance', TRUE)),
+		'ta_need' => trim((string) $this->input->post('ta_need', TRUE)),
+		'ta_type' => trim((string) $this->input->post('ta_type', TRUE)),
+		'updated_at' => date('Y-m-d H:i:s')
+	);
+	if($payload['issue_concern'] === ''){
+		$this->session->set_flashdata('danger', 'Issue or concern is required.');
+		redirect('Page/section_head_issues_concerns');
+		return;
+	}
+	$id = (int) $this->input->post('id');
+	if($id > 0){
+		$this->db->where('id', $id)->where('section_name', $section)->where('sec_group', $secGroup)->update('section_issues_concerns', $payload);
+		$this->session->set_flashdata('success', 'Issue or concern updated successfully.');
+	} else {
+		$payload['section_name'] = $section; $payload['sec_group'] = $secGroup; $payload['created_at'] = date('Y-m-d H:i:s');
+		$this->db->insert('section_issues_concerns', $payload);
+		$this->session->set_flashdata('success', 'Issue or concern added successfully.');
+	}
+	redirect('Page/section_head_issues_concerns');
+  }
+
+  function section_head_issues_concerns_delete(){
+	$this->ensure_section_issues_concerns_table();
+	$this->db->where('id', (int) $this->input->post('id'))->where('section_name', (string) $this->session->userdata('section'))->where('sec_group', (string) $this->session->userdata('secGroup'))->delete('section_issues_concerns');
+	$this->session->set_flashdata('success', 'Issue or concern removed.');
+	redirect('Page/section_head_issues_concerns');
+  }
+
   function switch_managed_section(){
 	$sectionName = trim((string) $this->input->post('section', TRUE));
 	$sectionRecord = $this->get_section_head_record_for_user(
@@ -2942,7 +3014,606 @@ public function memo_delete(){
 	  $result['data']=$this->SGODModel->schools();
 	  $result['canManageSchools'] = $this->can_manage_schools();
 	$this->load->view('schools',$result);
+  }
+
+  /**
+   * PBEI Recognition requirements register.
+   *
+   * The table is created on first use so an installation does not need a
+   * separate, manual SQL import before this page can be opened.
+   */
+  function pbei_requirements(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_requirements_table();
+	$result['requirements'] = $this->db->order_by('sort_order', 'ASC')->order_by('id', 'ASC')->get('pbei_requirements')->result();
+	$lastRequirement = $this->db->select_max('sort_order')->get('pbei_requirements')->row();
+	$result['nextOrder'] = ((int) ($lastRequirement->sort_order ?? 0)) + 1;
+	$this->load->view('pbei_requirements', $result);
+  }
+
+  function pbei_requirement_save(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_requirements_table();
+	$requirement = trim((string) $this->input->post('requirement', TRUE));
+	if($requirement === ''){
+		$this->session->set_flashdata('danger', 'Requirement name is required.');
+		redirect('Page/pbei_requirements');
+		return;
 	}
+	$payload = array(
+		'requirement' => $requirement,
+		'description' => trim((string) $this->input->post('description', TRUE)),
+		'sort_order' => (int) $this->input->post('sort_order'),
+		'updated_at' => date('Y-m-d H:i:s')
+	);
+	$id = (int) $this->input->post('id');
+	if($payload['sort_order'] <= 0){
+		$lastRequirement = $this->db->select_max('sort_order')->get('pbei_requirements')->row();
+		$payload['sort_order'] = ((int) ($lastRequirement->sort_order ?? 0)) + 1;
+	}
+	if($id > 0){
+		$this->db->where('id', $id)->update('pbei_requirements', $payload);
+		$this->session->set_flashdata('success', 'PBEI requirement updated successfully.');
+	} else {
+		$payload['created_at'] = date('Y-m-d H:i:s');
+		$this->db->insert('pbei_requirements', $payload);
+		$this->session->set_flashdata('success', 'PBEI requirement added successfully.');
+	}
+	redirect('Page/pbei_requirements');
+  }
+
+  function pbei_requirement_delete(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_requirements_table();
+	$id = (int) $this->input->post('id');
+	if($id > 0){
+		$this->db->where('id', $id)->delete('pbei_requirements');
+		$this->session->set_flashdata('success', 'PBEI requirement deleted successfully.');
+	}
+	redirect('Page/pbei_requirements');
+  }
+
+  function pbei_evaluation_areas(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_evaluation_areas_table();
+	$result['areas'] = $this->db->order_by('sort_order', 'ASC')->order_by('id', 'ASC')->get('pbei_evaluation_areas')->result();
+	$this->load->view('pbei_evaluation_areas', $result);
+  }
+
+  function pbei_evaluation_area_save(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_evaluation_areas_table();
+	$payload = array(
+		'evaluation_area' => trim((string) $this->input->post('evaluation_area', TRUE)),
+		'sub_area' => trim((string) $this->input->post('sub_area', TRUE)),
+		'indicators' => trim((string) $this->input->post('indicators', TRUE)),
+		'movs' => trim((string) $this->input->post('movs', TRUE)),
+		'updated_at' => date('Y-m-d H:i:s')
+	);
+	if(in_array('', $payload, TRUE)){
+		$this->session->set_flashdata('danger', 'Complete all Evaluation Area fields.');
+		redirect('Page/pbei_evaluation_areas');
+		return;
+	}
+	$id = (int) $this->input->post('id');
+	if($id > 0){
+		$this->db->where('id', $id)->update('pbei_evaluation_areas', $payload);
+		$this->session->set_flashdata('success', 'Evaluation area updated successfully.');
+	} else {
+		$lastArea = $this->db->select_max('sort_order')->get('pbei_evaluation_areas')->row();
+		$payload['sort_order'] = ((int) ($lastArea->sort_order ?? 0)) + 1;
+		$payload['created_at'] = date('Y-m-d H:i:s');
+		$this->db->insert('pbei_evaluation_areas', $payload);
+		$this->session->set_flashdata('success', 'Evaluation area added successfully.');
+	}
+	redirect('Page/pbei_evaluation_areas');
+  }
+
+  function pbei_evaluation_area_delete(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_evaluation_areas_table();
+	$id = (int) $this->input->post('id');
+	if($id > 0){
+		$this->db->where('id', $id)->delete('pbei_evaluation_areas');
+		$this->session->set_flashdata('success', 'Evaluation area deleted successfully.');
+	}
+	redirect('Page/pbei_evaluation_areas');
+  }
+
+  function school_pbei_requirements(){
+	if($this->session->userdata('section') !== 'School'){
+		show_error('Access Denied', 403);
+		return;
+	}
+	$this->ensure_pbei_requirements_table();
+	$this->ensure_school_pbei_requirement_submissions_table();
+	$this->ensure_school_pbei_disclosure_table();
+	$schoolId = (string) $this->session->userdata('username');
+	$result['requirements'] = $this->db
+		->select('r.*, s.id AS submission_id, s.notes, s.submission_status, s.division_remarks, s.stored_name, s.original_name, s.updated_at AS submitted_at')
+		->from('pbei_requirements r')
+		->join('school_pbei_requirement_submissions s', 's.requirement_id = r.id AND s.school_id = ' . $this->db->escape($schoolId), 'left')
+		->order_by('r.sort_order', 'ASC')->order_by('r.id', 'ASC')
+		->get()->result();
+	$result['disclosure'] = $this->db->where('school_id', $schoolId)->get('school_pbei_disclosures', 1)->row();
+	$this->load->view('school_pbei_requirements', $result);
+  }
+
+  function school_pbei_requirement_save(){
+	if($this->session->userdata('section') !== 'School'){
+		show_error('Access Denied', 403);
+		return;
+	}
+	$this->ensure_pbei_requirements_table();
+	$this->ensure_school_pbei_requirement_submissions_table();
+	$requirementId = (int) $this->input->post('requirement_id');
+	$schoolId = (string) $this->session->userdata('username');
+	$requirement = $this->db->where('id', $requirementId)->get('pbei_requirements', 1)->row();
+	if(!$requirement){
+		$this->session->set_flashdata('danger', 'The selected PBEI requirement is no longer available.');
+		redirect('Page/school_pbei_requirements');
+		return;
+	}
+
+	$existing = $this->db->where(array('school_id' => $schoolId, 'requirement_id' => $requirementId))->get('school_pbei_requirement_submissions', 1)->row();
+	$isValidated = $existing && $existing->submission_status === 'Validated';
+	if($isValidated && !empty($_FILES['requirement_pdf']['name'])){
+		$this->session->set_flashdata('danger', 'A validated attachment can no longer be replaced. You may still update your notes.');
+		redirect('Page/school_pbei_requirements');
+		return;
+	}
+	$notes = trim((string) $this->input->post('notes', TRUE));
+	$remarks = $existing && trim((string) $existing->remarks) !== '' ? trim((string) $existing->remarks) : 'For Validation';
+	$payload = array('school_id' => $schoolId, 'requirement_id' => $requirementId, 'notes' => $notes, 'remarks' => $remarks, 'updated_at' => date('Y-m-d H:i:s'));
+	if($existing){
+		$payload['stored_name'] = $existing->stored_name;
+		$payload['original_name'] = $existing->original_name;
+	}
+
+	if(!empty($_FILES['requirement_pdf']['name'])){
+		$uploadPath = FCPATH . 'upload/pbei_requirement_submissions/';
+		if(!is_dir($uploadPath) && !mkdir($uploadPath, 0775, TRUE)){
+			$this->session->set_flashdata('danger', 'Unable to create the PBEI upload folder.');
+			redirect('Page/school_pbei_requirements');
+			return;
+		}
+		$config = array('upload_path' => $uploadPath, 'allowed_types' => 'pdf', 'max_size' => 2048, 'encrypt_name' => TRUE);
+		$this->load->library('upload', $config);
+		if(!$this->upload->do_upload('requirement_pdf')){
+			$this->session->set_flashdata('danger', strip_tags($this->upload->display_errors('', '')));
+			redirect('Page/school_pbei_requirements');
+			return;
+		}
+		$file = $this->upload->data();
+		$payload['stored_name'] = $file['file_name'];
+		$payload['original_name'] = $file['client_name'];
+	}
+
+	if(empty($payload['stored_name']) && $notes === ''){
+		$this->session->set_flashdata('danger', 'Upload a PDF or enter notes/remarks before saving.');
+		redirect('Page/school_pbei_requirements');
+		return;
+	}
+	if($existing){
+		$this->db->where('id', $existing->id)->update('school_pbei_requirement_submissions', $payload);
+	} else {
+		$payload['submitted_at'] = date('Y-m-d H:i:s');
+		$this->db->insert('school_pbei_requirement_submissions', $payload);
+	}
+	$this->session->set_flashdata('success', 'PBEI requirement response saved.');
+	redirect('Page/school_pbei_requirements');
+  }
+
+  function school_pbei_disclosure_save(){
+	if($this->session->userdata('section') !== 'School'){
+		show_error('Access Denied', 403);
+		return;
+	}
+	$this->ensure_school_pbei_disclosure_table();
+	$schoolId = (string) $this->session->userdata('username');
+	$pendingCase = $this->input->post('pending_case', TRUE) === 'Yes' ? 'Yes' : ($this->input->post('pending_case', TRUE) === 'No' ? 'No' : '');
+	$caseDetails = trim((string) $this->input->post('case_details', TRUE));
+	if($pendingCase === ''){
+		$this->session->set_flashdata('danger', 'Select Yes or No for the criminal-case disclosure.');
+		redirect('Page/school_pbei_requirements');
+		return;
+	}
+	if($pendingCase === 'Yes' && $caseDetails === ''){
+		$this->session->set_flashdata('danger', 'Provide the criminal case details and status.');
+		redirect('Page/school_pbei_requirements');
+		return;
+	}
+	$payload = array('pending_case' => $pendingCase, 'case_details' => $pendingCase === 'Yes' ? $caseDetails : '', 'updated_at' => date('Y-m-d H:i:s'));
+	$existing = $this->db->where('school_id', $schoolId)->get('school_pbei_disclosures', 1)->row();
+	if($existing){
+		$this->db->where('id', $existing->id)->update('school_pbei_disclosures', $payload);
+	} else {
+		$payload['school_id'] = $schoolId;
+		$payload['created_at'] = date('Y-m-d H:i:s');
+		$this->db->insert('school_pbei_disclosures', $payload);
+	}
+	$this->session->set_flashdata('success', 'Criminal-case disclosure saved.');
+	redirect('Page/school_pbei_requirements');
+  }
+
+  function pbei_sworn_statement(){
+	if($this->session->userdata('section') !== 'School'){
+		show_error('Access Denied', 403);
+		return;
+	}
+	$school = $this->db->where('schoolID', (string) $this->session->userdata('username'))->get('schools', 1)->row();
+	$day = (int) date('j');
+	$lastTwoDigits = $day % 100;
+	$suffix = ($lastTwoDigits >= 11 && $lastTwoDigits <= 13) ? 'th' : array(1 => 'st', 2 => 'nd', 3 => 'rd')[$day % 10] ?? 'th';
+	$result['swornDate'] = $day . $suffix . ' day of ' . date('F Y');
+	$addressParts = array_filter(array_map('trim', array(
+		(string) ($school->sitio ?? ''), (string) ($school->brgy ?? ''), (string) ($school->city ?? ''), (string) ($school->province ?? '')
+	)));
+	// These are the same address fields maintained on the School Profile page.
+	$result['schoolAddress'] = !empty($addressParts)
+		? implode(', ', $addressParts)
+		: trim((string) ($school->schoolName ?? ''));
+	// Affiant information is maintained in the School Profile's School Head section.
+	$result['affiantName'] = trim(implode(' ', array_filter(array(
+		trim((string) ($school->adminFName ?? '')),
+		trim((string) ($school->adminMName ?? '')),
+		trim((string) ($school->adminLName ?? ''))
+	))));
+	$result['affiantDesignation'] = trim((string) ($school->adminDesignation ?? ''));
+	$result['schoolName'] = trim((string) ($school->schoolName ?? ''));
+	$this->load->view('pbei_sworn_statement', $result);
+  }
+
+  function pbei_data_privacy_compliance(){
+	if($this->session->userdata('section') !== 'School'){
+		show_error('Access Denied', 403);
+		return;
+	}
+	$school = $this->db->where('schoolID', (string) $this->session->userdata('username'))->get('schools', 1)->row();
+	$result['representativeName'] = trim(implode(' ', array_filter(array(
+		trim((string) ($school->adminFName ?? '')),
+		trim((string) ($school->adminMName ?? '')),
+		trim((string) ($school->adminLName ?? ''))
+	))));
+	$result['representativeTitle'] = trim((string) ($school->adminDesignation ?? ''));
+	$result['schoolName'] = trim((string) ($school->schoolName ?? ''));
+	$result['declarationDate'] = date('F j, Y');
+	$result['schoolCity'] = trim((string) ($school->city ?? ''));
+	$this->load->view('pbei_data_privacy_compliance', $result);
+  }
+
+  function pbei_school_submissions(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_requirements_table();
+	$this->ensure_school_pbei_requirement_submissions_table();
+	$result['schools'] = $this->db
+		->select('s.school_id, sch.schoolName, MAX(s.updated_at) AS last_submission')
+		->from('school_pbei_requirement_submissions s')
+		->join('schools sch', 'sch.schoolID = s.school_id', 'left')
+		->group_by('s.school_id')->group_by('sch.schoolName')
+		->order_by('sch.schoolName', 'ASC')->order_by('s.school_id', 'ASC')
+		->get()->result();
+	$this->load->view('pbei_school_submissions', $result);
+  }
+
+  function pbei_school_submission_details(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_requirements_table();
+	$this->ensure_school_pbei_requirement_submissions_table();
+	$schoolId = trim((string) $this->input->get('school_id', TRUE));
+	if($schoolId === ''){
+		redirect('Page/pbei_school_submissions');
+		return;
+	}
+	$result['submissions'] = $this->db
+		->select('s.id, s.school_id, s.notes, s.remarks, s.submission_status, s.stored_name, s.original_name, s.submitted_at, s.updated_at, s.division_remarks, r.requirement, r.sort_order, sch.schoolName')
+		->from('pbei_requirements r')
+		->join('school_pbei_requirement_submissions s', 's.requirement_id = r.id AND s.school_id = ' . $this->db->escape($schoolId), 'left', FALSE)
+		->join('schools sch', 'sch.schoolID = ' . $this->db->escape($schoolId), 'left', FALSE)
+		->order_by('r.sort_order', 'ASC')->order_by('r.id', 'ASC')
+		->get()->result();
+	$result['schoolName'] = !empty($result['submissions']) && trim((string) $result['submissions'][0]->schoolName) !== '' ? $result['submissions'][0]->schoolName : $schoolId;
+	$this->load->view('pbei_school_submission_details', $result);
+  }
+
+  function pbei_school_submission_part_one(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_school_profile_schema();
+	$this->ensure_school_pbei_requirement_submissions_table();
+	$schoolId = trim((string) $this->input->get('school_id', TRUE));
+	if($schoolId === ''){
+		redirect('Page/pbei_school_submissions');
+		return;
+	}
+	$result['school'] = $this->db->where('schoolID', $schoolId)->get('schools', 1)->row();
+	if(!$result['school']){
+		$this->session->set_flashdata('danger', 'School record could not be found.');
+		redirect('Page/pbei_school_submissions');
+		return;
+	}
+	$result['schoolId'] = $schoolId;
+	$result['submission'] = $this->db
+		->select('MIN(submitted_at) AS first_submitted_at, MAX(updated_at) AS last_updated_at')
+		->where('school_id', $schoolId)
+		->get('school_pbei_requirement_submissions', 1)->row();
+	$this->load->view('pbei_school_submission_part_one', $result);
+  }
+
+  function pbei_school_submission_part_one_save(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_school_profile_schema();
+	$schoolId = trim((string) $this->input->post('school_id', TRUE));
+	if($schoolId === '' || !$this->db->where('schoolID', $schoolId)->count_all_results('schools')){
+		$this->session->set_flashdata('danger', 'School record could not be found.');
+		redirect('Page/pbei_school_submissions');
+		return;
+	}
+	$fields = array('schoolName', 'schoolEmail', 'shs_tracks_offered', 'pbei_complete_school_address', 'division', 'region', 'schoolAdministrator', 'schoolAdministratorContactNo', 'school_year_effectivity', 'ocular_inspection_date', 'sdo_to_ro_submission_date');
+	$payload = array();
+	foreach($fields as $field){
+		if($this->db->field_exists($field, 'schools')) $payload[$field] = trim((string) $this->input->post($field, TRUE));
+	}
+	if(empty($payload['schoolName'])){
+		$this->session->set_flashdata('danger', 'School name is required.');
+		redirect('Page/pbei_school_submission_part_one?school_id=' . rawurlencode($schoolId));
+		return;
+	}
+	if(!empty($payload['schoolEmail']) && filter_var($payload['schoolEmail'], FILTER_VALIDATE_EMAIL) === FALSE){
+		$this->session->set_flashdata('danger', 'Enter a valid official school email address.');
+		redirect('Page/pbei_school_submission_part_one?school_id=' . rawurlencode($schoolId));
+		return;
+	}
+	$this->db->where('schoolID', $schoolId)->update('schools', $payload);
+	$this->db->where('username', $schoolId)->where('section', 'School')->update('one_sgod_users', array('fName' => $payload['schoolName']));
+	$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('fname' => $payload['schoolName']));
+	$this->session->set_flashdata('success', 'Part I school information saved to the school profile.');
+	redirect('Page/pbei_school_submission_part_one?school_id=' . rawurlencode($schoolId));
+  }
+
+  function pbei_school_submission_part_three(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_evaluation_areas_table();
+	$this->ensure_pbei_school_evaluations_table();
+	$this->ensure_pbei_school_evaluation_summaries_table();
+	$schoolId = trim((string) $this->input->get('school_id', TRUE));
+	if($schoolId === '' || !$this->db->where('schoolID', $schoolId)->count_all_results('schools')){
+		$this->session->set_flashdata('danger', 'School record could not be found.');
+		redirect('Page/pbei_school_submissions');
+		return;
+	}
+	$result['school'] = $this->db->where('schoolID', $schoolId)->get('schools', 1)->row();
+	$result['schoolId'] = $schoolId;
+	$result['areas'] = $this->db
+		->select('a.*, e.rating')
+		->from('pbei_evaluation_areas a')
+		->join('pbei_school_evaluations e', 'e.evaluation_area_id = a.id AND e.school_id = ' . $this->db->escape($schoolId), 'left', FALSE)
+		->order_by('a.sort_order', 'ASC')->order_by('a.id', 'ASC')
+		->get()->result();
+	$result['summaries'] = $this->db->where('school_id', $schoolId)->get('pbei_school_evaluation_summaries')->result();
+	$this->load->view('pbei_school_submission_part_three', $result);
+  }
+
+  function pbei_school_submission_part_three_save(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_evaluation_areas_table();
+	$this->ensure_pbei_school_evaluations_table();
+	$this->ensure_pbei_school_evaluation_summaries_table();
+	$schoolId = trim((string) $this->input->post('school_id', TRUE));
+	if($schoolId === '' || !$this->db->where('schoolID', $schoolId)->count_all_results('schools')){
+		$this->session->set_flashdata('danger', 'School record could not be found.');
+		redirect('Page/pbei_school_submissions');
+		return;
+	}
+	$ratings = (array) $this->input->post('ratings');
+	$areaIds = $this->db->select('id')->get('pbei_evaluation_areas')->result();
+	foreach($areaIds as $area){
+		$id = (int) $area->id;
+		$rating = isset($ratings[$id]) ? (int) $ratings[$id] : 0;
+		if($rating < 1 || $rating > 4) continue;
+		$existing = $this->db->where(array('school_id' => $schoolId, 'evaluation_area_id' => $id))->get('pbei_school_evaluations', 1)->row();
+		$payload = array('rating' => $rating, 'updated_at' => date('Y-m-d H:i:s'));
+		if($existing) $this->db->where('id', $existing->id)->update('pbei_school_evaluations', $payload);
+		else { $payload['school_id'] = $schoolId; $payload['evaluation_area_id'] = $id; $payload['created_at'] = date('Y-m-d H:i:s'); $this->db->insert('pbei_school_evaluations', $payload); }
+	}
+	if($this->input->is_ajax_request()){
+		$this->output->set_content_type('application/json')->set_output(json_encode(array('success' => TRUE)));
+		return;
+	}
+	$this->session->set_flashdata('success', 'Part III evaluation ratings saved successfully.');
+	redirect('Page/pbei_school_submission_part_three?school_id=' . rawurlencode($schoolId));
+  }
+
+  function pbei_school_submission_part_three_summary_save(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_pbei_school_evaluations_table();
+	$this->ensure_pbei_school_evaluation_summaries_table();
+	$schoolId = trim((string) $this->input->post('school_id', TRUE));
+	$areaName = trim((string) $this->input->post('evaluation_area', TRUE));
+	$subArea = trim((string) $this->input->post('sub_area', TRUE));
+	if($schoolId === '' || $areaName === '' || !$this->db->where('schoolID', $schoolId)->count_all_results('schools')){
+		$this->session->set_flashdata('danger', 'Evaluation summary could not be saved.');
+		redirect('Page/pbei_school_submissions');
+		return;
+	}
+	$existing = $this->db->where(array('school_id' => $schoolId, 'evaluation_area' => $areaName, 'sub_area' => $subArea))->get('pbei_school_evaluation_summaries', 1)->row();
+	$payload = array('remarks' => trim((string) $this->input->post('remarks', TRUE)), 'updated_at' => date('Y-m-d H:i:s'));
+	if($existing) $this->db->where('id', $existing->id)->update('pbei_school_evaluation_summaries', $payload);
+	else { $payload['school_id'] = $schoolId; $payload['evaluation_area'] = $areaName; $payload['sub_area'] = $subArea; $payload['created_at'] = date('Y-m-d H:i:s'); $this->db->insert('pbei_school_evaluation_summaries', $payload); }
+	if($this->input->is_ajax_request()){
+		$this->output->set_content_type('application/json')->set_output(json_encode(array('success' => TRUE)));
+		return;
+	}
+	$this->session->set_flashdata('success', 'Evaluation summary remarks saved successfully.');
+	redirect('Page/pbei_school_submission_part_three?school_id=' . rawurlencode($schoolId));
+  }
+
+  function pbei_school_submission_update(){
+	if(!$this->require_school_management_access()){ return; }
+	$this->ensure_school_pbei_requirement_submissions_table();
+	$submissionId = (int) $this->input->post('submission_id');
+	$status = trim((string) $this->input->post('submission_status', TRUE));
+	if(!in_array($status, array('For Validation', 'Validated'), TRUE)){
+		$status = 'For Validation';
+	}
+	if($submissionId > 0){
+		$this->db->where('id', $submissionId)->update('school_pbei_requirement_submissions', array(
+			'submission_status' => $status,
+			'division_remarks' => trim((string) $this->input->post('division_remarks', TRUE)),
+			'updated_at' => date('Y-m-d H:i:s')
+		));
+		$this->session->set_flashdata('success', 'School submission updated successfully.');
+	}
+	$returnSchoolId = trim((string) $this->input->post('return_school_id', TRUE));
+	if($returnSchoolId !== ''){
+		redirect('Page/pbei_school_submission_details?school_id=' . rawurlencode($returnSchoolId));
+		return;
+	}
+	redirect('Page/pbei_school_submissions');
+  }
+
+  private function ensure_section_issues_concerns_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS section_issues_concerns (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		section_name VARCHAR(255) NOT NULL,
+		sec_group VARCHAR(255) NOT NULL,
+		applicable_year VARCHAR(20) NOT NULL,
+		issue_concern TEXT NOT NULL,
+		degree_of_priority VARCHAR(100) NULL,
+		probable_causes TEXT NULL,
+		affected_performance TEXT NULL,
+		ta_need TEXT NULL,
+		ta_type TEXT NULL,
+		created_at DATETIME NULL,
+		updated_at DATETIME NULL,
+		PRIMARY KEY (id),
+		KEY idx_section_issues_concerns_scope (section_name, sec_group)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	if(!$this->db->field_exists('applicable_year', 'section_issues_concerns')){
+		$this->db->query("ALTER TABLE section_issues_concerns ADD COLUMN applicable_year VARCHAR(20) NOT NULL DEFAULT '" . date('Y') . "' AFTER sec_group");
+	}
+  }
+
+  private function ensure_pbei_evaluation_areas_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS pbei_evaluation_areas (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		evaluation_area LONGTEXT NOT NULL,
+		sub_area LONGTEXT NOT NULL,
+		indicators LONGTEXT NOT NULL,
+		movs LONGTEXT NOT NULL,
+		sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+		created_at DATETIME NULL,
+		updated_at DATETIME NULL,
+		PRIMARY KEY (id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	if(!$this->db->field_exists('sort_order', 'pbei_evaluation_areas')){
+		$this->db->query('ALTER TABLE pbei_evaluation_areas ADD COLUMN sort_order INT UNSIGNED NOT NULL DEFAULT 0 AFTER movs');
+	}
+	$this->db->query('UPDATE pbei_evaluation_areas SET sort_order = id WHERE sort_order = 0');
+  }
+
+  private function ensure_pbei_school_evaluations_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS pbei_school_evaluations (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		school_id VARCHAR(255) NOT NULL,
+		evaluation_area_id INT UNSIGNED NOT NULL,
+		rating TINYINT UNSIGNED NOT NULL,
+		created_at DATETIME NULL,
+		updated_at DATETIME NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY uq_pbei_school_evaluation (school_id, evaluation_area_id),
+		KEY idx_pbei_evaluation_area (evaluation_area_id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+
+  private function ensure_pbei_school_evaluation_summaries_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS pbei_school_evaluation_summaries (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		school_id VARCHAR(255) NOT NULL,
+		evaluation_area VARCHAR(255) NOT NULL,
+		sub_area VARCHAR(255) NOT NULL DEFAULT '',
+		remarks TEXT NULL,
+		created_at DATETIME NULL,
+		updated_at DATETIME NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY uq_pbei_school_evaluation_summary (school_id, evaluation_area, sub_area)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+
+  private function ensure_pbei_requirements_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS pbei_requirements (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		requirement VARCHAR(255) NOT NULL,
+		description TEXT NULL,
+		sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+		created_at DATETIME NULL,
+		updated_at DATETIME NULL,
+		PRIMARY KEY (id),
+		KEY idx_pbei_requirements_sort (sort_order)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	// Migrate databases created by the initial PBEI register version.
+	foreach(array('category', 'is_required', 'is_active') as $column){
+		if($this->db->field_exists($column, 'pbei_requirements')){
+			$this->db->query('ALTER TABLE pbei_requirements DROP COLUMN ' . $column);
+		}
+	}
+	$sortIndex = $this->db->query("SHOW INDEX FROM pbei_requirements WHERE Key_name = 'idx_pbei_requirements_sort'");
+	if($sortIndex->num_rows() === 0){
+		$this->db->query('ALTER TABLE pbei_requirements ADD KEY idx_pbei_requirements_sort (sort_order)');
+	}
+
+	// Populate a new installation with an editable starter checklist only.
+	if($this->db->count_all('pbei_requirements') === 0){
+		$now = date('Y-m-d H:i:s');
+		$this->db->insert_batch('pbei_requirements', array(
+			array('requirement' => 'Letter of Intent / Application', 'description' => 'Signed application or letter requesting PBEI recognition.', 'sort_order' => 1, 'created_at' => $now, 'updated_at' => $now),
+			array('requirement' => 'School Profile', 'description' => 'Current school profile, address, ownership, and contact details.', 'sort_order' => 2, 'created_at' => $now, 'updated_at' => $now),
+			array('requirement' => 'Government Permit / Previous Recognition', 'description' => 'Copy of the valid permit or most recent recognition document, when applicable.', 'sort_order' => 3, 'created_at' => $now, 'updated_at' => $now),
+			array('requirement' => 'Supporting Documentary Evidence', 'description' => 'Other documents required during validation and inspection.', 'sort_order' => 4, 'created_at' => $now, 'updated_at' => $now)
+		));
+	}
+  }
+
+  private function ensure_school_pbei_requirement_submissions_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS school_pbei_requirement_submissions (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		school_id VARCHAR(255) NOT NULL,
+		requirement_id INT UNSIGNED NOT NULL,
+		notes TEXT NULL,
+		remarks VARCHAR(255) NOT NULL DEFAULT 'For Validation',
+		submission_status VARCHAR(50) NOT NULL DEFAULT 'For Validation',
+		division_remarks TEXT NULL,
+		stored_name VARCHAR(255) NOT NULL DEFAULT '',
+		original_name VARCHAR(255) NOT NULL DEFAULT '',
+		submitted_at DATETIME NULL,
+		updated_at DATETIME NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY uq_school_pbei_requirement (school_id, requirement_id),
+		KEY idx_school_pbei_requirement (requirement_id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	if(!$this->db->field_exists('remarks', 'school_pbei_requirement_submissions')){
+		$this->db->query("ALTER TABLE school_pbei_requirement_submissions ADD COLUMN remarks VARCHAR(255) NOT NULL DEFAULT 'For Validation' AFTER notes");
+	}
+	if(!$this->db->field_exists('submission_status', 'school_pbei_requirement_submissions')){
+		$this->db->query("ALTER TABLE school_pbei_requirement_submissions ADD COLUMN submission_status VARCHAR(50) NOT NULL DEFAULT 'For Validation' AFTER remarks");
+	}
+	if(!$this->db->field_exists('division_remarks', 'school_pbei_requirement_submissions')){
+		$this->db->query('ALTER TABLE school_pbei_requirement_submissions ADD COLUMN division_remarks TEXT NULL AFTER submission_status');
+	}
+  }
+
+  private function ensure_school_pbei_disclosure_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS school_pbei_disclosures (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		school_id VARCHAR(255) NOT NULL,
+		pending_case VARCHAR(3) NOT NULL DEFAULT '',
+		case_details TEXT NULL,
+		created_at DATETIME NULL,
+		updated_at DATETIME NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY uq_school_pbei_disclosure (school_id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
 
   private function can_manage_schools(){
 	$section = strtolower(trim((string) $this->session->userdata('section')));
@@ -2987,18 +3658,13 @@ public function memo_delete(){
 	$schoolName = trim((string) $this->input->post('schoolName', TRUE));
 	$accountPassword = (string) $this->input->post('account_password', FALSE);
 	$accountEmail = trim((string) $this->input->post('account_email', TRUE));
-	if($schoolId === '' || $schoolName === ''){
-		$this->session->set_flashdata('danger', 'School ID and School Name are required.');
+	if($schoolName === ''){
+		$this->session->set_flashdata('danger', 'School Name is required.');
 		redirect('Page/schools');
 		return;
 	}
 
 	if($originalSchoolId === ''){
-		if($this->db->where('schoolID', $schoolId)->count_all_results('schools') > 0){
-			$this->session->set_flashdata('danger', 'That School ID already exists.');
-			redirect('Page/schools');
-			return;
-		}
 		if(strlen($accountPassword) < 6){
 			$this->session->set_flashdata('danger', 'Set an account password with at least 6 characters.');
 			redirect('Page/schools');
@@ -3009,16 +3675,27 @@ public function memo_delete(){
 			redirect('Page/schools');
 			return;
 		}
+		// An email is required for every new School account. When no School ID is
+		// supplied, use that unique email address as its account identifier.
+		if($schoolId === ''){ $schoolId = $accountEmail; }
+		if($this->db->where('schoolID', $schoolId)->count_all_results('schools') > 0){
+			$this->session->set_flashdata('danger', 'That School ID already exists.');
+			redirect('Page/schools');
+			return;
+		}
 		if($this->db->where('username', $schoolId)->count_all_results('users') > 0 || $this->db->where('username', $schoolId)->count_all_results('one_sgod_users') > 0){
 			$this->session->set_flashdata('danger', 'That School ID is already used by an account.');
 			redirect('Page/schools');
 			return;
 		}
-	} elseif($schoolId !== $originalSchoolId) {
+	} else {
+		if($schoolId === ''){ $schoolId = $originalSchoolId; }
+		if($schoolId !== $originalSchoolId) {
 		if($this->db->where('schoolID', $schoolId)->where('schoolID !=', $originalSchoolId)->count_all_results('schools') > 0){
 			$this->session->set_flashdata('danger', 'That School ID already exists.');
 			redirect('Page/schools');
 			return;
+		}
 		}
 	}
 
@@ -3029,6 +3706,7 @@ public function memo_delete(){
 			$payload[$field] = trim((string) $this->input->post($field, TRUE));
 		}
 	}
+	$payload['schoolID'] = $schoolId;
 	if($originalSchoolId === ''){
 		$this->db->trans_begin();
 		$schoolInserted = $this->db->insert('schools', $payload);
@@ -3371,7 +4049,9 @@ public function memo_delete(){
 			'corporateSecretary' => 'VARCHAR(255) NULL', 'corporateSecretaryEmail' => 'VARCHAR(255) NULL', 'corporateSecretaryContactNo' => 'VARCHAR(100) NULL',
 			'schoolAdministrator' => 'VARCHAR(255) NULL', 'schoolAdministratorEmail' => 'VARCHAR(255) NULL', 'schoolAdministratorContactNo' => 'VARCHAR(100) NULL',
 			'principalName' => 'VARCHAR(255) NULL', 'principalEmail' => 'VARCHAR(255) NULL', 'principalContactNo' => 'VARCHAR(100) NULL',
-			'stationCode' => 'VARCHAR(100) NULL', 'yearEstab' => 'VARCHAR(20) NULL', 'recogNo' => 'VARCHAR(255) NULL'
+			'stationCode' => 'VARCHAR(100) NULL', 'yearEstab' => 'VARCHAR(20) NULL', 'recogNo' => 'VARCHAR(255) NULL',
+			'division' => 'VARCHAR(255) NULL', 'region' => 'VARCHAR(255) NULL', 'pbei_complete_school_address' => 'TEXT NULL',
+			'school_year_effectivity' => 'VARCHAR(50) NULL', 'ocular_inspection_date' => 'DATE NULL', 'sdo_to_ro_submission_date' => 'DATE NULL'
 		);
 		foreach($columns as $column => $definition){
 			if(!$this->db->field_exists($column, 'schools')){

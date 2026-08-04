@@ -418,7 +418,7 @@ class Brigada extends CI_Controller
             'Civil_Society_Organizations' => 0
         ];
 
-        $this->db->select('p.general_type, COUNT(DISTINCT r.partners_id) as partner_count');
+        $this->db->select('p.general_type, COUNT(*) as partner_count');
         $this->db->from('brigada_contribution_report r');
         $this->db->join('brigada_partners p', 'r.partners_id = p.id', 'left');
 
@@ -446,7 +446,7 @@ class Brigada extends CI_Controller
             'Others' => 0
         ];
 
-        $this->db->select('p.specific_type, COUNT(DISTINCT r.partners_id) as partner_count');
+        $this->db->select('p.specific_type, COUNT(*) as partner_count');
         $this->db->from('brigada_contribution_report r');
         $this->db->join('brigada_partners p', 'r.partners_id = p.id', 'left');
 
@@ -504,6 +504,61 @@ class Brigada extends CI_Controller
         $result['filter_year'] = $filter_year;
         
         $this->load->view('brigada_summary_report_v2', $result);
+    }
+
+    function brigada_summary_v2_details()
+    {
+        $month = (int) $this->input->get('month', TRUE);
+        $year = (int) $this->input->get('year', TRUE);
+        $scope = trim((string) $this->input->get('scope', TRUE));
+        $type = trim((string) $this->input->get('type', TRUE));
+        $card = trim((string) $this->input->get('card', TRUE));
+
+        if ($month < 1 || $month > 12) $month = (int) date('n');
+        if ($year < 2000 || $year > 2100) $year = (int) date('Y');
+        if (!in_array($scope, array('', 'general', 'specific'), TRUE)) $scope = '';
+
+        $this->db->select('r.*, p.name AS partner_name, p.general_type, p.specific_type, s.schoolName');
+        $this->db->from('brigada_contribution_report r');
+        $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+        $this->db->join('schools s', 's.schoolID = r.school_id', 'left');
+        $this->db->where('MONTH(r.c_date) =', $month);
+        $this->db->where('YEAR(r.c_date) =', $year);
+        if ($scope === 'general' && $type !== '') $this->db->where('p.general_type', $type);
+        if ($scope === 'specific' && $type !== '') $this->db->where('p.specific_type', $type);
+        if ($this->db->table_exists('brigada_contribution_type')) {
+            $this->db->select("REPLACE(c.name, '_', ' ') AS contribution_type", FALSE);
+            $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
+        }
+        $donations = $this->db->order_by('r.c_date', 'DESC')->get()->result();
+
+        $totals = array('records' => count($donations), 'resources' => 0, 'volunteers' => 0, 'days' => array());
+        foreach ($donations as $donation) {
+            $totals['resources'] += (float) ($donation->amount ?? 0);
+            $totals['volunteers'] += (int) ($donation->no_beneficiary_learnes ?? 0) + (int) ($donation->no_beneficiary_personnel ?? 0);
+            if (!empty($donation->c_date)) $totals['days'][$donation->c_date] = TRUE;
+        }
+
+        $labels = array('records' => 'Total Records', 'resources' => 'Total Resources', 'volunteers' => 'Total Volunteers', 'days' => 'Reporting Days');
+        $title = $labels[$card] ?? 'Contribution Details';
+        if ($type !== '') $title = str_replace('_', ' ', $type) . ' Partner Details';
+        $primaryLabel = 'Contribution Records';
+        $primaryValue = number_format($totals['records']);
+        if ($card === 'resources') {
+            $primaryLabel = 'Total Resources';
+            $primaryValue = '₱' . number_format($totals['resources'], 2);
+        } elseif ($card === 'volunteers') {
+            $primaryLabel = 'Total Volunteers';
+            $primaryValue = number_format($totals['volunteers']);
+        } elseif ($card === 'days') {
+            $primaryLabel = 'Reporting Days';
+            $primaryValue = number_format(count($totals['days']));
+        }
+        $this->load->view('pages/brigada_summary_v2_details', array(
+            'title' => $title, 'donations' => $donations, 'month' => $month, 'year' => $year,
+            'scope' => $scope, 'type' => $type, 'totals' => $totals,
+            'primaryLabel' => $primaryLabel, 'primaryValue' => $primaryValue
+        ));
     }
 
     function spc_schoo_list_admin()
