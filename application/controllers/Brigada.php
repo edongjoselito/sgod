@@ -351,6 +351,7 @@ class Brigada extends CI_Controller
         }
         
         // Get all unique dates for column headers
+        $this->db->reset_query();
         $this->db->distinct();
         $this->db->select('c_date');
         $this->db->from('brigada_contribution_report');
@@ -368,6 +369,7 @@ class Brigada extends CI_Controller
         $dates = $dates_query->result();
         
         // Get all unique schools
+        $this->db->reset_query();
         $this->db->distinct();
         $this->db->select('s.schoolID, s.schoolName');
         $this->db->from('brigada_contribution_report r');
@@ -386,6 +388,7 @@ class Brigada extends CI_Controller
         $schools = $schools_query->result();
         
         // Get data for each school and date combination
+        $this->db->reset_query();
         $this->db->select('
             r.c_date,
             r.school_id,
@@ -411,6 +414,7 @@ class Brigada extends CI_Controller
         $raw_data = $data_query->result();
 
         // Get summary counts by general partner type for the selected period.
+        $this->db->reset_query();
         $partner_type_counts = [
             'Private_Sector' => 0,
             'Public_Sector' => 0,
@@ -418,7 +422,7 @@ class Brigada extends CI_Controller
             'Civil_Society_Organizations' => 0
         ];
 
-        $this->db->select('p.general_type, COUNT(*) as partner_count');
+        $this->db->select('p.general_type, COUNT(DISTINCT r.id) as partner_count');
         $this->db->from('brigada_contribution_report r');
         $this->db->join('brigada_partners p', 'r.partners_id = p.id', 'left');
 
@@ -440,13 +444,14 @@ class Brigada extends CI_Controller
         }
 
         // Get summary counts by specific partner type for the selected period.
+        $this->db->reset_query();
         $specific_partner_type_counts = [
             'Government' => 0,
             'INGO-International Non-Government Organizations' => 0,
             'Others' => 0
         ];
 
-        $this->db->select('p.specific_type, COUNT(*) as partner_count');
+        $this->db->select('p.specific_type, COUNT(DISTINCT r.id) as partner_count');
         $this->db->from('brigada_contribution_report r');
         $this->db->join('brigada_partners p', 'r.partners_id = p.id', 'left');
 
