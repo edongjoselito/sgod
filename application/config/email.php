@@ -13,21 +13,28 @@
 //     'wordwrap' => TRUE
 // );
 
-//Gmail
-
+// SMTP sender settings for partner signup
 $config['protocol'] = 'smtp';
-$config['smtp_host'] = 'ssl://smtp.googlemail.com';
-$config['smtp_user'] = 'softtechservices.net@gmail.com';
-$config['smtp_pass'] = '.P0liceReport';
+$config['smtp_host'] = 'mail.depedmis.com';
+$config['smtp_user'] = 'one@depedmis.com';
+$config['smtp_pass'] = 'moth34board';
 $config['smtp_port'] = 465;
+$config['smtp_crypto'] = 'ssl';
 
-//LXE Hosting
-//$config['protocol'] = 'mail';
-//$config['smtp_host'] = 'mail.lxeinfotechsolutions.com';
-//$config['smtp_user'] = 'no-reply@lxeinfotechsolutions.com';
-//$config['smtp_pass'] = 'moth34board';
-//$config['smtp_port'] = 465;
- 
+// Manual outgoing settings:
+// Username: one@depedmis.com
+// Password: use the email account's password
+// Outgoing Server: mail.depedmis.com
+// SMTP Port: 465
+// SSL/TLS required
+
+// legacy Gmail setup
+// $config['protocol'] = 'smtp';
+// $config['smtp_host'] = 'ssl://smtp.googlemail.com';
+// $config['smtp_user'] = 'softtechservices.net@gmail.com';
+// $config['smtp_pass'] = '.P0liceReport';
+// $config['smtp_port'] = 465;
+
 $config['charset'] = 'utf-8';
 $config['mailtype'] = 'html';
 $config['newline'] = "\r\n"; 
