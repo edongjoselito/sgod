@@ -30,6 +30,14 @@ $name = trim(implode(' ', array_filter(array($this->session->userdata('fName'), 
 <body>
 <div class="topline"></div><nav class="nav"><div class="shell nav-inner"><div class="brand"><small>Department of Education</small>SDO Davao Oriental</div><a class="logout" href="<?= site_url('Login/logout'); ?>">Sign out</a></div></nav>
 <main class="shell">
+    <?php if($this->session->flashdata('success')): ?>
+    <div style="padding:16px 20px; border-radius:8px; margin-bottom:24px; font-size:14px; background:#d1fae5; color:#065f46; border-left:4px solid #22c55e;"><?= $esc($this->session->flashdata('success')); ?></div>
+    <?php endif; ?>
+
+    <?php if($this->session->flashdata('danger')): ?>
+    <div style="padding:16px 20px; border-radius:8px; margin-bottom:24px; font-size:14px; background:#fee2e2; color:#991b1b; border-left:4px solid #dc2626;"><?= $esc($this->session->flashdata('danger')); ?></div>
+    <?php endif; ?>
+
     <section class="hero"><p class="eyebrow">Brigada Eskwela partner portal</p><h1>Welcome, <?= $esc($name !== '' ? $name : 'Partner'); ?>.</h1><p>Thank you for helping strengthen schools and create better learning spaces for every child.</p></section>
     <section class="grid" aria-label="Partner account summary">
         <article class="card profile"><p class="card-label">Partner profile</p><strong><?= $esc($partner ? $partner->name : 'Partner profile is being prepared'); ?></strong><p><?= $esc($partner ? trim(($partner->general_type ?? '') . ($partner->specific_type ? ' · ' . $partner->specific_type : '')) : 'Your registration was received successfully.'); ?></p></article>
@@ -47,8 +55,9 @@ $name = trim(implode(' ', array_filter(array($this->session->userdata('fName'), 
         <div class="resource-grid">
             <article class="resource-card"><div class="resource-icon">MOA</div><h3>Memorandum of Agreement</h3><p>Set out the purpose, expected support, responsibilities, implementation period, and signatures for a formal partnership.</p><a class="resource-link" href="<?= site_url('Page/partner_template/moa'); ?>">Download MOA template ↓</a></article>
             <article class="resource-card"><div class="resource-icon">DD</div><h3>Deed of Donation</h3><p>Document the donated items or support, complete specifications, estimated value, and the donor and donee details.</p><a class="resource-link" href="<?= site_url('Page/partner_template/deed_of_donation'); ?>">Download Deed of Donation ↓</a></article>
-            <article class="resource-card"><div class="resource-icon">DA</div><h3>Deed of Acceptance</h3><p>Record the school’s formal acceptance, the donated items, and its commitment to proper use and accountability.</p><a class="resource-link" href="<?= site_url('Page/partner_template/deed_of_acceptance'); ?>">Download Deed of Acceptance ↓</a></article>
+            <article class="resource-card"><div class="resource-icon">DA</div><h3>Deed of Acceptance</h3><p>Record the school's formal acceptance, the donated items, and its commitment to proper use and accountability.</p><a class="resource-link" href="<?= site_url('Page/partner_template/deed_of_acceptance'); ?>">Download Deed of Acceptance ↓</a></article>
             <article class="resource-card"><div class="resource-icon">✓</div><h3>Requirements checklist</h3><p>Use this checklist to prepare the standard coordination, documentation, donation, and acceptance requirements.</p><a class="resource-link" href="<?= site_url('Page/partner_template/requirements_checklist'); ?>">Download requirements checklist ↓</a></article>
+            <article class="resource-card"><div class="resource-icon">★</div><h3>Satisfaction Survey</h3><p>Share your feedback on your partnership experience with SDO Davao Oriental to help us improve.</p><a class="resource-link" href="<?= site_url('Page/satisfaction_survey'); ?>">Take survey →</a></article>
         </div>
         <div class="template-note">Templates are working drafts, not final legal instruments. Coordinate with the school and the SDO Davao Oriental Social Mobilization and Networking team before execution.</div>
     </section>

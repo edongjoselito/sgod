@@ -145,8 +145,8 @@
   .brig-stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    padding: 18px;
+    gap: 12px;
+    padding: 12px;
     background: #fff;
     border-left: 1px solid var(--c-border);
     border-right: 1px solid var(--c-border);
@@ -156,30 +156,30 @@
 
   .brig-stat-card {
     background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-    padding: 22px 22px;
+    padding: 16px 16px;
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 6px;
     border: 1px solid var(--c-border);
-    border-radius: 18px;
+    border-radius: 14px;
     box-shadow: var(--shadow-sm);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
   }
 
   .brig-stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.10);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.08);
   }
 
   .brig-stat-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
-    margin-bottom: 4px;
+    font-size: 15px;
+    margin-bottom: 3px;
     font-weight: 700;
   }
 
@@ -208,7 +208,7 @@
   .brig-stat-card {
     position: relative;
     overflow: hidden;
-    min-height: 158px;
+    min-height: 132px;
     justify-content: center;
   }
 
@@ -216,7 +216,7 @@
     content: "";
     position: absolute;
     inset: 0 auto 0 0;
-    width: 5px;
+    width: 4px;
     background: var(--c-primary);
   }
 

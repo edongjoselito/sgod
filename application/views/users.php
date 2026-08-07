@@ -840,6 +840,7 @@ $metrics = array(
                                                             $positionDisplay = $positionName !== '' ? $positionName : 'Unassigned';
                                                             $statusClass = $accountStatus === 'Active' ? 'status-active' : 'status-inactive';
                                                             $partnerReadOnly = $this->session->userdata('section') === 'Social Mobilization and Networking' && $section === 'Partner';
+                                                            $partnerActivationAllowed = $partnerReadOnly;
                                                             $toggleStatus = $accountStatus === 'Active' ? 'Inactive' : 'Active';
                                                             $toggleLabel = $accountStatus === 'Active' ? 'Deactivate user' : 'Activate user';
                                                             $toggleUrl = base_url() . 'Page/deactivate_user?username=' . rawurlencode($username) . '&status=' . rawurlencode($toggleStatus);
@@ -878,7 +879,9 @@ $metrics = array(
                                                                     </span>
                                                                 </td>
                                                                 <td class="text-center">
-                                                                    <?php if ($partnerReadOnly) : ?>
+                                                                    <?php if ($partnerActivationAllowed) : ?>
+                                                                        <a href="<?= htmlspecialchars($toggleUrl, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-sm <?= $accountStatus === 'Active' ? 'btn-warning' : 'btn-success'; ?>" onclick="return confirm('Are you sure you want to <?= strtolower($toggleLabel); ?> for <?= htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>?');"><?= htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?></a>
+                                                                    <?php elseif ($partnerReadOnly) : ?>
                                                                         <span class="text-muted small">Partner account<br>view only</span>
                                                                     <?php else : ?>
                                                                     <div class="manage-combo">

@@ -483,11 +483,12 @@ class BrigadaModel extends CI_Model
 
       public function contribution_report()
     {
+        $description = $this->input->post('project_name') ?: $this->input->post('spicific_contribution');
         $data = array(
             'c_date' => $this->input->post('c_date'), 
             'partners_id' => $this->input->post('partners_id'), 
             'contribution_id' => $this->input->post('contribution_id'), 
-            'spicific_contribution' => $this->input->post('spicific_contribution'), 
+            'spicific_contribution' => $description, 
             'unit_of_contribution' => $this->input->post('unit_of_contribution'), 
             'quantity_of_conftribution' => $this->input->post('quantity_of_conftribution'), 
             'amount' => $this->input->post('amount'), 
@@ -502,8 +503,8 @@ class BrigadaModel extends CI_Model
             'initiated_by' => $this->input->post('initiated_by'), 
             'remarks' => $this->input->post('remarks'), 
             'sy' => $this->input->post('sy'),
-            'school_id' => $this->session->username
-            
+            'tax_incentive_applicable' => $this->input->post('tax_incentive_applicable') ? 1 : 0,
+            'school_id' => trim((string) $this->input->post('school_id')) ?: $this->session->username
         );
 
         return $this->db->insert('brigada_contribution_report', $data);
@@ -530,11 +531,124 @@ class BrigadaModel extends CI_Model
             'initiated_by' => $this->input->post('initiated_by'), 
             'remarks' => $this->input->post('remarks'), 
             'sy' => $this->input->post('sy'),
-            
+            'tax_incentive_applicable' => $this->input->post('tax_incentive_applicable') ? 1 : 0,
+            'school_id' => trim((string) $this->input->post('school_id')) ?: $this->session->username,
         );
 
         $this->db->where('id', $this->input->post('id'));
         return $this->db->update('brigada_contribution_report', $data);
+    }
+
+    public function get_contribution_report_by_id($id)
+    {
+        return $this->db->get_where('brigada_contribution_report', ['id' => (int) $id])->row();
+    }
+
+    public function get_contribution_breakdown($reportId)
+    {
+        if (!$this->db->table_exists('brigada_contribution_breakdown')) {
+            return [];
+        }
+
+        $this->db->where('report_id', (int) $reportId);
+        $this->db->order_by('id', 'ASC');
+        return $this->db->get('brigada_contribution_breakdown')->result();
+    }
+
+    public function insert_contribution_breakdown()
+    {
+        if (!$this->db->table_exists('brigada_contribution_breakdown')) {
+            $this->db->query('CREATE TABLE IF NOT EXISTS brigada_contribution_breakdown (
+                id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                report_id INT UNSIGNED NOT NULL,
+                item_description VARCHAR(255) NOT NULL,
+                quantity DECIMAL(10,2) DEFAULT NULL,
+                unit VARCHAR(45) DEFAULT NULL,
+                unit_price DECIMAL(12,2) DEFAULT NULL,
+                amount DECIMAL(12,2) DEFAULT NULL,
+                remarks TEXT DEFAULT NULL,
+                PRIMARY KEY (id),
+                KEY idx_report_id (report_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+        }
+
+        $quantity = (float) $this->input->post('breakdown_quantity');
+        $unitPrice = (float) $this->input->post('breakdown_unit_price');
+        $totalAmount = null;
+        if ($quantity > 0 && $unitPrice >= 0) {
+            $totalAmount = $quantity * $unitPrice;
+        }
+
+        $data = array(
+            'report_id' => $this->input->post('report_id'),
+            'item_description' => $this->input->post('item_description'),
+            'quantity' => $this->input->post('breakdown_quantity'),
+            'unit' => $this->input->post('breakdown_unit'),
+            'unit_price' => $this->input->post('breakdown_unit_price'),
+            'amount' => $totalAmount,
+            'remarks' => $this->input->post('breakdown_remarks'),
+        );
+
+        return $this->db->insert('brigada_contribution_breakdown', $data);
+    }
+
+    public function get_contribution_breakdown_item($breakdownId)
+    {
+        return $this->db->get_where('brigada_contribution_breakdown', ['id' => (int) $breakdownId])->row();
+    }
+
+    public function update_contribution_breakdown($breakdownId)
+    {
+        $quantity = (float) $this->input->post('breakdown_quantity');
+        $unitPrice = (float) $this->input->post('breakdown_unit_price');
+        $totalAmount = null;
+        if ($quantity > 0 && $unitPrice >= 0) {
+            $totalAmount = $quantity * $unitPrice;
+        }
+
+        $data = array(
+            'item_description' => $this->input->post('item_description'),
+            'quantity' => $this->input->post('breakdown_quantity'),
+            'unit' => $this->input->post('breakdown_unit'),
+            'unit_price' => $this->input->post('breakdown_unit_price'),
+            'amount' => $totalAmount,
+            'remarks' => $this->input->post('breakdown_remarks'),
+        );
+
+        $this->db->where('id', (int) $breakdownId);
+        return $this->db->update('brigada_contribution_breakdown', $data);
+    }
+
+    public function get_tax_incentive_requirements($donationId)
+    {
+        if (!$this->db->table_exists('brigada_tax_incentive_requirements')) {
+            return [];
+        }
+        return $this->db->where('donation_id', (int) $donationId)->order_by('id', 'ASC')->get('brigada_tax_incentive_requirements')->result();
+    }
+
+    public function insert_tax_incentive_requirement()
+    {
+        if (!$this->db->table_exists('brigada_tax_incentive_requirements')) {
+            $this->db->query('CREATE TABLE IF NOT EXISTS brigada_tax_incentive_requirements (
+                id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                donation_id INT UNSIGNED NOT NULL,
+                requirement VARCHAR(255) NOT NULL,
+                status VARCHAR(45) NOT NULL DEFAULT "Pending",
+                remarks TEXT DEFAULT NULL,
+                PRIMARY KEY (id),
+                KEY idx_donation_id (donation_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+        }
+
+        $data = array(
+            'donation_id' => $this->input->post('donation_id'),
+            'requirement' => $this->input->post('requirement'),
+            'status' => $this->input->post('status'),
+            'remarks' => $this->input->post('remarks'),
+        );
+
+        return $this->db->insert('brigada_tax_incentive_requirements', $data);
     }
 
     public function daily_contribution()

@@ -31,14 +31,19 @@ $esc = function ($value) {
     .hero-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; }
     .hero-add-btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:13px 20px; margin:0!important; border:0; border-radius:16px; color:var(--memo-navy); background:linear-gradient(135deg,#fff 0%,#eef7ff 100%); font-weight:700; cursor:pointer; transition:transform .25s ease,box-shadow .25s ease; }
     .hero-add-btn:hover { color:var(--memo-navy); transform:translateY(-2px); box-shadow:0 14px 32px rgba(17,24,39,.12); text-decoration:none; }
-    .partners-card { margin-top:24px; border:0; border-radius:22px; box-shadow:var(--memo-shadow); overflow:hidden; }
+    .partners-card { margin-top:24px; border:0; border-radius:22px; box-shadow:var(--memo-shadow); overflow:visible; }
     .partners-card .card-body { padding:26px; }
+    .partners-card .table { overflow:visible; }
     .partner-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-top:24px; }.partner-summary-card { padding:20px; border:1px solid #e8ecf5; border-radius:16px; background:#fff; box-shadow:0 10px 24px rgba(15,23,42,.05); cursor:pointer; transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease; }.partner-summary-card:hover,.partner-summary-card:focus,.partner-summary-card.is-active { border-color:var(--memo-blue); box-shadow:0 14px 28px rgba(60,64,198,.14); outline:0; transform:translateY(-2px); }.partner-summary-label { display:block; color:#68708a; font-size:.76rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }.partner-summary-count { display:block; margin-top:8px; color:var(--memo-navy); font-size:2rem; font-weight:800; line-height:1; }.partner-summary-caption { display:block; margin-top:7px; color:#8a92aa; font-size:.82rem; }
     .partners-card .table thead th { border-top:0; border-bottom:1px solid #e8ecf5; color:#68708a; font-size:.72rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; }
     .partners-card .table td { border-color:#eef1f7; color:#343958; vertical-align:middle; }
     .partner-number { color:#8a92aa; font-weight:700; width:54px; }
     .partner-type { display:inline-flex; padding:5px 10px; border-radius:999px; background:rgba(60,64,198,.09); color:var(--memo-blue); font-size:.76rem; font-weight:700; }
-    .action-btn { border-radius:10px; font-weight:700; }.partners-card .dropdown,.partners-card .dropup { position:relative; z-index:2; }.partners-card .dropdown.show,.partners-card .dropup.show { z-index:1055; }.partner-actions-menu { z-index:1060; min-width:180px; border:0; border-radius:12px; box-shadow:0 12px 28px rgba(15,23,42,.16); }.partner-actions-menu .dropdown-item { padding:9px 15px; font-size:.84rem; cursor:pointer; }
+    .action-btn { border-radius:10px; font-weight:700; }
+    .partners-card .dropdown,.partners-card .dropup { position:relative; z-index:2; }
+    .partners-card .dropdown.show,.partners-card .dropup.show { z-index:9999; }
+    .partner-actions-menu { position:absolute; z-index:10000; min-width:180px; border:0; border-radius:12px; box-shadow:0 12px 28px rgba(15,23,42,.16); }
+    .partner-actions-menu .dropdown-item { padding:9px 15px; font-size:.84rem; cursor:pointer; }
     .partner-add-toggle { position:fixed; width:1px; height:1px; opacity:0; pointer-events:none; }
     .partner-add-modal { display:none; }
     .partner-add-toggle:checked + .partner-add-modal { position:fixed; inset:0; z-index:1060; display:flex; align-items:center; justify-content:center; padding:24px; overflow-y:auto; background:rgba(15,23,42,.62); }
@@ -100,7 +105,7 @@ $esc = function ($value) {
                                     <td><?= $esc($row->address ?? ''); ?></td>
                                     <td><?= $esc($row->contact_person ?? ''); ?></td>
                                     <td><?= $esc($row->contact ?? ''); ?></td>
-                                    <td><span class="partner-type"><?= $esc($row->general_type ?? ''); ?></span></td>
+                                    <td><span class="partner-type"><?= $esc(str_replace('_', ' ', $row->general_type ?? '')); ?></span></td>
                                     <td><?= $esc($row->specific_type ?? ''); ?></td>
                                     <?php if (!empty($can_manage_partners)): ?>
                                         <td class="text-right"><div class="dropup"><button class="btn btn-sm btn-light action-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Actions</button><div class="dropdown-menu dropdown-menu-right partner-actions-menu"><a href="<?= base_url(); ?>Brigada/partner_donation_details/<?= (int) $row->id; ?>" class="dropdown-item">View Donation Details</a><button type="button" class="dropdown-item js-edit-partner" data-toggle="modal" data-target="#partnerEditModal" data-id="<?= (int) $row->id; ?>" data-name="<?= $esc($row->name ?? ''); ?>" data-address="<?= $esc($row->address ?? ''); ?>" data-contact-person="<?= $esc($row->contact_person ?? ''); ?>" data-contact="<?= $esc($row->contact ?? ''); ?>" data-general-type="<?= $esc($row->general_type ?? ''); ?>" data-specific-type="<?= $esc($row->specific_type ?? ''); ?>">Edit Partner</button><a href="<?= base_url(); ?>Brigada/partners_delete/<?= (int) $row->id; ?>" class="dropdown-item text-danger" onclick="return confirm('Delete this partner?');">Delete Partner</a></div></div></td>

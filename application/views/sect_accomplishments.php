@@ -1014,6 +1014,10 @@ if (!function_exists('sect_accom_resource_markup')) {
                                                 </td>
                                                 <td style="text-align:center">
                                                     <div class="manage-actions">
+                                                        <a href="<?= base_url(); ?>Page/accomplishment_report/<?= (int) $row->id; ?>" target="_blank" class="manage-button manage-button--report">
+                                                            <i class="mdi mdi-printer"></i>
+                                                            Print
+                                                        </a>
                                                         <button type="button" class="manage-button manage-button--attach js-open-attachment-modal" data-acc-id="<?= (int) $row->id; ?>" data-activity="<?= sect_accom_escape($row->activity); ?>" data-attachments="<?= $attachmentPayloadJson; ?>">
                                                             <i class="mdi mdi-paperclip"></i>
                                                             <?= empty($reportRecords) ? 'Add Attachment' : 'Add More' ?>

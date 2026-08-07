@@ -145,6 +145,11 @@ class Login extends CI_Controller{
     }
     $hasPartnerAccountColumn = $this->db->field_exists('account_username', 'brigada_partners');
 
+    if(!$this->db->field_exists('activation_token', 'one_sgod_users')){
+      $this->db->query("ALTER TABLE one_sgod_users ADD COLUMN activation_token VARCHAR(255) NULL DEFAULT NULL");
+    }
+    $activationToken = bin2hex(random_bytes(16));
+
     $existingLogin = $this->db->where('username', $email)->get('one_sgod_users', 1)->num_rows() > 0;
     $existingUser = $this->db->where('username', $email)->get('users', 1)->num_rows() > 0;
     if($existingLogin || $existingUser){
@@ -163,7 +168,8 @@ class Login extends CI_Controller{
       'lName' => $lastName,
       'avatar' => 'avatar.png',
       'email' => $email,
-      'acctStat' => 'Active',
+      'acctStat' => 'Pending',
+      'activation_token' => $activationToken,
       'section' => 'Partner',
       'secGroup' => 'Partner'
     ));
@@ -212,7 +218,29 @@ class Login extends CI_Controller{
     }
 
     $this->db->trans_commit();
-    $this->session->set_flashdata('partner_signup_success', 'Your partner account has been created. You can sign in now.');
+
+    $confirmationUrl = site_url('Login/confirm_partner?token=' . rawurlencode($activationToken));
+    $mail_message = '<p>Dear ' . htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8') . ',</p>';
+    $mail_message .= '<p>Thank you for registering as a Brigada Eskwela partner. Please confirm your email address by clicking the link below:</p>';
+    $mail_message .= '<p><a href="' . $confirmationUrl . '">Confirm my account</a></p>';
+    $mail_message .= '<p>If you did not create this account, please ignore this message.</p>';
+    $mail_message .= '<p>Thank you,<br>SDO Davao Oriental Social Mobilization and Networking</p>';
+
+    $this->load->config('email');
+    $this->load->library('email');
+    $this->email->set_mailtype('html')
+      ->from('no-reply@depeddavor.com', 'DepEd SDO Davao Oriental')
+      ->to($email)
+      ->subject('Confirm your Brigada partner account')
+      ->message($mail_message);
+    $emailSent = $this->email->send();
+
+    $successMessage = 'Your partner account has been created. Please check your email and confirm your account before logging in.';
+    if(!$emailSent){
+      $successMessage .= ' We could not send the confirmation email. Contact Social Mobilization and Networking if you need help activating your account.';
+    }
+
+    $this->session->set_flashdata('partner_signup_success', $successMessage);
     redirect('Login');
   }
 
@@ -328,6 +356,15 @@ function registration(){
         $email = $data['email'];
         $section = $data['section'];
         $secGroup = $data['secGroup'];
+        $accountStatus = isset($data['acctStat']) ? trim((string) $data['acctStat']) : 'Active';
+        if(strtolower($accountStatus) !== 'active'){
+            $message = strtolower($accountStatus) === 'pending'
+                ? 'Your partner account has not been confirmed yet. Please check your email or contact Social Mobilization and Networking for manual approval.'
+                : 'Your account is not active. Please contact your administrator.';
+            $this->session->set_flashdata('msg', $message);
+            redirect('Login/');
+            return;
+        }
         $user_data = array(
             'username'  => $username,
 			'fName'  => $fName,

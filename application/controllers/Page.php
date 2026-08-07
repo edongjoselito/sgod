@@ -4,11 +4,12 @@ class Page extends CI_Controller{
     parent::__construct();
     $this->load->database();
     $this->load->helper('url');
-	$this->load->helper('url', 'form');	
+	$this->load->helper('url', 'form');
 	$this->load->library('form_validation');
+	$this->load->dbforge();
     $this->load->model('SGODModel');
     $this->load->model('Ipcrf_model');
-	
+
     if($this->session->userdata('logged_in') !== TRUE){
       redirect('login');
     }
@@ -954,6 +955,125 @@ class Page extends CI_Controller{
       'partner' => $partner,
       'contributionCount' => $contributionCount
     ));
+  }
+
+  public function satisfaction_survey(){
+    if($this->session->userdata('section') !== 'Partner'){
+      show_error('Access Denied', 403);
+      return;
+    }
+
+    $username = $this->session->userdata('username');
+    $partner = NULL;
+    if($this->db->table_exists('brigada_partners')){
+      if($this->db->field_exists('account_username', 'brigada_partners')){
+        $partner = $this->db->where('account_username', $username)->get('brigada_partners', 1)->row();
+      }
+      if(!$partner){
+        $partner = $this->db->like('contact', $username)->get('brigada_partners', 1)->row();
+      }
+    }
+
+    if($this->input->post()){
+      $this->form_validation->set_rules('responsiveness', 'Responsiveness', 'required|integer|greater_than[0]|less_than[6]');
+      $this->form_validation->set_rules('communication', 'Communication', 'required|integer|greater_than[0]|less_than[6]');
+      $this->form_validation->set_rules('ease_of_coordination', 'Ease of coordination', 'required|integer|greater_than[0]|less_than[6]');
+      $this->form_validation->set_rules('transparency', 'Transparency', 'required|integer|greater_than[0]|less_than[6]');
+      $this->form_validation->set_rules('reporting_quality', 'Reporting quality', 'required|integer|greater_than[0]|less_than[6]');
+      $this->form_validation->set_rules('future_willingness', 'Future willingness to partner', 'required|integer|greater_than[0]|less_than[6]');
+
+      if($this->form_validation->run() == TRUE){
+        $survey_data = array(
+          'partner_id' => $partner ? $partner->id : NULL,
+          'responsiveness' => $this->input->post('responsiveness'),
+          'communication' => $this->input->post('communication'),
+          'ease_of_coordination' => $this->input->post('ease_of_coordination'),
+          'transparency' => $this->input->post('transparency'),
+          'reporting_quality' => $this->input->post('reporting_quality'),
+          'future_willingness' => $this->input->post('future_willingness'),
+          'comments' => $this->input->post('comments'),
+          'submitted_at' => date('Y-m-d H:i:s')
+        );
+
+        if(!$this->db->table_exists('partner_satisfaction_surveys')){
+          $this->dbforge->add_field(array(
+            'id' => array('type' => 'INT', 'constraint' => 11, 'unsigned' => TRUE, 'auto_increment' => TRUE),
+            'partner_id' => array('type' => 'INT', 'constraint' => 11, 'unsigned' => TRUE, 'null' => TRUE),
+            'responsiveness' => array('type' => 'INT', 'constraint' => 1),
+            'communication' => array('type' => 'INT', 'constraint' => 1),
+            'ease_of_coordination' => array('type' => 'INT', 'constraint' => 1),
+            'transparency' => array('type' => 'INT', 'constraint' => 1),
+            'reporting_quality' => array('type' => 'INT', 'constraint' => 1),
+            'future_willingness' => array('type' => 'INT', 'constraint' => 1),
+            'comments' => array('type' => 'TEXT', 'null' => TRUE),
+            'submitted_at' => array('type' => 'DATETIME')
+          ));
+          $this->dbforge->add_key('id', TRUE);
+          $this->dbforge->create_table('partner_satisfaction_surveys', TRUE);
+        }
+
+        $this->db->insert('partner_satisfaction_surveys', $survey_data);
+        $this->session->set_flashdata('success', 'Thank you for your feedback! Your satisfaction survey has been submitted.');
+        redirect('Page/partner_dashboard');
+      }
+    }
+
+    $this->load->view('satisfaction_survey', array('partner' => $partner));
+  }
+
+  public function satisfaction_survey_results(){
+    if($this->session->userdata('section') !== 'Social Mobilization and Networking'){
+      show_error('Access Denied', 403);
+      return;
+    }
+
+    $surveys = array();
+    $averages = array();
+    $descriptions = array();
+    $total_surveys = 0;
+
+    if($this->db->table_exists('partner_satisfaction_surveys')){
+      $surveys = $this->db
+        ->select('s.*, p.name as partner_name, p.contact_person')
+        ->from('partner_satisfaction_surveys s')
+        ->join('brigada_partners p', 'p.id = s.partner_id', 'left')
+        ->order_by('s.submitted_at', 'DESC')
+        ->get()
+        ->result();
+
+      $total_surveys = count($surveys);
+
+      if($total_surveys > 0){
+        $averages = array(
+          'responsiveness' => number_format(array_sum(array_column($surveys, 'responsiveness')) / $total_surveys, 2),
+          'communication' => number_format(array_sum(array_column($surveys, 'communication')) / $total_surveys, 2),
+          'ease_of_coordination' => number_format(array_sum(array_column($surveys, 'ease_of_coordination')) / $total_surveys, 2),
+          'transparency' => number_format(array_sum(array_column($surveys, 'transparency')) / $total_surveys, 2),
+          'reporting_quality' => number_format(array_sum(array_column($surveys, 'reporting_quality')) / $total_surveys, 2),
+          'future_willingness' => number_format(array_sum(array_column($surveys, 'future_willingness')) / $total_surveys, 2),
+        );
+
+        foreach($averages as $key => $value){
+          $descriptions[$key] = $this->getRatingDescription($value);
+        }
+      }
+    }
+
+    $this->load->view('satisfaction_survey_results', array(
+      'surveys' => $surveys,
+      'averages' => $averages,
+      'descriptions' => $descriptions,
+      'total_surveys' => $total_surveys
+    ));
+  }
+
+  private function getRatingDescription($rating){
+    $rating = floatval($rating);
+    if($rating >= 4.5) return 'Excellent';
+    if($rating >= 3.5) return 'Very Good';
+    if($rating >= 2.5) return 'Good';
+    if($rating >= 1.5) return 'Fair';
+    return 'Poor';
   }
 
   public function partner_template($type = ''){
@@ -2101,6 +2221,15 @@ public function memo_delete(){
 		$this->ensure_accomplishment_scope_column();
 		$this->SGODModel->copy_row($param);
 		redirect('Page/viewSecAccomplishments');
+	}
+
+	function accomplishment_report($id){
+		$this->ensure_accomplishment_scope_column();
+		$id = (int) $id;
+		$data['title'] = 'Accomplishment Report';
+		$data['record'] = $this->SGODModel->one_cond_row('one_sgod_accomplishments', 'id', $id);
+		$data['reportGroups'] = $this->SGODModel->get_accomplishment_report_groups(array($id));
+		$this->load->view('accomplishment_report', $data);
 	}
 
 	function aip(){
@@ -4457,12 +4586,19 @@ public function deactivate_user(){
 	$username = $this->input->get('username');
 	$status = $this->input->get('status');
 
+	$user = $this->SGODModel->get_single_by_id('username', 'one_sgod_users', $username);
+	if(!$user){
+		$this->session->set_flashdata('danger', 'User account not found.');
+		redirect($this->get_users_redirect_route());
+	}
+
 	if($this->session->userdata('section')==='Super Admin' && !$this->is_super_admin_managed_account($username)){
 		$this->session->set_flashdata('danger', 'Super Admin can only manage CID, SGOD, and OSDS admin accounts.');
 		redirect($this->get_users_redirect_route());
 	}
 
-	if($this->session->userdata('section')!=='Super Admin' && !$this->can_manage_user($username)){
+	$allowedBySmnPartner = $this->session->userdata('section') === 'Social Mobilization and Networking' && $user->section === 'Partner';
+	if($this->session->userdata('section')!=='Super Admin' && !$allowedBySmnPartner && !$this->can_manage_user($username)){
 		$this->session->set_flashdata('danger', 'You can only manage users under your department.');
 		redirect($this->get_users_redirect_route());
 	}

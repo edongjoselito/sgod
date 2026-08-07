@@ -17,6 +17,53 @@ class Brigada extends CI_Controller
             $fy = (int) $this->session->userdata('cur_fy');
             $this->session->set_userdata('cur_sy', $fy . '-' . ($fy + 1));
         }
+
+        $this->ensure_brigada_contribution_breakdown_table();
+        $this->ensure_brigada_contribution_report_tax_fields();
+        $this->ensure_brigada_tax_incentive_requirements_table();
+    }
+
+    private function ensure_brigada_contribution_breakdown_table()
+    {
+        $this->db->query('CREATE TABLE IF NOT EXISTS brigada_contribution_breakdown (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            report_id INT UNSIGNED NOT NULL,
+            item_description VARCHAR(255) NOT NULL,
+            quantity DECIMAL(10,2) DEFAULT NULL,
+            unit VARCHAR(45) DEFAULT NULL,
+            unit_price DECIMAL(12,2) DEFAULT NULL,
+            amount DECIMAL(12,2) DEFAULT NULL,
+            remarks TEXT DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY idx_report_id (report_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+
+        if ($this->db->table_exists('brigada_contribution_breakdown') && !$this->db->field_exists('unit_price', 'brigada_contribution_breakdown')) {
+            $this->db->query('ALTER TABLE brigada_contribution_breakdown ADD COLUMN unit_price DECIMAL(12,2) DEFAULT NULL AFTER unit');
+        }
+    }
+
+    private function ensure_brigada_contribution_report_tax_fields()
+    {
+        if (!$this->db->table_exists('brigada_contribution_report')) {
+            return;
+        }
+        if (!$this->db->field_exists('tax_incentive_applicable', 'brigada_contribution_report')) {
+            $this->db->query('ALTER TABLE brigada_contribution_report ADD COLUMN tax_incentive_applicable TINYINT(1) NOT NULL DEFAULT 0 AFTER status_agreement');
+        }
+    }
+
+    private function ensure_brigada_tax_incentive_requirements_table()
+    {
+        $this->db->query('CREATE TABLE IF NOT EXISTS brigada_tax_incentive_requirements (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            donation_id INT UNSIGNED NOT NULL,
+            requirement VARCHAR(255) NOT NULL,
+            status VARCHAR(45) NOT NULL DEFAULT "Pending",
+            remarks TEXT DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY idx_donation_id (donation_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
     }
 
     public function index()
@@ -861,8 +908,259 @@ class Brigada extends CI_Controller
         }
         $data['donations'] = $this->db->where('r.partners_id', (int) $partner->id)->order_by('r.c_date', 'DESC')->get()->result();
         $data['partner'] = $partner;
+        $data['schools'] = $this->Common->no_cond('schools');
+        $data['contributionTypes'] = $this->db->table_exists('brigada_contribution_type') ? $this->Common->no_cond('brigada_contribution_type') : [];
+        $data['currentSy'] = $this->session->userdata('cur_sy') ?? '';
         $data['title'] = 'Partner Donation Details';
         $this->load->view('pages/brigada_partner_donation_details', $data);
+    }
+
+    public function partner_donation_save()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot add partner donations.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $partnerId = (int) $this->input->post('partners_id');
+        $partner = $this->db->where('id', $partnerId)->get('brigada_partners', 1)->row();
+        if (!$partner) {
+            $this->session->set_flashdata('danger', 'Partner record not found.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $this->BrigadaModel->contribution_report();
+        $this->session->set_flashdata('success', 'Donation record added successfully.');
+        redirect(base_url() . 'Brigada/partner_donation_details/' . $partnerId);
+    }
+
+    public function partner_donation_delete($donationId = 0, $partnerId = 0)
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot delete partner donations.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $donation = $this->BrigadaModel->get_contribution_report_by_id((int) $donationId);
+        if (!$donation) {
+            $this->session->set_flashdata('danger', 'Donation record not found.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $this->db->where('id', (int) $donationId);
+        $this->db->delete('brigada_contribution_report');
+        $this->session->set_flashdata('success', 'Donation deleted successfully.');
+        redirect(base_url() . 'Brigada/partner_donation_details/' . ((int) $partnerId ?: (int) $donation->partners_id));
+    }
+
+    public function partner_donation_view($donationId = 0)
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot view donation details.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $this->db->select('r.*');
+        $this->db->from('brigada_contribution_report r');
+        if ($this->db->table_exists('brigada_contribution_type')) {
+            $this->db->select("REPLACE(c.name, '_', ' ') AS contribution_type", FALSE);
+            $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
+        }
+        if ($this->db->table_exists('schools')) {
+            $this->db->select('s.schoolName, s.sitio, s.brgy, s.city, s.province');
+            $this->db->join('schools s', 's.schoolID = r.school_id', 'left');
+        }
+        $this->db->where('r.id', (int) $donationId);
+        $donation = $this->db->get()->row();
+
+        if (!$donation) {
+            $this->session->set_flashdata('danger', 'Donation record not found.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $partner = $this->db->where('id', (int) $donation->partners_id)->get('brigada_partners', 1)->row();
+        if (!$partner) {
+            $this->session->set_flashdata('danger', 'Partner record not found.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $data['donation'] = $donation;
+        $data['partner'] = $partner;
+        $data['breakdown'] = $this->BrigadaModel->get_contribution_breakdown((int) $donationId);
+        $data['title'] = 'Donation View';
+        $this->load->view('pages/brigada_partner_donation_view', $data);
+    }
+
+    public function tax_incentive_requirements($donationId = 0)
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot view tax incentive documentary requirements.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        if ((int) $donationId > 0) {
+            $donation = $this->BrigadaModel->get_contribution_report_by_id((int) $donationId);
+            if (!$donation || empty($donation->tax_incentive_applicable)) {
+                $this->session->set_flashdata('danger', 'Tax incentive donation record not found or not eligible.');
+                redirect(base_url() . 'Brigada/tax_incentive_requirements');
+                return;
+            }
+
+            $partner = $this->db->where('id', (int) $donation->partners_id)->get('brigada_partners', 1)->row();
+            if (!$partner) {
+                $this->session->set_flashdata('danger', 'Partner record not found.');
+                redirect(base_url() . 'Brigada/tax_incentive_requirements');
+                return;
+            }
+
+            $data['donation'] = $donation;
+            $data['partner'] = $partner;
+            $data['requirements'] = $this->BrigadaModel->get_tax_incentive_requirements((int) $donationId);
+            $data['title'] = 'Tax Incentive Documentary Requirements';
+            $this->load->view('pages/brigada_tax_incentive_requirements', $data);
+            return;
+        }
+
+        $this->db->select('r.*, p.name as partner_name');
+        $this->db->from('brigada_contribution_report r');
+        $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+        if ($this->db->table_exists('schools')) {
+            $this->db->select('s.schoolName, s.sitio, s.brgy, s.city, s.province');
+            $this->db->join('schools s', 's.schoolID = r.school_id', 'left');
+        }
+        $this->db->where('r.tax_incentive_applicable', 1);
+        $data['donations'] = $this->db->order_by('r.c_date', 'DESC')->get()->result();
+        $data['title'] = 'Tax Incentive Documentary Requirements';
+        $this->load->view('pages/brigada_tax_incentive_requirements', $data);
+    }
+
+    public function tax_incentive_requirements_save()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot update tax incentive documentary requirements.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $donationId = (int) $this->input->post('donation_id');
+        $donation = $this->BrigadaModel->get_contribution_report_by_id($donationId);
+        if (!$donation || empty($donation->tax_incentive_applicable)) {
+            $this->session->set_flashdata('danger', 'Donation record not found or not eligible for tax incentives.');
+            redirect(base_url() . 'Brigada/tax_incentive_requirements');
+            return;
+        }
+
+        $this->BrigadaModel->insert_tax_incentive_requirement();
+        $this->session->set_flashdata('success', 'Tax incentive requirement added successfully.');
+        redirect(base_url() . 'Brigada/tax_incentive_requirements/' . $donationId);
+    }
+
+    public function tax_incentive_requirements_delete($requirementId = 0, $donationId = 0)
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot delete tax incentive documentary requirements.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $this->Common->delete('brigada_tax_incentive_requirements', 'id', (int) $requirementId);
+        $this->session->set_flashdata('success', 'Tax incentive requirement deleted successfully.');
+        redirect(base_url() . 'Brigada/tax_incentive_requirements/' . (int) $donationId);
+    }
+
+    public function partner_donation_breakdown_save()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot add donation breakdown items.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $reportId = (int) $this->input->post('report_id');
+        $donation = $this->BrigadaModel->get_contribution_report_by_id($reportId);
+        if (!$donation) {
+            $this->session->set_flashdata('danger', 'Donation record not found.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $this->BrigadaModel->insert_contribution_breakdown();
+        $this->session->set_flashdata('success', 'Breakdown line item added successfully.');
+        redirect(base_url() . 'Brigada/partner_donation_view/' . $reportId);
+    }
+
+    public function partner_donation_breakdown_delete($breakdownId = 0, $reportId = 0)
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot delete breakdown items.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $this->db->where('id', (int) $breakdownId);
+        $this->db->delete('brigada_contribution_breakdown');
+        $this->session->set_flashdata('success', 'Breakdown line item deleted successfully.');
+        redirect(base_url() . 'Brigada/partner_donation_view/' . (int) $reportId);
+    }
+
+    public function partner_donation_breakdown_update()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot update breakdown items.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $breakdownId = (int) $this->input->post('breakdown_id');
+        $reportId = (int) $this->input->post('report_id');
+        $breakdown = $this->BrigadaModel->get_contribution_breakdown_item($breakdownId);
+        if (!$breakdown) {
+            $this->session->set_flashdata('danger', 'Breakdown item not found.');
+            redirect(base_url() . 'Brigada/partner_donation_view/' . $reportId);
+            return;
+        }
+
+        $this->BrigadaModel->update_contribution_breakdown($breakdownId);
+        $this->session->set_flashdata('success', 'Breakdown item updated successfully.');
+        redirect(base_url() . 'Brigada/partner_donation_view/' . $reportId);
+    }
+
+    public function partner_donation_update($donationId = 0)
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot edit partner donations.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $donation = $this->BrigadaModel->get_contribution_report_by_id((int) $donationId);
+        if (!$donation) {
+            $this->session->set_flashdata('danger', 'Donation record not found.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        if ($this->input->post()) {
+            $this->BrigadaModel->contribution_report_update();
+            $this->session->set_flashdata('success', 'Donation updated successfully.');
+            redirect(base_url() . 'Brigada/partner_donation_details/' . (int) $donation->partners_id);
+            return;
+        }
+
+        $data['donation'] = $donation;
+        $data['partner'] = $this->db->where('id', (int) $donation->partners_id)->get('brigada_partners', 1)->row();
+        $data['schools'] = $this->Common->no_cond('schools');
+        $data['contributionTypes'] = $this->db->table_exists('brigada_contribution_type') ? $this->Common->no_cond('brigada_contribution_type') : [];
+        $data['title'] = 'Update Donation';
+        $this->load->view('pages/brigada_partner_donation_edit', $data);
     }
 
     public function all_donation_details()
