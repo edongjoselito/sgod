@@ -621,34 +621,80 @@ class BrigadaModel extends CI_Model
 
     public function get_tax_incentive_requirements($donationId)
     {
-        if (!$this->db->table_exists('brigada_tax_incentive_requirements')) {
+        if (!$this->db->table_exists('brigada_requirements')) {
             return [];
         }
-        return $this->db->where('donation_id', (int) $donationId)->order_by('id', 'ASC')->get('brigada_tax_incentive_requirements')->result();
+        return $this->db->order_by('id', 'ASC')->get('brigada_requirements')->result();
     }
 
     public function insert_tax_incentive_requirement()
     {
-        if (!$this->db->table_exists('brigada_tax_incentive_requirements')) {
-            $this->db->query('CREATE TABLE IF NOT EXISTS brigada_tax_incentive_requirements (
+        if (!$this->db->table_exists('brigada_requirements')) {
+            $this->db->query('CREATE TABLE IF NOT EXISTS brigada_requirements (
                 id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-                donation_id INT UNSIGNED NOT NULL,
                 requirement VARCHAR(255) NOT NULL,
-                status VARCHAR(45) NOT NULL DEFAULT "Pending",
-                remarks TEXT DEFAULT NULL,
-                PRIMARY KEY (id),
-                KEY idx_donation_id (donation_id)
+                PRIMARY KEY (id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
         }
 
         $data = array(
-            'donation_id' => $this->input->post('donation_id'),
             'requirement' => $this->input->post('requirement'),
-            'status' => $this->input->post('status'),
-            'remarks' => $this->input->post('remarks'),
         );
 
-        return $this->db->insert('brigada_tax_incentive_requirements', $data);
+        return $this->db->insert('brigada_requirements', $data);
+    }
+
+    public function update_tax_incentive_requirement($requirementId, $donationId)
+    {
+        if (!$this->db->table_exists('brigada_requirements')) {
+            return false;
+        }
+
+        $data = array(
+            'requirement' => $this->input->post('requirement'),
+        );
+
+        $this->db->where('id', (int) $requirementId);
+        return $this->db->update('brigada_requirements', $data);
+    }
+
+    public function save_asp_tracking()
+    {
+        if (!$this->db->table_exists('brigada_asp_tracking')) {
+            return false;
+        }
+
+        $donationId = (int) $this->input->post('donation_id');
+        $requirementIds = $this->input->post('requirements') ?: array();
+        $remarks = $this->input->post('remarks') ?: array();
+        $completed = $this->input->post('completed') ?: array();
+
+        foreach ($requirementIds as $requirementId) {
+            $requirementId = (int) $requirementId;
+            $isCompleted = !empty($completed[$requirementId]) ? 1 : 0;
+            $remark = isset($remarks[$requirementId]) ? trim($remarks[$requirementId]) : '';
+
+            $existing = $this->db->where('donation_id', $donationId)
+                ->where('requirement_id', $requirementId)
+                ->get('brigada_asp_tracking', 1)
+                ->row();
+
+            $data = array(
+                'donation_id' => $donationId,
+                'requirement_id' => $requirementId,
+                'is_completed' => $isCompleted,
+                'remarks' => $remark,
+            );
+
+            if ($existing) {
+                $this->db->where('id', $existing->id);
+                $this->db->update('brigada_asp_tracking', $data);
+            } else {
+                $this->db->insert('brigada_asp_tracking', $data);
+            }
+        }
+
+        return true;
     }
 
     public function daily_contribution()

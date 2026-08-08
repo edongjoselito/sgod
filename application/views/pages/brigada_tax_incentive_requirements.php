@@ -22,8 +22,6 @@ $formatAmount = function($value) { return !empty($value) ? '₱' . number_format
         .card-panel .table th { border-top:0; color:#68708a; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
         .card-panel .table td { vertical-align:middle; }
         .empty { padding:42px; text-align:center; color:#6c757d; }
-        .detail-label { font-weight:600; color:#4b5663; }
-        .detail-value { color:#121928; }
     </style>
 </head>
 <body class="dashboard-root-theme">
@@ -34,121 +32,100 @@ $formatAmount = function($value) { return !empty($value) ? '₱' . number_format
         <main class="container-fluid dashboard-shell page-shell">
             <section class="page-hero">
                 <div>
-                    <a class="btn btn-sm btn-light" href="<?= base_url(); ?>Brigada/list_of_partners">← Back to Partners</a>
                     <h1>Tax Incentive Documentary Requirements</h1>
-                    <p>Manage documentary requirements for donations marked eligible for tax incentives.</p>
+                    <p>Manage documentary requirements for tax incentives.</p>
                 </div>
-                <?php if (!empty($donation)): ?>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a href="<?= base_url(); ?>Brigada/partner_donation_view/<?= (int) $donation->id; ?>" class="btn btn-outline-light">Donation Details</a>
-                        <a href="<?= base_url(); ?>Brigada/tax_incentive_requirements" class="btn btn-light">All Tax Incentive Donations</a>
-                    </div>
-                <?php endif; ?>
+                <button class="btn btn-light" type="button" data-toggle="modal" data-target="#requirementModal">
+                    <i class="mdi mdi-plus"></i> Add New
+                </button>
             </section>
 
-            <?php if (!empty($donation)): ?>
-                <section class="card card-panel p-4">
-                    <h5 class="mb-4">Donation summary</h5>
-                    <div class="row">
-                        <div class="col-md-4 mb-3"><div class="detail-label">Donation Date</div><div class="detail-value"><?= $esc($donation->c_date ?? '—'); ?></div></div>
-                        <div class="col-md-4 mb-3"><div class="detail-label">Partner</div><div class="detail-value"><?= $esc($partner->name ?? '—'); ?></div></div>
-                        <div class="col-md-4 mb-3"><div class="detail-label">Recipient School</div><div class="detail-value"><?= $esc($donation->schoolName ?? '—'); ?></div></div>
-                        <div class="col-md-4 mb-3"><div class="detail-label">Contribution</div><div class="detail-value"><?= $esc($donation->project_name ?? $donation->spicific_contribution ?? '—'); ?></div></div>
-                        <div class="col-md-4 mb-3"><div class="detail-label">Amount</div><div class="detail-value"><?= $formatAmount($donation->amount); ?></div></div>
-                        <div class="col-md-4 mb-3"><div class="detail-label">Tax Incentive Eligible</div><div class="detail-value"><?= !empty($donation->tax_incentive_applicable) ? 'Yes' : 'No'; ?></div></div>
-                    </div>
-                </section>
-
-                <section class="card card-panel p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h5 class="mb-0">Documentary requirements</h5>
-                        <button class="btn btn-sm btn-primary" type="button" data-toggle="collapse" data-target="#addRequirementPanel" aria-expanded="false" aria-controls="addRequirementPanel">Add Requirement</button>
-                    </div>
-
-                    <div class="collapse" id="addRequirementPanel">
-                        <div class="card card-body mb-4">
-                            <form method="post" action="<?= base_url(); ?>Brigada/tax_incentive_requirements_save">
-                                <input type="hidden" name="donation_id" value="<?= (int) $donation->id; ?>">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Requirement</label>
-                                        <input type="text" class="form-control" name="requirement" required>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Status</label>
-                                        <select class="form-control" name="status">
-                                            <option value="Pending">Pending</option>
-                                            <option value="Submitted">Submitted</option>
-                                            <option value="Completed">Completed</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Remarks</label>
-                                        <input type="text" class="form-control" name="remarks" placeholder="Optional note">
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <button type="submit" class="btn btn-primary">Save Requirement</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr><th>#</th><th>Requirement</th><th>Status</th><th>Remarks</th><th>Action</th></tr>
-                            </thead>
-                            <tbody>
-                                <?php if (!empty($requirements)): ?>
-                                    <?php foreach ($requirements as $index => $item): ?>
-                                        <tr>
-                                            <td><?= (int) $index + 1; ?></td>
-                                            <td><?= $esc($item->requirement ?? '—'); ?></td>
-                                            <td><?= $esc($item->status ?? 'Pending'); ?></td>
-                                            <td><?= $esc($item->remarks ?? '—'); ?></td>
-                                            <td><a href="<?= base_url(); ?>Brigada/tax_incentive_requirements_delete/<?= (int) $item->id; ?>/<?= (int) $donation->id; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this requirement?');">Delete</a></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr><td colspan="5" class="empty">No documentary requirements recorded yet.</td></tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-            <?php else: ?>
-                <section class="card card-panel p-4">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr><th>Date</th><th>Partner</th><th>School</th><th>Contribution</th><th>Amount</th><th>Action</th></tr>
-                            </thead>
-                            <tbody>
-                                <?php if (!empty($donations)): ?>
-                                    <?php foreach ($donations as $donationItem): ?>
-                                        <?php $school = trim((string) ($donationItem->schoolName ?? '')); ?>
-                                        <tr>
-                                            <td><?= $esc($donationItem->c_date ?? '—'); ?></td>
-                                            <td><?= $esc($donationItem->partner_name ?? '—'); ?></td>
-                                            <td><?= $esc($school !== '' ? $school : '—'); ?></td>
-                                            <td><?= $esc($donationItem->project_name ?? $donationItem->spicific_contribution ?? '—'); ?></td>
-                                            <td><?= $formatAmount($donationItem->amount); ?></td>
-                                            <td><a href="<?= base_url(); ?>Brigada/tax_incentive_requirements/<?= (int) $donationItem->id; ?>" class="btn btn-sm btn-outline-primary">View Requirements</a></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr><td colspan="6" class="empty">No tax incentive eligible donations found.</td></tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+            <?php if ($this->session->flashdata('success')): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <?= $esc($this->session->flashdata('success')); ?>
+                    <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                </div>
             <?php endif; ?>
+
+            <?php if ($this->session->flashdata('danger')): ?>
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <?= $esc($this->session->flashdata('danger')); ?>
+                    <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                </div>
+            <?php endif; ?>
+
+            <section class="card card-panel p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr><th>#</th><th>Requirement</th><th>Action</th></tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($requirements)): ?>
+                                <?php foreach ($requirements as $index => $item): ?>
+                                    <tr>
+                                        <td><?= (int) $index + 1; ?></td>
+                                        <td><?= $esc($item->requirement ?? '—'); ?></td>
+                                        <td class="d-flex gap-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary js-edit-requirement" data-id="<?= (int) $item->id; ?>" data-requirement="<?= $esc($item->requirement); ?>">Edit</button>
+                                            <a href="<?= base_url(); ?>Brigada/tax_incentive_requirements_delete/<?= (int) $item->id; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this requirement?');">Delete</a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr><td colspan="3" class="empty">No documentary requirements recorded yet.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </div><?php include(__DIR__ . '/../includes/footer.php'); ?></div>
 </div>
+
+<div class="modal fade" id="requirementModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><?= !empty($editingRequirement) ? 'Edit Requirement' : 'Add New Requirement'; ?></h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <form method="post" action="<?= base_url(); ?>Brigada/tax_incentive_requirements_save">
+                <div class="modal-body">
+                    <input type="hidden" name="requirement_id" value="<?= (int) ($editingRequirement->id ?? 0); ?>">
+                    <div class="form-group mb-3">
+                        <label>Requirement</label>
+                        <input type="text" class="form-control" name="requirement" required value="<?= $esc($editingRequirement->requirement ?? ''); ?>" placeholder="Enter requirement name">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><?= !empty($editingRequirement) ? 'Update' : 'Save'; ?></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
 <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('.js-edit-requirement').on('click', function() {
+        var id = $(this).data('id');
+        var requirement = $(this).data('requirement');
+        $('input[name="requirement_id"]').val(id);
+        $('input[name="requirement"]').val(requirement);
+        $('#requirementModal .modal-title').text('Edit Requirement');
+        $('#requirementModal').modal('show');
+    });
+
+    $('#requirementModal').on('hidden.bs.modal', function() {
+        $('input[name="requirement_id"]').val('0');
+        $('input[name="requirement"]').val('');
+        $('#requirementModal .modal-title').text('Add New Requirement');
+    });
+});
+</script>
 </body>
 </html>

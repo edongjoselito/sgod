@@ -1144,9 +1144,20 @@
                             <li><a href="<?= base_url(); ?>Brigada/spc_districts">School Preparedness</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/spc_admin_report">SPC Report</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/brigada_summary_v2">Summary Report</a></li>
+                            <li><a href="<?= base_url(); ?>Page/satisfaction_survey_results">Survey Results</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="javascript: void(0);" class="waves-effect">
+                            <i class="mdi mdi-school-outline"></i>
+                            <span> Adopt-A-School </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul class="nav-second-level" aria-expanded="false">
                             <li><a href="<?= base_url(); ?>Brigada/list_of_partners">Partners</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/tax_incentive_requirements">Tax Incentive Requirements</a></li>
-                            <li><a href="<?= base_url(); ?>Page/satisfaction_survey_results">Survey Results</a></li>
+                            <li><a href="<?= base_url(); ?>Brigada/asp_tracking">ASP Tracking</a></li>
                         </ul>
                     </li>
 

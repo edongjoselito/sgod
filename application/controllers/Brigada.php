@@ -1006,39 +1006,24 @@ class Brigada extends CI_Controller
             return;
         }
 
-        if ((int) $donationId > 0) {
-            $donation = $this->BrigadaModel->get_contribution_report_by_id((int) $donationId);
-            if (!$donation || empty($donation->tax_incentive_applicable)) {
-                $this->session->set_flashdata('danger', 'Tax incentive donation record not found or not eligible.');
-                redirect(base_url() . 'Brigada/tax_incentive_requirements');
-                return;
-            }
-
-            $partner = $this->db->where('id', (int) $donation->partners_id)->get('brigada_partners', 1)->row();
-            if (!$partner) {
-                $this->session->set_flashdata('danger', 'Partner record not found.');
-                redirect(base_url() . 'Brigada/tax_incentive_requirements');
-                return;
-            }
-
-            $data['donation'] = $donation;
-            $data['partner'] = $partner;
-            $data['requirements'] = $this->BrigadaModel->get_tax_incentive_requirements((int) $donationId);
-            $data['title'] = 'Tax Incentive Documentary Requirements';
-            $this->load->view('pages/brigada_tax_incentive_requirements', $data);
-            return;
-        }
-
-        $this->db->select('r.*, p.name as partner_name');
-        $this->db->from('brigada_contribution_report r');
-        $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
-        if ($this->db->table_exists('schools')) {
-            $this->db->select('s.schoolName, s.sitio, s.brgy, s.city, s.province');
-            $this->db->join('schools s', 's.schoolID = r.school_id', 'left');
-        }
-        $this->db->where('r.tax_incentive_applicable', 1);
-        $data['donations'] = $this->db->order_by('r.c_date', 'DESC')->get()->result();
         $data['title'] = 'Tax Incentive Documentary Requirements';
+
+        if ($this->db->table_exists('brigada_requirements')) {
+            $data['requirements'] = $this->db->order_by('id', 'DESC')->get('brigada_requirements')->result();
+        } else {
+            $data['requirements'] = array();
+        }
+
+        $editRequirementId = (int) $this->input->get('edit');
+        if ($editRequirementId > 0) {
+            $editingRequirement = $this->db->where('id', $editRequirementId)
+                ->get('brigada_requirements', 1)
+                ->row();
+            if ($editingRequirement) {
+                $data['editingRequirement'] = $editingRequirement;
+            }
+        }
+
         $this->load->view('pages/brigada_tax_incentive_requirements', $data);
     }
 
@@ -1050,17 +1035,19 @@ class Brigada extends CI_Controller
             return;
         }
 
-        $donationId = (int) $this->input->post('donation_id');
-        $donation = $this->BrigadaModel->get_contribution_report_by_id($donationId);
-        if (!$donation || empty($donation->tax_incentive_applicable)) {
-            $this->session->set_flashdata('danger', 'Donation record not found or not eligible for tax incentives.');
-            redirect(base_url() . 'Brigada/tax_incentive_requirements');
-            return;
+        $requirementId = (int) $this->input->post('requirement_id');
+        if ($requirementId > 0) {
+            if ($this->BrigadaModel->update_tax_incentive_requirement($requirementId, 0)) {
+                $this->session->set_flashdata('success', 'Tax incentive requirement updated successfully.');
+            } else {
+                $this->session->set_flashdata('danger', 'Unable to update the selected requirement.');
+            }
+        } else {
+            $this->BrigadaModel->insert_tax_incentive_requirement();
+            $this->session->set_flashdata('success', 'Tax incentive requirement added successfully.');
         }
 
-        $this->BrigadaModel->insert_tax_incentive_requirement();
-        $this->session->set_flashdata('success', 'Tax incentive requirement added successfully.');
-        redirect(base_url() . 'Brigada/tax_incentive_requirements/' . $donationId);
+        redirect(base_url() . 'Brigada/tax_incentive_requirements');
     }
 
     public function tax_incentive_requirements_delete($requirementId = 0, $donationId = 0)
@@ -1071,9 +1058,17 @@ class Brigada extends CI_Controller
             return;
         }
 
-        $this->Common->delete('brigada_tax_incentive_requirements', 'id', (int) $requirementId);
+        $requirementId = (int) $requirementId;
+        $requirement = $this->db->where('id', $requirementId)->get('brigada_requirements', 1)->row();
+        if (!$requirement) {
+            $this->session->set_flashdata('danger', 'Tax incentive requirement not found.');
+            redirect(base_url() . 'Brigada/tax_incentive_requirements');
+            return;
+        }
+
+        $this->db->where('id', $requirementId)->delete('brigada_requirements');
         $this->session->set_flashdata('success', 'Tax incentive requirement deleted successfully.');
-        redirect(base_url() . 'Brigada/tax_incentive_requirements/' . (int) $donationId);
+        redirect(base_url() . 'Brigada/tax_incentive_requirements');
     }
 
     public function partner_donation_breakdown_save()
@@ -1921,6 +1916,63 @@ public function contribution_dpds_export()
     $writer->save('php://output');
     exit;
 }
+
+    public function asp_tracking()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot view ASP tracking.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        if ($this->input->post('save_tracking')) {
+            $this->BrigadaModel->save_asp_tracking();
+            $this->session->set_flashdata('success', 'ASP tracking saved successfully.');
+            redirect(base_url() . 'Brigada/asp_tracking');
+            return;
+        }
+
+        $this->ensure_asp_tracking_table();
+
+        $this->db->select('r.id as donation_id, r.c_date, p.id as partner_id, p.name as partner_name, s.schoolName, r.project_name, r.spicific_contribution, r.amount');
+        $this->db->from('brigada_contribution_report r');
+        $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+        if ($this->db->table_exists('schools')) {
+            $this->db->join('schools s', 's.schoolID = r.school_id', 'left');
+        }
+        $this->db->where('r.tax_incentive_applicable', 1);
+        $data['partners'] = $this->db->order_by('p.name', 'ASC')->order_by('r.c_date', 'DESC')->get()->result();
+
+        $data['requirements'] = $this->db->table_exists('brigada_requirements')
+            ? $this->db->order_by('id', 'ASC')->get('brigada_requirements')->result()
+            : array();
+
+        $this->db->select('t.*, req.requirement as requirement_name');
+        $this->db->from('brigada_asp_tracking t');
+        $this->db->join('brigada_requirements req', 'req.id = t.requirement_id', 'left');
+        $data['tracking'] = $this->db->get()->result();
+
+        $data['title'] = 'ASP Tracking';
+        $this->load->view('pages/brigada_asp_tracking', $data);
+    }
+
+    private function ensure_asp_tracking_table()
+    {
+        if ($this->db->table_exists('brigada_asp_tracking')) {
+            return;
+        }
+
+        $this->db->query('CREATE TABLE IF NOT EXISTS brigada_asp_tracking (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            donation_id INT UNSIGNED NOT NULL,
+            requirement_id INT UNSIGNED NOT NULL,
+            is_completed TINYINT(1) NOT NULL DEFAULT 0,
+            remarks TEXT DEFAULT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY idx_donation_requirement (donation_id, requirement_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    }
 
 
 }
