@@ -32,16 +32,13 @@
   <title>e-Brigada</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- sql.js for Drift web database support -->
-  <script src="https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.js"></script>
-  <script>
-    // Tell sql.js where to find the WASM binary.
-    window.sqlJsOptions = {
-      locateFile: function(file) {
-        return 'https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/' + file;
-      }
-    };
-  </script>
+  <!-- sql.js for Drift web database support. Served from this directory
+       rather than a CDN: drift calls initSqlJs() with no options, so sql.js
+       resolves sql-wasm.wasm relative to the page. Pointing a locateFile at
+       a CDN has no effect — drift never passes it through — and the relative
+       request used to fall through to index.html, which is why the wasm
+       failed to compile ("expected magic word", found "<!DO"). -->
+  <script src="sql-wasm.js"></script>
 </head>
 <body>
   <!--

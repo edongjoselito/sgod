@@ -61,7 +61,7 @@ class Api_brigada extends CI_Controller {
 
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With');
+    header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With, X-Api-Token');
 
     if (strtoupper($_SERVER['REQUEST_METHOD']) === 'OPTIONS') {
       http_response_code(204);

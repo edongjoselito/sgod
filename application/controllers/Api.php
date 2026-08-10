@@ -28,7 +28,7 @@ class Api extends CI_Controller {
     // CORS — allow the Flutter web app (different port) to call the API.
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With');
+    header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With, X-Api-Token');
     header('Access-Control-Expose-Headers: Content-Type, Authorization');
     header('Access-Control-Max-Age: 86400');
 

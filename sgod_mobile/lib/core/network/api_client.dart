@@ -18,8 +18,13 @@ class ApiClient {
       : _http = httpClient ?? http.Client();
 
   /// The one and only backend. The server is not user-configurable — every
-  /// build talks to production.
-  static const String defaultBaseUrl = 'http://one.depedmis.com';
+  /// build talks to production, unless a developer overrides it at build time
+  /// with `--dart-define=BASE_URL=http://192.168.x.x/sgod` to hit a local
+  /// XAMPP instance.
+  static const String defaultBaseUrl = String.fromEnvironment(
+    'BASE_URL',
+    defaultValue: 'http://one.depedmis.com',
+  );
 
   static const Duration _requestTimeout = Duration(seconds: 15);
   static const Duration _uploadTimeout = Duration(seconds: 120);
