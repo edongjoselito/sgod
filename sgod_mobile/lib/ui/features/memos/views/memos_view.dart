@@ -7,6 +7,8 @@ import '../../../../data/models/memo_item.dart';
 import '../../../../data/repositories/memos_repository.dart';
 import '../../../core/di.dart';
 import '../view_models/memos_view_model.dart';
+import 'memo_detail_view.dart';
+import 'memo_edit_view.dart';
 
 /// iOS-style Memos page with list, table, and pagination.
 class MemosView extends StatefulWidget {
@@ -71,6 +73,21 @@ class _MemosViewState extends State<MemosView> {
                           size: 26, color: AppColors.label),
                     )
                   : null,
+              trailing: CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (_) => MemoEditView(
+                        onSaved: () => _vm.load(),
+                      ),
+                    ),
+                  );
+                },
+                child: const Icon(CupertinoIcons.add,
+                    size: 28, color: AppColors.primary),
+              ),
             ),
             CupertinoSliverRefreshControl(
               onRefresh: () => _vm.load(),
@@ -226,7 +243,22 @@ class _MemosViewState extends State<MemosView> {
           child: Column(
             children: [
               for (int i = 0; i < items.length; i++) ...[
-                _MemoRow(memo: items[i]),
+                _MemoRow(
+                  memo: items[i],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (_) => MemoDetailView(
+                          memo: items[i],
+                          onChanged: () {},
+                        ),
+                      ),
+                    ).then((_) {
+                    if (mounted) _vm.load();
+                  });
+                  },
+                ),
                 if (i < items.length - 1)
                   Container(height: 0.5, color: AppColors.separator),
               ],
@@ -343,13 +375,14 @@ class _MemosViewState extends State<MemosView> {
 
 // ── Compact memo row ───────────────────────────────────────────────────────
 class _MemoRow extends StatelessWidget {
-  const _MemoRow({required this.memo});
+  const _MemoRow({required this.memo, this.onTap});
   final MemoItem memo;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
-      onPressed: () {},
+      onPressed: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       minSize: 0,
       child: Row(

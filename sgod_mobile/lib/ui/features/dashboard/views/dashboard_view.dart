@@ -42,6 +42,12 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   @override
+  void dispose() {
+    _vm.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final accent = AppColors.forRole(widget.role.name);
     return ChangeNotifierProvider.value(

@@ -31,4 +31,20 @@ class WhereaboutsRepository {
       rethrow;
     }
   }
+
+  /// Delete a whereabouts record by id.
+  Future<void> delete(String id) async {
+    await _api.post('api/whereabouts_delete', body: {'id': id});
+    _cache?.remove(_key);
+  }
+
+  /// Save (create or update) a whereabouts record.
+  /// If [id] is non-empty, updates; otherwise creates.
+  Future<String> save(Map<String, dynamic> fields, {String id = ''}) async {
+    final body = <String, dynamic>{...fields};
+    if (id.isNotEmpty) body['id'] = id;
+    final data = await _api.post('api/whereabouts_save', body: body);
+    _cache?.remove(_key);
+    return (data?['id'] ?? 0).toString();
+  }
 }

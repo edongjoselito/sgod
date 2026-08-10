@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show showModalBottomSheet, TextButton, RoundedRectangleBorder;
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -699,13 +700,16 @@ Future<int?> brigadaPickIndex(
   if (options.isEmpty) return null;
   var selected = initialIndex.clamp(0, options.length - 1);
 
-  return showCupertinoModalPopup<int>(
+  return showModalBottomSheet<int>(
     context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
     builder: (sheetContext) => Container(
       height: 300,
       decoration: const BoxDecoration(
-        color: AppColors.secondaryBackground,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
         top: false,
@@ -721,8 +725,7 @@ Future<int?> brigadaPickIndex(
               ),
               child: Row(
                 children: [
-                  CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  TextButton(
                     onPressed: () => Navigator.of(sheetContext).pop(),
                     child: const Text('Cancel'),
                   ),
@@ -737,8 +740,7 @@ Future<int?> brigadaPickIndex(
                       ),
                     ),
                   ),
-                  CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  TextButton(
                     onPressed: () => Navigator.of(sheetContext).pop(selected),
                     child: const Text('Done',
                         style: TextStyle(fontWeight: FontWeight.w600)),

@@ -33,4 +33,20 @@ class ActivityDesignsRepository {
       rethrow;
     }
   }
+
+  /// Delete an activity design by id.
+  Future<void> delete(String id) async {
+    await _api.post('api/activity_designs_delete', body: {'id': id});
+    _cache?.remove(_key);
+  }
+
+  /// Save (create or update) an activity design.
+  /// If [id] is non-empty, updates; otherwise creates.
+  Future<String> save(Map<String, dynamic> fields, {String id = ''}) async {
+    final body = <String, dynamic>{...fields};
+    if (id.isNotEmpty) body['id'] = id;
+    final data = await _api.post('api/activity_designs_save', body: body);
+    _cache?.remove(_key);
+    return (data?['id'] ?? 0).toString();
+  }
 }

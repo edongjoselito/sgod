@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../data/models/accomplishment_item.dart';
 import '../../../../data/repositories/accomplishments_repository.dart';
 import '../../../core/di.dart';
@@ -289,20 +290,11 @@ class _AccomplishmentEditViewState extends State<AccomplishmentEditView> {
       final parsed = DateTime.tryParse(controller.text);
       if (parsed != null) initial = parsed;
     }
-    showCupertinoModalPopup(
-      context: context,
-      builder: (ctx) => Container(
-        height: 280,
-        color: AppColors.surface,
-        child: CupertinoDatePicker(
-          mode: CupertinoDatePickerMode.date,
-          initialDateTime: initial,
-          onDateTimeChanged: (dt) {
-            controller.text = dt.toIso8601String().split('T')[0];
-          },
-        ),
-      ),
-    );
+    AppDialogs.pickDate(context, initialDate: initial).then((dt) {
+      if (dt != null) {
+        controller.text = dt.toIso8601String().split('T')[0];
+      }
+    });
   }
 
   Widget _segmentedField(
@@ -392,19 +384,6 @@ class _AccomplishmentEditViewState extends State<AccomplishmentEditView> {
   }
 
   void _alert(String message) {
-    showCupertinoDialog(
-      context: context,
-      builder: (c) => CupertinoAlertDialog(
-        title: const Text('Notice'),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(c),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    AppDialogs.alert(context, 'Notice', message);
   }
 }

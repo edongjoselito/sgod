@@ -12,6 +12,7 @@ _$MemoItemImpl _$$MemoItemImplFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String? ?? '',
       memoNo: json['memoNo'] as String? ?? '',
       addedBy: json['added_by'] as String? ?? '',
+      secGroup: json['sec_group'] as String? ?? '',
     );
 
 Map<String, dynamic> _$$MemoItemImplToJson(_$MemoItemImpl instance) =>
@@ -20,4 +21,5 @@ Map<String, dynamic> _$$MemoItemImplToJson(_$MemoItemImpl instance) =>
       'title': instance.title,
       'memoNo': instance.memoNo,
       'added_by': instance.addedBy,
+      'sec_group': instance.secGroup,
     };

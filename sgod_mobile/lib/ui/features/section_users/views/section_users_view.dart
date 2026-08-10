@@ -3,15 +3,17 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../data/models/section_user_item.dart';
-import '../../../../data/repositories/section_users_repository.dart';
 import '../../../core/di.dart';
 import '../view_models/section_users_view_model.dart';
+import 'section_user_detail_view.dart';
 
 /// iOS-style Section Users screen.
 ///
 /// - Inset grouped list of users with avatar circles + status badges
 /// - Count shown in the nav bar trailing
 /// - Pull-to-refresh
+/// - Search bar filtering by name or username
+/// - Tap a user to open the read-only detail view
 /// - Loading and empty states
 class SectionUsersView extends StatefulWidget {
   const SectionUsersView({super.key});
@@ -22,12 +24,29 @@ class SectionUsersView extends StatefulWidget {
 
 class _SectionUsersViewState extends State<SectionUsersView> {
   late SectionUsersViewModel _vm;
+  final _searchController = TextEditingController();
+  String _query = '';
 
   @override
   void initState() {
     super.initState();
-    _vm = SectionUsersViewModel(SectionUsersRepository(DI.api));
+    _vm = SectionUsersViewModel(DI.sectionUsers);
     _vm.load();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<SectionUserItem> get _filtered {
+    if (_query.isEmpty) return _vm.items;
+    final q = _query.toLowerCase();
+    return _vm.items.where((u) {
+      return u.fullName.toLowerCase().contains(q) ||
+          u.username.toLowerCase().contains(q);
+    }).toList(growable: false);
   }
 
   @override
@@ -54,6 +73,7 @@ class _SectionUsersViewState extends State<SectionUsersView> {
               if (vm.items.isEmpty) {
                 return _buildEmpty();
               }
+              final items = _filtered;
               return CustomScrollView(
                 physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics(),
@@ -62,9 +82,26 @@ class _SectionUsersViewState extends State<SectionUsersView> {
                   CupertinoSliverRefreshControl(
                     onRefresh: () => vm.load(),
                   ),
+                  // ── Search bar ──────────────────────────────────────
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                      child: CupertinoSearchTextField(
+                        controller: _searchController,
+                        placeholder: 'Search by name or username',
+                        onChanged: (v) => setState(() => _query = v),
+                        style: const TextStyle(
+                            color: AppColors.label, fontSize: 15),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondaryBackground,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
                       child: Row(
                         children: [
                           const Text(
@@ -85,7 +122,7 @@ class _SectionUsersViewState extends State<SectionUsersView> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              '${vm.items.length}',
+                              '${items.length}',
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
@@ -97,19 +134,48 @@ class _SectionUsersViewState extends State<SectionUsersView> {
                       ),
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: CupertinoListSection.insetGrouped(
-                      margin: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                      children: vm.items
-                          .map((u) => _UserTile(user: u))
-                          .toList(growable: false),
+                  if (items.isEmpty)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 48),
+                        child: Center(
+                          child: Text(
+                            'No users match your search.',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: AppColors.secondaryLabel,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverToBoxAdapter(
+                      child: CupertinoListSection.insetGrouped(
+                        margin: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                        children: items
+                            .map((u) => _UserTile(
+                                  user: u,
+                                  onTap: () => _openDetail(context, u),
+                                ))
+                            .toList(growable: false),
+                      ),
                     ),
-                  ),
                 ],
               );
             },
           ),
         ),
+      ),
+    );
+  }
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+  void _openDetail(BuildContext context, SectionUserItem user) {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (_) => SectionUserDetailView(user: user),
       ),
     );
   }
@@ -188,14 +254,14 @@ class _SectionUsersViewState extends State<SectionUsersView> {
 
 // ── User tile ───────────────────────────────────────────────────────────────
 class _UserTile extends StatelessWidget {
-  const _UserTile({required this.user});
+  const _UserTile({required this.user, this.onTap});
 
   final SectionUserItem user;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final isActive =
-        user.acctStat.toLowerCase() == 'active';
+    final isActive = user.acctStat.toLowerCase() == 'active';
     final badgeColor = isActive ? AppColors.success : AppColors.tertiaryLabel;
     return CupertinoListTile.notched(
       leading: _Avatar(initials: user.initials),
@@ -214,21 +280,33 @@ class _UserTile extends StatelessWidget {
           color: AppColors.secondaryLabel,
         ),
       ),
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: badgeColor.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          user.acctStat,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: badgeColor,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: badgeColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              user.acctStat,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: badgeColor,
+              ),
+            ),
           ),
-        ),
+          const SizedBox(width: 4),
+          const Icon(
+            CupertinoIcons.chevron_right,
+            size: 16,
+            color: AppColors.tertiaryLabel,
+          ),
+        ],
       ),
+      onTap: onTap,
     );
   }
 }

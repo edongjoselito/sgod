@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../data/models/school_item.dart';
-import '../../../../data/repositories/schools_repository.dart';
 import '../../../core/di.dart';
 import '../view_models/schools_view_model.dart';
+import 'school_detail_view.dart';
 
 /// iOS-style schools list — grouped by district with a search bar and
 /// pull-to-refresh.
@@ -32,8 +32,14 @@ class _SchoolsViewState extends State<SchoolsView> {
   @override
   void initState() {
     super.initState();
-    _vm = SchoolsViewModel(SchoolsRepository(DI.api));
+    _vm = SchoolsViewModel(DI.schools);
     _vm.load();
+  }
+
+  @override
+  void dispose() {
+    _vm.dispose();
+    super.dispose();
   }
 
   @override
@@ -170,7 +176,19 @@ class _SchoolsViewState extends State<SchoolsView> {
                       size: 18,
                       color: AppColors.tertiaryLabel,
                     ),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                          builder: (_) => SchoolDetailView(
+                            item: school,
+                            onChanged: () {},
+                          ),
+                        ),
+                      ).then((_) {
+                      if (mounted) _vm.load(silent: true);
+                    });
+                    },
                   ),
               ],
             ),

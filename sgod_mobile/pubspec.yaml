@@ -1,5 +1,5 @@
 name: sgod_mobile
-description: "DepEd SGOD mobile app — native Flutter client for sgod, shns, school, sned, smme, and District positions."
+description: "e-Brigada — DepEd SGOD mobile app for Brigada Eskwela, Adopt-A-School, and SGOD operations."
 publish_to: "none"
 
 version: 1.0.0+1
@@ -51,11 +51,13 @@ dependencies:
   flutter_local_notifications: ^18.0.1
 
   # Utilities
-  intl: ^0.19.0
+  intl: ^0.20.0
 
   # Models
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

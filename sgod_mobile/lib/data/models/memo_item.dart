@@ -13,6 +13,7 @@ class MemoItem with _$MemoItem {
     @Default('') String title,
     @Default('') String memoNo,
     @JsonKey(name: 'added_by') @Default('') String addedBy,
+    @JsonKey(name: 'sec_group') @Default('') String secGroup,
   }) = _MemoItem;
 
   factory MemoItem.fromJson(Map<String, dynamic> json) =>

@@ -11,6 +11,9 @@ import '../../section_users/views/section_users_view.dart';
 import '../../whereabouts/views/whereabouts_view.dart';
 import '../../activity_designs/views/activity_designs_view.dart';
 import '../views/placeholder_view.dart';
+import '../../adopt_a_school/views/partners_view.dart';
+import '../../adopt_a_school/views/donations_view.dart';
+import '../../adopt_a_school/views/asp_tracking_view.dart';
 // Brigada Eskwela module — self-contained under lib/brigada/.
 import '../../../../brigada/ui/hub/brigada_hub_view.dart';
 import '../../../../brigada/ui/preparedness/spc_districts_view.dart';
@@ -55,111 +58,11 @@ class AppSidebar extends StatelessWidget {
             // ── Header with gradient ────────────────────────────────────
             _buildHeader(),
             Container(height: 0.5, color: AppColors.separator),
-            // ── Menu items ──────────────────────────────────────────────
+            // ── Menu items (role-based) ─────────────────────────────────
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                children: [
-                  _section('Main', [
-                    _item(
-                      icon: PhosphorIconsRegular.house,
-                      iconColor: AppColors.primary,
-                      title: 'Dashboard',
-                      page: null,
-                    ),
-                    _item(
-                      icon: PhosphorIconsRegular.fileText,
-                      iconColor: AppColors.info,
-                      title: 'PMCF',
-                      page: const PlaceholderView(
-                        title: 'PMCF',
-                        subtitle: 'Program Management Consolidated Form',
-                        icon: PhosphorIconsRegular.fileText,
-                      ),
-                    ),
-                  ]),
-                  _section('Records', [
-                    _item(
-                      icon: PhosphorIconsRegular.checkSquare,
-                      iconColor: AppColors.success,
-                      title: 'Accomplishments',
-                      page: AccomplishmentsView(section: profile.section),
-                    ),
-                    _item(
-                      icon: PhosphorIconsRegular.bell,
-                      iconColor: AppColors.warning,
-                      title: 'Memos',
-                      page: const MemosView(),
-                    ),
-                    _item(
-                      icon: PhosphorIconsRegular.pencilSimple,
-                      iconColor: AppColors.danger,
-                      title: 'Activity Design',
-                      page: const ActivityDesignsView(),
-                    ),
-                    _item(
-                      icon: PhosphorIconsRegular.warningCircle,
-                      iconColor: AppColors.danger,
-                      title: 'Issues / Concerns',
-                      page: const IssuesView(),
-                    ),
-                  ]),
-                  _section('Programs', [
-                    _expandable(
-                      icon: PhosphorIconsRegular.broom,
-                      iconColor: AppColors.success,
-                      title: 'Brigada Eskwela',
-                      children: [
-                        _subItem('School Preparedness',
-                            const SpcDistrictsView()),
-                        _subItem('SPC Report', const SpcReportView()),
-                        _subItem('Summary Report', const BrigadaSummaryView()),
-                        _subItem('Survey Results', const SurveyResultsView()),
-                        _subItem('Overview & Offline',
-                            BrigadaHubView(username: profile.username)),
-                      ],
-                    ),
-                    _expandable(
-                      icon: PhosphorIconsRegular.handshake,
-                      iconColor: AppColors.info,
-                      title: 'Adopt-A-School',
-                      children: [
-                        _subItem('Partners', const PlaceholderView(
-                          title: 'Partners',
-                          icon: PhosphorIconsRegular.handshake,
-                        )),
-                        _subItem('Tax Incentive Requirements', const PlaceholderView(
-                          title: 'Tax Incentive Requirements',
-                          icon: PhosphorIconsRegular.certificate,
-                        )),
-                        _subItem('ASP Tracking', const PlaceholderView(
-                          title: 'ASP Tracking',
-                          icon: PhosphorIconsRegular.path,
-                        )),
-                      ],
-                    ),
-                  ]),
-                  _section('Management', [
-                    _item(
-                      icon: PhosphorIconsRegular.buildings,
-                      iconColor: AppColors.info,
-                      title: 'Schools',
-                      page: const SchoolsView(),
-                    ),
-                    _item(
-                      icon: PhosphorIconsRegular.users,
-                      iconColor: AppColors.primary,
-                      title: 'Manage Users',
-                      page: const SectionUsersView(),
-                    ),
-                    _item(
-                      icon: PhosphorIconsRegular.mapPin,
-                      iconColor: AppColors.warning,
-                      title: 'Whereabouts',
-                      page: const WhereaboutsView(),
-                    ),
-                  ]),
-                ],
+                children: _buildMenuItems(),
               ),
             ),
             _buildFooter(),
@@ -167,6 +70,177 @@ class AppSidebar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // ── Role-based menu ──────────────────────────────────────────────────────
+
+  /// Build sidebar menu items based on the user's role, mirroring the web
+  /// app's role-specific sidebars.
+  List<Widget> _buildMenuItems() {
+    final role = profile.role;
+
+    // Common items available to all SGOD-side roles
+    final mainSection = <Widget>[
+      _item(
+        icon: PhosphorIconsRegular.house,
+        iconColor: AppColors.primary,
+        title: 'Dashboard',
+        page: null,
+      ),
+      _item(
+        icon: PhosphorIconsRegular.fileText,
+        iconColor: AppColors.info,
+        title: 'PMCF',
+        page: const PlaceholderView(
+          title: 'PMCF',
+          subtitle: 'Program Management Consolidated Form',
+          icon: PhosphorIconsRegular.fileText,
+        ),
+      ),
+    ];
+
+    final recordsSection = <Widget>[
+      _item(
+        icon: PhosphorIconsRegular.checkSquare,
+        iconColor: AppColors.success,
+        title: 'Accomplishments',
+        page: AccomplishmentsView(section: profile.section),
+      ),
+      _item(
+        icon: PhosphorIconsRegular.bell,
+        iconColor: AppColors.warning,
+        title: 'Memos',
+        page: const MemosView(),
+      ),
+      _item(
+        icon: PhosphorIconsRegular.pencilSimple,
+        iconColor: AppColors.danger,
+        title: 'Activity Design',
+        page: const ActivityDesignsView(),
+      ),
+      _item(
+        icon: PhosphorIconsRegular.warningCircle,
+        iconColor: AppColors.danger,
+        title: 'Issues / Concerns',
+        page: const IssuesView(),
+      ),
+    ];
+
+    final managementSection = <Widget>[
+      _item(
+        icon: PhosphorIconsRegular.buildings,
+        iconColor: AppColors.info,
+        title: 'Schools',
+        page: const SchoolsView(),
+      ),
+      _item(
+        icon: PhosphorIconsRegular.users,
+        iconColor: AppColors.primary,
+        title: 'Manage Users',
+        page: const SectionUsersView(),
+      ),
+      _item(
+        icon: PhosphorIconsRegular.mapPin,
+        iconColor: AppColors.warning,
+        title: 'Whereabouts',
+        page: const WhereaboutsView(),
+      ),
+    ];
+
+    final programsSection = <Widget>[
+      _expandable(
+        icon: PhosphorIconsRegular.broom,
+        iconColor: AppColors.success,
+        title: 'Brigada Eskwela',
+        children: [
+          _subItem('School Preparedness', const SpcDistrictsView()),
+          _subItem('SPC Report', const SpcReportView()),
+          _subItem('Summary Report', const BrigadaSummaryView()),
+          _subItem('Survey Results', const SurveyResultsView()),
+          _subItem('Overview & Offline',
+              BrigadaHubView(username: profile.username)),
+        ],
+      ),
+      _expandable(
+        icon: PhosphorIconsRegular.handshake,
+        iconColor: AppColors.info,
+        title: 'Adopt-A-School',
+        children: [
+          _subItem('Partners', const PartnersView()),
+          _subItem('Tax Incentive Requirements', const DonationsView()),
+          _subItem('ASP Tracking', const AspTrackingView()),
+        ],
+      ),
+    ];
+
+    // School-specific items (web: School Profile, Personnel, Enrollment, PBEI)
+    final schoolSection = <Widget>[
+      _item(
+        icon: PhosphorIconsRegular.graduationCap,
+        iconColor: AppColors.primary,
+        title: 'School Profile',
+        page: const PlaceholderView(
+          title: 'School Profile',
+          subtitle: 'View and update your school information',
+          icon: PhosphorIconsRegular.graduationCap,
+        ),
+      ),
+      _item(
+        icon: PhosphorIconsRegular.usersThree,
+        iconColor: AppColors.info,
+        title: 'Personnel',
+        page: const PlaceholderView(
+          title: 'Personnel',
+          subtitle: 'Manage school personnel records',
+          icon: PhosphorIconsRegular.usersThree,
+        ),
+      ),
+      _item(
+        icon: PhosphorIconsRegular.chartBar,
+        iconColor: AppColors.success,
+        title: 'Enrollment Details',
+        page: const PlaceholderView(
+          title: 'Enrollment Details',
+          subtitle: 'View enrollment statistics',
+          icon: PhosphorIconsRegular.chartBar,
+        ),
+      ),
+    ];
+
+    switch (role) {
+      case Role.school:
+        // School users: Dashboard, PMCF, School Profile, Personnel,
+        // Enrollment, PBEI — no SGOD management items
+        return [
+          _section('Main', mainSection),
+          _section('School', schoolSection),
+          _section('Records', [
+            recordsSection[0], // Accomplishments
+            recordsSection[1], // Memos
+            recordsSection[2], // Activity Design
+          ]),
+        ];
+
+      case Role.sgod:
+      case Role.shns:
+      case Role.sned:
+      case Role.smme:
+      case Role.district:
+      case Role.unknown:
+      default:
+        // SGOD section users: full sidebar with all sections
+        // SMN section additionally gets Brigada + Adopt-A-School
+        final isSmn = profile.section
+            .toLowerCase()
+            .contains('social mobilization');
+
+        return [
+          _section('Main', mainSection),
+          _section('Records', recordsSection),
+          if (isSmn) _section('Programs', programsSection),
+          _section('Management', managementSection),
+        ];
+    }
   }
 
   // ── Header ───────────────────────────────────────────────────────────────
@@ -252,7 +326,7 @@ class AppSidebar extends StatelessWidget {
                   size: 18, color: AppColors.tertiaryLabel),
               const SizedBox(width: 8),
               const Text(
-                'DepEd ONE',
+                'e-Brigada',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,

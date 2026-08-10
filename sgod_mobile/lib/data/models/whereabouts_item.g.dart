@@ -16,7 +16,8 @@ _$WhereaboutsItemImpl _$$WhereaboutsItemImplFromJson(
   date: json['date'] as String? ?? '',
   location: json['location'] as String? ?? '',
   activity: json['activity'] as String? ?? '',
-  status: json['status'] as String? ?? 'In Office',
+  status: json['status'] as String? ?? '',
+  notes: json['notes'] as String? ?? '',
 );
 
 Map<String, dynamic> _$$WhereaboutsItemImplToJson(
@@ -30,4 +31,5 @@ Map<String, dynamic> _$$WhereaboutsItemImplToJson(
   'location': instance.location,
   'activity': instance.activity,
   'status': instance.status,
+  'notes': instance.notes,
 };

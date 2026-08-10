@@ -15,6 +15,7 @@ import '../../data/repositories/memos_repository.dart';
 import '../../data/repositories/schools_repository.dart';
 import '../../data/repositories/section_users_repository.dart';
 import '../../data/repositories/whereabouts_repository.dart';
+import '../../data/repositories/adopt_a_school_repository.dart';
 import '../../core/services/db_native.dart' if (dart.library.html) '../../core/services/db_web.dart' as platform;
 
 /// Dependency injection container — single place where services and
@@ -37,6 +38,20 @@ class DI {
   static late final IssuesRepository issues;
   static late final SectionUsersRepository sectionUsers;
   static late final ActivityDesignsRepository activityDesigns;
+  static late final AdoptASchoolRepository adoptASchool;
+
+  /// Whether the device is currently online.
+  static bool get isOnline => connectivity.isOnline;
+
+  /// Execute a write operation — sends directly if online, queues if offline.
+  /// All repositories should use this for mutations.
+  static Future<dynamic> writeOrQueue({
+    required String entity,
+    required String operation,
+    required Map<String, dynamic> payload,
+  }) async {
+    return sync.writeOrQueue(entity: entity, operation: operation, payload: payload);
+  }
 
   static Future<void> init() async {
     api = ApiClient();
@@ -71,6 +86,7 @@ class DI {
     issues = IssuesRepository(api, cache);
     sectionUsers = SectionUsersRepository(api, cache);
     activityDesigns = ActivityDesignsRepository(api, cache);
+    adoptASchool = AdoptASchoolRepository(api, cache);
 
     api.onUnauthorized = () {
       debugPrint('ApiClient: 401 received — session invalidated.');

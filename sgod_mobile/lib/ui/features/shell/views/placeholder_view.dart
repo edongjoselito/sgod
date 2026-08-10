@@ -11,11 +11,13 @@ class PlaceholderView extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.icon,
+    this.onMenuTap,
   });
 
   final String title;
   final String? subtitle;
   final IconData icon;
+  final VoidCallback? onMenuTap;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +29,13 @@ class PlaceholderView extends StatelessWidget {
         border: const Border(
           bottom: BorderSide(color: AppColors.separator, width: 0.5),
         ),
+        leading: onMenuTap != null
+            ? CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: onMenuTap,
+                child: const Icon(CupertinoIcons.line_horizontal_3, size: 22),
+              )
+            : null,
       ),
       child: SafeArea(
         child: Center(

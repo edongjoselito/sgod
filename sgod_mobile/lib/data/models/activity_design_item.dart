@@ -12,6 +12,9 @@ class ActivityDesignItem with _$ActivityDesignItem {
     @JsonKey(name: 'activity_date') required String activityDate,
     required String venue,
     @JsonKey(name: 'activity_design_no') required String activityDesignNo,
+    @Default('') String rationale,
+    @Default('') String objectives,
+    @JsonKey(name: 'fund_source') @Default('') String fundSource,
   }) = _ActivityDesignItem;
 
   factory ActivityDesignItem.fromJson(Map<String, dynamic> json) =>

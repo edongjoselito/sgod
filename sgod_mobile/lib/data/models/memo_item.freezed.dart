@@ -26,6 +26,8 @@ mixin _$MemoItem {
   String get memoNo => throw _privateConstructorUsedError;
   @JsonKey(name: 'added_by')
   String get addedBy => throw _privateConstructorUsedError;
+  @JsonKey(name: 'sec_group')
+  String get secGroup => throw _privateConstructorUsedError;
 
   /// Serializes this MemoItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -47,6 +49,7 @@ abstract class $MemoItemCopyWith<$Res> {
     String title,
     String memoNo,
     @JsonKey(name: 'added_by') String addedBy,
+    @JsonKey(name: 'sec_group') String secGroup,
   });
 }
 
@@ -69,6 +72,7 @@ class _$MemoItemCopyWithImpl<$Res, $Val extends MemoItem>
     Object? title = null,
     Object? memoNo = null,
     Object? addedBy = null,
+    Object? secGroup = null,
   }) {
     return _then(
       _value.copyWith(
@@ -87,6 +91,10 @@ class _$MemoItemCopyWithImpl<$Res, $Val extends MemoItem>
             addedBy: null == addedBy
                 ? _value.addedBy
                 : addedBy // ignore: cast_nullable_to_non_nullable
+                      as String,
+            secGroup: null == secGroup
+                ? _value.secGroup
+                : secGroup // ignore: cast_nullable_to_non_nullable
                       as String,
           )
           as $Val,
@@ -108,6 +116,7 @@ abstract class _$$MemoItemImplCopyWith<$Res>
     String title,
     String memoNo,
     @JsonKey(name: 'added_by') String addedBy,
+    @JsonKey(name: 'sec_group') String secGroup,
   });
 }
 
@@ -129,6 +138,7 @@ class __$$MemoItemImplCopyWithImpl<$Res>
     Object? title = null,
     Object? memoNo = null,
     Object? addedBy = null,
+    Object? secGroup = null,
   }) {
     return _then(
       _$MemoItemImpl(
@@ -148,6 +158,10 @@ class __$$MemoItemImplCopyWithImpl<$Res>
             ? _value.addedBy
             : addedBy // ignore: cast_nullable_to_non_nullable
                   as String,
+        secGroup: null == secGroup
+            ? _value.secGroup
+            : secGroup // ignore: cast_nullable_to_non_nullable
+                  as String,
       ),
     );
   }
@@ -161,6 +175,7 @@ class _$MemoItemImpl implements _MemoItem {
     this.title = '',
     this.memoNo = '',
     @JsonKey(name: 'added_by') this.addedBy = '',
+    @JsonKey(name: 'sec_group') this.secGroup = '',
   });
 
   factory _$MemoItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -177,10 +192,13 @@ class _$MemoItemImpl implements _MemoItem {
   @override
   @JsonKey(name: 'added_by')
   final String addedBy;
+  @override
+  @JsonKey(name: 'sec_group')
+  final String secGroup;
 
   @override
   String toString() {
-    return 'MemoItem(id: $id, title: $title, memoNo: $memoNo, addedBy: $addedBy)';
+    return 'MemoItem(id: $id, title: $title, memoNo: $memoNo, addedBy: $addedBy, secGroup: $secGroup)';
   }
 
   @override
@@ -191,12 +209,15 @@ class _$MemoItemImpl implements _MemoItem {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.memoNo, memoNo) || other.memoNo == memoNo) &&
-            (identical(other.addedBy, addedBy) || other.addedBy == addedBy));
+            (identical(other.addedBy, addedBy) || other.addedBy == addedBy) &&
+            (identical(other.secGroup, secGroup) ||
+                other.secGroup == secGroup));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, title, memoNo, addedBy);
+  int get hashCode =>
+      Object.hash(runtimeType, id, title, memoNo, addedBy, secGroup);
 
   /// Create a copy of MemoItem
   /// with the given fields replaced by the non-null parameter values.
@@ -218,6 +239,7 @@ abstract class _MemoItem implements MemoItem {
     final String title,
     final String memoNo,
     @JsonKey(name: 'added_by') final String addedBy,
+    @JsonKey(name: 'sec_group') final String secGroup,
   }) = _$MemoItemImpl;
 
   factory _MemoItem.fromJson(Map<String, dynamic> json) =
@@ -232,6 +254,9 @@ abstract class _MemoItem implements MemoItem {
   @override
   @JsonKey(name: 'added_by')
   String get addedBy;
+  @override
+  @JsonKey(name: 'sec_group')
+  String get secGroup;
 
   /// Create a copy of MemoItem
   /// with the given fields replaced by the non-null parameter values.

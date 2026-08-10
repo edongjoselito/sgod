@@ -16,7 +16,8 @@ class WhereaboutsItem with _$WhereaboutsItem {
     @Default('') String date,
     @Default('') String location,
     @Default('') String activity,
-    @Default('In Office') String status,
+    @Default('') String status,
+    @Default('') String notes,
   }) = _WhereaboutsItem;
 
   factory WhereaboutsItem.fromJson(Map<String, dynamic> json) =>

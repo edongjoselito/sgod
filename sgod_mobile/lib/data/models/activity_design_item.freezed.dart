@@ -29,6 +29,10 @@ mixin _$ActivityDesignItem {
   String get venue => throw _privateConstructorUsedError;
   @JsonKey(name: 'activity_design_no')
   String get activityDesignNo => throw _privateConstructorUsedError;
+  String get rationale => throw _privateConstructorUsedError;
+  String get objectives => throw _privateConstructorUsedError;
+  @JsonKey(name: 'fund_source')
+  String get fundSource => throw _privateConstructorUsedError;
 
   /// Serializes this ActivityDesignItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -54,6 +58,9 @@ abstract class $ActivityDesignItemCopyWith<$Res> {
     @JsonKey(name: 'activity_date') String activityDate,
     String venue,
     @JsonKey(name: 'activity_design_no') String activityDesignNo,
+    String rationale,
+    String objectives,
+    @JsonKey(name: 'fund_source') String fundSource,
   });
 }
 
@@ -78,6 +85,9 @@ class _$ActivityDesignItemCopyWithImpl<$Res, $Val extends ActivityDesignItem>
     Object? activityDate = null,
     Object? venue = null,
     Object? activityDesignNo = null,
+    Object? rationale = null,
+    Object? objectives = null,
+    Object? fundSource = null,
   }) {
     return _then(
       _value.copyWith(
@@ -105,6 +115,18 @@ class _$ActivityDesignItemCopyWithImpl<$Res, $Val extends ActivityDesignItem>
                 ? _value.activityDesignNo
                 : activityDesignNo // ignore: cast_nullable_to_non_nullable
                       as String,
+            rationale: null == rationale
+                ? _value.rationale
+                : rationale // ignore: cast_nullable_to_non_nullable
+                      as String,
+            objectives: null == objectives
+                ? _value.objectives
+                : objectives // ignore: cast_nullable_to_non_nullable
+                      as String,
+            fundSource: null == fundSource
+                ? _value.fundSource
+                : fundSource // ignore: cast_nullable_to_non_nullable
+                      as String,
           )
           as $Val,
     );
@@ -127,6 +149,9 @@ abstract class _$$ActivityDesignItemImplCopyWith<$Res>
     @JsonKey(name: 'activity_date') String activityDate,
     String venue,
     @JsonKey(name: 'activity_design_no') String activityDesignNo,
+    String rationale,
+    String objectives,
+    @JsonKey(name: 'fund_source') String fundSource,
   });
 }
 
@@ -150,6 +175,9 @@ class __$$ActivityDesignItemImplCopyWithImpl<$Res>
     Object? activityDate = null,
     Object? venue = null,
     Object? activityDesignNo = null,
+    Object? rationale = null,
+    Object? objectives = null,
+    Object? fundSource = null,
   }) {
     return _then(
       _$ActivityDesignItemImpl(
@@ -177,6 +205,18 @@ class __$$ActivityDesignItemImplCopyWithImpl<$Res>
             ? _value.activityDesignNo
             : activityDesignNo // ignore: cast_nullable_to_non_nullable
                   as String,
+        rationale: null == rationale
+            ? _value.rationale
+            : rationale // ignore: cast_nullable_to_non_nullable
+                  as String,
+        objectives: null == objectives
+            ? _value.objectives
+            : objectives // ignore: cast_nullable_to_non_nullable
+                  as String,
+        fundSource: null == fundSource
+            ? _value.fundSource
+            : fundSource // ignore: cast_nullable_to_non_nullable
+                  as String,
       ),
     );
   }
@@ -192,6 +232,9 @@ class _$ActivityDesignItemImpl implements _ActivityDesignItem {
     @JsonKey(name: 'activity_date') required this.activityDate,
     required this.venue,
     @JsonKey(name: 'activity_design_no') required this.activityDesignNo,
+    this.rationale = '',
+    this.objectives = '',
+    @JsonKey(name: 'fund_source') this.fundSource = '',
   });
 
   factory _$ActivityDesignItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -211,10 +254,19 @@ class _$ActivityDesignItemImpl implements _ActivityDesignItem {
   @override
   @JsonKey(name: 'activity_design_no')
   final String activityDesignNo;
+  @override
+  @JsonKey()
+  final String rationale;
+  @override
+  @JsonKey()
+  final String objectives;
+  @override
+  @JsonKey(name: 'fund_source')
+  final String fundSource;
 
   @override
   String toString() {
-    return 'ActivityDesignItem(id: $id, username: $username, title: $title, activityDate: $activityDate, venue: $venue, activityDesignNo: $activityDesignNo)';
+    return 'ActivityDesignItem(id: $id, username: $username, title: $title, activityDate: $activityDate, venue: $venue, activityDesignNo: $activityDesignNo, rationale: $rationale, objectives: $objectives, fundSource: $fundSource)';
   }
 
   @override
@@ -230,7 +282,13 @@ class _$ActivityDesignItemImpl implements _ActivityDesignItem {
                 other.activityDate == activityDate) &&
             (identical(other.venue, venue) || other.venue == venue) &&
             (identical(other.activityDesignNo, activityDesignNo) ||
-                other.activityDesignNo == activityDesignNo));
+                other.activityDesignNo == activityDesignNo) &&
+            (identical(other.rationale, rationale) ||
+                other.rationale == rationale) &&
+            (identical(other.objectives, objectives) ||
+                other.objectives == objectives) &&
+            (identical(other.fundSource, fundSource) ||
+                other.fundSource == fundSource));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -243,6 +301,9 @@ class _$ActivityDesignItemImpl implements _ActivityDesignItem {
     activityDate,
     venue,
     activityDesignNo,
+    rationale,
+    objectives,
+    fundSource,
   );
 
   /// Create a copy of ActivityDesignItem
@@ -270,6 +331,9 @@ abstract class _ActivityDesignItem implements ActivityDesignItem {
     @JsonKey(name: 'activity_date') required final String activityDate,
     required final String venue,
     @JsonKey(name: 'activity_design_no') required final String activityDesignNo,
+    final String rationale,
+    final String objectives,
+    @JsonKey(name: 'fund_source') final String fundSource,
   }) = _$ActivityDesignItemImpl;
 
   factory _ActivityDesignItem.fromJson(Map<String, dynamic> json) =
@@ -289,6 +353,13 @@ abstract class _ActivityDesignItem implements ActivityDesignItem {
   @override
   @JsonKey(name: 'activity_design_no')
   String get activityDesignNo;
+  @override
+  String get rationale;
+  @override
+  String get objectives;
+  @override
+  @JsonKey(name: 'fund_source')
+  String get fundSource;
 
   /// Create a copy of ActivityDesignItem
   /// with the given fields replaced by the non-null parameter values.

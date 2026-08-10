@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../view_models/auth_view_model.dart';
 
@@ -34,20 +35,7 @@ class _LoginViewState extends State<LoginView> {
       password: _passwordController.text,
     );
     if (!ok && mounted) {
-      showCupertinoDialog(
-        context: context,
-        builder: (ctx) => CupertinoAlertDialog(
-          title: const Text('Sign In Failed'),
-          content: Text(vm.error ?? 'Please check your credentials.'),
-          actions: [
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+      AppDialogs.alert(context, 'Sign In Failed', vm.error ?? 'Please check your credentials.');
     }
   }
 
@@ -67,7 +55,7 @@ class _LoginViewState extends State<LoginView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'DepEd ONE',
+                    'e-Brigada',
                     style: TextStyle(
                       fontSize: 34,
                       fontWeight: FontWeight.w700,

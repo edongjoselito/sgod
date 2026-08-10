@@ -76,6 +76,41 @@ class IssuesViewModel extends ChangeNotifier {
     }
   }
 
+  /// Updates an existing issue and refreshes the list on success.
+  Future<bool> updateIssue({
+    required String id,
+    required String title,
+    required String description,
+    String priority = 'Normal',
+    String status = 'Open',
+  }) async {
+    _isSaving = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final fields = <String, dynamic>{
+        'title': title,
+        'description': description,
+        'priority': priority,
+        'status': status,
+      };
+      final result = await _repo.update(id, fields);
+      if (result > 0) {
+        await load();
+        return true;
+      }
+      _error = 'Could not update the issue. Please try again.';
+      return false;
+    } catch (e) {
+      _error = '$e';
+      debugPrint('IssuesViewModel.updateIssue error: $e');
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
   /// Deletes an issue by id. Returns true on success.
   Future<bool> deleteIssue(String id) async {
     try {

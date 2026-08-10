@@ -31,6 +31,7 @@ mixin _$WhereaboutsItem {
   String get location => throw _privateConstructorUsedError;
   String get activity => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
+  String get notes => throw _privateConstructorUsedError;
 
   /// Serializes this WhereaboutsItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -58,6 +59,7 @@ abstract class $WhereaboutsItemCopyWith<$Res> {
     String location,
     String activity,
     String status,
+    String notes,
   });
 }
 
@@ -84,6 +86,7 @@ class _$WhereaboutsItemCopyWithImpl<$Res, $Val extends WhereaboutsItem>
     Object? location = null,
     Object? activity = null,
     Object? status = null,
+    Object? notes = null,
   }) {
     return _then(
       _value.copyWith(
@@ -119,6 +122,10 @@ class _$WhereaboutsItemCopyWithImpl<$Res, $Val extends WhereaboutsItem>
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                       as String,
+            notes: null == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as String,
           )
           as $Val,
     );
@@ -143,6 +150,7 @@ abstract class _$$WhereaboutsItemImplCopyWith<$Res>
     String location,
     String activity,
     String status,
+    String notes,
   });
 }
 
@@ -168,6 +176,7 @@ class __$$WhereaboutsItemImplCopyWithImpl<$Res>
     Object? location = null,
     Object? activity = null,
     Object? status = null,
+    Object? notes = null,
   }) {
     return _then(
       _$WhereaboutsItemImpl(
@@ -203,6 +212,10 @@ class __$$WhereaboutsItemImplCopyWithImpl<$Res>
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
                   as String,
+        notes: null == notes
+            ? _value.notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as String,
       ),
     );
   }
@@ -219,7 +232,8 @@ class _$WhereaboutsItemImpl implements _WhereaboutsItem {
     this.date = '',
     this.location = '',
     this.activity = '',
-    this.status = 'In Office',
+    this.status = '',
+    this.notes = '',
   });
 
   factory _$WhereaboutsItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -248,10 +262,13 @@ class _$WhereaboutsItemImpl implements _WhereaboutsItem {
   @override
   @JsonKey()
   final String status;
+  @override
+  @JsonKey()
+  final String notes;
 
   @override
   String toString() {
-    return 'WhereaboutsItem(id: $id, fName: $fName, lName: $lName, section: $section, date: $date, location: $location, activity: $activity, status: $status)';
+    return 'WhereaboutsItem(id: $id, fName: $fName, lName: $lName, section: $section, date: $date, location: $location, activity: $activity, status: $status, notes: $notes)';
   }
 
   @override
@@ -268,7 +285,8 @@ class _$WhereaboutsItemImpl implements _WhereaboutsItem {
                 other.location == location) &&
             (identical(other.activity, activity) ||
                 other.activity == activity) &&
-            (identical(other.status, status) || other.status == status));
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.notes, notes) || other.notes == notes));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -283,6 +301,7 @@ class _$WhereaboutsItemImpl implements _WhereaboutsItem {
     location,
     activity,
     status,
+    notes,
   );
 
   /// Create a copy of WhereaboutsItem
@@ -312,6 +331,7 @@ abstract class _WhereaboutsItem implements WhereaboutsItem {
     final String location,
     final String activity,
     final String status,
+    final String notes,
   }) = _$WhereaboutsItemImpl;
 
   factory _WhereaboutsItem.fromJson(Map<String, dynamic> json) =
@@ -335,6 +355,8 @@ abstract class _WhereaboutsItem implements WhereaboutsItem {
   String get activity;
   @override
   String get status;
+  @override
+  String get notes;
 
   /// Create a copy of WhereaboutsItem
   /// with the given fields replaced by the non-null parameter values.

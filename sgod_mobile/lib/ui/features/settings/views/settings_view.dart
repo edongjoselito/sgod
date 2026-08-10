@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_dialogs.dart';
 import '../../auth/view_models/auth_view_model.dart';
 
 /// iOS-style settings screen — grouped inset list sections.
@@ -104,29 +105,16 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-  void _confirmLogout(BuildContext context) {
-    showCupertinoDialog(
-      context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('Log Out'),
-        content: const Text(
-            'Are you sure you want to log out? Cached data will be cleared.'),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<AuthViewModel>().logout();
-            },
-            child: const Text('Log Out'),
-          ),
-        ],
-      ),
+  void _confirmLogout(BuildContext context) async {
+    final confirmed = await AppDialogs.confirm(
+      context,
+      title: 'Log Out',
+      message: 'Are you sure you want to log out? Cached data will be cleared.',
+      confirmText: 'Log Out',
+      destructive: true,
     );
+    if (confirmed == true && context.mounted) {
+      context.read<AuthViewModel>().logout();
+    }
   }
 }

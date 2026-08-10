@@ -74,10 +74,23 @@ class _FakeConnectivity extends ConnectivityService {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  Future<void> install({bool offline = false, bool online = true}) async {
-    final store = BrigadaStore();
-    await store.init();
-    await store.clear();
+  /// Store setup touches the path_provider channel and the filesystem, which
+  /// never complete inside the fake-async zone `testWidgets` runs in — so it
+  /// has to happen through [WidgetTester.runAsync]. path_provider has no test
+  /// implementation, so the store lands in its in-memory mode and the widget
+  /// phase stays free of real I/O.
+  Future<BrigadaStore> install(
+    WidgetTester tester, {
+    bool offline = false,
+    bool online = true,
+    BrigadaStore? reuse,
+  }) async {
+    late BrigadaStore store;
+    await tester.runAsync(() async {
+      store = reuse ?? BrigadaStore();
+      await store.init();
+      if (reuse == null) await store.clear();
+    });
     final connectivity = _FakeConnectivity(online);
     final repo = BrigadaRepository(
       api: _FixtureApi(offline: offline),
@@ -93,20 +106,21 @@ void main() {
         connectivity: connectivity,
       ),
     );
+    return store;
   }
 
   Future<void> pump(WidgetTester tester, Widget page) async {
     await tester.pumpWidget(CupertinoApp(home: page));
-    // Settle the two-phase load (cache miss → network) without waiting on
-    // the sliver refresh control's animations.
+    // Settle the two-phase load (cache miss → network).
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 100));
+    // Drain the store's debounced index write so no timer outlives the test.
+    await tester.pump(const Duration(milliseconds: 600));
   }
 
   group('renders with live-shaped data', () {
     testWidgets('hub', (tester) async {
-      await install();
+      await install(tester);
       await pump(tester, const BrigadaHubView(username: '1301260'));
 
       expect(find.text('Brigada Eskwela'), findsWidgets);
@@ -119,7 +133,7 @@ void main() {
     });
 
     testWidgets('school preparedness districts', (tester) async {
-      await install();
+      await install(tester);
       await pump(tester, const SpcDistrictsView(sy: '2026-2027'));
 
       expect(find.text('Baganga North'), findsOneWidget);
@@ -129,7 +143,7 @@ void main() {
     });
 
     testWidgets('district school list', (tester) async {
-      await install();
+      await install(tester);
       await pump(
         tester,
         const SpcSchoolsView(
@@ -145,7 +159,7 @@ void main() {
     });
 
     testWidgets('school checklist', (tester) async {
-      await install();
+      await install(tester);
       await pump(
         tester,
         const SpcChecklistView(
@@ -162,7 +176,7 @@ void main() {
     });
 
     testWidgets('spc report', (tester) async {
-      await install();
+      await install(tester);
       await pump(tester, const SpcReportView(sy: '2026-2027'));
 
       expect(find.text('Learning Resources'), findsOneWidget);
@@ -172,7 +186,7 @@ void main() {
 
     testWidgets('spc report expands a category into tappable counters',
         (tester) async {
-      await install();
+      await install(tester);
       await pump(tester, const SpcReportView(sy: '2026-2027'));
 
       await tester.tap(find.text('Learning Resources'));
@@ -185,7 +199,7 @@ void main() {
     });
 
     testWidgets('report responses', (tester) async {
-      await install();
+      await install(tester);
       await pump(
         tester,
         const SpcResponsesView(
@@ -202,7 +216,7 @@ void main() {
     });
 
     testWidgets('summary report with 201 schools', (tester) async {
-      await install();
+      await install(tester);
       await pump(tester, const BrigadaSummaryView());
 
       expect(find.text('Total Records'), findsOneWidget);
@@ -214,7 +228,7 @@ void main() {
     });
 
     testWidgets('contribution details', (tester) async {
-      await install();
+      await install(tester);
       await pump(
         tester,
         const ContributionDetailsView(
@@ -232,7 +246,7 @@ void main() {
     });
 
     testWidgets('survey results shows the not-started state', (tester) async {
-      await install();
+      await install(tester);
       await pump(tester, const SurveyResultsView());
 
       // The backing table is created on first submission, so this is the
@@ -245,7 +259,7 @@ void main() {
   group('offline behaviour', () {
     testWidgets('with nothing cached, offers a clear recovery path',
         (tester) async {
-      await install(offline: true, online: false);
+      await install(tester, offline: true, online: false);
       await pump(tester, const SpcReportView(sy: '2026-2027'));
 
       expect(find.text('Not available offline'), findsOneWidget);
@@ -255,29 +269,17 @@ void main() {
 
     testWidgets('serves cached data and labels it as saved', (tester) async {
       // Warm the cache while "online"...
-      await install();
-      await BrigadaModule.repository.fetch(
-        BrigadaRepository.reportRequest('2026-2027'),
-        (json) => json,
-      );
-      final warmStore = BrigadaModule.store;
+      final warmStore = await install(tester);
+      await tester.runAsync(() async {
+        await BrigadaModule.repository.fetch(
+          BrigadaRepository.reportRequest('2026-2027'),
+          (json) => json,
+        );
+      });
+      expect(warmStore.has('spc_report?sy=2026-2027'), isTrue);
 
-      // ...then go offline against the same store.
-      final connectivity = _FakeConnectivity(false);
-      final repo = BrigadaRepository(
-        api: _FixtureApi(offline: true),
-        store: warmStore,
-        connectivity: connectivity,
-      );
-      BrigadaModule.installForTests(
-        testStore: warmStore,
-        testRepository: repo,
-        testSync: BrigadaSyncService(
-          repository: repo,
-          store: warmStore,
-          connectivity: connectivity,
-        ),
-      );
+      // ...then go offline against that same warmed store.
+      await install(tester, offline: true, online: false, reuse: warmStore);
 
       await pump(tester, const SpcReportView(sy: '2026-2027'));
 

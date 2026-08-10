@@ -7,6 +7,8 @@ import '../../../../data/models/activity_design_item.dart';
 import '../../../../data/repositories/activity_designs_repository.dart';
 import '../../../core/di.dart';
 import '../view_models/activity_designs_view_model.dart';
+import 'activity_design_detail_view.dart';
+import 'activity_design_edit_view.dart';
 
 /// iOS-style Activity Designs list.
 class ActivityDesignsView extends StatefulWidget {
@@ -26,6 +28,12 @@ class _ActivityDesignsViewState extends State<ActivityDesignsView> {
     super.initState();
     _vm = ActivityDesignsViewModel(ActivityDesignsRepository(DI.api, DI.cache));
     _vm.load();
+  }
+
+  @override
+  void dispose() {
+    _vm.dispose();
+    super.dispose();
   }
 
   @override
@@ -53,6 +61,21 @@ class _ActivityDesignsViewState extends State<ActivityDesignsView> {
                           size: 26, color: AppColors.label),
                     )
                   : null,
+              trailing: CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (_) => ActivityDesignEditView(
+                        onSaved: () => _vm.load(),
+                      ),
+                    ),
+                  );
+                },
+                child: const Icon(CupertinoIcons.add,
+                    size: 28, color: AppColors.primary),
+              ),
             ),
             CupertinoSliverRefreshControl(
               onRefresh: () => _vm.load(),
@@ -152,7 +175,22 @@ class _ActivityDesignsViewState extends State<ActivityDesignsView> {
                       child: Column(
                         children: [
                           for (int i = 0; i < vm.items.length; i++) ...[
-                            _DesignRow(item: vm.items[i]),
+                            _DesignRow(
+                              item: vm.items[i],
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  CupertinoPageRoute(
+                                    builder: (_) => ActivityDesignDetailView(
+                                      item: vm.items[i],
+                                      onChanged: () {},
+                                    ),
+                                  ),
+                                ).then((_) {
+                                if (mounted) _vm.load();
+                              });
+                              },
+                            ),
                             if (i < vm.items.length - 1)
                               Container(height: 0.5, color: AppColors.separator),
                           ],
@@ -171,13 +209,14 @@ class _ActivityDesignsViewState extends State<ActivityDesignsView> {
 }
 
 class _DesignRow extends StatelessWidget {
-  const _DesignRow({required this.item});
+  const _DesignRow({required this.item, this.onTap});
   final ActivityDesignItem item;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
-      onPressed: () {},
+      onPressed: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       minSize: 0,
       child: Row(

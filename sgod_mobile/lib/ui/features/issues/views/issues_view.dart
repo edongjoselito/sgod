@@ -2,16 +2,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../data/models/issue_item.dart';
-import '../../../../data/repositories/issues_repository.dart';
 import '../../../core/di.dart';
 import '../view_models/issues_view_model.dart';
+import 'issue_detail_view.dart';
+import 'issue_edit_view.dart';
 
 /// iOS-style Issues / Concerns screen.
 ///
 /// - List of issue cards with priority + status badges
 /// - Pull-to-refresh
-/// - Add button opens a modal form (CupertinoAlertDialog)
+/// - Add button navigates to a full-screen edit form
+/// - Tap a card to open the detail view
 /// - Long-press an item to confirm deletion
 /// - Empty state with icon
 class IssuesView extends StatefulWidget {
@@ -29,8 +32,14 @@ class _IssuesViewState extends State<IssuesView> {
   @override
   void initState() {
     super.initState();
-    _vm = IssuesViewModel(IssuesRepository(DI.api));
+    _vm = IssuesViewModel(DI.issues);
     _vm.load(year: widget.year);
+  }
+
+  @override
+  void dispose() {
+    _vm.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,7 +55,7 @@ class _IssuesViewState extends State<IssuesView> {
               bottom: BorderSide(color: AppColors.separator, width: 0.5)),
           trailing: CupertinoButton(
             padding: EdgeInsets.zero,
-            onPressed: _showAddDialog,
+            onPressed: _openAddView,
             child: const Icon(CupertinoIcons.add, size: 24),
           ),
         ),
@@ -77,6 +86,7 @@ class _IssuesViewState extends State<IssuesView> {
                       itemBuilder: (context, i) {
                         final item = vm.items[i];
                         return GestureDetector(
+                          onTap: () => _openDetail(context, item),
                           onLongPress: () => _confirmDelete(context, item),
                           child: _IssueCard(item: item),
                         );
@@ -166,64 +176,43 @@ class _IssuesViewState extends State<IssuesView> {
     );
   }
 
-  // ── Add dialog ────────────────────────────────────────────────────────────
-  void _showAddDialog() {
-    showCupertinoDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => _AddIssueDialog(
-        onSubmit: ({required title, required description, required priority}) async {
-          final ok = await _vm.addIssue(
-            title: title,
-            description: description,
-            priority: priority,
-          );
-          if (ctx.mounted) Navigator.pop(ctx);
-          if (!ok && ctx.mounted) {
-            showCupertinoDialog(
-              context: ctx,
-              builder: (c) => CupertinoAlertDialog(
-                title: const Text('Error'),
-                content: Text(_vm.error ?? 'Could not save the issue.'),
-                actions: [
-                  CupertinoDialogAction(
-                    isDefaultAction: true,
-                    onPressed: () => Navigator.pop(c),
-                    child: const Text('OK'),
-                  ),
-                ],
-              ),
-            );
-          }
-        },
+  // ── Navigation ────────────────────────────────────────────────────────────
+  void _openAddView() {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (_) => IssueEditView(
+          onSaved: () => _vm.load(),
+        ),
       ),
     );
   }
 
+  void _openDetail(BuildContext context, IssueItem item) {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (_) => IssueDetailView(
+          item: item,
+          onChanged: () {},
+        ),
+      ),
+    ).then((_) {
+    if (mounted) _vm.load();
+  });
+  }
+
   // ── Delete confirm ────────────────────────────────────────────────────────
   void _confirmDelete(BuildContext context, IssueItem item) {
-    showCupertinoDialog(
-      context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('Delete Issue'),
-        content: Text('Delete "${item.title}"? This cannot be undone.'),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(ctx);
-              _vm.deleteIssue(item.id);
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+    AppDialogs.confirm(
+      context,
+      title: 'Delete Issue',
+      message: 'Delete "${item.title}"? This cannot be undone.',
+      confirmText: 'Delete',
+      destructive: true,
+    ).then((ok) {
+      if (ok == true) _vm.deleteIssue(item.id);
+    });
   }
 }
 
@@ -270,6 +259,8 @@ class _IssueCard extends StatelessWidget {
                 color: AppColors.secondaryLabel,
                 height: 1.35,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
           const SizedBox(height: 12),
@@ -310,13 +301,18 @@ class _PriorityBadge extends StatelessWidget {
         color = AppColors.danger;
         bg = AppColors.danger.withOpacity(0.12);
         break;
+      case 'medium':
+      case 'normal':
+        color = AppColors.warning;
+        bg = AppColors.warning.withOpacity(0.12);
+        break;
       case 'low':
-        color = AppColors.tertiaryLabel;
-        bg = AppColors.tertiaryLabel.withOpacity(0.12);
+        color = AppColors.success;
+        bg = AppColors.success.withOpacity(0.12);
         break;
       default:
-        color = AppColors.info;
-        bg = AppColors.info.withOpacity(0.12);
+        color = AppColors.tertiaryLabel;
+        bg = AppColors.tertiaryLabel.withOpacity(0.12);
     }
     return _Badge(label: priority, color: color, background: bg);
   }
@@ -332,14 +328,25 @@ class _StatusBadge extends StatelessWidget {
     final Color color;
     final Color bg;
     switch (status.toLowerCase()) {
+      case 'open':
+        color = AppColors.info;
+        bg = AppColors.info.withOpacity(0.12);
+        break;
+      case 'in progress':
+        color = AppColors.warning;
+        bg = AppColors.warning.withOpacity(0.12);
+        break;
       case 'resolved':
-      case 'closed':
         color = AppColors.success;
         bg = AppColors.success.withOpacity(0.12);
         break;
+      case 'closed':
+        color = AppColors.tertiaryLabel;
+        bg = AppColors.tertiaryLabel.withOpacity(0.12);
+        break;
       default:
-        color = AppColors.warning;
-        bg = AppColors.warning.withOpacity(0.12);
+        color = AppColors.tertiaryLabel;
+        bg = AppColors.tertiaryLabel.withOpacity(0.12);
     }
     return _Badge(label: status, color: color, background: bg);
   }
@@ -372,116 +379,6 @@ class _Badge extends StatelessWidget {
           color: color,
         ),
       ),
-    );
-  }
-}
-
-// ── Add dialog ──────────────────────────────────────────────────────────────
-class _AddIssueDialog extends StatefulWidget {
-  const _AddIssueDialog({required this.onSubmit});
-
-  final Future<void> Function({
-    required String title,
-    required String description,
-    required String priority,
-  }) onSubmit;
-
-  @override
-  State<_AddIssueDialog> createState() => _AddIssueDialogState();
-}
-
-class _AddIssueDialogState extends State<_AddIssueDialog> {
-  final _titleController = TextEditingController();
-  final _descController = TextEditingController();
-  String _priority = 'Normal';
-  bool _submitting = false;
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descController.dispose();
-    super.dispose();
-  }
-
-  bool get _canSubmit =>
-      _titleController.text.trim().isNotEmpty &&
-      _descController.text.trim().isNotEmpty &&
-      !_submitting;
-
-  Future<void> _submit() async {
-    if (!_canSubmit) return;
-    setState(() => _submitting = true);
-    await widget.onSubmit(
-      title: _titleController.text.trim(),
-      description: _descController.text.trim(),
-      priority: _priority,
-    );
-    if (mounted) setState(() => _submitting = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoAlertDialog(
-      title: const Text('New Issue'),
-      content: Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: Column(
-          children: [
-            CupertinoTextField(
-              controller: _titleController,
-              placeholder: 'Title',
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryBackground,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 10),
-            CupertinoTextField(
-              controller: _descController,
-              placeholder: 'Description',
-              minLines: 3,
-              maxLines: 5,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryBackground,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: CupertinoSlidingSegmentedControl<String>(
-                groupValue: _priority,
-                children: const {
-                  'Low': Text('Low'),
-                  'Normal': Text('Normal'),
-                  'High': Text('High'),
-                },
-                onValueChanged: (v) {
-                  if (v != null) setState(() => _priority = v);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        CupertinoDialogAction(
-          isDefaultAction: true,
-          onPressed: _submitting ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        CupertinoDialogAction(
-          isDestructiveAction: false,
-          onPressed: _canSubmit ? _submit : null,
-          child: _submitting
-              ? const CupertinoActivityIndicator(radius: 10)
-              : const Text('Save'),
-        ),
-      ],
     );
   }
 }

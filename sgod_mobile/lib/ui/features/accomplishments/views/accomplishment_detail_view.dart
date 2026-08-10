@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../data/models/accomplishment_item.dart';
 import '../../../../data/repositories/accomplishments_repository.dart';
 import '../../../core/di.dart';
@@ -51,6 +52,7 @@ class _AccomplishmentDetailViewState extends State<AccomplishmentDetailView> {
         ),
       ),
       child: SafeArea(
+        top: false,
         child: Column(
           children: [
             Expanded(
@@ -207,7 +209,6 @@ class _AccomplishmentDetailViewState extends State<AccomplishmentDetailView> {
                                   builder: (_) => AccomplishmentEditView(
                                     item: item,
                                     onSaved: () {
-                                      widget.onChanged?.call();
                                       Navigator.pop(context);
                                     },
                                   ),
@@ -299,7 +300,7 @@ class _AccomplishmentDetailViewState extends State<AccomplishmentDetailView> {
       onPressed: _busy ? null : onTap,
       color: color.withOpacity(0.1),
       borderRadius: BorderRadius.circular(10),
-      minSize: 48,
+      minimumSize: const Size(0, 48),
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: _busy && label == _busyLabel
           ? const CupertinoActivityIndicator(radius: 10)
@@ -330,20 +331,7 @@ class _AccomplishmentDetailViewState extends State<AccomplishmentDetailView> {
       await fn();
     } catch (e) {
       if (mounted) {
-        showCupertinoDialog(
-          context: context,
-          builder: (c) => CupertinoAlertDialog(
-            title: Text('$label Failed'),
-            content: Text('$e'),
-            actions: [
-              CupertinoDialogAction(
-                isDefaultAction: true,
-                onPressed: () => Navigator.pop(c),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+        AppDialogs.alert(context, '$label Failed', '$e');
       }
     } finally {
       if (mounted) {
@@ -360,63 +348,32 @@ class _AccomplishmentDetailViewState extends State<AccomplishmentDetailView> {
   void _doCopy() {
     _setBusy('Copy', () async {
       await _repo.copy(item.id);
+    }).then((_) {
       if (mounted) {
-        widget.onChanged?.call();
         Navigator.pop(context);
-        _toast('Accomplishment copied successfully');
       }
     });
   }
 
   void _confirmDelete() {
-    showCupertinoDialog(
-      context: context,
-      builder: (c) => CupertinoAlertDialog(
-        title: const Text('Delete Accomplishment'),
-        content: Text('Are you sure you want to delete "${item.activity}"?'),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(c),
-            child: const Text('Cancel'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(c);
-              _doDelete();
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+    AppDialogs.confirm(
+      context,
+      title: 'Delete Accomplishment',
+      message: 'Are you sure you want to delete "${item.activity}"?',
+      destructive: true,
+      confirmText: 'Delete',
+    ).then((confirmed) {
+      if (confirmed == true) _doDelete();
+    });
   }
 
   void _doDelete() {
     _setBusy('Delete', () async {
       await _repo.delete(item.id);
+    }).then((_) {
       if (mounted) {
-        widget.onChanged?.call();
         Navigator.pop(context);
-        _toast('Accomplishment deleted');
       }
     });
-  }
-
-  void _toast(String message) {
-    showCupertinoDialog(
-      context: context,
-      builder: (c) => CupertinoAlertDialog(
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(c),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 }

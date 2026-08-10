@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../data/models/whereabouts_item.dart';
-import '../../../../data/repositories/whereabouts_repository.dart';
 import '../../../core/di.dart';
 import '../view_models/whereabouts_view_model.dart';
+import 'whereabouts_detail_view.dart';
+import 'whereabouts_edit_view.dart';
 
 /// iOS-style whereabouts list — card-style entries with color-coded status
 /// badges, location with a map pin, and pull-to-refresh.
@@ -28,8 +29,14 @@ class _WhereaboutsViewState extends State<WhereaboutsView> {
   @override
   void initState() {
     super.initState();
-    _vm = WhereaboutsViewModel(WhereaboutsRepository(DI.api));
+    _vm = WhereaboutsViewModel(DI.whereabouts);
     _vm.load();
+  }
+
+  @override
+  void dispose() {
+    _vm.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,51 +45,107 @@ class _WhereaboutsViewState extends State<WhereaboutsView> {
       value: _vm,
       child: CupertinoPageScaffold(
         backgroundColor: AppColors.background,
-        navigationBar: const CupertinoNavigationBar(
-          middle: Text('Whereabouts'),
+        navigationBar: CupertinoNavigationBar(
+          middle: const Text('Whereabouts'),
+          trailing: CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: () {
+              Navigator.push(
+                context,
+                CupertinoPageRoute(
+                  builder: (_) => WhereaboutsEditView(
+                    onSaved: () => _vm.load(silent: true),
+                  ),
+                ),
+              );
+            },
+            child: const Icon(
+              CupertinoIcons.add,
+              size: 26,
+              color: AppColors.primary,
+            ),
+          ),
           backgroundColor: AppColors.surface,
-          border: Border(
+          border: const Border(
             bottom: BorderSide(color: AppColors.separator, width: 0.5),
           ),
         ),
         child: SafeArea(
-          child: Consumer<WhereaboutsViewModel>(
-            builder: (context, vm, _) {
-              if (vm.isLoading && vm.items.isEmpty) {
-                return _buildLoading();
-              }
-              if (vm.error != null && vm.items.isEmpty) {
-                return _buildError(vm);
-              }
-              if (vm.items.isEmpty) {
-                return _buildEmpty();
-              }
-              return CustomScrollView(
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              // ── Search bar ──────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                child: CupertinoSearchTextField(
+                  placeholder: 'Search name, activity, location...',
+                  onChanged: (value) => _vm.search(value),
+                  style: const TextStyle(
+                    color: AppColors.label,
+                    fontSize: 17,
+                  ),
+                  backgroundColor: AppColors.secondaryBackground,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                slivers: [
-                  CupertinoSliverRefreshControl(
-                    onRefresh: () => vm.load(silent: true),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = vm.items[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _WhereaboutsCard(item: item),
-                          );
-                        },
-                        childCount: vm.items.length,
+              ),
+              // ── List ────────────────────────────────────────────────────
+              Expanded(
+                child: Consumer<WhereaboutsViewModel>(
+                  builder: (context, vm, _) {
+                    if (vm.isLoading && vm.items.isEmpty) {
+                      return _buildLoading();
+                    }
+                    if (vm.error != null && vm.items.isEmpty) {
+                      return _buildError(vm);
+                    }
+                    final filtered = vm.filteredItems;
+                    if (filtered.isEmpty) {
+                      return _buildEmpty(vm.searchQuery.isNotEmpty);
+                    }
+                    return CustomScrollView(
+                      physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics(),
                       ),
-                    ),
-                  ),
-                ],
-              );
-            },
+                      slivers: [
+                        CupertinoSliverRefreshControl(
+                          onRefresh: () => vm.load(silent: true),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final item = filtered[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _WhereaboutsCard(
+                                    item: item,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        CupertinoPageRoute(
+                                          builder: (_) =>
+                                              WhereaboutsDetailView(
+                                            item: item,
+                                            onChanged: () {},
+                                          ),
+                                        ),
+                                      ).then((_) {
+                                      if (mounted) _vm.load(silent: true);
+                                    });
+                                    },
+                                  ),
+                                );
+                              },
+                              childCount: filtered.length,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -147,7 +210,7 @@ class _WhereaboutsViewState extends State<WhereaboutsView> {
     );
   }
 
-  Widget _buildEmpty() {
+  Widget _buildEmpty(bool isSearching) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -160,18 +223,20 @@ class _WhereaboutsViewState extends State<WhereaboutsView> {
               color: AppColors.tertiaryLabel,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'No whereabouts records',
-              style: TextStyle(
+            Text(
+              isSearching ? 'No matching whereabouts' : 'No whereabouts records',
+              style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 color: AppColors.label,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Pull down to refresh.',
-              style: TextStyle(
+            Text(
+              isSearching
+                  ? 'Try a different search term.'
+                  : 'Pull down to refresh.',
+              style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.secondaryLabel,
               ),
@@ -186,14 +251,17 @@ class _WhereaboutsViewState extends State<WhereaboutsView> {
 
 /// A single card-style whereabouts entry.
 class _WhereaboutsCard extends StatelessWidget {
-  const _WhereaboutsCard({required this.item});
+  const _WhereaboutsCard({required this.item, this.onTap});
 
   final WhereaboutsItem item;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final statusColor = _statusColor(item.status);
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
@@ -301,6 +369,7 @@ class _WhereaboutsCard extends StatelessWidget {
           ],
         ],
       ),
+      ),
     );
   }
 
@@ -333,15 +402,10 @@ class _WhereaboutsCard extends StatelessWidget {
 
   Color _statusColor(String status) {
     final s = status.trim().toLowerCase();
-    if (s.contains('field') || s.contains('on field')) {
-      return AppColors.warning;
-    }
-    if (s.contains('office') || s.contains('in office')) {
-      return AppColors.success;
-    }
-    if (s.contains('leave')) {
-      return AppColors.danger;
-    }
+    if (s.contains('field')) return AppColors.warning;
+    if (s.contains('leave')) return AppColors.danger;
+    if (s.contains('official') || s.contains('business')) return AppColors.info;
+    if (s.contains('office') || s.contains('out')) return AppColors.success;
     return AppColors.info;
   }
 }

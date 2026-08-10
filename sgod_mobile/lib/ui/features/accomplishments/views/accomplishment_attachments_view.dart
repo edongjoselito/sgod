@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../data/models/accomplishment_item.dart';
 import '../../../../data/repositories/accomplishments_repository.dart';
 import '../../../core/di.dart';
@@ -175,9 +176,9 @@ class _AccomplishmentAttachmentsViewState
   }
 
   void _showUploadSheet() {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (ctx) => _UploadSheet(
+    AppDialogs.showSheet(
+      context,
+      (ctx) => _UploadSheet(
         itemId: widget.item.id,
         onUploaded: () {
           Navigator.pop(ctx);
@@ -188,28 +189,15 @@ class _AccomplishmentAttachmentsViewState
   }
 
   void _confirmDelete(String id) {
-    showCupertinoDialog(
-      context: context,
-      builder: (c) => CupertinoAlertDialog(
-        title: const Text('Delete Attachment'),
-        content: const Text('Remove this attachment?'),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(c),
-            child: const Text('Cancel'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(c);
-              _doDelete(id);
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+    AppDialogs.confirm(
+      context,
+      title: 'Delete Attachment',
+      message: 'Remove this attachment?',
+      destructive: true,
+      confirmText: 'Delete',
+    ).then((confirmed) {
+      if (confirmed == true) _doDelete(id);
+    });
   }
 
   Future<void> _doDelete(String id) async {
@@ -218,20 +206,7 @@ class _AccomplishmentAttachmentsViewState
       _loadReports();
     } catch (e) {
       if (mounted) {
-        showCupertinoDialog(
-          context: context,
-          builder: (c) => CupertinoAlertDialog(
-            title: const Text('Error'),
-            content: Text('$e'),
-            actions: [
-              CupertinoDialogAction(
-                isDefaultAction: true,
-                onPressed: () => Navigator.pop(c),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+        AppDialogs.alert(context, 'Error', '$e');
       }
     }
   }
@@ -515,20 +490,10 @@ class _UploadSheetState extends State<_UploadSheet> {
   void _pickFile() {
     // For web, we use file_picker_web; for native, file_picker
     // Simplified: show a message for now since file picking needs platform-specific code
-    showCupertinoDialog(
-      context: context,
-      builder: (c) => CupertinoAlertDialog(
-        title: const Text('File Picker'),
-        content: const Text(
-            'File picking requires the file_picker package. For now, please upload via the web version.'),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(c),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+    AppDialogs.alert(
+      context,
+      'File Picker',
+      'File picking requires the file_picker package. For now, please upload via the web version.',
     );
   }
 
@@ -557,20 +522,7 @@ class _UploadSheetState extends State<_UploadSheet> {
   }
 
   void _alert(String msg) {
-    showCupertinoDialog(
-      context: context,
-      builder: (c) => CupertinoAlertDialog(
-        title: const Text('Notice'),
-        content: Text(msg),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(c),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    AppDialogs.alert(context, 'Notice', msg);
   }
 }
 

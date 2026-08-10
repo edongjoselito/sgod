@@ -35,6 +35,12 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
   }
 
   @override
+  void dispose() {
+    _vm.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: _vm,
@@ -194,10 +200,12 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
                                   CupertinoPageRoute(
                                     builder: (_) => AccomplishmentDetailView(
                                       item: vm.items[i],
-                                      onChanged: () => _vm.load(),
+                                      onChanged: () {},
                                     ),
                                   ),
-                                );
+                                ).then((_) {
+                                if (mounted) _vm.load();
+                              });
                               },
                             ),
                             if (i < vm.items.length - 1)

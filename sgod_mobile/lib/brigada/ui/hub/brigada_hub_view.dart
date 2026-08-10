@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_dialogs.dart';
 import '../../brigada_module.dart';
 import '../../data/brigada_models.dart';
 import '../../data/brigada_repository.dart';
@@ -94,54 +95,28 @@ class _BrigadaHubViewState extends State<BrigadaHubView> {
   }
 
   Future<void> _download() async {
-    final confirmed = await showCupertinoModalPopup<bool>(
-      context: context,
-      builder: (sheetContext) => CupertinoActionSheet(
-        title: const Text('Download for offline'),
-        message: Text(
+    final confirmed = await AppDialogs.confirm(
+      context,
+      title: 'Download for offline',
+      message:
           'Saves every district, school checklist, the preparedness report, '
           'survey results and the last 6 months of contributions for SY $_sy. '
           'Best done on Wi-Fi.',
-        ),
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.of(sheetContext).pop(true),
-            child: const Text('Download everything'),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          isDefaultAction: true,
-          onPressed: () => Navigator.of(sheetContext).pop(false),
-          child: const Text('Cancel'),
-        ),
-      ),
+      confirmText: 'Download everything',
     );
     if (confirmed != true) return;
     await BrigadaModule.sync.downloadForOffline(sy: _sy);
   }
 
   Future<void> _clearCache() async {
-    final confirmed = await showCupertinoModalPopup<bool>(
-      context: context,
-      builder: (sheetContext) => CupertinoActionSheet(
-        title: const Text('Clear offline data?'),
-        message: const Text(
+    final confirmed = await AppDialogs.confirm(
+      context,
+      title: 'Clear offline data?',
+      message:
           'Removes every saved Brigada report from this device. You will need '
           'a connection to view them again.',
-        ),
-        actions: [
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.of(sheetContext).pop(true),
-            child: const Text('Clear'),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          isDefaultAction: true,
-          onPressed: () => Navigator.of(sheetContext).pop(false),
-          child: const Text('Cancel'),
-        ),
-      ),
+      confirmText: 'Clear',
+      destructive: true,
     );
     if (confirmed != true) return;
     await BrigadaModule.sync.clearCache();

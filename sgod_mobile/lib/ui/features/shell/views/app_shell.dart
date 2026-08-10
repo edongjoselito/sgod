@@ -14,6 +14,7 @@ import '../../memos/views/memos_view.dart';
 import '../../schools/views/schools_view.dart';
 import 'app_sidebar.dart';
 import 'more_view.dart';
+import 'placeholder_view.dart';
 
 /// iOS-style app shell — CupertinoTabBar + slide-out sidebar.
 ///
@@ -45,6 +46,11 @@ class _AppShellState extends State<AppShell> {
     _pendingCount = DI.sync.pendingCount;
     DI.sync.addListener(_onSyncChanged);
     _connectivitySub = DI.connectivity.stream.listen(_onConnectivityChanged);
+    // Trigger initial sync on app launch
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      DI.sync.refreshPendingCount();
+      DI.sync.sync();
+    });
   }
 
   @override
@@ -148,17 +154,56 @@ class _AppShellState extends State<AppShell> {
   }
 
   List<_Tab> _tabsFor(UserProfile profile) {
-    return [
-      _Tab(
-        icon: PhosphorIconsRegular.house,
-        activeIcon: PhosphorIconsFill.house,
-        label: 'Home',
-        page: DashboardView(
-          role: profile.role,
-          profile: profile,
-          onMenuTap: _openSidebar,
-        ),
+    // Common Home tab for all roles
+    final homeTab = _Tab(
+      icon: PhosphorIconsRegular.house,
+      activeIcon: PhosphorIconsFill.house,
+      label: 'Home',
+      page: DashboardView(
+        role: profile.role,
+        profile: profile,
+        onMenuTap: _openSidebar,
       ),
+    );
+
+    final moreTab = _Tab(
+      icon: PhosphorIconsRegular.dotsThreeOutline,
+      activeIcon: PhosphorIconsFill.dotsThreeOutline,
+      label: 'More',
+      page: MoreView(profile: profile, onMenuTap: _openSidebar),
+    );
+
+    // School users get different tabs (no Schools management tab)
+    if (profile.role == Role.school) {
+      return [
+        homeTab,
+        _Tab(
+          icon: PhosphorIconsRegular.graduationCap,
+          activeIcon: PhosphorIconsFill.graduationCap,
+          label: 'Profile',
+          page: PlaceholderView(
+            title: 'School Profile',
+            icon: PhosphorIconsRegular.graduationCap,
+            onMenuTap: _openSidebar,
+          ),
+        ),
+        _Tab(
+          icon: PhosphorIconsRegular.usersThree,
+          activeIcon: PhosphorIconsFill.usersThree,
+          label: 'Personnel',
+          page: PlaceholderView(
+            title: 'Personnel',
+            icon: PhosphorIconsRegular.usersThree,
+            onMenuTap: _openSidebar,
+          ),
+        ),
+        moreTab,
+      ];
+    }
+
+    // SGOD-side roles: Home, Memos, Schools, More
+    return [
+      homeTab,
       _Tab(
         icon: PhosphorIconsRegular.bell,
         activeIcon: PhosphorIconsFill.bell,
@@ -171,12 +216,7 @@ class _AppShellState extends State<AppShell> {
         label: 'Schools',
         page: SchoolsView(onMenuTap: _openSidebar),
       ),
-      _Tab(
-        icon: PhosphorIconsRegular.dotsThreeOutline,
-        activeIcon: PhosphorIconsFill.dotsThreeOutline,
-        label: 'More',
-        page: MoreView(profile: profile, onMenuTap: _openSidebar),
-      ),
+      moreTab,
     ];
   }
 }

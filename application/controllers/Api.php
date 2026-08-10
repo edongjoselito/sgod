@@ -203,6 +203,57 @@ class Api extends CI_Controller {
     $this->_ok($this->Api_model->list_memos($limit, $offset));
   }
 
+  /** POST /api/memos_save — create or update a memo */
+  public function memos_save() {
+    if (!$this->_require_auth()) return;
+    $user = $this->api_auth->user();
+    $id = (int) $this->_input('id', 0);
+    $memoNo = trim((string) $this->_input('memoNo'));
+    $title  = trim((string) $this->_input('title'));
+
+    if ($memoNo === '' || $title === '') {
+      $this->_error('Memo number and title are required.', 422);
+      return;
+    }
+
+    // Check duplicate memo number within the same secGroup
+    $secGroup = $user->secGroup ?? 'SGOD';
+    $this->db->where('memoNo', $memoNo)->where('secGroup', $secGroup);
+    if ($id > 0) $this->db->where('id !=', $id);
+    $dup = $this->db->get('one_sgod_memo')->num_rows();
+    if ($dup > 0) {
+      $this->_error('Duplicate Memo Number.', 422);
+      return;
+    }
+
+    $data = array(
+      'memoNo'   => $memoNo,
+      'title'    => $title,
+      'added_by' => $user->username ?? '',
+      'secGroup' => $secGroup,
+    );
+
+    if ($id > 0) {
+      $this->db->where('id', $id)->update('one_sgod_memo', $data);
+      $this->_ok(array('id' => $id), 'Memo updated.');
+    } else {
+      $this->db->insert('one_sgod_memo', $data);
+      $this->_ok(array('id' => $this->db->insert_id()), 'Memo saved.');
+    }
+  }
+
+  /** POST /api/memos_delete { id } */
+  public function memos_delete() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    $this->db->where('id', $id)->delete('one_sgod_memo');
+    $this->_ok(array('id' => $id), 'Memo deleted.');
+  }
+
   // ── Accomplishments ───────────────────────────────────────────────────────
 
   /** GET /api/accomplishments?section= */
@@ -401,6 +452,44 @@ class Api extends CI_Controller {
     $this->_ok($this->Api_model->list_schools($district, $limit, $offset));
   }
 
+  /** POST /api/schools_save — update school info (mobile: edit only) */
+  public function schools_save() {
+    if (!$this->_require_auth()) return;
+    $recID = (int) $this->_input('recID', 0);
+    if ($recID <= 0) {
+      $this->_error('Valid recID is required for school update.', 422);
+      return;
+    }
+    $schoolName = trim((string) $this->_input('schoolName'));
+    if ($schoolName === '') {
+      $this->_error('School name is required.', 422);
+      return;
+    }
+
+    $data = array(
+      'schoolName'  => $schoolName,
+      'district'    => trim((string) $this->_input('district')),
+      'division'    => trim((string) $this->_input('division')),
+      'schoolType'  => trim((string) $this->_input('schoolType')),
+      'course'      => trim((string) $this->_input('course')),
+    );
+
+    $this->db->where('recID', $recID)->update('schools', $data);
+    $this->_ok(array('recID' => $recID), 'School updated.');
+  }
+
+  /** POST /api/schools_delete { recID } */
+  public function schools_delete() {
+    if (!$this->_require_auth()) return;
+    $recID = (int) $this->_input('recID', 0);
+    if ($recID <= 0) {
+      $this->_error('Valid recID is required.', 422);
+      return;
+    }
+    $this->db->where('recID', $recID)->delete('schools');
+    $this->_ok(array('recID' => $recID), 'School deleted.');
+  }
+
   // ── School personnel ──────────────────────────────────────────────────────
 
   /** GET /api/school_personnel?school_id= */
@@ -422,6 +511,69 @@ class Api extends CI_Controller {
     $limit  = (int) $this->input->get('limit', TRUE) ?: 50;
     $offset = (int) $this->input->get('offset', TRUE) ?: 0;
     $this->_ok($this->Api_model->list_activity_designs($limit, $offset));
+  }
+
+  /** POST /api/activity_designs_save — create or update */
+  public function activity_designs_save() {
+    if (!$this->_require_auth()) return;
+    $user = $this->api_auth->user();
+    $id = (int) $this->_input('id', 0);
+    $title = trim((string) $this->_input('title'));
+    if ($title === '') {
+      $this->_error('Title is required.', 422);
+      return;
+    }
+
+    $data = array(
+      'title'        => $title,
+      'activity_date'=> trim((string) $this->_input('activity_date')),
+      'venue'        => trim((string) $this->_input('venue')),
+      'rationale'    => trim((string) $this->_input('rationale')),
+      'objectives'   => trim((string) $this->_input('objectives')),
+      'fund_source'  => trim((string) $this->_input('fund_source')),
+      'updated_at'   => date('Y-m-d H:i:s'),
+    );
+
+    if ($id > 0) {
+      $existing = $this->db->where('id', $id)
+        ->where('username', $user->username ?? '')
+        ->get('one_sgod_activity_designs')->row();
+      if (!$existing) {
+        $this->_error('Activity design not found or access denied.', 404);
+        return;
+      }
+      $this->db->where('id', $id)->update('one_sgod_activity_designs', $data);
+      $this->_ok(array('id' => $id), 'Activity design updated.');
+    } else {
+      $data['username'] = $user->username ?? '';
+      $data['created_at'] = date('Y-m-d H:i:s');
+      // Generate next activity design number
+      $lastRow = $this->db->order_by('id', 'DESC')->get('one_sgod_activity_designs', 1)->row();
+      $nextNum = $lastRow ? (int) $lastRow->id + 1 : 1;
+      $data['activity_design_no'] = 'AD-' . date('Y') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+      $this->db->insert('one_sgod_activity_designs', $data);
+      $this->_ok(array('id' => $this->db->insert_id()), 'Activity design saved.');
+    }
+  }
+
+  /** POST /api/activity_designs_delete { id } */
+  public function activity_designs_delete() {
+    if (!$this->_require_auth()) return;
+    $user = $this->api_auth->user();
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    $entry = $this->db->where('id', $id)
+      ->where('username', $user->username ?? '')
+      ->get('one_sgod_activity_designs')->row();
+    if (!$entry) {
+      $this->_error('Activity design not found or access denied.', 404);
+      return;
+    }
+    $this->db->where('id', $id)->delete('one_sgod_activity_designs');
+    $this->_ok(array('id' => $id), 'Activity design deleted.');
   }
 
   // ── Issues / Concerns ─────────────────────────────────────────────────────
@@ -493,6 +645,59 @@ class Api extends CI_Controller {
     $this->_ok($this->Api_model->list_whereabouts($secGroup, $limit, $offset));
   }
 
+  /** POST /api/whereabouts_save — create or update whereabouts */
+  public function whereabouts_save() {
+    if (!$this->_require_auth()) return;
+    $user = $this->api_auth->user();
+    $id = (int) $this->_input('id', 0);
+
+    $date     = trim((string) $this->_input('date'));
+    $location = trim((string) $this->_input('location'));
+    $activity = trim((string) $this->_input('activity'));
+    $status   = trim((string) $this->_input('status'));
+    $notes    = trim((string) $this->_input('notes'));
+
+    if ($date === '' || $activity === '' || $status === '') {
+      $this->_error('Date, activity, and status are required.', 422);
+      return;
+    }
+
+    $data = array(
+      'date'     => $date,
+      'location' => $location,
+      'activity' => $activity,
+      'status'   => $status,
+      'notes'    => $notes,
+      'updated_at' => date('Y-m-d H:i:s'),
+    );
+
+    if ($id > 0) {
+      $this->db->where('id', $id)->update('one_sgod_employee_whereabouts', $data);
+      $this->_ok(array('id' => $id), 'Whereabouts updated.');
+    } else {
+      $data['username'] = $user->username ?? '';
+      $data['fName']    = $user->fName ?? $user->fname ?? '';
+      $data['lName']    = $user->lName ?? $user->lname ?? '';
+      $data['section']  = $user->section ?? '';
+      $data['secGroup'] = $user->secGroup ?? 'SGOD';
+      $data['created_at'] = date('Y-m-d H:i:s');
+      $this->db->insert('one_sgod_employee_whereabouts', $data);
+      $this->_ok(array('id' => $this->db->insert_id()), 'Whereabouts saved.');
+    }
+  }
+
+  /** POST /api/whereabouts_delete { id } */
+  public function whereabouts_delete() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    $this->db->where('id', $id)->delete('one_sgod_employee_whereabouts');
+    $this->_ok(array('id' => $id), 'Whereabouts deleted.');
+  }
+
   // ── Section Users ─────────────────────────────────────────────────────────
 
   /** GET /api/section_users */
@@ -512,5 +717,252 @@ class Api extends CI_Controller {
     $user = $this->api_auth->user();
     $secGroup = $user->secGroup ?? 'SGOD';
     $this->_ok($this->Api_model->list_sections($secGroup));
+  }
+
+  // ── Adopt-A-School: Partners ──────────────────────────────────────────────
+
+  /** GET /api/partners?search= */
+  public function partners_index() {
+    if (!$this->_require_auth()) return;
+    $search = trim((string) $this->input->get('search', TRUE));
+    $limit  = (int) $this->input->get('limit', TRUE) ?: 100;
+    $offset = (int) $this->input->get('offset', TRUE) ?: 0;
+
+    $this->db->order_by('name', 'ASC');
+    if ($search !== '') {
+      $this->db->group_start()
+        ->like('name', $search)
+        ->or_like('contact_person', $search)
+        ->or_like('general_type', $search)
+        ->group_end();
+    }
+    $rows = $this->db->limit($limit, $offset)->get('brigada_partners')->result_array();
+    $this->_ok($rows);
+  }
+
+  /** POST /api/partners_save — create or update a partner */
+  public function partners_save() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    $name = trim((string) $this->_input('name'));
+    if ($name === '') {
+      $this->_error('Partner name is required.', 422);
+      return;
+    }
+
+    $data = array(
+      'name'           => $name,
+      'address'        => trim((string) $this->_input('address')),
+      'contact_person' => trim((string) $this->_input('contact_person')),
+      'contact'        => trim((string) $this->_input('contact')),
+      'general_type'   => trim((string) $this->_input('general_type')),
+      'specific_type'  => trim((string) $this->_input('specific_type')),
+    );
+
+    if ($id > 0) {
+      $this->db->where('id', $id)->update('brigada_partners', $data);
+      $this->_ok(array('id' => $id), 'Partner updated.');
+    } else {
+      $this->db->insert('brigada_partners', $data);
+      $this->_ok(array('id' => $this->db->insert_id()), 'Partner saved.');
+    }
+  }
+
+  /** POST /api/partners_delete { id } */
+  public function partners_delete() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    $this->db->where('id', $id)->delete('brigada_partners');
+    $this->_ok(array('id' => $id), 'Partner deleted.');
+  }
+
+  // ── Adopt-A-School: Donations ─────────────────────────────────────────────
+
+  /** GET /api/donations?partner_id= */
+  public function donations_index() {
+    if (!$this->_require_auth()) return;
+    $partnerId = (int) $this->input->get('partner_id', TRUE);
+    $limit  = (int) $this->input->get('limit', TRUE) ?: 100;
+    $offset = (int) $this->input->get('offset', TRUE) ?: 0;
+
+    $this->db->select('r.*, p.name as partner_name');
+    $this->db->from('brigada_contribution_report r');
+    $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+    if ($partnerId > 0) $this->db->where('r.partners_id', $partnerId);
+    $this->db->order_by('r.c_date', 'DESC');
+    $rows = $this->db->limit($limit, $offset)->get()->result_array();
+
+    // Attach breakdown items for each donation
+    foreach ($rows as &$r) {
+      $r['breakdown'] = $this->db->where('report_id', $r['id'])
+        ->get('brigada_contribution_breakdown')->result_array();
+    }
+    $this->_ok($rows);
+  }
+
+  /** POST /api/donations_save — create or update a donation */
+  public function donations_save() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    $partnerId = (int) $this->_input('partners_id', 0);
+    if ($partnerId <= 0) {
+      $this->_error('Partner is required.', 422);
+      return;
+    }
+
+    $data = array(
+      'partners_id'             => $partnerId,
+      'c_date'                  => trim((string) $this->_input('c_date')),
+      'spicific_contribution'   => trim((string) $this->_input('spicific_contribution')),
+      'unit_of_contribution'    => trim((string) $this->_input('unit_of_contribution')),
+      'quantity_of_conftribution' => (float) $this->_input('quantity', 0),
+      'amount'                  => (float) $this->_input('amount', 0),
+      'no_beneficiary_learnes'  => (int) $this->_input('no_beneficiary_learnes', 0),
+      'no_beneficiary_personnel'=> (int) $this->_input('no_beneficiary_personnel', 0),
+      'form_of_agreement'       => trim((string) $this->_input('form_of_agreement')),
+      'agreement_started'       => trim((string) $this->_input('agreement_started')),
+      'agreement_end'           => trim((string) $this->_input('agreement_end')),
+      'project_category'        => trim((string) $this->_input('project_category')),
+      'project_name'            => trim((string) $this->_input('project_name')),
+      'status_agreement'        => trim((string) $this->_input('status_agreement')),
+      'tax_incentive_applicable'=> (int) $this->_input('tax_incentive_applicable', 0),
+      'initiated_by'            => trim((string) $this->_input('initiated_by')),
+      'remarks'                 => trim((string) $this->_input('remarks')),
+      'sy'                      => trim((string) $this->_input('sy')),
+    );
+
+    if ($id > 0) {
+      $this->db->where('id', $id)->update('brigada_contribution_report', $data);
+      $this->_ok(array('id' => $id), 'Donation updated.');
+    } else {
+      $this->db->insert('brigada_contribution_report', $data);
+      $this->_ok(array('id' => $this->db->insert_id()), 'Donation saved.');
+    }
+  }
+
+  /** POST /api/donations_delete { id } */
+  public function donations_delete() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    $this->db->where('id', $id)->delete('brigada_contribution_report');
+    $this->db->where('report_id', $id)->delete('brigada_contribution_breakdown');
+    $this->_ok(array('id' => $id), 'Donation deleted.');
+  }
+
+  // ── Adopt-A-School: Tax Incentive Requirements ────────────────────────────
+
+  /** GET /api/tax_incentive_requirements?donation_id= */
+  public function tax_incentive_requirements_index() {
+    if (!$this->_require_auth()) return;
+    $donationId = (int) $this->input->get('donation_id', TRUE);
+    if ($donationId <= 0) {
+      $this->_ok(array());
+      return;
+    }
+    $rows = $this->db->where('donation_id', $donationId)
+      ->order_by('id', 'ASC')
+      ->get('brigada_tax_incentive_requirements')
+      ->result_array();
+    $this->_ok($rows);
+  }
+
+  /** POST /api/tax_incentive_requirements_save */
+  public function tax_incentive_requirements_save() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    $donationId = (int) $this->_input('donation_id', 0);
+    $requirement = trim((string) $this->_input('requirement'));
+    if ($donationId <= 0 || $requirement === '') {
+      $this->_error('Donation ID and requirement text are required.', 422);
+      return;
+    }
+
+    $data = array(
+      'donation_id' => $donationId,
+      'requirement' => $requirement,
+      'status'      => trim((string) $this->_input('status', 'Pending')),
+      'remarks'     => trim((string) $this->_input('remarks')),
+    );
+
+    if ($id > 0) {
+      $this->db->where('id', $id)->update('brigada_tax_incentive_requirements', $data);
+      $this->_ok(array('id' => $id), 'Requirement updated.');
+    } else {
+      $this->db->insert('brigada_tax_incentive_requirements', $data);
+      $this->_ok(array('id' => $this->db->insert_id()), 'Requirement saved.');
+    }
+  }
+
+  /** POST /api/tax_incentive_requirements_delete { id } */
+  public function tax_incentive_requirements_delete() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    $this->db->where('id', $id)->delete('brigada_tax_incentive_requirements');
+    $this->_ok(array('id' => $id), 'Requirement deleted.');
+  }
+
+  // ── Adopt-A-School: Contribution Types ────────────────────────────────────
+
+  /** GET /api/contribution_types */
+  public function contribution_types_index() {
+    if (!$this->_require_auth()) return;
+    $rows = $this->db->order_by('name', 'ASC')
+      ->get('brigada_contribution_type')
+      ->result_array();
+    $this->_ok($rows);
+  }
+
+  // ── Adopt-A-School: ASP Tracking ──────────────────────────────────────────
+
+  /** GET /api/asp_tracking — lists all tax-incentive-applicable donations
+   *  with their requirement completion status. */
+  public function asp_tracking_index() {
+    if (!$this->_require_auth()) return;
+
+    // Get all donations where tax_incentive_applicable = 1
+    $this->db->select('r.id as donation_id, r.c_date, r.spicific_contribution,
+                       r.amount, r.project_name, r.status_agreement,
+                       p.id as partner_id, p.name as partner_name');
+    $this->db->from('brigada_contribution_report r');
+    $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+    $this->db->where('r.tax_incentive_applicable', 1);
+    $this->db->order_by('p.name', 'ASC');
+    $this->db->order_by('r.c_date', 'DESC');
+    $donations = $this->db->get()->result_array();
+
+    // For each donation, get its requirements and completion stats
+    foreach ($donations as &$d) {
+      $reqs = $this->db->where('donation_id', $d['donation_id'])
+        ->get('brigada_tax_incentive_requirements')
+        ->result_array();
+      $total = count($reqs);
+      $completed = 0;
+      $pending = 0;
+      foreach ($reqs as $req) {
+        $status = strtolower($req['status'] ?? 'pending');
+        if ($status === 'approved' || $status === 'completed' || $status === 'submitted') {
+          $completed++;
+        } else {
+          $pending++;
+        }
+      }
+      $d['total_requirements'] = $total;
+      $d['completed_requirements'] = $completed;
+      $d['pending_requirements'] = $pending;
+      $d['requirements'] = $reqs;
+    }
+    $this->_ok($donations);
   }
 }

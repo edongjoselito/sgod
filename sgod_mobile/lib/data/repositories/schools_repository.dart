@@ -47,4 +47,18 @@ class SchoolsRepository {
           s.schoolID.toLowerCase().contains(q);
     }).toList();
   }
+
+  /// Delete a school by recID.
+  Future<void> delete(String recID) async {
+    await _api.post('api/schools_delete', body: {'recID': recID});
+    _cache?.remove(_key);
+  }
+
+  /// Save (update) a school record. [recID] is required.
+  Future<String> save(Map<String, dynamic> fields, {required String recID}) async {
+    final body = <String, dynamic>{...fields, 'recID': recID};
+    final data = await _api.post('api/schools_save', body: body);
+    _cache?.remove(_key);
+    return (data?['recID'] ?? recID).toString();
+  }
 }

@@ -55,9 +55,26 @@ class IssuesRepository {
     return int.tryParse(data?.toString() ?? '') ?? 0;
   }
 
+  /// Updates an existing issue identified by [id] with the given [fields].
+  /// The `issues_concerns_save` endpoint handles both create (id == 0) and
+  /// update (id > 0), so we simply include the id in the request body.
+  Future<int> update(String id, Map<String, dynamic> fields) async {
+    final body = <String, dynamic>{...fields, 'id': id};
+    final data = await _api.post('api/issues_concerns_save', body: body);
+    _cache?.remove(_key);
+    if (data is Map<String, dynamic>) {
+      final newId = data['id'];
+      if (newId is int) return newId;
+      return int.tryParse(newId?.toString() ?? '') ?? 0;
+    }
+    if (data is int) return data;
+    return int.tryParse(data?.toString() ?? '') ?? 0;
+  }
+
   /// Deletes the issue with the given [id]. Returns true on success.
   Future<bool> delete(String id) async {
     await _api.post('api/issues_concerns_delete', body: {'id': id});
+    _cache?.remove(_key);
     return true;
   }
 }

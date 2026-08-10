@@ -13,6 +13,12 @@ class WhereaboutsViewModel extends ChangeNotifier {
   List<WhereaboutsItem> _items = [];
   List<WhereaboutsItem> get items => _items;
 
+  /// Items after the current search query has been applied.
+  List<WhereaboutsItem> get filteredItems => _search(_items, _searchQuery);
+
+  String _searchQuery = '';
+  String get searchQuery => _searchQuery;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -36,5 +42,29 @@ class WhereaboutsViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Updates the search query and notifies listeners so the view re-filters.
+  void search(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
+  /// Clears the current search filter.
+  void clearSearch() {
+    _searchQuery = '';
+    notifyListeners();
+  }
+
+  /// Client-side search across name, activity, and location.
+  List<WhereaboutsItem> _search(List<WhereaboutsItem> items, String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return items;
+    return items.where((w) {
+      final name = '${w.fName} ${w.lName}'.toLowerCase();
+      return name.contains(q) ||
+          w.activity.toLowerCase().contains(q) ||
+          w.location.toLowerCase().contains(q);
+    }).toList();
   }
 }
