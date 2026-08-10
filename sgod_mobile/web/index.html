@@ -34,6 +34,14 @@
 
   <!-- sql.js for Drift web database support -->
   <script src="https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.js"></script>
+  <script>
+    // Tell sql.js where to find the WASM binary.
+    window.sqlJsOptions = {
+      locateFile: function(file) {
+        return 'https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/' + file;
+      }
+    };
+  </script>
 </head>
 <body>
   <!--

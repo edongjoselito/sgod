@@ -29,6 +29,8 @@ class Api extends CI_Controller {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
     header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With');
+    header('Access-Control-Expose-Headers: Content-Type, Authorization');
+    header('Access-Control-Max-Age: 86400');
 
     // Respond to CORS preflight and stop.
     if (strtoupper($_SERVER['REQUEST_METHOD']) === 'OPTIONS') {
