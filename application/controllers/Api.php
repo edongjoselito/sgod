@@ -35,6 +35,12 @@ class Api extends CI_Controller {
       http_response_code(204);
       exit;
     }
+
+    // Self-heal the e-Brigada schema on every request. Idempotent — short
+    // circuits on a stored fingerprint, never drops anything. See
+    // docs/E_BRIGADA_ALIGNMENT_SPEC.md §4 (Workstream A).
+    $this->load->library('schema_guard');
+    $this->schema_guard->ensure();
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -164,30 +170,28 @@ class Api extends CI_Controller {
     $this->_ok($profile);
   }
 
-  /**
-   * GET /api/auth_diag — deployment self-check for the mobile bearer-token
-   * flow. Reports only booleans (never a token or any user data) so it is
-   * safe to hit from a browser while diagnosing 401 loops.
-   */
-  public function auth_diag() {
-    $token = $this->api_auth->read_bearer_token();
-    $this->_ok(array(
-      'php_sapi'              => php_sapi_name(),
-      'apache_headers_fn'     => function_exists('apache_request_headers'),
-      'ci_sees_authorization' => $this->input->get_request_header('Authorization', FALSE) !== NULL,
-      'server_authorization'  => !empty($_SERVER['HTTP_AUTHORIZATION']),
-      'redirect_authorization'=> !empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION']),
-      'token_received'        => $token !== '',
-      'token_recognized'      => $token !== '' && $this->api_auth->validate_token(),
-      'api_tokens_table'      => $this->db->table_exists('api_tokens'),
-    ));
-  }
-
   /** POST /api/auth/logout */
   public function auth_logout() {
     // Best-effort — revoke even if the token is slightly off.
     $this->api_auth->revoke_current_token();
     $this->_ok(NULL, 'Logged out.');
+  }
+
+  /**
+   * GET /api/schema_check — boolean-only diagnostic.
+   *
+   * Forces a fresh Schema_guard pass (so a hand-dropped column is reported as
+   * FALSE and re-created) and reports per-table/column/index booleans. No
+   * data, no tokens. See docs/E_BRIGADA_ALIGNMENT_SPEC.md §4.
+   */
+  public function schema_check() {
+    $this->load->library('schema_guard');
+    $report = $this->schema_guard->schema_check();
+    $this->_ok(array(
+      'schema_guard' => $report,
+      'fingerprint'  => $this->db->where('meta_key', 'schema_guard_fingerprint')
+        ->get('system_meta', 1)->row()->meta_value ?? NULL,
+    ));
   }
 
   // ── Dashboard ─────────────────────────────────────────────────────────────
@@ -629,19 +633,20 @@ class Api extends CI_Controller {
     $description = trim((string) $this->_input('description'));
     $priority    = trim((string) $this->_input('priority', 'Normal'));
     $year        = trim((string) $this->_input('year', date('Y')));
+    $id          = (int) $this->_input('id');
 
-    if ($title === '' || $description === '') {
-      $this->_error('Title and description are required.', 422);
+    if ($title === '') {
+      $this->_error('Title is required.', 422);
       return;
     }
-    $id = $this->Api_model->save_issue_concern(
-      $section, $secGroup, $username, $title, $description, $priority, $year
+    $resultId = $this->Api_model->save_issue_concern(
+      $section, $secGroup, $username, $title, $description, $priority, $year, $id
     );
-    if (!$id) {
+    if (!$resultId) {
       $this->_error('Could not save the issue.', 500);
       return;
     }
-    $this->_ok(array('id' => $id), 'Issue saved.');
+    $this->_ok(array('id' => $resultId), $id > 0 ? 'Issue updated.' : 'Issue saved.');
   }
 
   /** POST /api/issues_concerns_delete */
@@ -654,7 +659,9 @@ class Api extends CI_Controller {
     }
     $user = $this->api_auth->user();
     $username = $user->username ?? '';
-    $ok = $this->Api_model->delete_issue_concern($id, $username);
+    $section  = $user->section ?? '';
+    $secGroup = $user->secGroup ?? '';
+    $ok = $this->Api_model->delete_issue_concern($id, $username, $section, $secGroup);
     if (!$ok) {
       $this->_error('Could not delete the issue.', 404);
       return;

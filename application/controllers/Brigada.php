@@ -21,6 +21,12 @@ class Brigada extends CI_Controller
         $this->ensure_brigada_contribution_breakdown_table();
         $this->ensure_brigada_contribution_report_tax_fields();
         $this->ensure_brigada_tax_incentive_requirements_table();
+
+        // Self-heal the e-Brigada alignment schema (Workstream A). Idempotent
+        // and additive-only — never drops anything the legacy ensure_* calls
+        // above created. See docs/E_BRIGADA_ALIGNMENT_SPEC.md §4.
+        $this->load->library('schema_guard');
+        $this->schema_guard->ensure();
     }
 
     private function ensure_brigada_contribution_breakdown_table()
@@ -1154,6 +1160,9 @@ class Brigada extends CI_Controller
         $data['partner'] = $this->db->where('id', (int) $donation->partners_id)->get('brigada_partners', 1)->row();
         $data['schools'] = $this->Common->no_cond('schools');
         $data['contributionTypes'] = $this->db->table_exists('brigada_contribution_type') ? $this->Common->no_cond('brigada_contribution_type') : [];
+        // Workstream C: supporting documents for this contribution.
+        $data['attachments'] = $this->BrigadaModel->get_attachments('contribution', (int) $donation->id);
+        $data['flags'] = $this->BrigadaModel->get_flags((int) $donation->id);
         $data['title'] = 'Update Donation';
         $this->load->view('pages/brigada_partner_donation_edit', $data);
     }
@@ -1167,12 +1176,23 @@ class Brigada extends CI_Controller
         }
 
         $selectedPartnerType = trim((string) $this->input->get('partner_type', TRUE));
+        // Workstream D step 1: scope every aggregate to a single school year so
+        // division totals stop blending 2024-2025 / 2025-2026 / 2026-2027.
+        // Default to the session's current SY; allow ?sy= to override, and
+        // ?sy=all to deliberately view every year.
+        $selectedSy = trim((string) $this->input->get('sy', TRUE));
+        $scopeSy = $selectedSy !== '' && $selectedSy !== 'all'
+            ? $selectedSy
+            : ($this->session->userdata('cur_sy') ?: '');
 
         $this->db->select('r.*, p.name AS partner_name, p.general_type AS partner_type_key');
         $this->db->from('brigada_contribution_report r');
         $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
         if ($selectedPartnerType !== '') {
             $this->db->where('p.general_type', $selectedPartnerType);
+        }
+        if ($scopeSy !== '') {
+            $this->db->where('r.sy', $scopeSy);
         }
         if ($this->db->table_exists('brigada_contribution_type')) {
             $this->db->select("REPLACE(c.name, '_', ' ') AS contribution_type", FALSE);
@@ -1185,6 +1205,9 @@ class Brigada extends CI_Controller
         $data['donations'] = $this->db->order_by('r.c_date', 'DESC')->get()->result();
         $this->db->select_sum('r.amount', 'total_amount');
         $this->db->from('brigada_contribution_report r');
+        if ($scopeSy !== '') {
+            $this->db->where('r.sy', $scopeSy);
+        }
         if ($selectedPartnerType !== '') {
             $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
             $this->db->where('p.general_type', $selectedPartnerType);
@@ -1194,9 +1217,14 @@ class Brigada extends CI_Controller
         $this->db->select('COUNT(*) AS record_count, SUM(COALESCE(r.amount, 0)) AS total_amount, p.general_type AS partner_type_key, REPLACE(COALESCE(NULLIF(p.general_type, \'\'), \'Unspecified\'), \'_\', \' \') AS partner_type', FALSE);
         $this->db->from('brigada_contribution_report r');
         $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
+        if ($scopeSy !== '') {
+            $this->db->where('r.sy', $scopeSy);
+        }
         $this->db->group_by('p.general_type');
         $data['typeSummary'] = $this->db->order_by('total_amount', 'DESC')->get()->result();
         $data['selectedPartnerType'] = $selectedPartnerType;
+        $data['selectedSy'] = $scopeSy;
+        $data['syValues'] = $this->BrigadaModel->available_sy_values();
         $data['title'] = 'All Donation Details';
         $this->load->view('pages/brigada_all_donation_details', $data);
     }
@@ -1215,11 +1243,19 @@ class Brigada extends CI_Controller
             redirect(base_url() . 'Brigada/all_donation_details');
             return;
         }
+        // Workstream D step 1: same SY scoping as all_donation_details.
+        $selectedSy = trim((string) $this->input->get('sy', TRUE));
+        $scopeSy = $selectedSy !== '' && $selectedSy !== 'all'
+            ? $selectedSy
+            : ($this->session->userdata('cur_sy') ?: '');
 
         $this->db->select('r.*, p.name AS partner_name');
         $this->db->from('brigada_contribution_report r');
         $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
         $this->db->where('p.general_type', $partnerType);
+        if ($scopeSy !== '') {
+            $this->db->where('r.sy', $scopeSy);
+        }
         if ($this->db->table_exists('brigada_contribution_type')) {
             $this->db->select("REPLACE(c.name, '_', ' ') AS contribution_type", FALSE);
             $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
@@ -1237,6 +1273,9 @@ class Brigada extends CI_Controller
         $this->db->from('brigada_contribution_report r');
         $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
         $this->db->where('p.general_type', $partnerType);
+        if ($scopeSy !== '') {
+            $this->db->where('r.sy', $scopeSy);
+        }
         if ($selectedContributionType !== '' && $this->db->table_exists('brigada_contribution_type')) {
             $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
             $this->db->where('c.name', $selectedContributionType);
@@ -1251,13 +1290,218 @@ class Brigada extends CI_Controller
             $this->db->join('brigada_partners p', 'p.id = r.partners_id', 'left');
             $this->db->join('brigada_contribution_type c', 'c.id = r.contribution_id', 'left');
             $this->db->where('p.general_type', $partnerType);
+            if ($scopeSy !== '') {
+                $this->db->where('r.sy', $scopeSy);
+            }
             $this->db->group_by('c.name');
             $data['contributionSummary'] = $this->db->order_by('record_count', 'DESC')->get()->result();
         }
         $data['partnerType'] = $partnerType;
         $data['selectedContributionType'] = $selectedContributionType;
+        $data['selectedSy'] = $scopeSy;
+        $data['syValues'] = $this->BrigadaModel->available_sy_values();
         $data['title'] = 'Donation Type Details';
         $this->load->view('pages/brigada_donation_type_details', $data);
+    }
+
+    /**
+     * Validation queue — SMN/SGOD-only review of Brigada submissions.
+     * (Workstream B, spec §5.) School-position users are bounced, mirroring
+     * the guard already used in all_donation_details.
+     */
+    public function validation_queue()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot access the validation queue.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $filters = array(
+            'sy'                 => trim((string) $this->input->get('sy', TRUE)),
+            'district'           => trim((string) $this->input->get('district', TRUE)),
+            'school_id'          => trim((string) $this->input->get('school_id', TRUE)),
+            'validation_status'  => trim((string) $this->input->get('validation_status', TRUE)),
+            'partner_type'       => trim((string) $this->input->get('partner_type', TRUE)),
+        );
+
+        $data['donations']    = $this->BrigadaModel->validation_queue($filters);
+        $data['filters']      = $filters;
+        $data['syValues']     = $this->BrigadaModel->available_sy_values();
+        $data['districts']    = $this->db->table_exists('district')
+            ? $this->db->where('id !=', 18)->order_by('discription', 'ASC')->get('district')->result()
+            : array();
+        $data['partnerTypes'] = $this->db->table_exists('brigada_partners')
+            ? $this->db->distinct()->select('general_type')
+                ->where('general_type IS NOT NULL')->where('general_type !=', '')
+                ->get('brigada_partners')->result()
+            : array();
+        $data['title'] = 'Brigada Validation Queue';
+        $this->load->view('pages/brigada_validation_queue', $data);
+    }
+
+    /**
+     * POST handler for a single validation decision. Server-side rule lives in
+     * BrigadaModel::validate_report() so it cannot be bypassed from the UI.
+     */
+    public function validation_decide()
+    {
+        if (strtoupper($this->input->method(TRUE)) !== 'POST') {
+            redirect(base_url() . 'Brigada/validation_queue');
+            return;
+        }
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot validate submissions.');
+            redirect(base_url() . 'Brigada/validation_queue');
+            return;
+        }
+
+        $reportId = (int) $this->input->post('report_id');
+        $action   = trim((string) $this->input->post('action'));
+        $remarks  = trim((string) $this->input->post('remarks'));
+        $res = $this->BrigadaModel->validate_report(
+            $reportId, $action, $this->session->username, $remarks
+        );
+        if ($res['ok']) {
+            $this->session->set_flashdata('success', $res['message']);
+        } else {
+            $this->session->set_flashdata('danger', $res['message']);
+        }
+        redirect(base_url() . 'Brigada/validation_queue' . $this->_validation_query_string($this->input->post()));
+    }
+
+    /** POST handler for bulk validation. */
+    public function validation_bulk()
+    {
+        if (strtoupper($this->input->method(TRUE)) !== 'POST') {
+            redirect(base_url() . 'Brigada/validation_queue');
+            return;
+        }
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot validate submissions.');
+            redirect(base_url() . 'Brigada/validation_queue');
+            return;
+        }
+        $ids = $this->input->post('report_ids');
+        if (!is_array($ids)) $ids = array();
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids, function ($i) { return $i > 0; });
+        $res = $this->BrigadaModel->bulk_validate($ids, $this->session->username);
+        $this->session->set_flashdata(
+            'success',
+            'Validated ' . $res['validated'] . ', skipped ' . $res['skipped'] . '.'
+        );
+        if (!empty($res['messages'])) {
+            $this->session->set_flashdata('danger', implode(' | ', $res['messages']));
+        }
+        redirect(base_url() . 'Brigada/validation_queue' . $this->_validation_query_string($this->input->post()));
+    }
+
+    /** Rebuild the filter query string from the submitted filter fields. */
+    private function _validation_query_string($post)
+    {
+        $keep = array('sy', 'district', 'school_id', 'validation_status', 'partner_type');
+        $parts = array();
+        foreach ($keep as $k) {
+            $v = trim((string) ($post[$k] ?? ''));
+            if ($v !== '') $parts[] = $k . '=' . rawurlencode($v);
+        }
+        return $parts ? '?' . implode('&', $parts) : '';
+    }
+
+    // ── Workstream D steps 2-5: year-on-year analytics + rankings ────────────
+
+    /**
+     * Brigada/yoy — division-wide year-on-year comparison with by-district and
+     * by-contribution-type splits for a chosen pair of years, plus top-N
+     * rankings. SMN/SGOD only; school users are bounced. Charts use the
+     * Chart.js library already in use across the dashboards (spec §7).
+     */
+    public function yoy()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot view year-on-year analytics.');
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+
+        $syValues = $this->BrigadaModel->available_sy_values();
+        $syA = trim((string) $this->input->get('sy_a', TRUE));
+        $syB = trim((string) $this->input->get('sy_b', TRUE));
+        // Default: the two most recent years.
+        if (count($syValues) >= 2) {
+            if ($syA === '') $syA = $syValues[0];
+            if ($syB === '') $syB = $syValues[1];
+        } elseif (count($syValues) === 1) {
+            if ($syA === '') $syA = $syValues[0];
+            if ($syB === '') $syB = $syValues[0];
+        }
+
+        $data['syA'] = $syA;
+        $data['syB'] = $syB;
+        $data['syValues'] = $syValues;
+        $data['totals']      = $this->BrigadaModel->yoy_totals($syA, $syB);
+        $data['districtsA']  = $this->BrigadaModel->yoy_by_district($syA);
+        $data['districtsB']  = $this->BrigadaModel->yoy_by_district($syB);
+        $data['typesA']      = $this->BrigadaModel->yoy_by_contribution_type($syA);
+        $data['typesB']      = $this->BrigadaModel->yoy_by_contribution_type($syB);
+        $data['topSchools']  = $this->BrigadaModel->top_schools($syA, 10);
+        $data['topStakeholders'] = $this->BrigadaModel->top_stakeholders($syA, 10);
+        $data['title'] = 'Brigada Year-on-Year';
+        $this->load->view('pages/brigada_yoy', $data);
+    }
+
+    // ── Workstream C: supporting documents (attachments) ────────────────────
+
+    /**
+     * POST Brigada/attachment_upload  (multipart: file, entity_type, entity_id, sy, school_id)
+     *
+     * Whitelist + size cap + server-side MIME validation live in BrigadaModel.
+     * Files land in uploads/brigada/<sy>/<school_id>/ with a randomised name.
+     */
+    public function attachment_upload()
+    {
+        if (strtoupper($this->input->method(TRUE)) !== 'POST') {
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+        $entityType = trim((string) $this->input->post('entity_type'));
+        $entityId   = (int) $this->input->post('entity_id');
+        $sy         = trim((string) $this->input->post('sy')) ?: ($this->session->userdata('cur_sy') ?: '');
+        $schoolId   = trim((string) $this->input->post('school_id')) ?: $this->session->username;
+
+        $v = $this->BrigadaModel->validate_attachment('file');
+        if (!$v['ok']) {
+            $this->session->set_flashdata('danger', $v['message']);
+            redirect($this->input->post('redirect') ?: (base_url() . 'Brigada/contribution_report'));
+            return;
+        }
+        $res = $this->BrigadaModel->save_attachment($v, $entityType, $entityId, $sy, $schoolId, $this->session->username);
+        if (!$res['ok']) {
+            $this->session->set_flashdata('danger', $res['message']);
+        } else {
+            $this->session->set_flashdata('success', $res['message']);
+            // Recompute flags so MISSING_ATTACHMENT clears when a doc lands.
+            if ($entityType === 'contribution') $this->BrigadaModel->recompute_flags($entityId);
+        }
+        redirect($this->input->post('redirect') ?: (base_url() . 'Brigada/contribution_report'));
+    }
+
+    /** POST Brigada/attachment_delete  (attachment_id) — ownership-checked. */
+    public function attachment_delete()
+    {
+        if (strtoupper($this->input->method(TRUE)) !== 'POST') {
+            redirect(base_url() . 'Brigada/list_of_partners');
+            return;
+        }
+        $id = (int) $this->input->post('attachment_id');
+        $res = $this->BrigadaModel->delete_attachment($id, $this->session->username, $this->session->userdata('position'));
+        if (!$res['ok']) {
+            $this->session->set_flashdata('danger', $res['message']);
+        } else {
+            $this->session->set_flashdata('success', $res['message']);
+        }
+        redirect($this->input->post('redirect') ?: (base_url() . 'Brigada/contribution_report'));
     }
 
     public function settings_partners() {
@@ -1916,6 +2160,152 @@ public function contribution_dpds_export()
     $writer->save('php://output');
     exit;
 }
+
+    /**
+     * Workstream E — division-level consolidated export.
+     *
+     * Scoped by sy + optional district + optional contribution type. NOT by
+     * session username. Blocked for School-position users. Streams (does not
+     * buffer) so it scales past 2,578 rows. Sheets: division summary,
+     * per-district totals, per-school detail, stakeholder-sector summary.
+     * Reuses the DPDS theme colors + PhpSpreadsheet; the per-school monthly
+     * DPDS export above is left untouched.
+     */
+    public function contribution_division_export()
+    {
+        if ($this->session->userdata('position') === 'School') {
+            $this->session->set_flashdata('danger', 'School users cannot export the division report.');
+            redirect(base_url() . 'Brigada/all_donation_details');
+            return;
+        }
+        require_once FCPATH . 'vendor/autoload.php';
+
+        $sy              = trim((string) $this->input->get('sy', TRUE)) ?: ($this->session->userdata('cur_sy') ?: '');
+        $district        = trim((string) $this->input->get('district', TRUE));
+        $contributionType= trim((string) $this->input->get('contribution_type', TRUE));
+
+        $rows         = $this->BrigadaModel->division_export_rows($sy, $district, $contributionType);
+        $districtRows = $this->BrigadaModel->yoy_by_district($sy);
+        $sectorRows   = $this->BrigadaModel->division_sector_summary($sy, $district);
+        $total        = $this->BrigadaModel->yoy_totals($sy);
+
+        $GREY = 'D9D9D9'; $BLUE = '4472C4'; $LBLUE = '9DC3E6'; $PERI = '8EAADB'; $BOX = 'E7E6E6';
+        $thin = ['borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]]];
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+
+        // ── Sheet 1: Division Summary ────────────────────────────────────────
+        $s1 = $spreadsheet->getActiveSheet();
+        $s1->setTitle('Division Summary');
+        $s1->getColumnDimension('A')->setWidth(34);
+        $s1->getColumnDimension('B')->setWidth(22);
+        $r = 1;
+        $s1->setCellValue("A{$r}", 'Division Consolidated Brigada Report'); $s1->getStyle("A{$r}")->getFont()->setBold(true)->setSize(14); $r += 2;
+        $s1->setCellValue("A{$r}", 'School Year'); $s1->setCellValue("B{$r}", $sy); $r++;
+        $s1->setCellValue("A{$r}", 'District Filter'); $s1->setCellValue("B{$r}", $district !== '' ? $district : 'All'); $r++;
+        $s1->setCellValue("A{$r}", 'Contribution Type Filter'); $s1->setCellValue("B{$r}", $contributionType !== '' ? $contributionType : 'All'); $r++;
+        $s1->setCellValue("A{$r}", 'Generated At'); $s1->setCellValue("B{$r}", date('Y-m-d H:i:s')); $r += 2;
+        $s1->setCellValue("A{$r}", 'Total Records'); $s1->setCellValue("B{$r}", (int) ($total[0]->record_count ?? count($rows))); $r++;
+        $s1->setCellValue("A{$r}", 'Total Amount'); $s1->setCellValue("B{$r}", (float) ($total[0]->total_amount ?? 0)); $s1->getStyle("B{$r}")->getNumberFormat()->setFormatCode('#,##0.00'); $r++;
+        $s1->setCellValue("A{$r}", 'Schools Count'); $s1->setCellValue("B{$r}", (int) ($total[0]->school_count ?? 0)); $r++;
+        $s1->setCellValue("A{$r}", 'Partners Count'); $s1->setCellValue("B{$r}", (int) ($total[0]->partner_count ?? 0)); $r++;
+        $s1->getStyle("A1:B{$r}")->applyFromArray($thin);
+
+        // ── Sheet 2: Per-District Totals ─────────────────────────────────────
+        $s2 = $spreadsheet->createSheet();
+        $s2->setTitle('District Totals');
+        $s2->getColumnDimension('A')->setWidth(28);
+        $s2->getColumnDimension('B')->setWidth(14);
+        $s2->getColumnDimension('C')->setWidth(18);
+        $s2->getColumnDimension('D')->setWidth(14);
+        $hdr = ['District', 'Records', 'Total Amount', 'Schools'];
+        foreach ($hdr as $i => $h) {
+            $col = chr(65 + $i);
+            $s2->setCellValue("{$col}1", $h);
+            $s2->getStyle("{$col}1")->getFont()->setBold(true);
+            $s2->getStyle("{$col}1")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB($PERI);
+        }
+        $rr = 2;
+        foreach ($districtRows as $d) {
+            $s2->setCellValue("A{$rr}", (string) ($d->district ?? '—'));
+            $s2->setCellValue("B{$rr}", (int) ($d->record_count ?? 0));
+            $s2->setCellValue("C{$rr}", (float) ($d->total_amount ?? 0));
+            $s2->getStyle("C{$rr}")->getNumberFormat()->setFormatCode('#,##0.00');
+            $s2->setCellValue("D{$rr}", (int) ($d->school_count ?? 0));
+            $rr++;
+        }
+        $s2->getStyle("A1:D" . max(2, $rr - 1))->applyFromArray($thin);
+
+        // ── Sheet 3: Per-School Detail ───────────────────────────────────────
+        $s3 = $spreadsheet->createSheet();
+        $s3->setTitle('School Detail');
+        $cols = ['ID', 'Date', 'SY', 'School ID', 'School', 'District', 'Partner', 'Sector', 'Contribution Type', 'Project', 'Specific', 'Qty', 'Unit', 'Amount', 'Learners', 'Personnel', 'Status', 'Validation', 'Submitted By', 'Created At'];
+        $widths = [8, 12, 10, 12, 28, 18, 28, 22, 22, 24, 24, 8, 10, 14, 10, 10, 14, 12, 16, 18];
+        foreach ($cols as $i => $h) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+            $s3->getColumnDimension($col)->setWidth($widths[$i]);
+            $s3->setCellValue("{$col}1", $h);
+            $s3->getStyle("{$col}1")->getFont()->setBold(true);
+            $s3->getStyle("{$col}1")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB($PERI);
+        }
+        $rr = 2;
+        foreach ($rows as $row) {
+            $vals = [
+                $row->id, $row->c_date, $row->sy, $row->school_id, $row->schoolName, $row->school_district,
+                $row->partner_name, $row->partner_sector, $row->contribution_type,
+                $row->project_name, $row->spicific_contribution, $row->quantity_of_conftribution,
+                $row->unit_of_contribution, (float) ($row->amount ?? 0),
+                $row->no_beneficiary_learnes, $row->no_beneficiary_personnel,
+                $row->status_agreement, $row->validation_status ?? 'pending',
+                $row->submitted_by, $row->created_at,
+            ];
+            foreach ($vals as $i => $v) {
+                $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+                $s3->setCellValue("{$col}{$rr}", $v);
+                if ($i === 13) $s3->getStyle("{$col}{$rr}")->getNumberFormat()->setFormatCode('#,##0.00');
+            }
+            $rr++;
+        }
+        $s3->getStyle("A1:T" . max(2, $rr - 1))->applyFromArray($thin);
+        $s3->freezePane('A2');
+
+        // ── Sheet 4: Stakeholder-Sector Summary ──────────────────────────────
+        $s4 = $spreadsheet->createSheet();
+        $s4->setTitle('Sector Summary');
+        $s4->getColumnDimension('A')->setWidth(30);
+        $s4->getColumnDimension('B')->setWidth(12);
+        $s4->getColumnDimension('C')->setWidth(18);
+        $s4->getColumnDimension('D')->setWidth(14);
+        $hdr = ['Sector', 'Records', 'Total Amount', 'Partners'];
+        foreach ($hdr as $i => $h) {
+            $col = chr(65 + $i);
+            $s4->setCellValue("{$col}1", $h);
+            $s4->getStyle("{$col}1")->getFont()->setBold(true);
+            $s4->getStyle("{$col}1")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB($PERI);
+        }
+        $rr = 2;
+        foreach ($sectorRows as $sec) {
+            $s4->setCellValue("A{$rr}", str_replace('_', ' ', (string) ($sec->sector ?? 'Unspecified')));
+            $s4->setCellValue("B{$rr}", (int) ($sec->record_count ?? 0));
+            $s4->setCellValue("C{$rr}", (float) ($sec->total_amount ?? 0));
+            $s4->getStyle("C{$rr}")->getNumberFormat()->setFormatCode('#,##0.00');
+            $s4->setCellValue("D{$rr}", (int) ($sec->partner_count ?? 0));
+            $rr++;
+        }
+        $s4->getStyle("A1:D" . max(2, $rr - 1))->applyFromArray($thin);
+
+        // ── Stream ───────────────────────────────────────────────────────────
+        $suffix = $sy . ($district !== '' ? '_' . preg_replace('/[^A-Za-z0-9]/', '', $district) : '');
+        $filename = 'Brigada_Division_' . $suffix . '.xlsx';
+        if (ob_get_length()) { ob_end_clean(); }
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->setIncludeCharts(false);
+        $writer->save('php://output');
+        exit;
+    }
 
     public function asp_tracking()
     {

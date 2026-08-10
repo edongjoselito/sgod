@@ -868,6 +868,7 @@ class Page extends CI_Controller{
 		'affected_performance' => trim((string) $this->input->post('affected_performance', TRUE)),
 		'ta_need' => trim((string) $this->input->post('ta_need', TRUE)),
 		'ta_type' => trim((string) $this->input->post('ta_type', TRUE)),
+		'username' => (string) $this->session->userdata('username'),
 		'updated_at' => date('Y-m-d H:i:s')
 	);
 	if($payload['issue_concern'] === ''){
@@ -3619,6 +3620,16 @@ public function memo_delete(){
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 	if(!$this->db->field_exists('applicable_year', 'section_issues_concerns')){
 		$this->db->query("ALTER TABLE section_issues_concerns ADD COLUMN applicable_year VARCHAR(20) NOT NULL DEFAULT '" . date('Y') . "' AFTER sec_group");
+	}
+	// Columns used by the mobile API surface — additive, nullable/defaulted.
+	if(!$this->db->field_exists('username', 'section_issues_concerns')){
+		$this->db->query("ALTER TABLE section_issues_concerns ADD COLUMN username VARCHAR(100) NULL DEFAULT NULL AFTER sec_group");
+	}
+	if(!$this->db->field_exists('description', 'section_issues_concerns')){
+		$this->db->query("ALTER TABLE section_issues_concerns ADD COLUMN description TEXT NULL AFTER issue_concern");
+	}
+	if(!$this->db->field_exists('status', 'section_issues_concerns')){
+		$this->db->query("ALTER TABLE section_issues_concerns ADD COLUMN status VARCHAR(50) NULL DEFAULT 'Open' AFTER degree_of_priority");
 	}
   }
 

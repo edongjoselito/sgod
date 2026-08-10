@@ -1,0 +1,590 @@
+/* ─────────────────────────────────────────────────────────────────
+   Brigada Eskwela — Modern App Design System
+   Inspired by PayPal, Spotify, Apple Health, Skyro, Salmon.
+   Builds on dashboard-unified.css variables for token consistency.
+   ───────────────────────────────────────────────────────────────── */
+
+:root {
+    /* Category accent colors — Apple Health style */
+    --br-navy: #1a1f71;
+    --br-navy-light: #3c40c6;
+    --br-violet: #6c70ef;
+    --br-teal: #00b8a9;
+    --br-coral: #ff6b6b;
+    --br-amber: #ffa94d;
+    --br-green: #2bb673;
+    --br-pink: #e84a8d;
+    --br-sky: #4dabf7;
+    --br-indigo: #4263eb;
+    --br-gold: #fcd116;
+
+    /* Surface tokens */
+    --br-surface: #ffffff;
+    --br-surface-2: #f8f9fd;
+    --br-surface-3: #f1f3f9;
+    --br-ink: #1a1d2e;
+    --br-ink-2: #4a4f6a;
+    --br-muted: #8a90a8;
+    --br-border: #eceef5;
+    --br-border-2: #e0e3ee;
+
+    /* Shadows — layered for depth */
+    --br-shadow-sm: 0 2px 8px rgba(26, 31, 112, 0.06);
+    --br-shadow: 0 8px 24px rgba(26, 31, 112, 0.08);
+    --br-shadow-lg: 0 16px 40px rgba(26, 31, 112, 0.12);
+    --br-shadow-xl: 0 24px 60px rgba(26, 31, 112, 0.16);
+
+    /* Radii — squircle-inspired */
+    --br-radius-sm: 12px;
+    --br-radius: 18px;
+    --br-radius-lg: 24px;
+    --br-radius-xl: 32px;
+}
+
+/* ── Shell ─────────────────────────────────────────────────────── */
+.br-shell {
+    padding: 16px 0 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ── Hero — Spotify/PayPal style gradient banner ────────────────── */
+.br-hero {
+    position: relative;
+    padding: 32px 36px 36px;
+    overflow: hidden;
+    border-radius: var(--br-radius-xl);
+    color: #fff;
+    background:
+        radial-gradient(circle at 90% 10%, rgba(255,255,255,0.18), transparent 40%),
+        radial-gradient(circle at 10% 90%, rgba(108,112,239,0.4), transparent 50%),
+        linear-gradient(135deg, #1a1f71 0%, #3c40c6 50%, #6c70ef 100%);
+    box-shadow: var(--br-shadow-lg);
+}
+.br-hero::before {
+    content: "";
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border: 30px solid rgba(255,255,255,0.06);
+    border-radius: 50%;
+}
+.br-hero::after {
+    content: "";
+    position: absolute;
+    bottom: -80px; right: 40px;
+    width: 160px; height: 160px;
+    border: 20px solid rgba(252,209,22,0.08);
+    border-radius: 50%;
+}
+.br-hero > * { position: relative; z-index: 1; }
+.br-hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-bottom: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    color: rgba(255,255,255,0.92);
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+}
+.br-hero-eyebrow i { font-size: 1rem; }
+.br-hero h1 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(1.7rem, 3.5vw, 2.3rem);
+    line-height: 1.1; font-weight: 800;
+    letter-spacing: -0.03em;
+}
+.br-hero p {
+    max-width: 580px; margin: 10px 0 0;
+    color: rgba(255,255,255,0.82);
+    font-size: 0.95rem; line-height: 1.6;
+}
+.br-hero-actions {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 20px;
+}
+.br-hero-actions .btn {
+    border-radius: 14px;
+    font-weight: 700; font-size: 0.85rem;
+    padding: 10px 18px;
+    border: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.br-hero-actions .btn-light {
+    background: rgba(255,255,255,0.95);
+    color: var(--br-navy);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.br-hero-actions .btn-light:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+.br-hero-actions .btn-gold {
+    background: var(--br-gold);
+    color: var(--br-navy);
+}
+.br-hero-actions .btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(252,209,22,0.4);
+}
+
+/* ── KPI Cards — Apple Health style gradient tiles ──────────────── */
+.br-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+.br-kpi {
+    position: relative;
+    display: flex; flex-direction: column;
+    padding: 22px 24px;
+    border: 1px solid var(--br-border);
+    border-radius: var(--br-radius);
+    background: var(--br-surface);
+    box-shadow: var(--br-shadow);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.br-kpi::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--br-accent, var(--br-navy-light));
+}
+.br-kpi:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--br-shadow-lg);
+}
+.br-kpi-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+}
+.br-kpi-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: var(--br-accent-soft, rgba(60,64,198,0.1));
+    color: var(--br-accent, var(--br-navy-light));
+    font-size: 1.5rem;
+}
+.br-kpi-trend {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem; font-weight: 700;
+}
+.br-kpi-trend.up { background: rgba(43,182,115,0.12); color: var(--br-green); }
+.br-kpi-trend.down { background: rgba(255,107,107,0.12); color: var(--br-coral); }
+.br-kpi-trend.neutral { background: var(--br-surface-3); color: var(--br-muted); }
+.br-kpi-value {
+    display: block;
+    color: var(--br-ink);
+    font-size: 1.75rem; line-height: 1.1; font-weight: 800;
+    letter-spacing: -0.02em;
+}
+.br-kpi-value.up { color: var(--br-green); }
+.br-kpi-value.down { color: var(--br-coral); }
+.br-kpi-label {
+    display: block; margin-top: 6px;
+    color: var(--br-ink-2);
+    font-size: 0.82rem; font-weight: 700;
+}
+.br-kpi-context {
+    display: block; margin-top: 4px;
+    color: var(--br-muted);
+    font-size: 0.74rem; font-weight: 500;
+}
+
+/* Accent variants — Apple Health category colors */
+.br-kpi.accent-navy   { --br-accent: var(--br-navy-light); --br-accent-soft: rgba(60,64,198,0.1); }
+.br-kpi.accent-teal   { --br-accent: var(--br-teal); --br-accent-soft: rgba(0,184,169,0.1); }
+.br-kpi.accent-coral  { --br-accent: var(--br-coral); --br-accent-soft: rgba(255,107,107,0.1); }
+.br-kpi.accent-amber  { --br-accent: var(--br-amber); --br-accent-soft: rgba(255,169,77,0.1); }
+.br-kpi.accent-green  { --br-accent: var(--br-green); --br-accent-soft: rgba(43,182,115,0.1); }
+.br-kpi.accent-pink   { --br-accent: var(--br-pink); --br-accent-soft: rgba(232,74,141,0.1); }
+.br-kpi.accent-sky    { --br-accent: var(--br-sky); --br-accent-soft: rgba(77,171,247,0.1); }
+.br-kpi.accent-violet { --br-accent: var(--br-violet); --br-accent-soft: rgba(108,112,239,0.1); }
+.br-kpi.accent-gold   { --br-accent: var(--br-gold); --br-accent-soft: rgba(252,209,22,0.15); }
+
+/* ── Cards / Panels ─────────────────────────────────────────────── */
+.br-card {
+    margin-top: 20px;
+    border: 1px solid var(--br-border);
+    border-radius: var(--br-radius-lg);
+    background: var(--br-surface);
+    box-shadow: var(--br-shadow);
+    overflow: hidden;
+}
+.br-card-body { padding: 24px 28px; }
+.br-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--br-border);
+}
+.br-card-header h5 {
+    margin: 0;
+    color: var(--br-ink);
+    font-size: 1.05rem; font-weight: 800;
+    letter-spacing: -0.01em;
+}
+.br-card-header .badge { font-size: 0.72rem; font-weight: 700; padding: 6px 14px; border-radius: 20px; }
+
+/* ── Section title (inline, not in card header) ─────────────────── */
+.br-section-title {
+    margin: 28px 4px 0;
+    color: var(--br-ink);
+    font-size: 1.1rem; font-weight: 800;
+    letter-spacing: -0.01em;
+}
+.br-section-subtitle {
+    margin: 4px 4px 0;
+    color: var(--br-muted);
+    font-size: 0.84rem; font-weight: 500;
+}
+
+/* ── Filter bar — pill-style selectors ──────────────────────────── */
+.br-filter {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--br-border);
+    background: var(--br-surface-2);
+}
+.br-filter label {
+    display: block; margin: 0 0 6px;
+    color: var(--br-muted);
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+}
+.br-filter .form-control {
+    border-radius: var(--br-radius-sm);
+    border: 1.5px solid var(--br-border-2);
+    font-size: 0.88rem; font-weight: 500;
+    padding: 9px 14px;
+    background: var(--br-surface);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.br-filter .form-control:focus {
+    border-color: var(--br-navy-light);
+    box-shadow: 0 0 0 4px rgba(60,64,198,0.1);
+    outline: 0;
+}
+.br-filter-actions {
+    grid-column: 1/-1;
+    display: flex; gap: 10px; flex-wrap: wrap;
+    align-items: flex-end;
+}
+.br-filter-actions .btn {
+    border-radius: var(--br-radius-sm);
+    font-weight: 700; font-size: 0.85rem;
+    padding: 9px 18px;
+    transition: transform 0.15s ease;
+}
+.br-filter-actions .btn:hover { transform: translateY(-1px); }
+
+/* ── Tables — clean, spacious, app-like ─────────────────────────── */
+.br-table { margin: 0; }
+.br-table th {
+    border-top: 0 !important;
+    border-bottom: 2px solid var(--br-border) !important;
+    color: var(--br-muted);
+    font-size: 0.68rem; font-weight: 800;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    white-space: nowrap;
+    padding: 14px 20px !important;
+    background: var(--br-surface-2);
+}
+.br-table td {
+    vertical-align: middle;
+    padding: 14px 20px !important;
+    border-color: var(--br-border) !important;
+    font-size: 0.87rem;
+    color: var(--br-ink-2);
+}
+.br-table tbody tr {
+    transition: background 0.15s ease;
+}
+.br-table tbody tr:hover { background: var(--br-surface-2); }
+.br-table .text-right { text-align: right; }
+.br-table .amount {
+    font-weight: 800; color: var(--br-ink);
+    white-space: nowrap;
+    font-size: 0.92rem;
+}
+.br-table strong { color: var(--br-ink); font-weight: 700; }
+
+/* ── Badges / Pills ─────────────────────────────────────────────── */
+.br-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.73rem; font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+.br-badge i { font-size: 0.9rem; }
+.br-badge-pending   { background: #fff3cd; color: #8d5b11; }
+.br-badge-validated { background: #d4edda; color: #1a7d36; }
+.br-badge-returned  { background: #f8d7da; color: #a02838; }
+.br-badge-error     { background: #f8d7da; color: #a02838; }
+.br-badge-warning   { background: #fff3cd; color: #8d5b11; }
+.br-badge-info      { background: rgba(60,64,198,0.1); color: var(--br-navy-light); }
+.br-badge-success   { background: rgba(43,182,115,0.12); color: var(--br-green); }
+.br-badge-neutral   { background: var(--br-surface-3); color: var(--br-muted); }
+
+/* ── Rank number — Spotify-style circle ─────────────────────────── */
+.br-rank {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--br-navy-light), var(--br-violet));
+    color: #fff;
+    font-weight: 800; font-size: 0.85rem;
+    box-shadow: 0 4px 10px rgba(60,64,198,0.3);
+}
+.br-rank.gold { background: linear-gradient(135deg, #fcd116, #ffa94d); box-shadow: 0 4px 10px rgba(252,209,22,0.4); }
+.br-rank.silver { background: linear-gradient(135deg, #c0c5d8, #8a90a8); box-shadow: 0 4px 10px rgba(138,144,168,0.3); }
+.br-rank.bronze { background: linear-gradient(135deg, #cd7f32, #a05a2c); box-shadow: 0 4px 10px rgba(160,90,44,0.3); }
+
+/* ── Empty state ────────────────────────────────────────────────── */
+.br-empty {
+    padding: 56px 24px;
+    text-align: center;
+    color: var(--br-muted);
+}
+.br-empty i {
+    font-size: 3rem;
+    opacity: 0.3;
+    margin-bottom: 14px;
+    display: block;
+    color: var(--br-navy-light);
+}
+.br-empty p { margin: 0; font-size: 0.9rem; font-weight: 600; }
+
+/* ── Chart wrapper ──────────────────────────────────────────────── */
+.br-chart { position: relative; height: 300px; }
+
+/* ── SY selector — inline pill style ────────────────────────────── */
+.br-sy-select {
+    display: inline-flex; align-items: flex-end; gap: 12px;
+    margin: 20px 4px 0;
+    flex-wrap: wrap;
+}
+.br-sy-select label {
+    margin: 0;
+    color: var(--br-muted);
+    font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+.br-sy-select select {
+    border-radius: var(--br-radius-sm);
+    border: 1.5px solid var(--br-border-2);
+    font-size: 0.85rem; font-weight: 600;
+    padding: 8px 14px;
+    background: var(--br-surface);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.br-sy-select select:focus {
+    border-color: var(--br-navy-light);
+    box-shadow: 0 0 0 4px rgba(60,64,198,0.1);
+    outline: 0;
+}
+.br-sy-select .btn {
+    border-radius: var(--br-radius-sm);
+    font-weight: 700; font-size: 0.85rem;
+    padding: 8px 18px;
+}
+
+/* ── Attachment list — file cards ───────────────────────────────── */
+.br-attach-list { list-style: none; padding: 0; margin: 18px 0 0; }
+.br-attach-list li {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--br-border);
+    transition: padding-left 0.15s ease;
+}
+.br-attach-list li:hover { padding-left: 6px; }
+.br-attach-list li:last-child { border-bottom: 0; }
+.br-attach-list a {
+    display: inline-flex; align-items: center; gap: 10px;
+    color: var(--br-ink); font-weight: 700; text-decoration: none;
+    font-size: 0.9rem;
+}
+.br-attach-list a i {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: rgba(60,64,198,0.08);
+    color: var(--br-navy-light);
+    font-size: 1.3rem;
+}
+.br-attach-list a:hover { color: var(--br-navy-light); }
+.br-attach-meta {
+    display: block; margin-top: 4px;
+    color: var(--br-muted);
+    font-size: 0.74rem; font-weight: 500;
+}
+
+/* ── Flag chips ─────────────────────────────────────────────────── */
+.br-flags { display: flex; flex-wrap: wrap; gap: 5px; }
+.br-flags .br-badge { font-size: 0.66rem; padding: 3px 9px; }
+
+/* ── Modal — bottom-sheet on mobile, centered on desktop ────────── */
+.br-modal .modal-content {
+    border: 0;
+    border-radius: var(--br-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--br-shadow-xl);
+}
+.br-modal .modal-header {
+    border-bottom: 1px solid var(--br-border);
+    padding: 20px 24px;
+    background: var(--br-surface);
+}
+.br-modal .modal-header h5 {
+    margin: 0; font-weight: 800; color: var(--br-ink);
+    font-size: 1.1rem;
+}
+.br-modal .modal-body { padding: 24px; }
+.br-modal .modal-footer {
+    border-top: 1px solid var(--br-border);
+    padding: 18px 24px;
+    background: var(--br-surface-2);
+}
+.br-modal .form-group label {
+    font-weight: 700; color: var(--br-ink);
+    font-size: 0.85rem; margin-bottom: 6px;
+}
+.br-modal .form-control {
+    border-radius: var(--br-radius-sm);
+    border: 1.5px solid var(--br-border-2);
+    padding: 10px 14px;
+    font-size: 0.9rem;
+}
+.br-modal .form-control:focus {
+    border-color: var(--br-navy-light);
+    box-shadow: 0 0 0 4px rgba(60,64,198,0.1);
+}
+.br-modal textarea { min-height: 80px; }
+.br-modal .btn {
+    border-radius: var(--br-radius-sm);
+    font-weight: 700; padding: 10px 20px;
+}
+
+@media (max-width: 768px) {
+    .br-modal .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+    }
+    .br-modal .modal-content {
+        border-radius: var(--br-radius-lg) var(--br-radius-lg) 0 0;
+    }
+}
+
+/* ── Alerts ─────────────────────────────────────────────────────── */
+.br-shell .alert {
+    display: flex; align-items: center; gap: 10px;
+    border-radius: var(--br-radius);
+    border: 0;
+    font-size: 0.88rem; font-weight: 600;
+    margin-top: 16px;
+    padding: 14px 20px;
+}
+.br-shell .alert i { font-size: 1.2rem; }
+.br-shell .alert-success { background: rgba(43,182,115,0.1); color: #1a7d36; }
+.br-shell .alert-danger { background: rgba(255,107,107,0.1); color: #a02838; }
+.br-shell .alert-warning { background: rgba(255,169,77,0.12); color: #8d5b11; }
+
+/* ── Buttons ────────────────────────────────────────────────────── */
+.br-shell .btn-primary {
+    background: linear-gradient(135deg, var(--br-navy-light), var(--br-violet));
+    border: 0;
+    box-shadow: 0 4px 12px rgba(60,64,198,0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.br-shell .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(60,64,198,0.35);
+}
+.br-shell .btn-success {
+    background: linear-gradient(135deg, var(--br-green), #20a162);
+    border: 0;
+    box-shadow: 0 4px 12px rgba(43,182,115,0.25);
+}
+.br-shell .btn-danger {
+    background: linear-gradient(135deg, var(--br-coral), #e03151);
+    border: 0;
+}
+.br-shell .btn-outline-primary {
+    border: 1.5px solid var(--br-navy-light);
+    color: var(--br-navy-light);
+    font-weight: 700;
+    border-radius: var(--br-radius-sm);
+}
+.br-shell .btn-outline-primary:hover {
+    background: var(--br-navy-light);
+    color: #fff;
+}
+.br-shell .btn-outline-danger {
+    border: 1.5px solid var(--br-coral);
+    color: var(--br-coral);
+    border-radius: var(--br-radius-sm);
+}
+.br-shell .btn-outline-danger:hover {
+    background: var(--br-coral); color: #fff;
+}
+.br-shell .btn-sm { border-radius: 10px; font-weight: 700; }
+
+/* ── Progress bar — Apple Health style ──────────────────────────── */
+.br-progress {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--br-surface-3);
+    overflow: hidden;
+}
+.br-progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--br-navy-light), var(--br-violet));
+    transition: width 0.6s ease;
+}
+
+/* ── Avatar / icon circle ───────────────────────────────────────── */
+.br-avatar {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--br-navy-light), var(--br-violet));
+    color: #fff;
+    font-weight: 800; font-size: 0.85rem;
+    box-shadow: 0 4px 10px rgba(60,64,198,0.2);
+}
+
+/* ── Divider ────────────────────────────────────────────────────── */
+.br-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--br-border), transparent);
+    margin: 24px 0;
+    border: 0;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .br-hero { padding: 24px 22px; border-radius: var(--br-radius-lg); }
+    .br-card-body { padding: 18px 20px; }
+    .br-card-header { padding: 16px 20px; }
+    .br-filter { padding: 18px 20px; }
+    .br-table th, .br-table td { padding: 11px 14px !important; font-size: 0.82rem; }
+    .br-kpi { padding: 18px 20px; }
+    .br-kpi-value { font-size: 1.5rem; }
+}

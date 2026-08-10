@@ -22,8 +22,15 @@ class Api_model extends CI_Model {
    */
   public function profile_payload($user, $source = 'deped_mis') {
     if ($source === 'sgod') {
+      // one_sgod_users has no `id` column (PK is username). Returning 0 made
+      // every SGOD profile collide on the same Drift row (spec §10). Derive a
+      // stable, positive int from the username so each user gets a distinct
+      // profile row without depending on a DB column that does not exist.
+      // crc32 is unsigned on 64-bit PHP and stable for the same input.
+      $username = (string) ($user->username ?? '');
+      $stableId = $username !== '' ? (int) (crc32($username) & 0x7FFFFFFF) : 0;
       return array(
-        'id'          => 0,
+        'id'          => $stableId,
         'username'    => $user->username,
         'position'    => $user->secGroup ?? '',
         'fname'       => $user->fName ?? '',
@@ -375,55 +382,84 @@ class Api_model extends CI_Model {
 
   // ── Issues / Concerns ─────────────────────────────────────────────────────
 
+  /**
+   * List issues/concerns for a section + secGroup, scoped by applicable_year.
+   * Maps the DB column names (section_name, sec_group, issue_concern, etc.)
+   * to the clean API names the mobile app expects (section, secGroup, title,
+   * priority, year).
+   */
   public function list_issues_concerns($section, $secGroup, $year) {
     if (!$this->db->table_exists('section_issues_concerns')) {
       return array();
     }
-    $this->db->where('section', $section);
-    $this->db->where('secGroup', $secGroup);
+    $this->db->where('section_name', $section);
+    $this->db->where('sec_group', $secGroup);
     if ($year !== '') {
-      $this->db->where('YEAR(created_at)', $year);
+      $this->db->where('applicable_year', $year);
     }
-    return $this->db->order_by('id', 'DESC')
+    $rows = $this->db->order_by('id', 'DESC')
       ->get('section_issues_concerns')
       ->result_array();
+    // Map DB columns → API-expected names so the mobile freezed model parses.
+    $out = array();
+    foreach ($rows as $r) {
+      $out[] = array(
+        'id'          => (int) ($r['id'] ?? 0),
+        'section'     => (string) ($r['section_name'] ?? ''),
+        'secGroup'    => (string) ($r['sec_group'] ?? ''),
+        'username'    => (string) ($r['username'] ?? ''),
+        'title'       => (string) ($r['issue_concern'] ?? ''),
+        'description' => (string) ($r['description'] ?? ''),
+        'priority'    => (string) ($r['degree_of_priority'] ?? 'Normal'),
+        'status'      => (string) ($r['status'] ?? 'Open'),
+        'year'        => (string) ($r['applicable_year'] ?? ''),
+        'created_at'  => (string) ($r['created_at'] ?? ''),
+      );
+    }
+    return $out;
   }
 
-  public function save_issue_concern($section, $secGroup, $username, $title, $description, $priority, $year) {
+  /**
+   * Create or update an issue/concern. When $id > 0, updates the existing
+   * row (scoped to the caller's section + secGroup so a user can't edit
+   * another section's record). Maps clean API field names to DB columns.
+   */
+  public function save_issue_concern($section, $secGroup, $username, $title, $description, $priority, $year, $id = 0) {
     if (!$this->db->table_exists('section_issues_concerns')) {
-      // Auto-create the table if it doesn't exist.
-      $this->db->query("CREATE TABLE IF NOT EXISTS `section_issues_concerns` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `section` varchar(255) NOT NULL,
-        `secGroup` varchar(50) NOT NULL,
-        `username` varchar(100) NOT NULL,
-        `title` varchar(500) NOT NULL,
-        `description` text NOT NULL,
-        `priority` varchar(50) NOT NULL DEFAULT 'Normal',
-        `status` varchar(50) NOT NULL DEFAULT 'Open',
-        `year` varchar(10) NOT NULL,
-        `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (`id`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+      return 0;
     }
     $data = array(
-      'section'     => $section,
-      'secGroup'    => $secGroup,
-      'username'    => $username,
-      'title'       => $title,
-      'description' => $description,
-      'priority'    => $priority,
-      'year'        => $year,
+      'section_name'        => $section,
+      'sec_group'           => $secGroup,
+      'username'            => $username,
+      'issue_concern'       => $title,
+      'description'         => $description,
+      'degree_of_priority'  => $priority ?: 'Normal',
+      'applicable_year'     => $year ?: date('Y'),
+      'updated_at'          => date('Y-m-d H:i:s'),
     );
+
+    $id = (int) $id;
+    if ($id > 0) {
+      // Update — scoped to the caller's section so cross-section edits fail.
+      $this->db->where('id', $id)
+        ->where('section_name', $section)
+        ->where('sec_group', $secGroup)
+        ->update('section_issues_concerns', $data);
+      return $this->db->affected_rows() > 0 ? $id : 0;
+    }
+    $data['created_at'] = date('Y-m-d H:i:s');
     $this->db->insert('section_issues_concerns', $data);
-    return $this->db->insert_id();
+    return (int) $this->db->insert_id();
   }
 
-  public function delete_issue_concern($id, $username) {
+  public function delete_issue_concern($id, $username, $section = '', $secGroup = '') {
     if (!$this->db->table_exists('section_issues_concerns')) return FALSE;
-    $this->db->where('id', $id);
-    $this->db->where('username', $username);
+    $this->db->where('id', (int) $id);
+    // Scope by section + secGroup when available (more restrictive than
+    // username alone, which may be NULL for legacy web-created rows).
+    if ($section !== '') $this->db->where('section_name', $section);
+    if ($secGroup !== '') $this->db->where('sec_group', $secGroup);
     return $this->db->delete('section_issues_concerns');
   }
 

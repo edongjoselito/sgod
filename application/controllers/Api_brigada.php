@@ -67,6 +67,10 @@ class Api_brigada extends CI_Controller {
       http_response_code(204);
       exit;
     }
+
+    // Self-heal the e-Brigada schema on every request (Workstream A).
+    $this->load->library('schema_guard');
+    $this->schema_guard->ensure();
   }
 
   // ── Envelope helpers ───────────────────────────────────────────────────────
@@ -1004,6 +1008,297 @@ class Api_brigada extends CI_Controller {
       'current_sy'  => $current,
       'school_years'=> $years,
       'section'     => (string) ($this->api_auth->user()->section ?? ''),
+    ));
+  }
+
+  // ── Workstream B: validation queue + decisions ───────────────────────────
+  //
+  // These endpoints stay behind the existing SMN-only _guard() — validation is
+  // a division-side action. The encoding surface (Workstream F) gets its own
+  // guard so _guard() is not widened wholesale.
+
+  /**
+   * GET api_brigada/validation_queue?sy=&district=&school_id=&validation_status=&partner_type=
+   *
+   * Returns submissions for SMN/SGOD review, with their current flag rows
+   * attached so the mobile queue can show why a row was flagged.
+   */
+  public function validation_queue() {
+    if (!$this->_guard()) return;
+    $this->load->model('BrigadaModel');
+
+    $filters = array(
+      'sy'                => trim((string) $this->input->get('sy', TRUE)),
+      'district'          => trim((string) $this->input->get('district', TRUE)),
+      'school_id'         => trim((string) $this->input->get('school_id', TRUE)),
+      'validation_status' => trim((string) $this->input->get('validation_status', TRUE)),
+      'partner_type'      => trim((string) $this->input->get('partner_type', TRUE)),
+    );
+    $rows = $this->BrigadaModel->validation_queue($filters);
+
+    // Attach flags + normalize NULL validation_status to 'pending' for the
+    // client, without writing a backfill (spec §3 constraint #4).
+    $out = array();
+    foreach ($rows as $r) {
+      $r->validation_status = $r->validation_status === NULL ? 'pending' : $r->validation_status;
+      $r->flags = $this->BrigadaModel->get_flags($r->id);
+      $out[] = $r;
+    }
+    $this->_ok(array(
+      'queue'       => $out,
+      'filters'     => $filters,
+      'school_years'=> $this->BrigadaModel->available_sy_values(),
+    ));
+  }
+
+  /**
+   * POST api_brigada/validate  { report_id, action, remarks }
+   *
+   * action ∈ 'validate' | 'return'. The self-validation block is enforced in
+   * BrigadaModel::validate_report() so a direct API call cannot bypass it.
+   */
+  public function validate() {
+    if (!$this->_guard()) return;
+    $this->load->model('BrigadaModel');
+
+    $reportId = (int) $this->_input('report_id');
+    $action   = strtolower(trim((string) $this->_input('action')));
+    $remarks  = trim((string) $this->_input('remarks'));
+    $validator = $this->api_auth->user()->username ?? '';
+
+    $res = $this->BrigadaModel->validate_report($reportId, $action, $validator, $remarks);
+    if (!$res['ok']) { $this->_error($res['message'], 422); return; }
+    $this->_ok(array('report_id' => $reportId, 'result' => $res['message']), $res['message']);
+  }
+
+  /** Read a JSON or form-encoded body field (Api_brigada has no _input yet). */
+  private function _input($key, $default = '') {
+    $raw = $this->input->raw_input_stream;
+    $json = json_decode($raw, TRUE);
+    if (is_array($json) && isset($json[$key])) return $json[$key];
+    $v = $this->input->post($key, TRUE);
+    return $v !== NULL ? $v : $default;
+  }
+
+  // ── Workstream C: supporting documents (attachments) ─────────────────────
+  //
+  // The encoding surface is reachable by School-position users for their OWN
+  // school_id only, so these endpoints use a second guard (_encode_guard)
+  // rather than widening _guard() wholesale (spec §9).
+
+  /**
+   * Require a valid token. Returns the user object on success. Unlike _guard()
+   * this does NOT require the SMN section — school users reach the encoding
+   * surface through here. Per-record ownership is checked in the handlers.
+   */
+  private function _encode_guard() {
+    if (!$this->api_auth->validate_token()) {
+      $this->_error('Unauthorized — valid bearer token required.', 401);
+      return FALSE;
+    }
+    return $this->api_auth->user();
+  }
+
+  /** GET api_brigada/attachments?entity_type=&entity_id= */
+  public function attachments() {
+    $user = $this->_encode_guard();
+    if (!$user) return;
+    $this->load->model('BrigadaModel');
+    $entityType = trim((string) $this->input->get('entity_type', TRUE)) ?: 'contribution';
+    $entityId = (int) $this->input->get('entity_id', TRUE);
+    $rows = $this->BrigadaModel->get_attachments($entityType, $entityId);
+    $this->_ok(array('attachments' => $rows, 'entity_type' => $entityType, 'entity_id' => $entityId));
+  }
+
+  /**
+   * POST api_brigada/attachment_upload  (multipart: file, entity_type, entity_id, sy, school_id)
+   *
+   * A school actor may only attach to a contribution whose school_id matches
+   * their own username. SMN/SGOD may attach to anything.
+   */
+  public function attachment_upload() {
+    $user = $this->_encode_guard();
+    if (!$user) return;
+    $this->load->model('BrigadaModel');
+
+    $entityType = trim((string) $this->_input('entity_type')) ?: 'contribution';
+    $entityId   = (int) $this->_input('entity_id');
+    $sy         = trim((string) $this->_input('sy')) ?: $this->_sy();
+    $schoolId   = trim((string) $this->_input('school_id')) ?: (string) ($user->username ?? '');
+
+    // Per-record ownership for school actors.
+    $position = strtolower(trim((string) ($user->position ?? $user->secGroup ?? '')));
+    if ($position === 'school' && $entityType === 'contribution') {
+      $row = $this->db->select('school_id')->where('id', $entityId)
+        ->get('brigada_contribution_report', 1)->row();
+      if (!$row || strtolower(trim((string) $row->school_id)) !== strtolower(trim((string) $user->username))) {
+        $this->_error('You can only attach documents to your own school\'s contributions.', 403);
+        return;
+      }
+    }
+
+    $v = $this->BrigadaModel->validate_attachment('file');
+    if (!$v['ok']) { $this->_error($v['message'], 422); return; }
+    $res = $this->BrigadaModel->save_attachment($v, $entityType, $entityId, $sy, $schoolId, (string) ($user->username ?? ''));
+    if (!$res['ok']) { $this->_error($res['message'], 500); return; }
+    if ($entityType === 'contribution') $this->BrigadaModel->recompute_flags($entityId);
+    $this->_ok(array('attachment_id' => $res['id'], 'path' => $res['path']), $res['message']);
+  }
+
+  /** POST api_brigada/attachment_delete  { attachment_id } — ownership-checked. */
+  public function attachment_delete() {
+    $user = $this->_encode_guard();
+    if (!$user) return;
+    $this->load->model('BrigadaModel');
+    $id = (int) $this->_input('attachment_id');
+    $position = strtolower(trim((string) ($user->position ?? $user->secGroup ?? '')));
+    $res = $this->BrigadaModel->delete_attachment($id, (string) ($user->username ?? ''), $position);
+    if (!$res['ok']) { $this->_error($res['message'], 403); return; }
+    $this->_ok(NULL, $res['message']);
+  }
+
+  // ── Workstream F: mobile contribution encoding ───────────────────────────
+  //
+  // School users list/create/edit their OWN school's donations for the current
+  // sy. SMN/SGOD users reach the validation queue through validation_queue()/
+  // validate() above. The sync contract (spec §9) is enforced in
+  // BrigadaModel::update_contribution_from_payload().
+
+  /** GET api_brigada/my_contributions?sy= — own school's donations. */
+  public function my_contributions() {
+    $user = $this->_encode_guard();
+    if (!$user) return;
+    $this->load->model('BrigadaModel');
+    $sy = trim((string) $this->input->get('sy', TRUE));
+    if ($sy === '') $sy = $this->_sy();
+    $rows = $this->BrigadaModel->my_contributions((string) ($user->username ?? ''), $sy);
+    $this->_ok(array(
+      'contributions'  => $rows,
+      'sy'             => $sy,
+      'school_id'      => (string) ($user->username ?? ''),
+      'generated_at'   => date('c'),
+    ));
+  }
+
+  /** GET api_brigada/contribution_types — reference data for the encoder form. */
+  public function contribution_types() {
+    $user = $this->_encode_guard();
+    if (!$user) return;
+    $rows = $this->db->table_exists('brigada_contribution_type')
+      ? $this->db->order_by('name', 'ASC')->get('brigada_contribution_type')->result()
+      : array();
+    $this->_ok(array('contribution_types' => $rows));
+  }
+
+  /** GET api_brigada/partners?school_id= — partners visible to the caller. */
+  public function partners() {
+    $user = $this->_encode_guard();
+    if (!$user) return;
+    $this->db->select('id, name, general_type, specific_type');
+    $schoolId = trim((string) $this->input->get('school_id', TRUE));
+    if ($schoolId !== '' && $this->db->field_exists('account_username', 'brigada_partners')) {
+      // School sees its own partners plus unassigned ones.
+      $this->db->group_start()
+        ->where('account_username', $schoolId)
+        ->or_where('account_username', '')
+        ->or_where('account_username IS NULL')
+        ->group_end();
+    }
+    $rows = $this->db->order_by('name', 'ASC')->get('brigada_partners')->result();
+    $this->_ok(array('partners' => $rows));
+  }
+
+  /**
+   * POST api_brigada/contribution_create  { ...contribution fields... }
+   *
+   * School actors create against their own school_id (enforced server-side).
+   */
+  public function contribution_create() {
+    $user = $this->_encode_guard();
+    if (!$user) return;
+    $this->load->model('BrigadaModel');
+    $position = strtolower(trim((string) ($user->position ?? $user->secGroup ?? '')));
+    $payload = $this->_contribution_payload();
+    $res = $this->BrigadaModel->create_contribution_from_payload($payload, (string) ($user->username ?? ''));
+    if (!$res['ok']) { $this->_error($res['message'], 422); return; }
+    $this->_ok(array('id' => $res['id'], 'updated_at' => date('Y-m-d H:i:s')), $res['message']);
+  }
+
+  /**
+   * POST api_brigada/contribution_update  { id, expected_updated_at, ...fields... }
+   *
+   * Sync contract: a validated record is not editable by the school; a
+   * stale expected_updated_at is rejected with a readable message.
+   */
+  public function contribution_update() {
+    $user = $this->_encode_guard();
+    if (!$user) return;
+    $this->load->model('BrigadaModel');
+    $id = (int) $this->_input('id');
+    $expectedUpdatedAt = trim((string) $this->_input('expected_updated_at'));
+    $position = strtolower(trim((string) ($user->position ?? $user->secGroup ?? '')));
+    $payload = $this->_contribution_payload();
+    $res = $this->BrigadaModel->update_contribution_from_payload($id, $payload, (string) ($user->username ?? ''), $position, $expectedUpdatedAt);
+    if (!$res['ok']) {
+      // Staleness and validation-lock both surface as 409 so the client can
+      // distinguish them from a plain 422 field error.
+      $this->_error($res['message'], 409);
+      return;
+    }
+    $this->_ok(array('id' => $id, 'updated_at' => $res['updated_at']), $res['message']);
+  }
+
+  /** Build a contribution payload from JSON/form input, mapping clean names. */
+  private function _contribution_payload() {
+    $fields = array(
+      'c_date', 'partners_id', 'contribution_id', 'spicific_contribution',
+      'unit_of_contribution', 'quantity_of_conftribution', 'amount',
+      'no_beneficiary_learnes', 'no_beneficiary_personnel', 'form_of_agreement',
+      'agreement_started', 'agreement_end', 'project_category', 'project_name',
+      'status_agreement', 'initiated_by', 'remarks', 'sy', 'school_id',
+    );
+    $payload = array();
+    foreach ($fields as $f) {
+      $val = $this->_input($f, NULL);
+      if ($val !== NULL) $payload[$f] = $val;
+    }
+    $tax = $this->_input('tax_incentive_applicable', NULL);
+    if ($tax !== NULL) $payload['tax_incentive_applicable'] = $tax ? 1 : 0;
+    // description fallback mirrors the web contribution_report() helper.
+    if (!empty($payload['project_name'])) $payload['spicific_contribution'] = $payload['project_name'];
+    return $payload;
+  }
+
+  // ── Workstream D steps 2-5: year-on-year analytics + rankings ─────────────
+
+  /**
+   * GET api_brigada/yoy?sy_a=&sy_b=&limit=
+   *
+   * Returns totals by sy (for the chosen pair), by-district and by-contribution-
+   * type splits for each, and top-N schools + stakeholders for sy_a. Mirrors
+   * the web Brigada/yoy view so the mobile app can render the same picture.
+   */
+  public function yoy() {
+    if (!$this->_guard()) return;
+    $this->load->model('BrigadaModel');
+    $syA = trim((string) $this->input->get('sy_a', TRUE));
+    $syB = trim((string) $this->input->get('sy_b', TRUE));
+    $limit = (int) $this->input->get('limit', TRUE) ?: 10;
+    $years = $this->BrigadaModel->available_sy_values();
+    if ($syA === '' && count($years) >= 1) $syA = $years[0];
+    if ($syB === '' && count($years) >= 2) $syB = $years[1];
+
+    $this->_ok(array(
+      'sy_a'             => $syA,
+      'sy_b'             => $syB,
+      'school_years'     => $years,
+      'totals'           => $this->BrigadaModel->yoy_totals($syA, $syB),
+      'districts_a'      => $this->BrigadaModel->yoy_by_district($syA),
+      'districts_b'      => $this->BrigadaModel->yoy_by_district($syB),
+      'contribution_types_a' => $this->BrigadaModel->yoy_by_contribution_type($syA),
+      'contribution_types_b' => $this->BrigadaModel->yoy_by_contribution_type($syB),
+      'top_schools'      => $this->BrigadaModel->top_schools($syA, $limit),
+      'top_stakeholders' => $this->BrigadaModel->top_stakeholders($syA, $limit),
     ));
   }
 }
