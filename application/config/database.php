@@ -11,7 +11,7 @@ $db['default'] = array(
 	'hostname' => '127.0.0.1',
 	'username' => 'root',
 	'password' => 'moth34board',
-	'database' => 'depedmis_one',
+	'database' => 'depedmis_davor',
 
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
