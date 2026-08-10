@@ -95,11 +95,11 @@ class DI {
     try {
       final baseUrl = await storage.getBaseUrl();
       final token = await storage.getToken();
-      api.configure(baseUrl: baseUrl ?? 'http://localhost/sgod');
+      api.configure(baseUrl: baseUrl ?? 'https://one.depedmis.com');
       if (token != null) api.configure(token: token);
     } catch (e) {
       debugPrint('DI: storage restore failed, using defaults: $e');
-      api.configure(baseUrl: 'http://localhost/sgod');
+      api.configure(baseUrl: 'https://one.depedmis.com');
     }
   }
 

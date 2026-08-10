@@ -27,6 +27,12 @@ class AuthRepository {
   }) async {
     debugPrint('AuthRepository: login attempt for "$username"');
 
+    // Clear any stale token before logging in.
+    api.clearToken();
+    try {
+      await storage.clearToken();
+    } catch (_) {}
+
     final data = await api.post('api/auth_login', body: {
       'username': username,
       'password': password,
@@ -99,7 +105,14 @@ class AuthRepository {
         );
         try {
           await api.get('api/auth_me');
-        } catch (_) {}
+        } catch (e) {
+          // Token is invalid/expired — clear it so login starts fresh.
+          api.clearToken();
+          try {
+            await storage.clearToken();
+          } catch (_) {}
+          return null;
+        }
         return profile;
       }
     } catch (e) {
