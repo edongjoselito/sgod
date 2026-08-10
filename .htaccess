@@ -1,5 +1,17 @@
+# Belt-and-braces companion to the rewrite rule below, for hosts where the
+# E= flag alone does not survive into the CGI environment.
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase ^Authorization$ "(.+)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Under CGI/FastCGI/PHP-FPM Apache strips the Authorization header before
+    # PHP sees it, which breaks the mobile app's bearer tokens (every request
+    # after login comes back 401). Re-inject it into the CGI environment.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
     # Browsers may request this conventional path even when the page links to
     # assets/images/favicon.ico.

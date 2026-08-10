@@ -92,14 +92,12 @@ class DI {
       debugPrint('ApiClient: 401 received — session invalidated.');
     };
 
+    api.configure(baseUrl: ApiClient.defaultBaseUrl);
     try {
-      final baseUrl = await storage.getBaseUrl();
       final token = await storage.getToken();
-      api.configure(baseUrl: baseUrl ?? 'https://one.depedmis.com');
       if (token != null) api.configure(token: token);
     } catch (e) {
-      debugPrint('DI: storage restore failed, using defaults: $e');
-      api.configure(baseUrl: 'https://one.depedmis.com');
+      debugPrint('DI: token restore failed: $e');
     }
   }
 

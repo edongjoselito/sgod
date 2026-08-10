@@ -17,6 +17,10 @@ class ApiClient {
   ApiClient({http.Client? httpClient})
       : _http = httpClient ?? http.Client();
 
+  /// The one and only backend. The server is not user-configurable — every
+  /// build talks to production.
+  static const String defaultBaseUrl = 'http://one.depedmis.com';
+
   static const Duration _requestTimeout = Duration(seconds: 15);
   static const Duration _uploadTimeout = Duration(seconds: 120);
   static const int _maxRetries = 3;
@@ -61,10 +65,15 @@ class ApiClient {
     );
   }
 
+  /// Shared hosting running PHP as CGI/FastCGI drops the `Authorization`
+  /// header before PHP sees it, so the token is mirrored into `X-Api-Token`,
+  /// which passes through untouched. The server accepts either.
   Map<String, String> get _headers => {
         'Accept': 'application/json',
-        if (_token != null && _token!.isNotEmpty)
+        if (_token != null && _token!.isNotEmpty) ...{
           'Authorization': 'Bearer $_token',
+          'X-Api-Token': _token!,
+        },
       };
 
   /// GET — returns the `data` field from the envelope, or null if absent.
@@ -183,10 +192,30 @@ class ApiClient {
     final body = response.body.trim();
     debugPrint('ApiClient: ${response.request?.method} ${response.request?.url} → ${response.statusCode} (${body.length} bytes)');
 
+    Map<String, dynamic>? json;
+    if (body.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(body);
+        if (decoded is Map<String, dynamic>) json = decoded;
+      } on FormatException {
+        json = null;
+      }
+    }
+
+    // A 401 from the login endpoint means "wrong credentials", not "your
+    // session lapsed" — surface the server's own wording so a rejected
+    // login is never mistaken for an expired one, and don't drop a session
+    // that the login attempt never established.
     if (response.statusCode == 401) {
-      onUnauthorized?.call();
-      throw ApiException('Session expired. Please log in again.',
-          statusCode: 401);
+      final isLogin =
+          response.request?.url.path.contains('auth_login') ?? false;
+      if (!isLogin) onUnauthorized?.call();
+      final message = (json?['message'] as String?)?.trim() ?? '';
+      throw ApiException(
+        message.isNotEmpty ? message : 'Session expired. Please log in again.',
+        statusCode: 401,
+        body: json,
+      );
     }
 
     if (body.isEmpty) {
@@ -194,10 +223,7 @@ class ApiClient {
       throw ApiException('Empty response', statusCode: response.statusCode);
     }
 
-    Map<String, dynamic>? json;
-    try {
-      json = jsonDecode(body) as Map<String, dynamic>;
-    } on FormatException {
+    if (json == null) {
       if (response.statusCode >= 400) {
         throw ApiException('Request failed (${response.statusCode})',
             statusCode: response.statusCode);

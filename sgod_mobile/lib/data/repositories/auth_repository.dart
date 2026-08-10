@@ -84,9 +84,7 @@ class AuthRepository {
   Future<UserProfile?> restoreSession() async {
     try {
       final token = await storage.getToken();
-      final baseUrl = await storage.getBaseUrl();
       if (token == null || token.isEmpty) return null;
-      if (baseUrl != null && baseUrl.isNotEmpty) api.configure(baseUrl: baseUrl);
       api.configure(token: token);
 
       final cached = await db.getProfile();
@@ -105,13 +103,20 @@ class AuthRepository {
         );
         try {
           await api.get('api/auth_me');
+        } on ApiException catch (e) {
+          if (e.statusCode == 401) {
+            // The server rejected the token — clear it so login starts fresh.
+            api.clearToken();
+            try {
+              await storage.clearToken();
+            } catch (_) {}
+            return null;
+          }
+          // Any other server error: keep the session and run off the cache.
+          debugPrint('AuthRepository: auth_me failed, using cached profile: $e');
         } catch (e) {
-          // Token is invalid/expired — clear it so login starts fresh.
-          api.clearToken();
-          try {
-            await storage.clearToken();
-          } catch (_) {}
-          return null;
+          // Offline or unreachable — the cached profile is still valid.
+          debugPrint('AuthRepository: auth_me unreachable, using cache: $e');
         }
         return profile;
       }

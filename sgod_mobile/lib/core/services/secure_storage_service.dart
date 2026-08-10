@@ -14,17 +14,12 @@ class SecureStorageService {
 
   static const _keyToken = 'api_token';
   static const _keyProfile = 'user_profile';
-  static const _keyBaseUrl = 'api_base_url';
   static const _keyBiometricEnabled = 'biometric_enabled';
 
   Future<String?> getToken() => _storage.read(key: _keyToken);
   Future<void> saveToken(String token) =>
       _storage.write(key: _keyToken, value: token);
   Future<void> clearToken() => _storage.delete(key: _keyToken);
-
-  Future<String?> getBaseUrl() => _storage.read(key: _keyBaseUrl);
-  Future<void> saveBaseUrl(String url) =>
-      _storage.write(key: _keyBaseUrl, value: url);
 
   Future<Map<String, dynamic>?> getProfile() async {
     final raw = await _storage.read(key: _keyProfile);

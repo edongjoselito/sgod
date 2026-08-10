@@ -56,10 +56,20 @@ class Api extends CI_Controller {
       ->set_output(json_encode($payload));
   }
 
-  /** Require a valid bearer token; respond 401 and stop if absent. */
+  /**
+   * Require a valid bearer token; respond 401 and stop if absent.
+   *
+   * The two failure modes are reported separately so a 401 loop can be told
+   * apart at a glance: a token that never reached PHP points at the server
+   * (stripped Authorization header), a token that reached PHP but matched
+   * nothing points at the session itself.
+   */
   private function _require_auth() {
     if (!$this->api_auth->validate_token()) {
-      $this->_error('Unauthorized — valid bearer token required.', 401);
+      $message = $this->api_auth->read_bearer_token() === ''
+        ? 'No session token reached the server.'
+        : 'Session expired. Please log in again.';
+      $this->_error($message, 401);
       return FALSE;
     }
     return TRUE;
@@ -152,6 +162,25 @@ class Api extends CI_Controller {
     $source = $this->api_auth->login_source();
     $profile = $this->Api_model->profile_payload($user, $source);
     $this->_ok($profile);
+  }
+
+  /**
+   * GET /api/auth_diag — deployment self-check for the mobile bearer-token
+   * flow. Reports only booleans (never a token or any user data) so it is
+   * safe to hit from a browser while diagnosing 401 loops.
+   */
+  public function auth_diag() {
+    $token = $this->api_auth->read_bearer_token();
+    $this->_ok(array(
+      'php_sapi'              => php_sapi_name(),
+      'apache_headers_fn'     => function_exists('apache_request_headers'),
+      'ci_sees_authorization' => $this->input->get_request_header('Authorization', FALSE) !== NULL,
+      'server_authorization'  => !empty($_SERVER['HTTP_AUTHORIZATION']),
+      'redirect_authorization'=> !empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION']),
+      'token_received'        => $token !== '',
+      'token_recognized'      => $token !== '' && $this->api_auth->validate_token(),
+      'api_tokens_table'      => $this->db->table_exists('api_tokens'),
+    ));
   }
 
   /** POST /api/auth/logout */

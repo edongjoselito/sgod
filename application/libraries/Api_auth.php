@@ -40,18 +40,69 @@ class Api_auth {
   // ── Token validation ─────────────────────────────────────────────────────
 
   /**
+   * Extract the raw bearer token from the request.
+   *
+   * Apache only hands the `Authorization` header to PHP when it runs as a
+   * module. Under CGI/FastCGI/PHP-FPM — which is what most shared hosting
+   * uses — the header is dropped unless it is re-injected by .htaccess, so
+   * we look in every place it can plausibly turn up and fall back to the
+   * `X-Api-Token` header the mobile app also sends.
+   *
+   * @return string Raw token, or '' when the request carries none.
+   */
+  public function read_bearer_token() {
+    $candidates = array();
+
+    foreach (array('Authorization', 'X-Authorization', 'X-Api-Token') as $name) {
+      $value = $this->ci->input->get_request_header($name, FALSE);
+      if ($value !== NULL && $value !== '') {
+        $candidates[] = $value;
+      }
+    }
+
+    foreach (array(
+      'HTTP_AUTHORIZATION',
+      'REDIRECT_HTTP_AUTHORIZATION',
+      'HTTP_X_AUTHORIZATION',
+      'HTTP_X_API_TOKEN',
+      'REDIRECT_HTTP_X_API_TOKEN',
+    ) as $key) {
+      if (!empty($_SERVER[$key])) {
+        $candidates[] = $_SERVER[$key];
+      }
+    }
+
+    if (function_exists('apache_request_headers')) {
+      foreach ((array) apache_request_headers() as $name => $value) {
+        $name = strtolower($name);
+        if ($name === 'authorization' || $name === 'x-authorization' || $name === 'x-api-token') {
+          if ($value !== '') $candidates[] = $value;
+        }
+      }
+    }
+
+    foreach ($candidates as $value) {
+      $value = trim((string) $value);
+      if ($value === '') {
+        continue;
+      }
+      if (stripos($value, 'Bearer ') === 0) {
+        $value = trim(substr($value, 7));
+      }
+      if ($value !== '') {
+        return $value;
+      }
+    }
+
+    return '';
+  }
+
+  /**
    * Validate the Bearer token from the Authorization header and load the
    * matching user. Returns TRUE on success, FALSE otherwise.
    */
   public function validate_token() {
-    $header = $this->ci->input->get_request_header('Authorization', TRUE);
-    if ($header === NULL || $header === '') {
-      return FALSE;
-    }
-    if (stripos($header, 'Bearer ') !== 0) {
-      return FALSE;
-    }
-    $token = trim(substr($header, 7));
+    $token = $this->read_bearer_token();
     if ($token === '') {
       return FALSE;
     }
@@ -70,7 +121,11 @@ class Api_auth {
       'last_seen_at' => date('Y-m-d H:i:s'),
     ));
 
-    $this->loginSource = $row->position === 'sgod' ? 'sgod' : 'deped_mis';
+    // The source is encoded in the user_key prefix ('sgod:…' / 'users:…'),
+    // not in the position column — position holds the role label.
+    $this->loginSource = strpos((string) $row->user_key, 'sgod:') === 0
+      ? 'sgod'
+      : 'deped_mis';
     $this->user = $this->_resolve_user($row->user_key);
     if (!$this->user) {
       return FALSE;
@@ -109,11 +164,10 @@ class Api_auth {
    * Revoke the token currently presented in the Authorization header.
    */
   public function revoke_current_token() {
-    $header = $this->ci->input->get_request_header('Authorization', TRUE);
-    if (!$header || stripos($header, 'Bearer ') !== 0) {
+    $token = $this->read_bearer_token();
+    if ($token === '') {
       return;
     }
-    $token = trim(substr($header, 7));
     $this->ci->db->where('token_hash', sha1($token))->delete('api_tokens');
   }
 
