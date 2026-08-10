@@ -27,6 +27,7 @@ foreach ($records as $r) {
     <link href="<?= base_url(); ?>assets/css/dashboard-unified.css" rel="stylesheet">
     <link href="<?= base_url(); ?>assets/css/brigada-pages.css" rel="stylesheet">
     <link href="<?= base_url(); ?>assets/libs/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <style>.br-hero h2 { color: #fff !important; }</style>
 </head>
 <body class="dashboard-root-theme">
 <div id="wrapper">

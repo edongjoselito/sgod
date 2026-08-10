@@ -25,9 +25,10 @@ $dashboardConfig = array(
         'context' => $profileCompleted . ' of ' . count($profileChecklist) . ' profile details completed'
     ),
     'metrics' => array(),
+    'enrollment_chart' => isset($enrollmentChart) ? $enrollmentChart : array(),
     'quick_links_title' => 'School Tools',
     'quick_links_caption' => 'Open the tools available to your School account',
-    'quick_links_overlap' => TRUE,
+    'quick_links_overlap' => FALSE,
     'quick_links' => array(
         array('label' => 'School Profile', 'context' => 'Review the school information on record.', 'href' => base_url() . 'Page/school_profile/' . rawurlencode($schoolId), 'icon' => 'mdi-card-account-details-outline'),
         array('label' => 'Edit School Profile', 'context' => 'Update your school contact and profile details.', 'href' => base_url() . 'Page/school_profile_edit', 'icon' => 'mdi-pencil-outline')

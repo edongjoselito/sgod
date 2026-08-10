@@ -21,6 +21,7 @@ $dashboardDistribution = isset($dashboardConfig['distribution']) && is_array($da
     : null;
 $dashboardShowWhereabouts = !array_key_exists('show_whereabouts', $dashboardConfig) || !empty($dashboardConfig['show_whereabouts']);
 $dashboardHeroProgress = isset($dashboardConfig['hero_progress']) && is_array($dashboardConfig['hero_progress']) ? $dashboardConfig['hero_progress'] : null;
+$dashboardEnrollmentChart = isset($dashboardConfig['enrollment_chart']) && is_array($dashboardConfig['enrollment_chart']) ? $dashboardConfig['enrollment_chart'] : null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -120,6 +121,38 @@ $dashboardHeroProgress = isset($dashboardConfig['hero_progress']) && is_array($d
                             </div>
                         <?php } ?>
 
+                        <?php if ($dashboardEnrollmentChart) {
+                            $enrollmentLabels = array_values((array) ($dashboardEnrollmentChart['labels'] ?? array()));
+                            $enrollmentMale = array_values((array) ($dashboardEnrollmentChart['male'] ?? array()));
+                            $enrollmentFemale = array_values((array) ($dashboardEnrollmentChart['female'] ?? array()));
+                            $enrollmentSchoolYear = trim((string) ($dashboardEnrollmentChart['schoolYear'] ?? ''));
+                        ?>
+                            <div class="row dashboard-main-row">
+                                <div class="col-12">
+                                    <section class="dashboard-card enrollment-chart-card">
+                                        <div class="card-heading">
+                                            <div class="heading-group">
+                                                <span class="heading-icon"><i class="mdi mdi-chart-bar"></i></span>
+                                                <div>
+                                                    <h2 class="card-title">Enrollment Report</h2>
+                                                    <p class="card-caption"><?= $enrollmentSchoolYear !== '' ? 'School Year ' . $dashboardEsc($enrollmentSchoolYear) : 'No enrollment records yet'; ?></p>
+                                                </div>
+                                            </div>
+                                            <a class="btn btn-sm btn-outline-primary" href="<?= site_url('Page/school_enrollment_details'); ?>">View enrollment details</a>
+                                        </div>
+                                        <div class="dashboard-card-body">
+                                            <?php if (!empty($enrollmentLabels)) { ?>
+                                                <div class="enrollment-chart-wrap"><canvas id="schoolEnrollmentChart" aria-label="Enrollment report chart" role="img"></canvas></div>
+                                                <div class="enrollment-chart-legend"><span><i class="is-male"></i> Male</span><span><i class="is-female"></i> Female</span><strong><?= number_format((int) ($dashboardEnrollmentChart['total'] ?? 0)); ?> total enrollees</strong></div>
+                                            <?php } else { ?>
+                                                <div class="enrollment-empty"><i class="mdi mdi-chart-bar-stacked"></i><span>Enrollment data will appear here after you add records.</span><a href="<?= site_url('Page/school_enrollment_details'); ?>">Add enrollment</a></div>
+                                            <?php } ?>
+                                        </div>
+                                    </section>
+                                </div>
+                            </div>
+                        <?php } ?>
+
                         <?php if (!empty($dashboardQuickLinks)) { ?>
                             <div class="row dashboard-main-row<?= !empty($dashboardConfig['quick_links_overlap']) ? ' dashboard-quick-links-overlap' : ''; ?>">
                                 <div class="col-12">
@@ -184,5 +217,31 @@ $dashboardHeroProgress = isset($dashboardConfig['hero_progress']) && is_array($d
         <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
         <script src="<?= base_url(); ?>assets/libs/sweetalert2/sweetalert2.min.js"></script>
         <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
+        <?php if ($dashboardEnrollmentChart && !empty($enrollmentLabels)) { ?>
+            <script src="<?= base_url(); ?>assets/libs/chart-js/Chart.bundle.min.js"></script>
+            <script>
+                (function () {
+                    var canvas = document.getElementById('schoolEnrollmentChart');
+                    if (!canvas || typeof Chart === 'undefined') return;
+                    new Chart(canvas.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: <?= json_encode($enrollmentLabels); ?>,
+                            datasets: [
+                                { label: 'Male', data: <?= json_encode($enrollmentMale); ?>, backgroundColor: '#1769aa', borderRadius: 5, borderSkipped: false },
+                                { label: 'Female', data: <?= json_encode($enrollmentFemale); ?>, backgroundColor: '#55c5c4', borderRadius: 5, borderSkipped: false }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            legend: { display: false },
+                            scales: { xAxes: [{ stacked: true, gridLines: { display: false } }], yAxes: [{ stacked: true, ticks: { beginAtZero: true, precision: 0 }, gridLines: { color: 'rgba(16,45,78,.08)' } }] },
+                            tooltips: { mode: 'index', intersect: false }
+                        }
+                    });
+                }());
+            </script>
+        <?php } ?>
     </body>
 </html>

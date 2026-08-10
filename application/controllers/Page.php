@@ -487,7 +487,30 @@ class Page extends CI_Controller{
 
   function School(){
     if($this->session->userdata('section')==='School'){
-		$result['school'] = $this->db->where('schoolID', $this->session->userdata('username'))->get('schools', 1)->row();
+		$schoolId = (string) $this->session->userdata('username');
+		$result['school'] = $this->db->where('schoolID', $schoolId)->get('schools', 1)->row();
+		$this->ensure_school_enrollment_table();
+		$latestYear = $this->db->select('school_year')->where('school_id', $schoolId)->order_by('school_year', 'DESC')->get('one_school_enrollment_details', 1)->row();
+		$result['enrollmentChart'] = array('schoolYear' => '', 'labels' => array(), 'male' => array(), 'female' => array(), 'total' => 0);
+		if($latestYear && trim((string) $latestYear->school_year) !== ''){
+			$enrollmentRows = $this->db->select('grade_level, SUM(male_count) AS male_count, SUM(female_count) AS female_count')
+				->where('school_id', $schoolId)->where('school_year', $latestYear->school_year)->group_by('grade_level')->get('one_school_enrollment_details')->result();
+			$gradeOrder = array('Preschool', 'Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12');
+			usort($enrollmentRows, function($left, $right) use ($gradeOrder) {
+				$leftIndex = array_search($left->grade_level, $gradeOrder, TRUE);
+				$rightIndex = array_search($right->grade_level, $gradeOrder, TRUE);
+				$leftIndex = $leftIndex === FALSE ? 999 : $leftIndex;
+				$rightIndex = $rightIndex === FALSE ? 999 : $rightIndex;
+				return $leftIndex === $rightIndex ? strcasecmp($left->grade_level, $right->grade_level) : $leftIndex - $rightIndex;
+			});
+			$result['enrollmentChart']['schoolYear'] = (string) $latestYear->school_year;
+			foreach($enrollmentRows as $enrollmentRow){
+				$result['enrollmentChart']['labels'][] = (string) $enrollmentRow->grade_level;
+				$result['enrollmentChart']['male'][] = (int) $enrollmentRow->male_count;
+				$result['enrollmentChart']['female'][] = (int) $enrollmentRow->female_count;
+				$result['enrollmentChart']['total'] += (int) $enrollmentRow->male_count + (int) $enrollmentRow->female_count;
+			}
+		}
 		$this->load->view('dashboard_school', $result);
     }else{
         echo "Access Denied";
@@ -4023,9 +4046,13 @@ public function memo_delete(){
 		$result['selectedSchoolYear'] = $selectedSchoolYear;
 		$editId = (int) $this->input->get('edit');
 		$result['editEnrollment'] = $editId ? $this->db->where('id', $editId)->where('school_id', $schoolId)->get('one_school_enrollment_details', 1)->row() : null;
-		$maleQuery = $this->db->select_sum('male_count')->where('school_id', $schoolId); if($selectedSchoolYear !== '') $maleQuery->where('school_year', $selectedSchoolYear);
-		$femaleQuery = $this->db->select_sum('female_count')->where('school_id', $schoolId); if($selectedSchoolYear !== '') $femaleQuery->where('school_year', $selectedSchoolYear);
-		$result['totals'] = array('male' => (int) $maleQuery->get('one_school_enrollment_details')->row()->male_count, 'female' => (int) $femaleQuery->get('one_school_enrollment_details')->row()->female_count);
+		$totalsQuery = $this->db->select_sum('male_count')->select_sum('female_count')->where('school_id', $schoolId);
+		if($selectedSchoolYear !== '') $totalsQuery->where('school_year', $selectedSchoolYear);
+		$totalsRow = $totalsQuery->get('one_school_enrollment_details')->row();
+		$result['totals'] = array(
+			'male' => (int) ($totalsRow->male_count ?? 0),
+			'female' => (int) ($totalsRow->female_count ?? 0)
+		);
 		$this->load->view('school_enrollment_details', $result);
 	}
 
@@ -4070,12 +4097,15 @@ public function memo_delete(){
 	}
 
 	function school_profile($param){
-		if($this->session->userdata('section') === 'School' && (string) $param !== (string) $this->session->userdata('username')){
+		// School IDs may be email addresses. Decode the URL segment before comparing
+		// it to the logged-in account, otherwise an encoded "@" (%40) is rejected.
+		$schoolId = rawurldecode((string) $param);
+		if($this->session->userdata('section') === 'School' && strcasecmp($schoolId, (string) $this->session->userdata('username')) !== 0){
 			show_error('Access Denied', 403);
 			return;
 		}
 		$this->ensure_school_profile_schema();
-		$result['data']=$this->SGODModel->schoolDetails($param);
+		$result['data']=$this->SGODModel->schoolDetails($schoolId);
 		$this->load->view('school_profile',$result);
 	}
 

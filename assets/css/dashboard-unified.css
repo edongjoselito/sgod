@@ -432,6 +432,54 @@ body.dashboard-root-theme {
     padding: 20px;
 }
 
+.enrollment-chart-wrap {
+    position: relative;
+    height: 320px;
+    padding-top: 6px;
+}
+
+.enrollment-chart-wrap canvas {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.enrollment-chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    margin-top: 12px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.enrollment-chart-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.enrollment-chart-legend i { width: 10px; height: 10px; border-radius: 50%; }
+.enrollment-chart-legend .is-male { background: #1769aa; }
+.enrollment-chart-legend .is-female { background: #55c5c4; }
+.enrollment-chart-legend strong { margin-left: auto; color: #102d4e; }
+
+.enrollment-empty {
+    display: flex;
+    min-height: 170px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #64748b;
+    text-align: center;
+}
+
+.enrollment-empty i { color: #1769aa; font-size: 26px; }
+.enrollment-empty a { color: #1269aa; font-weight: 700; text-decoration: none; }
+
+@media (max-width: 575px) {
+    .enrollment-chart-wrap { height: 260px; }
+    .enrollment-chart-legend strong { width: 100%; margin-left: 0; }
+    .enrollment-empty { align-items: center; flex-direction: column; }
+}
+
 .quick-action-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));

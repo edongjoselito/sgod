@@ -17,6 +17,8 @@ $esc = function($value) { return htmlspecialchars((string) $value, ENT_QUOTES, '
         .pbei-school-hero { margin: 20px 0 24px; padding: 30px; border-radius: 18px; color: #fff; background: linear-gradient(135deg, #272b8c, #565de8); }
         .pbei-school-hero h2 { color: #fff; margin: 8px 0 0; }
         .pbei-school-hero p { margin: 9px 0 0; color: rgba(255,255,255,.84); }
+        .pbei-order-link { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; padding: 9px 13px; border: 1px solid rgba(255,255,255,.52); border-radius: 9px; color: #fff; background: rgba(255,255,255,.12); font-size: .84rem; font-weight: 700; text-decoration: none; }
+        .pbei-order-link:hover { color: #363ba8; background: #fff; text-decoration: none; }
         .pbei-item { border: 0; border-radius: 16px; box-shadow: 0 8px 24px rgba(34, 52, 87, .08); overflow: hidden; }
         .pbei-item + .pbei-item { margin-top: 18px; }
         .pbei-order { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; color: #363ba8; background: #e9ebff; font-weight: 700; }
@@ -46,6 +48,7 @@ $esc = function($value) { return htmlspecialchars((string) $value, ENT_QUOTES, '
             <div class="d-flex align-items-center"><i class="mdi mdi-trophy-outline font-24 mr-2"></i><span class="text-uppercase font-weight-bold small">PBEI</span></div>
             <h2>Mandatory Requirements</h2>
             <p>Attach the supporting PDF and add notes for each item.</p>
+            <a class="pbei-order-link" href="https://www.deped.gov.ph/wp-content/uploads/DO_s2026_012r.pdf" target="_blank" rel="noopener noreferrer"><i class="mdi mdi-file-document-outline"></i> Read DepEd Order No. 12, s. 2026</a>
         </section>
 
         <?php if ($this->session->flashdata('success')): ?><div class="alert alert-success alert-dismissible fade show" role="alert"><?= $esc($this->session->flashdata('success')); ?><button type="button" class="close" data-dismiss="alert">&times;</button></div><?php endif; ?>
