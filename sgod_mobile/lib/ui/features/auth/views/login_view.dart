@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../core/widgets/primary_button.dart';
+import '../../../core/di.dart';
 import '../view_models/auth_view_model.dart';
 
 /// iOS-style login screen — CupertinoTextField, filled button, clean layout.
@@ -19,16 +21,30 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _serverUrlController = TextEditingController();
   bool _obscurePassword = true;
+  bool _showServerField = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _serverUrlController.text = DI.api.baseUrl;
+  }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _serverUrlController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
+    final url = _serverUrlController.text.trim();
+    if (url.isNotEmpty) {
+      await DI.storage.saveBaseUrl(url);
+      DI.api.configure(baseUrl: url);
+    }
     final vm = context.read<AuthViewModel>();
     final ok = await vm.login(
       username: _usernameController.text.trim(),
@@ -71,6 +87,63 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
                   const SizedBox(height: 36),
+
+                  // ── Server URL (collapsible) ────────────────────────
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    minSize: 0,
+                    onPressed: () => setState(() => _showServerField = !_showServerField),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Server URL',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.tertiaryLabel,
+                          ),
+                        ),
+                        Icon(
+                          _showServerField
+                              ? CupertinoIcons.chevron_up
+                              : CupertinoIcons.chevron_down,
+                          size: 14,
+                          color: AppColors.tertiaryLabel,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_showServerField) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: CupertinoTextField(
+                        controller: _serverUrlController,
+                        placeholder: 'https://your-domain.com/sgod',
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 16),
+                          child: Icon(CupertinoIcons.globe, size: 20,
+                              color: AppColors.tertiaryLabel),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        keyboardType: TextInputType.url,
+                        autocorrect: false,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: AppColors.label,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // ── Username ────────────────────────────────────────
                   Container(
