@@ -1158,6 +1158,7 @@
                             <li><a href="<?= base_url(); ?>Brigada/list_of_partners">Partners</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/tax_incentive_requirements">Tax Incentive Requirements</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/asp_tracking">ASP Tracking</a></li>
+                            <li><a href="<?= base_url(); ?>Page/school_needs_list">School Needs</a></li>
                         </ul>
                     </li>
 

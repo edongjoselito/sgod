@@ -5021,4 +5021,91 @@ private function is_super_admin_managed_account($username){
 
 	$this->load->view('accomplishments_by_objective', $result);
   }
+
+  function school_needs_list(){
+        if (!$this->db->table_exists('schools')) {
+            show_404();
+        }
+
+        $data['title'] = 'School Needs';
+        $data['schools'] = $this->db->order_by('schoolName', 'ASC')->get('schools')->result();
+        $this->load->view('pages/school_needs_list', $data);
+  }
+
+  function school_needs($schoolId = 0){
+        $schoolId = (int) $schoolId;
+        if ($schoolId === 0) {
+            $schoolId = (int) $this->input->get('school_id');
+        }
+
+        if (!$this->db->table_exists('schools')) {
+            show_404();
+        }
+
+        $school = $this->db->where('schoolID', $schoolId)->get('schools', 1)->row();
+        if (!$school) {
+            $this->session->set_flashdata('danger', 'School not found.');
+            redirect('Page/school_needs_list');
+            return;
+        }
+
+        $this->ensure_school_needs_table();
+
+        if ($this->input->post('save_need')) {
+            $data = array(
+                'school_id' => $schoolId,
+                'need' => $this->input->post('need'),
+                'quantity' => (int) $this->input->post('quantity'),
+                'remarks' => $this->input->post('remarks'),
+            );
+
+            $needId = (int) $this->input->post('need_id');
+            if ($needId > 0) {
+                $this->db->where('id', $needId)->where('school_id', $schoolId);
+                $this->db->update('school_needs', $data);
+                $this->session->set_flashdata('success', 'School need updated successfully.');
+            } else {
+                $this->db->insert('school_needs', $data);
+                $this->session->set_flashdata('success', 'School need added successfully.');
+            }
+
+            redirect('Page/school_needs/' . $schoolId);
+            return;
+        }
+
+        if ((int) $this->input->get('delete') > 0) {
+            $this->db->where('id', (int) $this->input->get('delete'))->where('school_id', $schoolId)->delete('school_needs');
+            $this->session->set_flashdata('success', 'School need deleted successfully.');
+            redirect('Page/school_needs/' . $schoolId);
+            return;
+        }
+
+        $data['school'] = $school;
+        $data['needs'] = $this->db->where('school_id', $schoolId)->order_by('id', 'DESC')->get('school_needs')->result();
+        $data['title'] = 'School Needs - ' . $school->schoolName;
+
+        $editNeedId = (int) $this->input->get('edit');
+        if ($editNeedId > 0) {
+            $data['editingNeed'] = $this->db->where('id', $editNeedId)->where('school_id', $schoolId)->get('school_needs', 1)->row();
+        }
+
+        $this->load->view('pages/school_needs', $data);
+  }
+
+  private function ensure_school_needs_table(){
+        if ($this->db->table_exists('school_needs')) {
+            return;
+        }
+
+        $this->db->query('CREATE TABLE IF NOT EXISTS school_needs (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            school_id INT UNSIGNED NOT NULL,
+            need VARCHAR(255) NOT NULL,
+            quantity INT UNSIGNED NOT NULL DEFAULT 1,
+            remarks TEXT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_school_id (school_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+  }
 }
