@@ -5043,6 +5043,46 @@ private function is_super_admin_managed_account($username){
         $this->load->view('pages/school_needs_list', $data);
   }
 
+  public function partner_school_needs_list(){
+        if($this->session->userdata('section') !== 'Partner'){
+            show_error('Access Denied', 403);
+            return;
+        }
+
+        if (!$this->db->table_exists('schools')) {
+            show_404();
+        }
+
+        $data['title'] = 'School Needs';
+        $data['schools'] = $this->db->order_by('schoolName', 'ASC')->get('schools')->result();
+        $this->load->view('pages/partner_school_needs_list', $data);
+  }
+
+  public function partner_school_needs($schoolId = 0){
+        if($this->session->userdata('section') !== 'Partner'){
+            show_error('Access Denied', 403);
+            return;
+        }
+
+        $schoolId = (int) $schoolId;
+        if (!$this->db->table_exists('schools') || $schoolId === 0) {
+            show_404();
+        }
+
+        $school = $this->db->where('schoolID', $schoolId)->get('schools', 1)->row();
+        if (!$school) {
+            $this->session->set_flashdata('danger', 'School not found.');
+            redirect('Page/partner_school_needs_list');
+            return;
+        }
+
+        $this->ensure_school_needs_table();
+        $data['school'] = $school;
+        $data['needs'] = $this->db->where('school_id', $schoolId)->order_by('id', 'DESC')->get('school_needs')->result();
+        $data['title'] = 'School Needs - ' . $school->schoolName;
+        $this->load->view('pages/partner_school_needs', $data);
+  }
+
   function school_needs($schoolId = 0){
         $schoolId = (int) $schoolId;
         if ($schoolId === 0) {

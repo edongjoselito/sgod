@@ -11,6 +11,9 @@ $name = trim(implode(' ', array_filter(array($this->session->userdata('fName'), 
     <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
     <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { --navy:#092b4c; --blue:#0875c3; --gold:#f5b336; --ink:#172c43; --muted:#5f6f87; --line:#dbe5ef; --surface:#ffffff; --surface-soft:#f8fbff; --border:#d6e2ee; }
         body { min-height:100vh; color:var(--ink); background:#eef5fb; font-family:"Inter",system-ui,Arial,sans-serif; }
@@ -60,6 +63,58 @@ $name = trim(implode(' ', array_filter(array($this->session->userdata('fName'), 
         .resource-link:hover { color:#0a3f7a; text-decoration:underline; }
         @media(max-width:980px){ .hero, .overview-grid, .overview-secondary, .resource-grid { grid-template-columns:1fr; } .hero { padding:28px; } }
         @media(max-width:700px){ .nav-inner { flex-direction:column; align-items:flex-start; } .hero-cta { flex-direction:column; } main { padding:36px 0 52px; } }
+
+        /* Modern partner portal theme */
+        :root { --navy:#102d4e; --blue:#1269aa; --blue-deep:#0b4d82; --aqua:#55c5c4; --gold:#f4bd4f; --ink:#1b2a41; --muted:#64748b; --border:#e3eaf2; --shadow:0 16px 40px rgba(18,45,78,.07); }
+        * { box-sizing:border-box; }
+        body { background:radial-gradient(circle at 8% 8%,rgba(85,197,196,.11),transparent 24rem),radial-gradient(circle at 96% 34%,rgba(244,189,79,.10),transparent 22rem),#f6f8fb; font-family:"DM Sans","Segoe UI",system-ui,sans-serif; letter-spacing:-.01em; }
+        .topline { height:5px; background:linear-gradient(90deg,var(--aqua),#388ec5 48%,var(--gold)); }
+        .nav { background:rgba(255,255,255,.82); backdrop-filter:blur(18px); border-bottom:1px solid rgba(227,234,242,.9); box-shadow:none; }
+        .shell { width:min(1180px,calc(100% - 32px)); }
+        .nav-inner { gap:24px; padding:17px 0; }
+        .brand { color:var(--navy); font:700 21px/1.1 "Playfair Display",Georgia,serif; }
+        .brand small { color:var(--blue); font:700 10px/1.3 "DM Sans",sans-serif; letter-spacing:.13em; }
+        .logout { padding:10px 17px; color:var(--navy); background:#f7fafc; border-color:var(--border); transition:color .2s ease,background .2s ease,transform .2s ease; }
+        .logout:hover { color:#fff; background:var(--navy); transform:translateY(-1px); }
+        main { padding:38px 0 80px; }
+        .hero { position:relative; display:block; overflow:hidden; isolation:isolate; padding:clamp(32px,5vw,56px); border-radius:28px; background:linear-gradient(125deg,#102d4e 0%,#155e96 58%,#1a7cac 100%); box-shadow:0 28px 65px rgba(16,45,78,.20); }
+        .hero::before,.hero::after { position:absolute; z-index:-1; content:""; border-radius:50%; pointer-events:none; }
+        .hero::before { width:340px; height:340px; top:-195px; right:-82px; border:52px solid rgba(255,255,255,.10); }
+        .hero::after { width:190px; height:190px; right:20%; bottom:-138px; background:rgba(244,189,79,.24); }
+        .eyebrow { margin:0 0 14px; color:#ffe09a; font-size:11px; font-weight:700; letter-spacing:.16em; }
+        .hero h1 { max-width:700px; margin:0 0 14px; font:700 clamp(32px,4vw,52px)/1.08 "Playfair Display",Georgia,serif; }
+        .hero p { max-width:650px; font-size:16px; line-height:1.7; }
+        .hero-cta { gap:10px; margin-top:24px; }
+        .hero-cta a { min-width:154px; padding:13px 20px; border-radius:12px; color:var(--blue-deep); }
+        .hero-cta a:hover { transform:translateY(-2px); }
+        .hero-cta a.secondary { color:#fff; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.3); box-shadow:none; }
+        .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:20px; }
+        .card { position:relative; display:flex; flex-direction:column; min-height:185px; padding:26px; overflow:hidden; border:1px solid var(--border); border-radius:20px; background:#fff; box-shadow:var(--shadow); transition:transform .2s ease,box-shadow .2s ease; }
+        .card::before { position:absolute; top:0; left:26px; width:42px; height:4px; content:""; border-radius:0 0 4px 4px; background:var(--aqua); }
+        .card:nth-child(2)::before { background:var(--gold); }
+        .card:hover,.resource-card:hover,.step:hover { transform:translateY(-3px); box-shadow:0 22px 42px rgba(16,45,78,.11); }
+        .card-label { margin:0 0 11px; color:var(--blue-deep); font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+        .card strong { color:var(--navy); font-size:clamp(1.55rem,2.4vw,2rem); line-height:1.15; }
+        .card p:not(.card-label) { margin:10px 0 0; color:var(--muted); line-height:1.6; }
+        .resource-section { margin-top:56px; }
+        .resource-heading { align-items:flex-end; gap:32px; margin-bottom:22px; }
+        .resource-heading h2 { font:700 clamp(1.65rem,3vw,2.15rem)/1.2 "Playfair Display",Georgia,serif; }
+        .resource-heading p { line-height:1.65; }
+        .steps { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+        .step { display:flex; flex-direction:column; gap:9px; min-height:158px; padding:22px; border:1px solid var(--border); border-radius:18px; background:#fff; box-shadow:var(--shadow); transition:transform .2s ease,box-shadow .2s ease; }
+        .step b { color:var(--blue-deep); font-size:.79rem; letter-spacing:.09em; }
+        .step span { color:var(--muted); font-size:.95rem; line-height:1.55; }
+        .resource-grid { gap:16px; }
+        .resource-card { min-height:255px; padding:25px; border-color:var(--border); border-radius:20px; box-shadow:var(--shadow); transition:transform .2s ease,box-shadow .2s ease; }
+        .resource-icon { color:var(--blue-deep); background:#e9f4f5; font-family:"DM Sans",sans-serif; font-size:13px; font-weight:700; letter-spacing:.02em; }
+        .resource-card h3 { font-size:1.18rem; }
+        .resource-card p { line-height:1.65; }
+        .resource-link { color:var(--blue-deep); }
+        .empty,.template-note { margin-top:20px; padding:17px 20px; border:1px solid #f5df9d; border-left:4px solid var(--gold); border-radius:16px; background:#fff9e9; color:#684c13; font-size:.95rem; line-height:1.6; }
+        @media(max-width:980px){ .steps { grid-template-columns:repeat(2,minmax(0,1fr)); } .resource-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:700px){ .grid,.steps,.resource-grid { grid-template-columns:1fr; } .resource-heading { display:block; } .resource-heading > p { margin-top:10px; } }
+        @media(max-width:480px){ .shell { width:calc(100% - 24px); } .hero { padding:30px 24px; border-radius:22px; } .nav-inner { gap:12px; } }
+
     </style>
 </head>
 <body>
@@ -73,7 +128,15 @@ $name = trim(implode(' ', array_filter(array($this->session->userdata('fName'), 
     <div style="padding:16px 20px; border-radius:8px; margin-bottom:24px; font-size:14px; background:#fee2e2; color:#991b1b; border-left:4px solid #dc2626;"><?= $esc($this->session->flashdata('danger')); ?></div>
     <?php endif; ?>
 
-    <section class="hero"><p class="eyebrow">Brigada Eskwela partner portal</p><h1>Welcome, <?= $esc($name !== '' ? $name : 'Partner'); ?>.</h1><p>Thank you for helping strengthen schools and create better learning spaces for every child.</p></section>
+    <section class="hero">
+        <p class="eyebrow">Brigada Eskwela partner portal</p>
+        <h1>Welcome, <?= $esc($name !== '' ? $name : 'Partner'); ?>.</h1>
+        <p>Thank you for helping strengthen schools and create better learning spaces for every child.</p>
+        <div class="hero-cta">
+            <a href="<?= site_url('Page/partner_school_needs_list'); ?>">View school needs</a>
+            <a class="secondary" href="<?= site_url('Page/satisfaction_survey'); ?>">Take survey</a>
+        </div>
+    </section>
     <section class="grid" aria-label="Partner account summary">
         <article class="card profile"><p class="card-label">Partner profile</p><strong><?= $esc($partner ? $partner->name : 'Partner profile is being prepared'); ?></strong><p><?= $esc($partner ? trim(($partner->general_type ?? '') . ($partner->specific_type ? ' · ' . $partner->specific_type : '')) : 'Your registration was received successfully.'); ?></p></article>
         <article class="card"><p class="card-label">Recorded support</p><strong><?= (int) $contributionCount; ?></strong><p>Brigada Eskwela contribution record<?= (int) $contributionCount === 1 ? '' : 's'; ?>.</p><a class="resource-link" href="<?= site_url('Page/partner_donations'); ?>">View all donations →</a></article>
