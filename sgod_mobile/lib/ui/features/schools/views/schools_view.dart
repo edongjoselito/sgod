@@ -58,9 +58,10 @@ class _SchoolsViewState extends State<SchoolsView> {
                       size: 26, color: AppColors.label),
                 )
               : null,
-          trailing: Consumer<SchoolsViewModel>(
-            builder: (context, vm, _) {
-              final count = vm.totalCount;
+          trailing: ListenableBuilder(
+            listenable: _vm,
+            builder: (context, _) {
+              final count = _vm.totalCount;
               if (count == 0) return const SizedBox.shrink();
               return Text(
                 '$count school${count == 1 ? '' : 's'}',
