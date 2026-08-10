@@ -1,0 +1,114 @@
+{
+ "sy": "2026-2027",
+ "districts": [
+  {
+   "id": 1,
+   "name": "Baganga North",
+   "school_count": 19,
+   "submitted_count": 4
+  },
+  {
+   "id": 2,
+   "name": "Baganga South",
+   "school_count": 26,
+   "submitted_count": 10
+  },
+  {
+   "id": 3,
+   "name": "Banaybanay",
+   "school_count": 23,
+   "submitted_count": 6
+  },
+  {
+   "id": 4,
+   "name": "Boston",
+   "school_count": 14,
+   "submitted_count": 1
+  },
+  {
+   "id": 5,
+   "name": "Caraga North",
+   "school_count": 31,
+   "submitted_count": 6
+  },
+  {
+   "id": 6,
+   "name": "Caraga South",
+   "school_count": 20,
+   "submitted_count": 8
+  },
+  {
+   "id": 7,
+   "name": "Cateel 1",
+   "school_count": 10,
+   "submitted_count": 2
+  },
+  {
+   "id": 8,
+   "name": "Cateel 2",
+   "school_count": 28,
+   "submitted_count": 4
+  },
+  {
+   "id": 9,
+   "name": "Governor Generoso North",
+   "school_count": 0,
+   "submitted_count": 0
+  },
+  {
+   "id": 10,
+   "name": "Governor Generoso South",
+   "school_count": 0,
+   "submitted_count": 0
+  },
+  {
+   "id": 11,
+   "name": "Lupon East",
+   "school_count": 26,
+   "submitted_count": 10
+  },
+  {
+   "id": 12,
+   "name": "Lupon West",
+   "school_count": 21,
+   "submitted_count": 5
+  },
+  {
+   "id": 13,
+   "name": "Manay North",
+   "school_count": 23,
+   "submitted_count": 10
+  },
+  {
+   "id": 14,
+   "name": "Manay South",
+   "school_count": 22,
+   "submitted_count": 4
+  },
+  {
+   "id": 15,
+   "name": "San Isidro North",
+   "school_count": 13,
+   "submitted_count": 4
+  },
+  {
+   "id": 16,
+   "name": "San Isidro South",
+   "school_count": 14,
+   "submitted_count": 0
+  },
+  {
+   "id": 18,
+   "name": "School Division Office",
+   "school_count": 1,
+   "submitted_count": 0
+  },
+  {
+   "id": 17,
+   "name": "Tarragona",
+   "school_count": 24,
+   "submitted_count": 5
+  }
+ ],
+ "generated_at": "2026-08-10T08:59:04+08:00"
+}

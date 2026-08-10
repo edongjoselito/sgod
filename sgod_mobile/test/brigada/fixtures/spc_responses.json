@@ -1,0 +1,336 @@
+{
+ "sy": "2026-2027",
+ "item_id": 1,
+ "value": 1,
+ "rating_label": "Fully Prepared",
+ "item_description": "Classrooms are clean, well-ventilated, and conducive to learning",
+ "category_name": "Facilities and Infrastructure",
+ "schools": [
+  {
+   "school_id": "501555",
+   "school_name": "ALIWAGWAG INTEGRATED SCHOOL",
+   "remark": "Parents help with the cleaning of rooms "
+  },
+  {
+   "school_id": "129323",
+   "school_name": "AROMA BEACH ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129279",
+   "school_name": "BADIANG ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129230",
+   "school_name": "BALETE PS",
+   "remark": ""
+  },
+  {
+   "school_id": "129152",
+   "school_name": "BAN-AO ES",
+   "remark": "EVIDENT"
+  },
+  {
+   "school_id": "129250",
+   "school_name": "BAYBAY ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129280",
+   "school_name": "BONIFACIO ES",
+   "remark": ""
+  },
+  {
+   "school_id": "501081",
+   "school_name": "BUTAY IS",
+   "remark": ""
+  },
+  {
+   "school_id": "129326",
+   "school_name": "CABADIANGAN ELEMENTARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129178",
+   "school_name": "CABANGCALAN ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129340",
+   "school_name": "CAIPOC PRIMARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "304306",
+   "school_name": "CALAPAGAN NATIONAL HS",
+   "remark": ""
+  },
+  {
+   "school_id": "129303",
+   "school_name": "Calasagan ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129234",
+   "school_name": "CANINGAG ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129342",
+   "school_name": "CAPASNAN ELEM. SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "205508",
+   "school_name": "CASUNUGAN ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129180",
+   "school_name": "CAUSWAGAN ES",
+   "remark": ""
+  },
+  {
+   "school_id": "305516",
+   "school_name": "CORPORACION NHS",
+   "remark": ""
+  },
+  {
+   "school_id": "304316",
+   "school_name": "DR. BEATO C. MACAYRA NHS",
+   "remark": ""
+  },
+  {
+   "school_id": "129346",
+   "school_name": "HERMINIGILDO ATOG ELEM. SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129327",
+   "school_name": "ILANGAY ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129306",
+   "school_name": "Immaculada ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129359",
+   "school_name": "JUAN MAPAYO ELEM. SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129254",
+   "school_name": "JUDGE ERNESTO NOMBRADO MEMORIAL SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129450",
+   "school_name": "KAMONING ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129215",
+   "school_name": "Lahi PS",
+   "remark": ""
+  },
+  {
+   "school_id": "129157",
+   "school_name": "LAMBAJON CENTRAL ELEMENTARY SCHOOL SPED CENTER",
+   "remark": ""
+  },
+  {
+   "school_id": "316108",
+   "school_name": "LAVIGAN NATIONAL HIGH SCHOOL",
+   "remark": "evident"
+  },
+  {
+   "school_id": "316107",
+   "school_name": "LEANDRO G. JAPOS NHS",
+   "remark": ""
+  },
+  {
+   "school_id": "129354",
+   "school_name": "LINGAYAO ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129217",
+   "school_name": "LUBGANON Elementary School ",
+   "remark": ""
+  },
+  {
+   "school_id": "129430",
+   "school_name": "MAAG ELEMENTARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129311",
+   "school_name": "Macangao Central Elementary School",
+   "remark": ""
+  },
+  {
+   "school_id": "137186",
+   "school_name": "Mandabon ES",
+   "remark": ""
+  },
+  {
+   "school_id": "304301",
+   "school_name": "MANUEL B. GUI\u00d1EZ SR. NATIONAL HIGH SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "316101",
+   "school_name": "MARAYAG NATIONAL HIGH SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "500457",
+   "school_name": "MAYLAYA INTEGRATED SCHOL",
+   "remark": ""
+  },
+  {
+   "school_id": "501608",
+   "school_name": "MODESTO T. VEROY SR. IS",
+   "remark": "accomplished"
+  },
+  {
+   "school_id": "129296",
+   "school_name": "NANGAN ELEMENTARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129457",
+   "school_name": "OMPAO ES",
+   "remark": ""
+  },
+  {
+   "school_id": "304299",
+   "school_name": "Our Lady of Guadalupe  NHS",
+   "remark": ""
+  },
+  {
+   "school_id": "129318",
+   "school_name": "PANGYAN ELEMENTARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129172",
+   "school_name": "PANJUGAN ELEMENTARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129222",
+   "school_name": "PANLAISAN ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129242",
+   "school_name": "PANTUYAN ELEMENTARY SCHOOL",
+   "remark": "Successfully done"
+  },
+  {
+   "school_id": "129268",
+   "school_name": "Poo ES",
+   "remark": ""
+  },
+  {
+   "school_id": "304330",
+   "school_name": "PUNDAGUITAN NATIONAL HIGH SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "304331",
+   "school_name": "PUNTALINAO NHS",
+   "remark": ""
+  },
+  {
+   "school_id": "129336",
+   "school_name": "R. SUMAMBOT ELEM. SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129174",
+   "school_name": "SALINGCOMOT ELEMENTARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129367",
+   "school_name": "SAN FERMIN ELEM. SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "304332",
+   "school_name": "SAN ISIDRO NHS",
+   "remark": "ready for occupancy"
+  },
+  {
+   "school_id": "304333",
+   "school_name": "SAN LUIS NATIONAL HIGH SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "501965",
+   "school_name": "San Pedro Integrated School",
+   "remark": ""
+  },
+  {
+   "school_id": "129432",
+   "school_name": "SAN ROQUE ES - SAN ISIDRO NORTH",
+   "remark": ""
+  },
+  {
+   "school_id": "129175",
+   "school_name": "SAOQUIGUE ELEMENTARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129289",
+   "school_name": "SERAPION C. BASALO ELEMENTARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129162",
+   "school_name": "STA. CRUZ ES",
+   "remark": ""
+  },
+  {
+   "school_id": "306221",
+   "school_name": "Surop National High School",
+   "remark": ""
+  },
+  {
+   "school_id": "129193",
+   "school_name": "T. PATRICIO ELEMENTARY SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129287",
+   "school_name": "TANDANG SORA ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129320",
+   "school_name": "Tiombocan ES",
+   "remark": ""
+  },
+  {
+   "school_id": "302077",
+   "school_name": "TIOMBOCAN NATIONAL HIGH SCHOOL",
+   "remark": ""
+  },
+  {
+   "school_id": "129463",
+   "school_name": "TUBAON ES",
+   "remark": ""
+  },
+  {
+   "school_id": "129424",
+   "school_name": "TUBURAN VILLAGE ELEMENTARY SCHOOL",
+   "remark": ""
+  }
+ ],
+ "generated_at": "2026-08-10T08:59:04+08:00"
+}

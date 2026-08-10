@@ -18,7 +18,9 @@ import '../view_models/schools_view_model.dart';
 /// - Count shown in the nav bar trailing ("343 schools")
 /// - Pull-to-refresh, loading and empty states
 class SchoolsView extends StatefulWidget {
-  const SchoolsView({super.key});
+  const SchoolsView({super.key, this.onMenuTap});
+
+  final VoidCallback? onMenuTap;
 
   @override
   State<SchoolsView> createState() => _SchoolsViewState();
@@ -42,6 +44,14 @@ class _SchoolsViewState extends State<SchoolsView> {
         backgroundColor: AppColors.background,
         navigationBar: CupertinoNavigationBar(
           middle: const Text('Schools'),
+          leading: widget.onMenuTap != null
+              ? CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: widget.onMenuTap,
+                  child: const Icon(CupertinoIcons.line_horizontal_3,
+                      size: 26, color: AppColors.label),
+                )
+              : null,
           trailing: Consumer<SchoolsViewModel>(
             builder: (context, vm, _) {
               final count = vm.totalCount;

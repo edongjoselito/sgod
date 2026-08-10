@@ -32,6 +32,19 @@ mixin _$AccomplishmentItem {
   String get year => throw _privateConstructorUsedError;
   String get achieved => throw _privateConstructorUsedError;
   String get target => throw _privateConstructorUsedError;
+  String get monthAcc => throw _privateConstructorUsedError;
+  String get weekAcc => throw _privateConstructorUsedError;
+  String get activityCategory => throw _privateConstructorUsedError;
+  String get particulars => throw _privateConstructorUsedError;
+  String get venue => throw _privateConstructorUsedError;
+  String get targetDate => throw _privateConstructorUsedError;
+  String get encoder => throw _privateConstructorUsedError;
+  String get accomplishmentScope => throw _privateConstructorUsedError;
+  String get resources => throw _privateConstructorUsedError;
+  String get notes => throw _privateConstructorUsedError;
+  String get perIndicators => throw _privateConstructorUsedError;
+  String get remarks => throw _privateConstructorUsedError;
+  String get secGroup => throw _privateConstructorUsedError;
 
   /// Serializes this AccomplishmentItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -60,6 +73,19 @@ abstract class $AccomplishmentItemCopyWith<$Res> {
     String year,
     String achieved,
     String target,
+    String monthAcc,
+    String weekAcc,
+    String activityCategory,
+    String particulars,
+    String venue,
+    String targetDate,
+    String encoder,
+    String accomplishmentScope,
+    String resources,
+    String notes,
+    String perIndicators,
+    String remarks,
+    String secGroup,
   });
 }
 
@@ -87,6 +113,19 @@ class _$AccomplishmentItemCopyWithImpl<$Res, $Val extends AccomplishmentItem>
     Object? year = null,
     Object? achieved = null,
     Object? target = null,
+    Object? monthAcc = null,
+    Object? weekAcc = null,
+    Object? activityCategory = null,
+    Object? particulars = null,
+    Object? venue = null,
+    Object? targetDate = null,
+    Object? encoder = null,
+    Object? accomplishmentScope = null,
+    Object? resources = null,
+    Object? notes = null,
+    Object? perIndicators = null,
+    Object? remarks = null,
+    Object? secGroup = null,
   }) {
     return _then(
       _value.copyWith(
@@ -126,6 +165,58 @@ class _$AccomplishmentItemCopyWithImpl<$Res, $Val extends AccomplishmentItem>
                 ? _value.target
                 : target // ignore: cast_nullable_to_non_nullable
                       as String,
+            monthAcc: null == monthAcc
+                ? _value.monthAcc
+                : monthAcc // ignore: cast_nullable_to_non_nullable
+                      as String,
+            weekAcc: null == weekAcc
+                ? _value.weekAcc
+                : weekAcc // ignore: cast_nullable_to_non_nullable
+                      as String,
+            activityCategory: null == activityCategory
+                ? _value.activityCategory
+                : activityCategory // ignore: cast_nullable_to_non_nullable
+                      as String,
+            particulars: null == particulars
+                ? _value.particulars
+                : particulars // ignore: cast_nullable_to_non_nullable
+                      as String,
+            venue: null == venue
+                ? _value.venue
+                : venue // ignore: cast_nullable_to_non_nullable
+                      as String,
+            targetDate: null == targetDate
+                ? _value.targetDate
+                : targetDate // ignore: cast_nullable_to_non_nullable
+                      as String,
+            encoder: null == encoder
+                ? _value.encoder
+                : encoder // ignore: cast_nullable_to_non_nullable
+                      as String,
+            accomplishmentScope: null == accomplishmentScope
+                ? _value.accomplishmentScope
+                : accomplishmentScope // ignore: cast_nullable_to_non_nullable
+                      as String,
+            resources: null == resources
+                ? _value.resources
+                : resources // ignore: cast_nullable_to_non_nullable
+                      as String,
+            notes: null == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as String,
+            perIndicators: null == perIndicators
+                ? _value.perIndicators
+                : perIndicators // ignore: cast_nullable_to_non_nullable
+                      as String,
+            remarks: null == remarks
+                ? _value.remarks
+                : remarks // ignore: cast_nullable_to_non_nullable
+                      as String,
+            secGroup: null == secGroup
+                ? _value.secGroup
+                : secGroup // ignore: cast_nullable_to_non_nullable
+                      as String,
           )
           as $Val,
     );
@@ -151,6 +242,19 @@ abstract class _$$AccomplishmentItemImplCopyWith<$Res>
     String year,
     String achieved,
     String target,
+    String monthAcc,
+    String weekAcc,
+    String activityCategory,
+    String particulars,
+    String venue,
+    String targetDate,
+    String encoder,
+    String accomplishmentScope,
+    String resources,
+    String notes,
+    String perIndicators,
+    String remarks,
+    String secGroup,
   });
 }
 
@@ -177,6 +281,19 @@ class __$$AccomplishmentItemImplCopyWithImpl<$Res>
     Object? year = null,
     Object? achieved = null,
     Object? target = null,
+    Object? monthAcc = null,
+    Object? weekAcc = null,
+    Object? activityCategory = null,
+    Object? particulars = null,
+    Object? venue = null,
+    Object? targetDate = null,
+    Object? encoder = null,
+    Object? accomplishmentScope = null,
+    Object? resources = null,
+    Object? notes = null,
+    Object? perIndicators = null,
+    Object? remarks = null,
+    Object? secGroup = null,
   }) {
     return _then(
       _$AccomplishmentItemImpl(
@@ -216,6 +333,58 @@ class __$$AccomplishmentItemImplCopyWithImpl<$Res>
             ? _value.target
             : target // ignore: cast_nullable_to_non_nullable
                   as String,
+        monthAcc: null == monthAcc
+            ? _value.monthAcc
+            : monthAcc // ignore: cast_nullable_to_non_nullable
+                  as String,
+        weekAcc: null == weekAcc
+            ? _value.weekAcc
+            : weekAcc // ignore: cast_nullable_to_non_nullable
+                  as String,
+        activityCategory: null == activityCategory
+            ? _value.activityCategory
+            : activityCategory // ignore: cast_nullable_to_non_nullable
+                  as String,
+        particulars: null == particulars
+            ? _value.particulars
+            : particulars // ignore: cast_nullable_to_non_nullable
+                  as String,
+        venue: null == venue
+            ? _value.venue
+            : venue // ignore: cast_nullable_to_non_nullable
+                  as String,
+        targetDate: null == targetDate
+            ? _value.targetDate
+            : targetDate // ignore: cast_nullable_to_non_nullable
+                  as String,
+        encoder: null == encoder
+            ? _value.encoder
+            : encoder // ignore: cast_nullable_to_non_nullable
+                  as String,
+        accomplishmentScope: null == accomplishmentScope
+            ? _value.accomplishmentScope
+            : accomplishmentScope // ignore: cast_nullable_to_non_nullable
+                  as String,
+        resources: null == resources
+            ? _value.resources
+            : resources // ignore: cast_nullable_to_non_nullable
+                  as String,
+        notes: null == notes
+            ? _value.notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as String,
+        perIndicators: null == perIndicators
+            ? _value.perIndicators
+            : perIndicators // ignore: cast_nullable_to_non_nullable
+                  as String,
+        remarks: null == remarks
+            ? _value.remarks
+            : remarks // ignore: cast_nullable_to_non_nullable
+                  as String,
+        secGroup: null == secGroup
+            ? _value.secGroup
+            : secGroup // ignore: cast_nullable_to_non_nullable
+                  as String,
       ),
     );
   }
@@ -234,6 +403,19 @@ class _$AccomplishmentItemImpl implements _AccomplishmentItem {
     this.year = '',
     this.achieved = '',
     this.target = '',
+    this.monthAcc = '',
+    this.weekAcc = '',
+    this.activityCategory = '',
+    this.particulars = '',
+    this.venue = '',
+    this.targetDate = '',
+    this.encoder = '',
+    this.accomplishmentScope = '',
+    this.resources = '',
+    this.notes = '',
+    this.perIndicators = '',
+    this.remarks = '',
+    this.secGroup = '',
   });
 
   factory _$AccomplishmentItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -265,10 +447,49 @@ class _$AccomplishmentItemImpl implements _AccomplishmentItem {
   @override
   @JsonKey()
   final String target;
+  @override
+  @JsonKey()
+  final String monthAcc;
+  @override
+  @JsonKey()
+  final String weekAcc;
+  @override
+  @JsonKey()
+  final String activityCategory;
+  @override
+  @JsonKey()
+  final String particulars;
+  @override
+  @JsonKey()
+  final String venue;
+  @override
+  @JsonKey()
+  final String targetDate;
+  @override
+  @JsonKey()
+  final String encoder;
+  @override
+  @JsonKey()
+  final String accomplishmentScope;
+  @override
+  @JsonKey()
+  final String resources;
+  @override
+  @JsonKey()
+  final String notes;
+  @override
+  @JsonKey()
+  final String perIndicators;
+  @override
+  @JsonKey()
+  final String remarks;
+  @override
+  @JsonKey()
+  final String secGroup;
 
   @override
   String toString() {
-    return 'AccomplishmentItem(id: $id, activity: $activity, section: $section, dateConducted: $dateConducted, percentageAccom: $percentageAccom, quarter: $quarter, year: $year, achieved: $achieved, target: $target)';
+    return 'AccomplishmentItem(id: $id, activity: $activity, section: $section, dateConducted: $dateConducted, percentageAccom: $percentageAccom, quarter: $quarter, year: $year, achieved: $achieved, target: $target, monthAcc: $monthAcc, weekAcc: $weekAcc, activityCategory: $activityCategory, particulars: $particulars, venue: $venue, targetDate: $targetDate, encoder: $encoder, accomplishmentScope: $accomplishmentScope, resources: $resources, notes: $notes, perIndicators: $perIndicators, remarks: $remarks, secGroup: $secGroup)';
   }
 
   @override
@@ -288,12 +509,33 @@ class _$AccomplishmentItemImpl implements _AccomplishmentItem {
             (identical(other.year, year) || other.year == year) &&
             (identical(other.achieved, achieved) ||
                 other.achieved == achieved) &&
-            (identical(other.target, target) || other.target == target));
+            (identical(other.target, target) || other.target == target) &&
+            (identical(other.monthAcc, monthAcc) ||
+                other.monthAcc == monthAcc) &&
+            (identical(other.weekAcc, weekAcc) || other.weekAcc == weekAcc) &&
+            (identical(other.activityCategory, activityCategory) ||
+                other.activityCategory == activityCategory) &&
+            (identical(other.particulars, particulars) ||
+                other.particulars == particulars) &&
+            (identical(other.venue, venue) || other.venue == venue) &&
+            (identical(other.targetDate, targetDate) ||
+                other.targetDate == targetDate) &&
+            (identical(other.encoder, encoder) || other.encoder == encoder) &&
+            (identical(other.accomplishmentScope, accomplishmentScope) ||
+                other.accomplishmentScope == accomplishmentScope) &&
+            (identical(other.resources, resources) ||
+                other.resources == resources) &&
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.perIndicators, perIndicators) ||
+                other.perIndicators == perIndicators) &&
+            (identical(other.remarks, remarks) || other.remarks == remarks) &&
+            (identical(other.secGroup, secGroup) ||
+                other.secGroup == secGroup));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     activity,
@@ -304,7 +546,20 @@ class _$AccomplishmentItemImpl implements _AccomplishmentItem {
     year,
     achieved,
     target,
-  );
+    monthAcc,
+    weekAcc,
+    activityCategory,
+    particulars,
+    venue,
+    targetDate,
+    encoder,
+    accomplishmentScope,
+    resources,
+    notes,
+    perIndicators,
+    remarks,
+    secGroup,
+  ]);
 
   /// Create a copy of AccomplishmentItem
   /// with the given fields replaced by the non-null parameter values.
@@ -334,6 +589,19 @@ abstract class _AccomplishmentItem implements AccomplishmentItem {
     final String year,
     final String achieved,
     final String target,
+    final String monthAcc,
+    final String weekAcc,
+    final String activityCategory,
+    final String particulars,
+    final String venue,
+    final String targetDate,
+    final String encoder,
+    final String accomplishmentScope,
+    final String resources,
+    final String notes,
+    final String perIndicators,
+    final String remarks,
+    final String secGroup,
   }) = _$AccomplishmentItemImpl;
 
   factory _AccomplishmentItem.fromJson(Map<String, dynamic> json) =
@@ -359,6 +627,32 @@ abstract class _AccomplishmentItem implements AccomplishmentItem {
   String get achieved;
   @override
   String get target;
+  @override
+  String get monthAcc;
+  @override
+  String get weekAcc;
+  @override
+  String get activityCategory;
+  @override
+  String get particulars;
+  @override
+  String get venue;
+  @override
+  String get targetDate;
+  @override
+  String get encoder;
+  @override
+  String get accomplishmentScope;
+  @override
+  String get resources;
+  @override
+  String get notes;
+  @override
+  String get perIndicators;
+  @override
+  String get remarks;
+  @override
+  String get secGroup;
 
   /// Create a copy of AccomplishmentItem
   /// with the given fields replaced by the non-null parameter values.

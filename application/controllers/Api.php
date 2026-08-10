@@ -214,6 +214,182 @@ class Api extends CI_Controller {
     $this->_ok($this->Api_model->list_accomplishments($section, $limit, $offset));
   }
 
+  /** POST /api/accomplishments_save — create or update */
+  public function accomplishments_save() {
+    if (!$this->_require_auth()) return;
+    $user = $this->api_auth->user();
+    $id = (int) $this->_input('id', 0);
+
+    $activityDateFrom = trim((string) $this->_input('activityDateFrom'));
+    $activityDateTo   = trim((string) $this->_input('activityDateTo'));
+    if ($activityDateFrom === '' || $activityDateTo === '') {
+      $this->_error('Activity dates (from and to) are required.', 422);
+      return;
+    }
+    if (strtotime($activityDateTo) < strtotime($activityDateFrom)) {
+      $this->_error('Activity Date To must be on or after Activity Date From.', 422);
+      return;
+    }
+
+    // Derive quarter / year / month from the from-date
+    $quarter  = $this->Api_model->quarter_from_date($activityDateFrom);
+    $year     = date('Y', strtotime($activityDateFrom));
+    $monthAcc = date('F', strtotime($activityDateFrom));
+    $dateConducted = $activityDateFrom === $activityDateTo
+      ? $activityDateFrom
+      : $activityDateFrom . ' - ' . $activityDateTo;
+
+    $data = array(
+      'quarter'        => $quarter,
+      'year'           => $year,
+      'monthAcc'       => $monthAcc,
+      'weekAcc'        => '',
+      'section'        => $user->section ?? '',
+      'activity'       => trim((string) $this->_input('activity')),
+      'particulars'    => trim((string) $this->_input('particulars')),
+      'activityCategory' => trim((string) $this->_input('activityCategory')),
+      'venue'          => trim((string) $this->_input('venue')),
+      'targetDate'     => $activityDateFrom,
+      'dateConducted'  => $dateConducted,
+      'encoder'        => $user->username ?? '',
+      'accomplishmentScope' => trim((string) $this->_input('accomplishmentScope')),
+      'resources'      => trim((string) $this->_input('resources')),
+      'notes'          => trim((string) $this->_input('notes')),
+      'perIndicators'  => trim((string) $this->_input('perIndicators')),
+      'target'         => trim((string) $this->_input('target')),
+      'achieved'       => trim((string) $this->_input('achieved')),
+      'percentageAccom'=> trim((string) $this->_input('percentageAccom')),
+      'remarks'        => trim((string) $this->_input('remarks')),
+      'secGroup'       => $user->secGroup ?? 'SGOD',
+    );
+
+    if ($id > 0) {
+      $this->db->where('id', $id)->update('one_sgod_accomplishments', $data);
+      $this->_ok(array('id' => $id), 'Accomplishment updated.');
+    } else {
+      $this->db->insert('one_sgod_accomplishments', $data);
+      $this->_ok(array('id' => $this->db->insert_id()), 'Accomplishment saved.');
+    }
+  }
+
+  /** POST /api/accomplishments_delete { id } */
+  public function accomplishments_delete() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    // Delete attached reports first
+    if ($this->db->table_exists('one_sgod_accomplishment_reports')) {
+      $this->db->where('acc_id', $id)->delete('one_sgod_accomplishment_reports');
+    }
+    $this->db->where('id', $id)->delete('one_sgod_accomplishments');
+    $this->_ok(array('id' => $id), 'Accomplishment deleted.');
+  }
+
+  /** POST /api/accomplishments_copy { id } */
+  public function accomplishments_copy() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    $newId = $this->Api_model->copy_accomplishment($id);
+    if ($newId === 0) {
+      $this->_error('Could not copy accomplishment.', 500);
+      return;
+    }
+    $this->_ok(array('id' => $newId), 'Accomplishment copied.');
+  }
+
+  /** GET /api/accomplishment_reports?acc_id= — list attachments */
+  public function accomplishment_reports() {
+    if (!$this->_require_auth()) return;
+    $accId = (int) $this->input->get('acc_id', TRUE);
+    if ($accId <= 0) {
+      $this->_error('acc_id is required.', 422);
+      return;
+    }
+    $this->_ok($this->Api_model->list_accomplishment_reports($accId));
+  }
+
+  /** POST /api/accomplishment_reports_upload — multipart upload */
+  public function accomplishment_reports_upload() {
+    if (!$this->_require_auth()) return;
+    $accId = (int) $this->_input('acc_id', 0);
+    $documentName = trim((string) $this->_input('document_name'));
+    if ($accId <= 0) {
+      $this->_error('acc_id is required.', 422);
+      return;
+    }
+    if ($documentName === '') {
+      $this->_error('Document name is required.', 422);
+      return;
+    }
+    if (empty($_FILES['attachment_file']['name'])) {
+      $this->_error('A PDF file is required.', 422);
+      return;
+    }
+
+    $uploadPath = FCPATH . 'upload/accomplishment_reports/';
+    if (!is_dir($uploadPath)) {
+      mkdir($uploadPath, 0775, TRUE);
+    }
+
+    $config['upload_path']   = $uploadPath;
+    $config['allowed_types'] = 'pdf|doc|docx|jpg|jpeg|png|xls|xlsx';
+    $config['max_size']      = 15360;
+    $this->load->library('upload', $config);
+
+    if (!$this->upload->do_upload('attachment_file')) {
+      $this->_error('Upload failed: ' . strip_tags($this->upload->display_errors()), 422);
+      return;
+    }
+
+    $uploadData = $this->upload->data();
+    $this->db->insert('one_sgod_accomplishment_reports', array(
+      'acc_id'         => $accId,
+      'document_name'  => $documentName,
+      'original_name'  => (string) $uploadData['client_name'],
+      'stored_name'    => (string) $uploadData['file_name'],
+      'uploaded_at'    => date('Y-m-d H:i:s'),
+    ));
+
+    $insertId = $this->db->insert_id();
+    $this->_ok(array(
+      'id'           => $insertId,
+      'acc_id'       => $accId,
+      'document_name'=> $documentName,
+      'original_name'=> (string) $uploadData['client_name'],
+      'stored_name'  => (string) $uploadData['file_name'],
+      'url'          => base_url() . 'upload/accomplishment_reports/' . rawurlencode($uploadData['file_name']),
+    ), 'Attachment uploaded.');
+  }
+
+  /** POST /api/accomplishment_reports_delete { id } */
+  public function accomplishment_reports_delete() {
+    if (!$this->_require_auth()) return;
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    $row = $this->db->where('id', $id)->get('one_sgod_accomplishment_reports')->row_array();
+    if (!$row) {
+      $this->_error('Attachment not found.', 404);
+      return;
+    }
+    // Delete file
+    $filePath = FCPATH . 'upload/accomplishment_reports/' . $row['stored_name'];
+    if (file_exists($filePath)) {
+      @unlink($filePath);
+    }
+    $this->db->where('id', $id)->delete('one_sgod_accomplishment_reports');
+    $this->_ok(array('id' => $id), 'Attachment deleted.');
+  }
+
   // ── Schools ───────────────────────────────────────────────────────────────
 
   /** GET /api/schools?district= */

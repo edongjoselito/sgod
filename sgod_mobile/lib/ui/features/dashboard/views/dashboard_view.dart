@@ -16,10 +16,16 @@ import '../view_models/dashboard_view_model.dart';
 /// - Compact horizontal bar chart (top 4 sections only)
 /// - Grouped inset lists for recent memos, accomplishments, whereabouts
 class DashboardView extends StatefulWidget {
-  const DashboardView({super.key, required this.role, required this.profile});
+  const DashboardView({
+    super.key,
+    required this.role,
+    required this.profile,
+    this.onMenuTap,
+  });
 
   final Role role;
   final UserProfile profile;
+  final VoidCallback? onMenuTap;
 
   @override
   State<DashboardView> createState() => _DashboardViewState();
@@ -52,17 +58,25 @@ class _DashboardViewState extends State<DashboardView> {
               backgroundColor: AppColors.background,
               border: const Border(
                   bottom: BorderSide(color: AppColors.separator, width: 0.5)),
+              leading: widget.onMenuTap != null
+                  ? CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: widget.onMenuTap,
+                      child: const Icon(CupertinoIcons.line_horizontal_3,
+                          size: 26, color: AppColors.label),
+                    )
+                  : null,
               trailing: GestureDetector(
                 onTap: () {},
                 child: Container(
-                  width: 36,
-                  height: 36,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: accent.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(CupertinoIcons.person_fill,
-                      color: accent, size: 18),
+                      color: accent, size: 16),
                 ),
               ),
             ),

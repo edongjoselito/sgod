@@ -10,7 +10,9 @@ import '../view_models/memos_view_model.dart';
 
 /// iOS-style Memos page with list, table, and pagination.
 class MemosView extends StatefulWidget {
-  const MemosView({super.key});
+  const MemosView({super.key, this.onMenuTap});
+
+  final VoidCallback? onMenuTap;
 
   @override
   State<MemosView> createState() => _MemosViewState();
@@ -55,12 +57,20 @@ class _MemosViewState extends State<MemosView> {
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
-            const CupertinoSliverNavigationBar(
-              largeTitle: Text('Memos'),
+            CupertinoSliverNavigationBar(
+              largeTitle: const Text('Memos'),
               backgroundColor: AppColors.surface,
-              border: Border(
+              border: const Border(
                 bottom: BorderSide(color: AppColors.separator, width: 0.5),
               ),
+              leading: widget.onMenuTap != null
+                  ? CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: widget.onMenuTap,
+                      child: const Icon(CupertinoIcons.line_horizontal_3,
+                          size: 26, color: AppColors.label),
+                    )
+                  : null,
             ),
             CupertinoSliverRefreshControl(
               onRefresh: () => _vm.load(),

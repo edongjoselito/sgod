@@ -295,6 +295,43 @@ class Api_model extends CI_Model {
       ->result_array();
   }
 
+  /** Derive quarter (1-4) from a date string. */
+  public function quarter_from_date($dateStr) {
+    $ts = strtotime($dateStr);
+    if ($ts === false) return '';
+    $m = (int) date('n', $ts);
+    if ($m <= 3) return '1';
+    if ($m <= 6) return '2';
+    if ($m <= 9) return '3';
+    return '4';
+  }
+
+  /** Copy an accomplishment row and return the new insert id. */
+  public function copy_accomplishment($id) {
+    if (!$this->db->table_exists('one_sgod_accomplishments')) return 0;
+    $id = (int) $id;
+    $row = $this->db->where('id', $id)->get('one_sgod_accomplishments')->row_array();
+    if (!$row) return 0;
+    unset($row['id']);
+    $this->db->insert('one_sgod_accomplishments', $row);
+    return (int) $this->db->insert_id();
+  }
+
+  /** List attachment reports for an accomplishment. */
+  public function list_accomplishment_reports($accId) {
+    if (!$this->db->table_exists('one_sgod_accomplishment_reports')) {
+      return array();
+    }
+    $rows = $this->db->where('acc_id', (int) $accId)
+      ->order_by('id', 'DESC')
+      ->get('one_sgod_accomplishment_reports')
+      ->result_array();
+    foreach ($rows as &$r) {
+      $r['url'] = base_url() . 'upload/accomplishment_reports/' . rawurlencode($r['stored_name']);
+    }
+    return $rows;
+  }
+
   // ── Schools ───────────────────────────────────────────────────────────────
 
   public function list_schools($district = '', $limit = 100, $offset = 0) {

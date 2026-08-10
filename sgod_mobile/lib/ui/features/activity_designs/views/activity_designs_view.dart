@@ -3,34 +3,28 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../data/models/accomplishment_item.dart';
-import '../../../../data/repositories/accomplishments_repository.dart';
+import '../../../../data/models/activity_design_item.dart';
+import '../../../../data/repositories/activity_designs_repository.dart';
 import '../../../core/di.dart';
-import '../view_models/accomplishments_view_model.dart';
-import 'accomplishment_detail_view.dart';
-import 'accomplishment_edit_view.dart';
+import '../view_models/activity_designs_view_model.dart';
 
-/// iOS-style Accomplishments list with full-screen detail page.
-class AccomplishmentsView extends StatefulWidget {
-  const AccomplishmentsView({super.key, this.section = '', this.onMenuTap});
+/// iOS-style Activity Designs list.
+class ActivityDesignsView extends StatefulWidget {
+  const ActivityDesignsView({super.key, this.onMenuTap});
 
-  final String section;
   final VoidCallback? onMenuTap;
 
   @override
-  State<AccomplishmentsView> createState() => _AccomplishmentsViewState();
+  State<ActivityDesignsView> createState() => _ActivityDesignsViewState();
 }
 
-class _AccomplishmentsViewState extends State<AccomplishmentsView> {
-  late AccomplishmentsViewModel _vm;
+class _ActivityDesignsViewState extends State<ActivityDesignsView> {
+  late ActivityDesignsViewModel _vm;
 
   @override
   void initState() {
     super.initState();
-    _vm = AccomplishmentsViewModel(
-      AccomplishmentsRepository(DI.api, DI.cache),
-      section: widget.section,
-    );
+    _vm = ActivityDesignsViewModel(ActivityDesignsRepository(DI.api, DI.cache));
     _vm.load();
   }
 
@@ -46,7 +40,7 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
           ),
           slivers: [
             CupertinoSliverNavigationBar(
-              largeTitle: const Text('Accomplishments'),
+              largeTitle: const Text('Activity Designs'),
               backgroundColor: AppColors.surface,
               border: const Border(
                 bottom: BorderSide(color: AppColors.separator, width: 0.5),
@@ -59,11 +53,6 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
                           size: 26, color: AppColors.label),
                     )
                   : null,
-              trailing: CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: () => _showAddSheet(context),
-                child: const Icon(CupertinoIcons.add, size: 24),
-              ),
             ),
             CupertinoSliverRefreshControl(
               onRefresh: () => _vm.load(),
@@ -72,7 +61,7 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
                 child: CupertinoSearchTextField(
-                  placeholder: 'Search accomplishments',
+                  placeholder: 'Search activity designs',
                   onChanged: (value) => _vm.query = value,
                   style: const TextStyle(
                     fontSize: 16,
@@ -81,24 +70,7 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Consumer<AccomplishmentsViewModel>(
-                builder: (context, vm, _) {
-                  if (vm.all.isEmpty) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                    child: Text(
-                      '${vm.items.length} accomplishment${vm.items.length == 1 ? '' : 's'}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.tertiaryLabel,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Consumer<AccomplishmentsViewModel>(
+            Consumer<ActivityDesignsViewModel>(
               builder: (context, vm, _) {
                 if (vm.isLoading && vm.all.isEmpty) {
                   return const SliverFillRemaining(
@@ -109,7 +81,7 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
                         children: [
                           CupertinoActivityIndicator(radius: 16),
                           SizedBox(height: 16),
-                          Text('Loading accomplishments...',
+                          Text('Loading activity designs...',
                               style: TextStyle(
                                   color: AppColors.secondaryLabel,
                                   fontSize: 15)),
@@ -128,17 +100,11 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
                           const Icon(CupertinoIcons.wifi_exclamationmark,
                               size: 48, color: AppColors.tertiaryLabel),
                           const SizedBox(height: 16),
-                          const Text('Could not load accomplishments',
+                          const Text('Could not load activity designs',
                               style: TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.label)),
-                          const SizedBox(height: 4),
-                          Text(vm.error!,
-                              style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.secondaryLabel),
-                              textAlign: TextAlign.center),
                           const SizedBox(height: 16),
                           CupertinoButton(
                             onPressed: vm.load,
@@ -156,10 +122,10 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(CupertinoIcons.check_mark_circled,
+                          Icon(PhosphorIconsRegular.pencilSimple,
                               size: 48, color: AppColors.tertiaryLabel),
                           SizedBox(height: 16),
-                          Text('No accomplishments found',
+                          Text('No activity designs found',
                               style: TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
@@ -186,20 +152,7 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
                       child: Column(
                         children: [
                           for (int i = 0; i < vm.items.length; i++) ...[
-                            _AccomplishmentRow(
-                              item: vm.items[i],
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  CupertinoPageRoute(
-                                    builder: (_) => AccomplishmentDetailView(
-                                      item: vm.items[i],
-                                      onChanged: () => _vm.load(),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                            _DesignRow(item: vm.items[i]),
                             if (i < vm.items.length - 1)
                               Container(height: 0.5, color: AppColors.separator),
                           ],
@@ -215,33 +168,16 @@ class _AccomplishmentsViewState extends State<AccomplishmentsView> {
       ),
     );
   }
-
-  void _showAddSheet(BuildContext context) {
-    Navigator.push(
-      context,
-      CupertinoPageRoute(
-        builder: (_) => AccomplishmentEditView(
-          onSaved: () => _vm.load(),
-        ),
-      ),
-    );
-  }
 }
 
-// ── Compact accomplishment row ─────────────────────────────────────────────
-class _AccomplishmentRow extends StatelessWidget {
-  const _AccomplishmentRow({required this.item, required this.onTap});
-  final AccomplishmentItem item;
-  final VoidCallback onTap;
+class _DesignRow extends StatelessWidget {
+  const _DesignRow({required this.item});
+  final ActivityDesignItem item;
 
   @override
   Widget build(BuildContext context) {
-    final pct = double.tryParse(
-          item.percentageAccom.replaceAll('%', '').trim(),
-        ) ??
-        0;
     return CupertinoButton(
-      onPressed: onTap,
+      onPressed: () {},
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       minSize: 0,
       child: Row(
@@ -250,11 +186,11 @@ class _AccomplishmentRow extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.danger.withOpacity(0.1),
               borderRadius: BorderRadius.circular(7),
             ),
-            child: const Icon(PhosphorIconsRegular.checkSquare,
-                size: 16, color: AppColors.success),
+            child: const Icon(PhosphorIconsRegular.pencilSimple,
+                size: 16, color: AppColors.danger),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -262,72 +198,43 @@ class _AccomplishmentRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.activity,
+                  item.activityDesignNo,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.label,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.danger,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Row(
-                  children: [
-                    if (item.dateConducted.isNotEmpty) ...[
-                      Text(
-                        item.dateConducted,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.tertiaryLabel,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(width: 6),
-                    ],
-                    if (item.quarter.isNotEmpty) ...[
-                      Text(
-                        'Q${item.quarter}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.tertiaryLabel,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                    ],
-                    if (item.year.isNotEmpty)
-                      Text(
-                        item.year,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.tertiaryLabel,
-                        ),
-                      ),
-                  ],
+                Text(
+                  item.title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.secondaryLabel,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                if (item.activityDate.isNotEmpty || item.venue.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    [
+                      if (item.activityDate.isNotEmpty) item.activityDate,
+                      if (item.venue.isNotEmpty) item.venue,
+                    ].join(' • '),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.tertiaryLabel,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
             ),
           ),
-          if (pct > 0) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                '${pct.toStringAsFixed(0)}%',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.success,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(width: 6),
           const Icon(CupertinoIcons.chevron_right,
               size: 14, color: AppColors.tertiaryLabel),
         ],

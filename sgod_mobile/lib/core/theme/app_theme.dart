@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import 'app_colors.dart';
 
-/// iOS-style Cupertino theme for the SGOD mobile app.
+/// iOS-style Cupertino theme for the DepEd ONE mobile app.
 class AppTheme {
   AppTheme._();
 
@@ -20,6 +20,17 @@ class AppTheme {
           fontSize: 17,
           color: AppColors.label,
         ),
+        actionTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 17,
+          fontWeight: FontWeight.w400,
+          color: AppColors.primary,
+        ),
+        tabLabelTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 10,
+          color: AppColors.label,
+        ),
         navTitleTextStyle: TextStyle(
           fontFamily: fontFamily,
           fontSize: 17,
@@ -32,11 +43,22 @@ class AppTheme {
           fontWeight: FontWeight.w700,
           color: AppColors.label,
         ),
-        actionTextStyle: TextStyle(
+        navActionTextStyle: TextStyle(
           fontFamily: fontFamily,
           fontSize: 17,
           fontWeight: FontWeight.w400,
           color: AppColors.primary,
+        ),
+        pickerTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 21,
+          color: AppColors.label,
+        ),
+        dateTimePickerTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 21,
+          fontWeight: FontWeight.w400,
+          color: AppColors.label,
         ),
       ),
     );

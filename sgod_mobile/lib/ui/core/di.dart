@@ -7,6 +7,7 @@ import '../../core/services/connectivity_service.dart';
 import '../../core/services/secure_storage_service.dart';
 import '../../core/services/sync_service.dart';
 import '../../data/repositories/accomplishments_repository.dart';
+import '../../data/repositories/activity_designs_repository.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import '../../data/repositories/issues_repository.dart';
@@ -35,6 +36,7 @@ class DI {
   static late final WhereaboutsRepository whereabouts;
   static late final IssuesRepository issues;
   static late final SectionUsersRepository sectionUsers;
+  static late final ActivityDesignsRepository activityDesigns;
 
   static Future<void> init() async {
     api = ApiClient();
@@ -68,6 +70,7 @@ class DI {
     whereabouts = WhereaboutsRepository(api, cache);
     issues = IssuesRepository(api, cache);
     sectionUsers = SectionUsersRepository(api, cache);
+    activityDesigns = ActivityDesignsRepository(api, cache);
 
     api.onUnauthorized = () {
       debugPrint('ApiClient: 401 received — session invalidated.');

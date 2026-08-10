@@ -1,0 +1,83 @@
+{
+ "periods": [
+  {
+   "year": 2026,
+   "month": 7,
+   "label": "July 2026",
+   "records": 4
+  },
+  {
+   "year": 2026,
+   "month": 6,
+   "label": "June 2026",
+   "records": 2506
+  },
+  {
+   "year": 2026,
+   "month": 5,
+   "label": "May 2026",
+   "records": 22
+  },
+  {
+   "year": 2026,
+   "month": 4,
+   "label": "April 2026",
+   "records": 3
+  },
+  {
+   "year": 2026,
+   "month": 3,
+   "label": "March 2026",
+   "records": 23
+  },
+  {
+   "year": 2026,
+   "month": 2,
+   "label": "February 2026",
+   "records": 3
+  },
+  {
+   "year": 2026,
+   "month": 1,
+   "label": "January 2026",
+   "records": 3
+  },
+  {
+   "year": 2025,
+   "month": 12,
+   "label": "December 2025",
+   "records": 1
+  },
+  {
+   "year": 2025,
+   "month": 9,
+   "label": "September 2025",
+   "records": 2
+  },
+  {
+   "year": 2025,
+   "month": 6,
+   "label": "June 2025",
+   "records": 5
+  },
+  {
+   "year": 2025,
+   "month": 4,
+   "label": "April 2025",
+   "records": 1
+  },
+  {
+   "year": 2023,
+   "month": 6,
+   "label": "June 2023",
+   "records": 1
+  },
+  {
+   "year": 2016,
+   "month": 6,
+   "label": "June 2016",
+   "records": 1
+  }
+ ],
+ "generated_at": "2026-08-10T08:59:04+08:00"
+}

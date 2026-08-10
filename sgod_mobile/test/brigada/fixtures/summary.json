@@ -1,0 +1,6739 @@
+{
+ "month": 6,
+ "year": 2026,
+ "month_label": "June",
+ "dates": [
+  "2026-06-22",
+  "2026-06-19",
+  "2026-06-18",
+  "2026-06-16",
+  "2026-06-12",
+  "2026-06-11",
+  "2026-06-10",
+  "2026-06-09",
+  "2026-06-08",
+  "2026-06-06",
+  "2026-06-05",
+  "2026-06-04",
+  "2026-06-03",
+  "2026-06-02",
+  "2026-06-01"
+ ],
+ "totals": {
+  "records": 2506,
+  "resources": 11163182.52,
+  "volunteers": 584203,
+  "days": 15
+ },
+ "general_partner_types": [
+  {
+   "key": "Private_Sector",
+   "label": "Private Sector",
+   "count": 1374
+  },
+  {
+   "key": "Public_Sector",
+   "label": "Public Sector",
+   "count": 936
+  },
+  {
+   "key": "International",
+   "label": "International",
+   "count": 6
+  },
+  {
+   "key": "Civil_Society_Organizations",
+   "label": "Civil Society Organizations",
+   "count": 190
+  }
+ ],
+ "specific_partner_types": [
+  {
+   "key": "Government",
+   "label": "Government",
+   "count": 735
+  },
+  {
+   "key": "INGO-International Non-Government Organizations",
+   "label": "International Non-Government Organization",
+   "count": 14
+  },
+  {
+   "key": "Others",
+   "label": "Others",
+   "count": 1757
+  }
+ ],
+ "schools": [
+  {
+   "school_id": "6356770",
+   "school_name": "6356770",
+   "total_resources": 1210,
+   "total_volunteers": 664,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 240,
+     "volunteers": 166,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 500,
+     "volunteers": 166,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 120,
+     "volunteers": 166,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 350,
+     "volunteers": 166,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129249",
+   "school_name": "Abihod Elementary School ",
+   "total_resources": 2000,
+   "total_volunteers": 54,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1000,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 200,
+     "volunteers": 14,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 500,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 300,
+     "volunteers": 40,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129288",
+   "school_name": "Aguinaldo Elementary School",
+   "total_resources": 7050,
+   "total_volunteers": 581,
+   "total_records": 17,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 450,
+     "volunteers": 59,
+     "records": 4
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 200,
+     "volunteers": 87,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 5400,
+     "volunteers": 330,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 350,
+     "volunteers": 67,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 650,
+     "volunteers": 38,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "129321",
+   "school_name": "ALBERTO RECA\u00d1O ES",
+   "total_resources": 3070,
+   "total_volunteers": 52,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 1900,
+     "volunteers": 20,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1170,
+     "volunteers": 32,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129323",
+   "school_name": "AROMA BEACH ES",
+   "total_resources": 3501,
+   "total_volunteers": 1684,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 1,
+     "volunteers": 421,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 421,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 3500,
+     "volunteers": 842,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "134717",
+   "school_name": "AUREO D. CA\u00d1AL ES",
+   "total_resources": 5000,
+   "total_volunteers": 103,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 5000,
+     "volunteers": 103,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129194",
+   "school_name": "Baclinan PS",
+   "total_resources": 0,
+   "total_volunteers": 183,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 0,
+     "volunteers": 122,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 61,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129164",
+   "school_name": "BACULIN ES",
+   "total_resources": 343,
+   "total_volunteers": 6020,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 105,
+     "volunteers": 1806,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 66,
+     "volunteers": 1806,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 72,
+     "volunteers": 1204,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 36,
+     "volunteers": 602,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 64,
+     "volunteers": 602,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129165",
+   "school_name": "BAGANGA CES",
+   "total_resources": 301591,
+   "total_volunteers": 1374,
+   "total_records": 15,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5,
+     "volunteers": 200,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 9,
+     "volunteers": 0,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 14,
+     "volunteers": 105,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 809,
+     "volunteers": 0,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 300754,
+     "volunteers": 1069,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "304300",
+   "school_name": "BAGANGA NATIONAL HIGH SCHOOL",
+   "total_resources": 8694,
+   "total_volunteers": 5136,
+   "total_records": 63,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 967,
+     "volunteers": 173,
+     "records": 11
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1681,
+     "volunteers": 354,
+     "records": 11
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2196,
+     "volunteers": 1809,
+     "records": 18
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2090,
+     "volunteers": 2092,
+     "records": 19
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1760,
+     "volunteers": 708,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "304320",
+   "school_name": "BAGUMBAYAN AGRO-IND. HS",
+   "total_resources": 1780,
+   "total_volunteers": 50,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 400,
+     "volunteers": 20,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 250,
+     "volunteers": 20,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 600,
+     "volunteers": 3,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 180,
+     "volunteers": 3,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 350,
+     "volunteers": 4,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129324",
+   "school_name": "BAGUMBAYAN ES",
+   "total_resources": 12839,
+   "total_volunteers": 2707,
+   "total_records": 11,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 2831,
+     "volunteers": 640,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 5000,
+     "volunteers": 640,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2007,
+     "volunteers": 960,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 3001,
+     "volunteers": 467,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "129230",
+   "school_name": "BALETE PS",
+   "total_resources": 1317,
+   "total_volunteers": 278,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1000,
+     "volunteers": 50,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 0,
+     "volunteers": 54,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 100,
+     "volunteers": 58,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 200,
+     "volunteers": 58,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 17,
+     "volunteers": 58,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129177",
+   "school_name": "BANAYBANAY CENTRAL ES",
+   "total_resources": 120476.5,
+   "total_volunteers": 27189,
+   "total_records": 30,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5250,
+     "volunteers": 1041,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 12800,
+     "volunteers": 3123,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 51825.5,
+     "volunteers": 10410,
+     "records": 10
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 16898,
+     "volunteers": 5205,
+     "records": 5
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 33703,
+     "volunteers": 7410,
+     "records": 11
+    }
+   ]
+  },
+  {
+   "school_id": "129301",
+   "school_name": "Banhawan ES",
+   "total_resources": 16138,
+   "total_volunteers": 183,
+   "total_records": 12,
+   "entries": [
+    {
+     "date": "2026-06-16",
+     "resources": 13,
+     "volunteers": 85,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 2975,
+     "volunteers": 14,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1675,
+     "volunteers": 11,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3715,
+     "volunteers": 30,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 6410,
+     "volunteers": 33,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1350,
+     "volunteers": 10,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "501419",
+   "school_name": "BANTAY IS",
+   "total_resources": 5010,
+   "total_volunteers": 264,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 2500,
+     "volunteers": 38,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 10,
+     "volunteers": 113,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2500,
+     "volunteers": 113,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129423",
+   "school_name": "BAON ES",
+   "total_resources": 135586,
+   "total_volunteers": 3550,
+   "total_records": 29,
+   "entries": [
+    {
+     "date": "2026-06-10",
+     "resources": 5460,
+     "volunteers": 251,
+     "records": 1
+    },
+    {
+     "date": "2026-06-08",
+     "resources": 71950,
+     "volunteers": 502,
+     "records": 2
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 15128,
+     "volunteers": 589,
+     "records": 11
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 11703,
+     "volunteers": 609,
+     "records": 6
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 9127.5,
+     "volunteers": 325,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 11200,
+     "volunteers": 753,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 11017.5,
+     "volunteers": 521,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129166",
+   "school_name": "BATAWAN ES",
+   "total_resources": 2500,
+   "total_volunteers": 16,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 2500,
+     "volunteers": 16,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129425",
+   "school_name": "BATOBATO CENTRAL ELEMENTARY SCHOOL",
+   "total_resources": 5161.05,
+   "total_volunteers": 1310,
+   "total_records": 42,
+   "entries": [
+    {
+     "date": "2026-06-10",
+     "resources": 2.05,
+     "volunteers": 32,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 2009,
+     "volunteers": 516,
+     "records": 16
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1173,
+     "volunteers": 239,
+     "records": 10
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 518,
+     "volunteers": 132,
+     "records": 5
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 356,
+     "volunteers": 165,
+     "records": 5
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1103,
+     "volunteers": 226,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129250",
+   "school_name": "BAYBAY ES",
+   "total_resources": 270,
+   "total_volunteers": 728,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 0,
+     "volunteers": 91,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 0,
+     "volunteers": 91,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 0,
+     "volunteers": 91,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 182,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 270,
+     "volunteers": 273,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129325",
+   "school_name": "BENITO BAROL SR. ELEMENTARY SCHOOL",
+   "total_resources": 74709.5,
+   "total_volunteers": 7605,
+   "total_records": 12,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 14233,
+     "volunteers": 1902,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 5563,
+     "volunteers": 1268,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 50125,
+     "volunteers": 1268,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 11,
+     "volunteers": 1268,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 4777.5,
+     "volunteers": 1899,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "501422",
+   "school_name": "Binaton IS",
+   "total_resources": 2900,
+   "total_volunteers": 34,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1700,
+     "volunteers": 14,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 200,
+     "volunteers": 2,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 0,
+     "volunteers": 8,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 4,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1000,
+     "volunteers": 6,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129433",
+   "school_name": "BITAOGAN CENTRAL ES",
+   "total_resources": 850.5,
+   "total_volunteers": 486,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 2,
+     "volunteers": 86,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 841.5,
+     "volunteers": 268,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1,
+     "volunteers": 30,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 4,
+     "volunteers": 62,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2,
+     "volunteers": 40,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129280",
+   "school_name": "BONIFACIO ES",
+   "total_resources": 740,
+   "total_volunteers": 38,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 570,
+     "volunteers": 34,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 170,
+     "volunteers": 4,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129195",
+   "school_name": "BOSTON CES",
+   "total_resources": 2564,
+   "total_volunteers": 1857,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 2564,
+     "volunteers": 1857,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "304304",
+   "school_name": "BOSTON NATIONAL HIGH SCHOOL",
+   "total_resources": 345490,
+   "total_volunteers": 40824,
+   "total_records": 67,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 22727,
+     "volunteers": 2911,
+     "records": 6
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 47760,
+     "volunteers": 4725,
+     "records": 11
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 69587,
+     "volunteers": 5156,
+     "records": 9
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 73209,
+     "volunteers": 4878,
+     "records": 11
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 132207,
+     "volunteers": 23154,
+     "records": 30
+    }
+   ]
+  },
+  {
+   "school_id": "501081",
+   "school_name": "BUTAY IS",
+   "total_resources": 4500,
+   "total_volunteers": 104,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 3000,
+     "volunteers": 77,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1500,
+     "volunteers": 27,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129197",
+   "school_name": "CAATIJAN ES",
+   "total_resources": 2807,
+   "total_volunteers": 3130,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 100,
+     "volunteers": 342,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 906,
+     "volunteers": 1705,
+     "records": 5
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 400,
+     "volunteers": 342,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 400,
+     "volunteers": 67,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1001,
+     "volunteers": 674,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129326",
+   "school_name": "CABADIANGAN ELEMENTARY SCHOOL",
+   "total_resources": 0,
+   "total_volunteers": 0,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 0,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 0,
+     "volunteers": 0,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129178",
+   "school_name": "CABANGCALAN ES",
+   "total_resources": 7300,
+   "total_volunteers": 1436,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 2800,
+     "volunteers": 478,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 2300,
+     "volunteers": 239,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 700,
+     "volunteers": 239,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 900,
+     "volunteers": 241,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 600,
+     "volunteers": 239,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129198",
+   "school_name": "CABASAGAN ELEMENTARY SCHOOL",
+   "total_resources": 2065,
+   "total_volunteers": 1151,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 231,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2065,
+     "volunteers": 920,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "129179",
+   "school_name": "CAGANGANAN ES",
+   "total_resources": 15836,
+   "total_volunteers": 6045,
+   "total_records": 27,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 8642,
+     "volunteers": 1995,
+     "records": 7
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 805,
+     "volunteers": 1140,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 3684,
+     "volunteers": 2355,
+     "records": 9
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2705,
+     "volunteers": 555,
+     "records": 7
+    }
+   ]
+  },
+  {
+   "school_id": "129340",
+   "school_name": "CAIPOC PRIMARY SCHOOL",
+   "total_resources": 1000,
+   "total_volunteers": 44,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 1000,
+     "volunteers": 44,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "304306",
+   "school_name": "CALAPAGAN NATIONAL HS",
+   "total_resources": 28500,
+   "total_volunteers": 12377,
+   "total_records": 34,
+   "entries": [
+    {
+     "date": "2026-06-11",
+     "resources": 4500,
+     "volunteers": 1122,
+     "records": 3
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 7800,
+     "volunteers": 2654,
+     "records": 8
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1650,
+     "volunteers": 2992,
+     "records": 8
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 5000,
+     "volunteers": 374,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 5050,
+     "volunteers": 3366,
+     "records": 9
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 4500,
+     "volunteers": 1869,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129435",
+   "school_name": "Cambalion Elementary School",
+   "total_resources": 47446,
+   "total_volunteers": 594,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 780,
+     "volunteers": 139,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 500,
+     "volunteers": 139,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 16666,
+     "volunteers": 139,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 500,
+     "volunteers": 139,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 29000,
+     "volunteers": 38,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129153",
+   "school_name": "CAMPAWAN ELEMENTARY SCHOOL",
+   "total_resources": 566350,
+   "total_volunteers": 3192,
+   "total_records": 12,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 149340,
+     "volunteers": 532,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 147830,
+     "volunteers": 798,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 53080,
+     "volunteers": 798,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 117880,
+     "volunteers": 798,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 98220,
+     "volunteers": 266,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129234",
+   "school_name": "CANINGAG ES",
+   "total_resources": 24312.5,
+   "total_volunteers": 691,
+   "total_records": 9,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1500,
+     "volunteers": 108,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 7000,
+     "volunteers": 108,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1125,
+     "volunteers": 108,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 7000,
+     "volunteers": 146,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 7687.5,
+     "volunteers": 221,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129342",
+   "school_name": "CAPASNAN ELEM. SCHOOL",
+   "total_resources": 35000,
+   "total_volunteers": 46,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 35000,
+     "volunteers": 46,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129211",
+   "school_name": "CARAGA CENTRAL ELEMENTARY SCHOOL",
+   "total_resources": 791,
+   "total_volunteers": 5846,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 791,
+     "volunteers": 5846,
+     "records": 8
+    }
+   ]
+  },
+  {
+   "school_id": "304307",
+   "school_name": "Caraga NHS",
+   "total_resources": 212077,
+   "total_volunteers": 7112,
+   "total_records": 38,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 29000,
+     "volunteers": 910,
+     "records": 4
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 44112,
+     "volunteers": 1251,
+     "records": 6
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 60167,
+     "volunteers": 2075,
+     "records": 9
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 46050,
+     "volunteers": 1174,
+     "records": 5
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 32748,
+     "volunteers": 1702,
+     "records": 14
+    }
+   ]
+  },
+  {
+   "school_id": "129200",
+   "school_name": "CARMEN ES",
+   "total_resources": 38675,
+   "total_volunteers": 642,
+   "total_records": 18,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1550,
+     "volunteers": 57,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 7500,
+     "volunteers": 168,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3300,
+     "volunteers": 81,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 25125,
+     "volunteers": 254,
+     "records": 7
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1200,
+     "volunteers": 82,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "205508",
+   "school_name": "CASUNUGAN ES",
+   "total_resources": 7000,
+   "total_volunteers": 240,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5000,
+     "volunteers": 120,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2000,
+     "volunteers": 120,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129343",
+   "school_name": "CATABUANAN PRIMARY SCHOOL",
+   "total_resources": 4019,
+   "total_volunteers": 108,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 2000,
+     "volunteers": 36,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 19,
+     "volunteers": 36,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2000,
+     "volunteers": 36,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129252",
+   "school_name": "CATEEL CES",
+   "total_resources": 261154.6,
+   "total_volunteers": 4234,
+   "total_records": 31,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 39282.06,
+     "volunteers": 334,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 53188,
+     "volunteers": 444,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 77851.99,
+     "volunteers": 1143,
+     "records": 6
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 77194.01000000001,
+     "volunteers": 1097,
+     "records": 7
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 13638.54,
+     "volunteers": 1216,
+     "records": 12
+    }
+   ]
+  },
+  {
+   "school_id": "304311",
+   "school_name": "CATEEL VOCATIONAL HIGH SCHOOL",
+   "total_resources": 1344939,
+   "total_volunteers": 2868,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 368249,
+     "volunteers": 804,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 510500,
+     "volunteers": 1119,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 190,
+     "volunteers": 479,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 156500,
+     "volunteers": 168,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 309500,
+     "volunteers": 298,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129180",
+   "school_name": "CAUSWAGAN ES",
+   "total_resources": 85597,
+   "total_volunteers": 682,
+   "total_records": 29,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 44934.5,
+     "volunteers": 184,
+     "records": 5
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 12825,
+     "volunteers": 174,
+     "records": 5
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 17137.5,
+     "volunteers": 138,
+     "records": 6
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 5000,
+     "volunteers": 70,
+     "records": 5
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 5700,
+     "volunteers": 116,
+     "records": 8
+    }
+   ]
+  },
+  {
+   "school_id": "129304",
+   "school_name": "Cocornon ES",
+   "total_resources": 93218,
+   "total_volunteers": 1951,
+   "total_records": 20,
+   "entries": [
+    {
+     "date": "2026-06-18",
+     "resources": 7605,
+     "volunteers": 253,
+     "records": 1
+    },
+    {
+     "date": "2026-06-11",
+     "resources": 4513,
+     "volunteers": 215,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 11375,
+     "volunteers": 359,
+     "records": 4
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 19900,
+     "volunteers": 460,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 14430,
+     "volunteers": 385,
+     "records": 5
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 21625,
+     "volunteers": 225,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 13770,
+     "volunteers": 54,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129329",
+   "school_name": "COMARA T. MANUEL CES - SPED CENTER",
+   "total_resources": 143592,
+   "total_volunteers": 25155,
+   "total_records": 16,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 15682,
+     "volunteers": 8922,
+     "records": 6
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 16610,
+     "volunteers": 2974,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 33530,
+     "volunteers": 2974,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 52610,
+     "volunteers": 7311,
+     "records": 4
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 25160,
+     "volunteers": 2974,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129330",
+   "school_name": "COMARA T. MANUEL CES II",
+   "total_resources": 42895,
+   "total_volunteers": 6875,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 10000,
+     "volunteers": 1375,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1100,
+     "volunteers": 1375,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 31795,
+     "volunteers": 4125,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "502245",
+   "school_name": "CONCEPCION INTEGRATED SCHOOL",
+   "total_resources": 17450,
+   "total_volunteers": 725,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 17450,
+     "volunteers": 725,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "501082",
+   "school_name": "COOG IS",
+   "total_resources": 58500,
+   "total_volunteers": 2640,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5000,
+     "volunteers": 330,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 13500,
+     "volunteers": 330,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 11500,
+     "volunteers": 660,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 18500,
+     "volunteers": 990,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 10000,
+     "volunteers": 330,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "305516",
+   "school_name": "CORPORACION NHS",
+   "total_resources": 14262,
+   "total_volunteers": 3080,
+   "total_records": 7,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5760,
+     "volunteers": 1760,
+     "records": 4
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 8500,
+     "volunteers": 880,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2,
+     "volunteers": 440,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129282",
+   "school_name": "CRISPIN DELA CRUZ ES",
+   "total_resources": 2050,
+   "total_volunteers": 630,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 2050,
+     "volunteers": 630,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "304312",
+   "school_name": "CRISPIN E. ROJAS NATIONAL HIGH SCHOOL",
+   "total_resources": 5719,
+   "total_volunteers": 2586,
+   "total_records": 16,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1400,
+     "volunteers": 92,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 2405,
+     "volunteers": 525,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 548,
+     "volunteers": 290,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 21,
+     "volunteers": 547,
+     "records": 4
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1345,
+     "volunteers": 1132,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "129154",
+   "school_name": "DAPNAN ES",
+   "total_resources": 211635,
+   "total_volunteers": 7013,
+   "total_records": 22,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 32000,
+     "volunteers": 630,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 13550,
+     "volunteers": 1890,
+     "records": 6
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 15573,
+     "volunteers": 1575,
+     "records": 5
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 13500,
+     "volunteers": 945,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 137012,
+     "volunteers": 1973,
+     "records": 6
+    }
+   ]
+  },
+  {
+   "school_id": "316102",
+   "school_name": "DEL PILAR NATIONAL HIGH SCHOOL",
+   "total_resources": 31602.875,
+   "total_volunteers": 1432,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 31602.875,
+     "volunteers": 1432,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "129436",
+   "school_name": "DELA PE\u00d1A NARISMA RECA\u00d1O ES",
+   "total_resources": 20554,
+   "total_volunteers": 827,
+   "total_records": 7,
+   "entries": [
+    {
+     "date": "2026-06-10",
+     "resources": 2050,
+     "volunteers": 314,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 1500,
+     "volunteers": 58,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 500,
+     "volunteers": 25,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 16004,
+     "volunteers": 398,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 500,
+     "volunteers": 32,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129181",
+   "school_name": "DINAGSAAN ES",
+   "total_resources": 826,
+   "total_volunteers": 1630,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-08",
+     "resources": 11,
+     "volunteers": 326,
+     "records": 2
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 6,
+     "volunteers": 326,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 2,
+     "volunteers": 326,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2,
+     "volunteers": 326,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 5,
+     "volunteers": 163,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 800,
+     "volunteers": 163,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129305",
+   "school_name": "Don Mariano Marcos ES",
+   "total_resources": 20620,
+   "total_volunteers": 3620,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 3475,
+     "volunteers": 724,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 2613,
+     "volunteers": 724,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2100,
+     "volunteers": 724,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 8675,
+     "volunteers": 724,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 3757,
+     "volunteers": 724,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "316106",
+   "school_name": "DON MARIANO MARCOS NHS",
+   "total_resources": 98245,
+   "total_volunteers": 9228,
+   "total_records": 34,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 31170,
+     "volunteers": 2866,
+     "records": 8
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 18500,
+     "volunteers": 948,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1973,
+     "volunteers": 1185,
+     "records": 5
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 5772,
+     "volunteers": 1185,
+     "records": 5
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 40830,
+     "volunteers": 3044,
+     "records": 12
+    }
+   ]
+  },
+  {
+   "school_id": "316105",
+   "school_name": "Donguila-Pacres NHS",
+   "total_resources": 12034,
+   "total_volunteers": 2899,
+   "total_records": 14,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 7900,
+     "volunteers": 337,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 355,
+     "volunteers": 471,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2911,
+     "volunteers": 760,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 208,
+     "volunteers": 500,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 660,
+     "volunteers": 831,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "304316",
+   "school_name": "DR. BEATO C. MACAYRA NHS",
+   "total_resources": 1878,
+   "total_volunteers": 2369,
+   "total_records": 17,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 125,
+     "volunteers": 130,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 175,
+     "volunteers": 390,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 869,
+     "volunteers": 373,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 705,
+     "volunteers": 688,
+     "records": 7
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 4,
+     "volunteers": 788,
+     "records": 6
+    }
+   ]
+  },
+  {
+   "school_id": "129426",
+   "school_name": "DUGMANON ES",
+   "total_resources": 49630.29,
+   "total_volunteers": 1692,
+   "total_records": 9,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5000,
+     "volunteers": 376,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 11464.29,
+     "volunteers": 376,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 10000,
+     "volunteers": 188,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 23166,
+     "volunteers": 752,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "205501",
+   "school_name": "E. ANGALA SR. MES",
+   "total_resources": 5417,
+   "total_volunteers": 749,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-08",
+     "resources": 19,
+     "volunteers": 125,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 3150,
+     "volunteers": 125,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2230,
+     "volunteers": 250,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 6,
+     "volunteers": 125,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 12,
+     "volunteers": 124,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129167",
+   "school_name": "Eduardo M. Mali\u00f1o Elementary school formerly: Batiano Elementary school BATIANO ES",
+   "total_resources": 87800,
+   "total_volunteers": 1626,
+   "total_records": 11,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 11625,
+     "volunteers": 356,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 4750,
+     "volunteers": 20,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 19562.5,
+     "volunteers": 520,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 34312.5,
+     "volunteers": 364,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 17550,
+     "volunteers": 366,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129427",
+   "school_name": "EMILIO JACINTO ES",
+   "total_resources": 6034.5,
+   "total_volunteers": 747,
+   "total_records": 9,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 941,
+     "volunteers": 166,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 23,
+     "volunteers": 249,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 8,
+     "volunteers": 166,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 5062.5,
+     "volunteers": 166,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129283",
+   "school_name": "ENRIQUE ORENCIA ES",
+   "total_resources": 460800,
+   "total_volunteers": 3866,
+   "total_records": 13,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 355000,
+     "volunteers": 1709,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 34875,
+     "volunteers": 480,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 21865,
+     "volunteers": 69,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 26250,
+     "volunteers": 138,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 22810,
+     "volunteers": 1470,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129316",
+   "school_name": "Ernesto D. Violan ES",
+   "total_resources": 97,
+   "total_volunteers": 28,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 97,
+     "volunteers": 28,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "306086",
+   "school_name": "Ernesto D. Violan National High School",
+   "total_resources": 13551.5,
+   "total_volunteers": 1056,
+   "total_records": 12,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 2722,
+     "volunteers": 88,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1146,
+     "volunteers": 176,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1706,
+     "volunteers": 264,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 6165,
+     "volunteers": 352,
+     "records": 4
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1812.5,
+     "volunteers": 176,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "304315",
+   "school_name": "EVARISTO MORALIZON NVHS",
+   "total_resources": 593273.88,
+   "total_volunteers": 4810,
+   "total_records": 14,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 23612.5,
+     "volunteers": 314,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 38131.25,
+     "volunteers": 764,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 420825.59,
+     "volunteers": 1336,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 42437.04,
+     "volunteers": 926,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 68267.5,
+     "volunteers": 1470,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "502787",
+   "school_name": "FELIX OLEA IS",
+   "total_resources": 3100,
+   "total_volunteers": 88,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 3100,
+     "volunteers": 88,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "137311",
+   "school_name": "Felomino Monday Layupan Sr. Es",
+   "total_resources": 59265,
+   "total_volunteers": 720,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 15062.5,
+     "volunteers": 180,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 3625,
+     "volunteers": 90,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 5250,
+     "volunteers": 90,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 7050,
+     "volunteers": 180,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 28277.5,
+     "volunteers": 180,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "136928",
+   "school_name": "FRANCISCO D. MINGHI ES",
+   "total_resources": 7000,
+   "total_volunteers": 41,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5000,
+     "volunteers": 41,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 0,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2000,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 0,
+     "volunteers": 0,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "502246",
+   "school_name": "FRANCISCO E. LAHORA SR. INTEGRATED SCHOOL",
+   "total_resources": 152903,
+   "total_volunteers": 12728,
+   "total_records": 43,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 16512.5,
+     "volunteers": 2171,
+     "records": 7
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 40250,
+     "volunteers": 2795,
+     "records": 9
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 35362.5,
+     "volunteers": 2182,
+     "records": 9
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 18131,
+     "volunteers": 1866,
+     "records": 6
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 42647,
+     "volunteers": 3714,
+     "records": 12
+    }
+   ]
+  },
+  {
+   "school_id": "129438",
+   "school_name": "Gregorio H. Del Pilar Elementary School",
+   "total_resources": 609,
+   "total_volunteers": 440,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 606,
+     "volunteers": 275,
+     "records": 5
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1,
+     "volunteers": 55,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1,
+     "volunteers": 55,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1,
+     "volunteers": 55,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129357",
+   "school_name": "GREGORIO MORALIZON ELEM. SCHOOL II",
+   "total_resources": 323700,
+   "total_volunteers": 11210,
+   "total_records": 19,
+   "entries": [
+    {
+     "date": "2026-06-18",
+     "resources": 7740,
+     "volunteers": 590,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 141290,
+     "volunteers": 3540,
+     "records": 6
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 42160,
+     "volunteers": 1770,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 79800,
+     "volunteers": 2360,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 43140,
+     "volunteers": 1180,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 9570,
+     "volunteers": 1770,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129189",
+   "school_name": "HADJI ATON BANGAL ES",
+   "total_resources": 12540,
+   "total_volunteers": 1634,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 12000,
+     "volunteers": 314,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 7,
+     "volunteers": 314,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 10,
+     "volunteers": 314,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 10,
+     "volunteers": 314,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 513,
+     "volunteers": 378,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129213",
+   "school_name": "HANGINAN ES",
+   "total_resources": 10242,
+   "total_volunteers": 85,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 2500,
+     "volunteers": 15,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 4328,
+     "volunteers": 45,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 3414,
+     "volunteers": 25,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129346",
+   "school_name": "HERMINIGILDO ATOG ELEM. SCHOOL",
+   "total_resources": 3100,
+   "total_volunteers": 30,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 1000,
+     "volunteers": 10,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2100,
+     "volunteers": 20,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129428",
+   "school_name": "IBA ES",
+   "total_resources": 8930,
+   "total_volunteers": 809,
+   "total_records": 7,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 3400,
+     "volunteers": 262,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1875,
+     "volunteers": 131,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2500,
+     "volunteers": 154,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1155,
+     "volunteers": 262,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "109430",
+   "school_name": "IBA\u00d1EZ ES",
+   "total_resources": 20509.25,
+   "total_volunteers": 1051,
+   "total_records": 11,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 9000,
+     "volunteers": 275,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 6500,
+     "volunteers": 194,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2603,
+     "volunteers": 194,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 5,
+     "volunteers": 97,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2401.25,
+     "volunteers": 291,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129327",
+   "school_name": "ILANGAY ES",
+   "total_resources": 6165,
+   "total_volunteers": 707,
+   "total_records": 11,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 401,
+     "volunteers": 105,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1324,
+     "volunteers": 227,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 403,
+     "volunteers": 158,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 435,
+     "volunteers": 113,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 3602,
+     "volunteers": 104,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129306",
+   "school_name": "Immaculada ES",
+   "total_resources": 2755,
+   "total_volunteers": 210,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 250,
+     "volunteers": 35,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 500,
+     "volunteers": 35,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2,
+     "volunteers": 35,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1503,
+     "volunteers": 70,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 500,
+     "volunteers": 35,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129186",
+   "school_name": "IRENEO C. DONGUILA SR. ES",
+   "total_resources": 27505,
+   "total_volunteers": 8835,
+   "total_records": 26,
+   "entries": [
+    {
+     "date": "2026-06-08",
+     "resources": 760,
+     "volunteers": 1104,
+     "records": 3
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 6982,
+     "volunteers": 3312,
+     "records": 9
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1430,
+     "volunteers": 1104,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 4475,
+     "volunteers": 1472,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2120,
+     "volunteers": 1472,
+     "records": 4
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 11738,
+     "volunteers": 371,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129307",
+   "school_name": "Josefito Taliman ES",
+   "total_resources": 8252.5,
+   "total_volunteers": 1254,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-11",
+     "resources": 6160,
+     "volunteers": 246,
+     "records": 2
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 653.5,
+     "volunteers": 252,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1,
+     "volunteers": 126,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 653,
+     "volunteers": 378,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 785,
+     "volunteers": 252,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129359",
+   "school_name": "JUAN MAPAYO ELEM. SCHOOL",
+   "total_resources": 3883,
+   "total_volunteers": 272,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 704,
+     "volunteers": 104,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 4,
+     "volunteers": 52,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2500,
+     "volunteers": 104,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 675,
+     "volunteers": 12,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129254",
+   "school_name": "JUDGE ERNESTO NOMBRADO MEMORIAL SCHOOL",
+   "total_resources": 57750,
+   "total_volunteers": 10,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 57750,
+     "volunteers": 10,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129155",
+   "school_name": "KIAGBAAN ES",
+   "total_resources": 10529,
+   "total_volunteers": 1463,
+   "total_records": 11,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 2000,
+     "volunteers": 266,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 851,
+     "volunteers": 266,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 3200,
+     "volunteers": 266,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 4478,
+     "volunteers": 665,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129156",
+   "school_name": "KINABLANGAN ES",
+   "total_resources": 5900,
+   "total_volunteers": 14980,
+   "total_records": 47,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 637,
+     "volunteers": 336,
+     "records": 10
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1500,
+     "volunteers": 124,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1550,
+     "volunteers": 880,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1113,
+     "volunteers": 4400,
+     "records": 10
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1100,
+     "volunteers": 9240,
+     "records": 21
+    }
+   ]
+  },
+  {
+   "school_id": "129441",
+   "school_name": "LA UNION ELEMENTARY SCHOOL",
+   "total_resources": 18367,
+   "total_volunteers": 3810,
+   "total_records": 9,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1692,
+     "volunteers": 2090,
+     "records": 5
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 16666,
+     "volunteers": 467,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 6,
+     "volunteers": 936,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 3,
+     "volunteers": 317,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129215",
+   "school_name": "Lahi PS",
+   "total_resources": 350,
+   "total_volunteers": 4,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 350,
+     "volunteers": 4,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129157",
+   "school_name": "LAMBAJON CENTRAL ELEMENTARY SCHOOL SPED CENTER",
+   "total_resources": 4486.5,
+   "total_volunteers": 17006,
+   "total_records": 32,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1372,
+     "volunteers": 7497,
+     "records": 13
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 16,
+     "volunteers": 1644,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1568.5,
+     "volunteers": 3386,
+     "records": 7
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 653,
+     "volunteers": 3288,
+     "records": 6
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 877,
+     "volunteers": 1191,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129328",
+   "school_name": "LANGKA ES",
+   "total_resources": 44695,
+   "total_volunteers": 2354,
+   "total_records": 15,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5625,
+     "volunteers": 44,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 7500,
+     "volunteers": 54,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 5625,
+     "volunteers": 44,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 5625,
+     "volunteers": 44,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 20320,
+     "volunteers": 2168,
+     "records": 11
+    }
+   ]
+  },
+  {
+   "school_id": "129292",
+   "school_name": "LAVIGAN ELEMENTARY SCHOOL",
+   "total_resources": 3880,
+   "total_volunteers": 316,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 580,
+     "volunteers": 124,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 700,
+     "volunteers": 78,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 800,
+     "volunteers": 36,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 800,
+     "volunteers": 54,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1000,
+     "volunteers": 24,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "316108",
+   "school_name": "LAVIGAN NATIONAL HIGH SCHOOL",
+   "total_resources": 24,
+   "total_volunteers": 1918,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-18",
+     "resources": 1,
+     "volunteers": 376,
+     "records": 1
+    },
+    {
+     "date": "2026-06-10",
+     "resources": 3,
+     "volunteers": 376,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 5,
+     "volunteers": 376,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 15,
+     "volunteers": 790,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "316107",
+   "school_name": "LEANDRO G. JAPOS NHS",
+   "total_resources": 6405,
+   "total_volunteers": 173,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 4500,
+     "volunteers": 78,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1905,
+     "volunteers": 95,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129353",
+   "school_name": "LIMENTUOG ES",
+   "total_resources": 1700,
+   "total_volunteers": 94,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1700,
+     "volunteers": 94,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "136958",
+   "school_name": "LIMOT ELEMENTARY SCHOOL - BAGANGA SOUTH",
+   "total_resources": 28,
+   "total_volunteers": 84,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 28,
+     "volunteers": 84,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129354",
+   "school_name": "LINGAYAO ES",
+   "total_resources": 0,
+   "total_volunteers": 152,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 76,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 0,
+     "volunteers": 76,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "109431",
+   "school_name": "LOGDECK ELEMENTARY SCHOOL - CARAGA SOUTH",
+   "total_resources": 83060,
+   "total_volunteers": 1095,
+   "total_records": 15,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 8500,
+     "volunteers": 146,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 2500,
+     "volunteers": 73,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3000,
+     "volunteers": 73,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 6500,
+     "volunteers": 146,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 62560,
+     "volunteers": 657,
+     "records": 9
+    }
+   ]
+  },
+  {
+   "school_id": "129217",
+   "school_name": "LUBGANON Elementary School ",
+   "total_resources": 300,
+   "total_volunteers": 16,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 300,
+     "volunteers": 16,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129171",
+   "school_name": "LUCOD ELEMENTARY SCHOOL",
+   "total_resources": 199904,
+   "total_volunteers": 5763,
+   "total_records": 18,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 63634,
+     "volunteers": 1279,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 99600,
+     "volunteers": 1892,
+     "records": 6
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 17425,
+     "volunteers": 1256,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 19245,
+     "volunteers": 1336,
+     "records": 6
+    }
+   ]
+  },
+  {
+   "school_id": "136927",
+   "school_name": "LUDIVINA F. PESALBON ELEMENTARY SCHOOL",
+   "total_resources": 56200,
+   "total_volunteers": 1521,
+   "total_records": 13,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5700,
+     "volunteers": 234,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 7000,
+     "volunteers": 234,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 16000,
+     "volunteers": 351,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 14000,
+     "volunteers": 351,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 13500,
+     "volunteers": 351,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "304321",
+   "school_name": "LUPON NATIONAL COMPREHENSIVE HIGH SCHOOL",
+   "total_resources": 3050,
+   "total_volunteers": 860,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 3050,
+     "volunteers": 860,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129293",
+   "school_name": "LUZON CENTRAL  ELEMENTARY SCHOOL",
+   "total_resources": 3439,
+   "total_volunteers": 897,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-10",
+     "resources": 46,
+     "volunteers": 6,
+     "records": 2
+    },
+    {
+     "date": "2026-06-09",
+     "resources": 43,
+     "volunteers": 29,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 0,
+     "volunteers": 318,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1850,
+     "volunteers": 44,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1200,
+     "volunteers": 95,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 200,
+     "volunteers": 306,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 100,
+     "volunteers": 99,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129430",
+   "school_name": "MAAG ELEMENTARY SCHOOL",
+   "total_resources": 1016,
+   "total_volunteers": 221,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 16,
+     "volunteers": 103,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1000,
+     "volunteers": 118,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "501964",
+   "school_name": "Mabasa Integrated School",
+   "total_resources": 8700,
+   "total_volunteers": 490,
+   "total_records": 9,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 0,
+     "volunteers": 50,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 0,
+     "volunteers": 60,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1500,
+     "volunteers": 155,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 6500,
+     "volunteers": 105,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 700,
+     "volunteers": 120,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "304323",
+   "school_name": "MACANGAO AGRICULTURAL VOCATIONAL HIGH SCHOOL",
+   "total_resources": 60226,
+   "total_volunteers": 407,
+   "total_records": 11,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 7570,
+     "volunteers": 31,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 17650,
+     "volunteers": 75,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 14410,
+     "volunteers": 70,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 7280,
+     "volunteers": 56,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 13316,
+     "volunteers": 175,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129311",
+   "school_name": "Macangao Central Elementary School",
+   "total_resources": 9052,
+   "total_volunteers": 729,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1,
+     "volunteers": 176,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 3,
+     "volunteers": 76,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3,
+     "volunteers": 76,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2545,
+     "volunteers": 243,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 6500,
+     "volunteers": 158,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129454",
+   "school_name": "MAGANDA ELEMENTARY SCHOOL",
+   "total_resources": 6550,
+   "total_volunteers": 711,
+   "total_records": 9,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 500,
+     "volunteers": 79,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 675,
+     "volunteers": 237,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 4250,
+     "volunteers": 237,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 750,
+     "volunteers": 79,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 375,
+     "volunteers": 79,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129238",
+   "school_name": "MAGLAHOS ELEMENTARY SCHOOL",
+   "total_resources": 12815.5,
+   "total_volunteers": 507,
+   "total_records": 13,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 2000,
+     "volunteers": 78,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1500,
+     "volunteers": 39,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 5375,
+     "volunteers": 39,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 3000,
+     "volunteers": 117,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 940.5,
+     "volunteers": 234,
+     "records": 6
+    }
+   ]
+  },
+  {
+   "school_id": "501963",
+   "school_name": "Magsayap IS",
+   "total_resources": 1700,
+   "total_volunteers": 572,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 300,
+     "volunteers": 54,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 300,
+     "volunteers": 128,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 800,
+     "volunteers": 260,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 300,
+     "volunteers": 130,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "137302",
+   "school_name": "Magtunod Elementary School",
+   "total_resources": 28802,
+   "total_volunteers": 166,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 10300,
+     "volunteers": 56,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 4500,
+     "volunteers": 28,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 5000,
+     "volunteers": 28,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 6502,
+     "volunteers": 26,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2500,
+     "volunteers": 28,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129183",
+   "school_name": "MAHAYAG ES",
+   "total_resources": 96129,
+   "total_volunteers": 3965,
+   "total_records": 25,
+   "entries": [
+    {
+     "date": "2026-06-22",
+     "resources": 20500,
+     "volunteers": 37,
+     "records": 1
+    },
+    {
+     "date": "2026-06-19",
+     "resources": 18360,
+     "volunteers": 111,
+     "records": 1
+    },
+    {
+     "date": "2026-06-18",
+     "resources": 10000,
+     "volunteers": 37,
+     "records": 1
+    },
+    {
+     "date": "2026-06-08",
+     "resources": 29290,
+     "volunteers": 1892,
+     "records": 11
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 3250,
+     "volunteers": 172,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 9,
+     "volunteers": 172,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 967,
+     "volunteers": 344,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 9250,
+     "volunteers": 342,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 4503,
+     "volunteers": 858,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129331",
+   "school_name": "MAHAYAHAY ELEMENENTARY SCHOOL ",
+   "total_resources": 3710,
+   "total_volunteers": 444,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 800,
+     "volunteers": 111,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 700,
+     "volunteers": 111,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 650,
+     "volunteers": 111,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1560,
+     "volunteers": 111,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129240",
+   "school_name": "MALIBAGO ELEMENTARY SCHOOL - CARAGA SOUTH",
+   "total_resources": 0,
+   "total_volunteers": 82,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 0,
+     "volunteers": 82,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129313",
+   "school_name": "Malig ES",
+   "total_resources": 0,
+   "total_volunteers": 671,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 0,
+     "volunteers": 109,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 0,
+     "volunteers": 109,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 0,
+     "volunteers": 109,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 235,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 0,
+     "volunteers": 109,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "304324",
+   "school_name": "MANAY NHS",
+   "total_resources": 547590,
+   "total_volunteers": 16556,
+   "total_records": 13,
+   "entries": [
+    {
+     "date": "2026-06-19",
+     "resources": 7540,
+     "volunteers": 1371,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 17750,
+     "volunteers": 1371,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 250000,
+     "volunteers": 1371,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 13300,
+     "volunteers": 4113,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 4500,
+     "volunteers": 2742,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 254500,
+     "volunteers": 5588,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "306222",
+   "school_name": "Manikling NHS",
+   "total_resources": 2626,
+   "total_volunteers": 3439,
+   "total_records": 19,
+   "entries": [
+    {
+     "date": "2026-06-10",
+     "resources": 10,
+     "volunteers": 382,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1516,
+     "volunteers": 1528,
+     "records": 8
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 900,
+     "volunteers": 1528,
+     "records": 8
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 200,
+     "volunteers": 1,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "304301",
+   "school_name": "MANUEL B. GUI\u00d1EZ SR. NATIONAL HIGH SCHOOL",
+   "total_resources": 1633.6,
+   "total_volunteers": 8008,
+   "total_records": 18,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 27,
+     "volunteers": 538,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1158.6,
+     "volunteers": 2468,
+     "records": 8
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 266,
+     "volunteers": 3822,
+     "records": 5
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 182,
+     "volunteers": 1180,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129285",
+   "school_name": "MANUEL ROXAS ES",
+   "total_resources": 2500,
+   "total_volunteers": 65,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 800,
+     "volunteers": 21,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1000,
+     "volunteers": 24,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 700,
+     "volunteers": 20,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "304317",
+   "school_name": "MANUEL S. NASSER, SR. NHS",
+   "total_resources": 87,
+   "total_volunteers": 1884,
+   "total_records": 7,
+   "entries": [
+    {
+     "date": "2026-06-10",
+     "resources": 2,
+     "volunteers": 412,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 66,
+     "volunteers": 1041,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 19,
+     "volunteers": 431,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129184",
+   "school_name": "MAPUTI ES",
+   "total_resources": 28150,
+   "total_volunteers": 3528,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 7375,
+     "volunteers": 588,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 8962.5,
+     "volunteers": 1764,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 4562.5,
+     "volunteers": 588,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 7250,
+     "volunteers": 588,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "306220",
+   "school_name": "Maputi National High School",
+   "total_resources": 135250,
+   "total_volunteers": 1820,
+   "total_records": 7,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 52100,
+     "volunteers": 780,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 36150,
+     "volunteers": 520,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 31000,
+     "volunteers": 260,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 16000,
+     "volunteers": 260,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129314",
+   "school_name": "Marayag Elementary School",
+   "total_resources": 104108,
+   "total_volunteers": 678,
+   "total_records": 20,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5400,
+     "volunteers": 81,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 5200,
+     "volunteers": 74,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 8,
+     "volunteers": 128,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 25700,
+     "volunteers": 157,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 67800,
+     "volunteers": 238,
+     "records": 12
+    }
+   ]
+  },
+  {
+   "school_id": "316101",
+   "school_name": "MARAYAG NATIONAL HIGH SCHOOL",
+   "total_resources": 123274.5,
+   "total_volunteers": 3387,
+   "total_records": 43,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 39650,
+     "volunteers": 1062,
+     "records": 14
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 21012.5,
+     "volunteers": 541,
+     "records": 9
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 20250,
+     "volunteers": 582,
+     "records": 8
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 25475,
+     "volunteers": 642,
+     "records": 7
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 16887,
+     "volunteers": 560,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129241",
+   "school_name": "MERCEDES ELEMENTARY SCHOOL",
+   "total_resources": 107775,
+   "total_volunteers": 2794,
+   "total_records": 22,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 4625,
+     "volunteers": 508,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 8500,
+     "volunteers": 381,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 94650,
+     "volunteers": 1905,
+     "records": 15
+    }
+   ]
+  },
+  {
+   "school_id": "129158",
+   "school_name": "MIKIT ES",
+   "total_resources": 44600,
+   "total_volunteers": 1455,
+   "total_records": 15,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 11650,
+     "volunteers": 411,
+     "records": 6
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 2000,
+     "volunteers": 234,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1950,
+     "volunteers": 351,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 3000,
+     "volunteers": 234,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 26000,
+     "volunteers": 225,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "501608",
+   "school_name": "MODESTO T. VEROY SR. IS",
+   "total_resources": 11106,
+   "total_volunteers": 4680,
+   "total_records": 24,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 2021,
+     "volunteers": 1170,
+     "records": 6
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 815,
+     "volunteers": 780,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1930,
+     "volunteers": 1560,
+     "records": 8
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 320,
+     "volunteers": 585,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 6020,
+     "volunteers": 585,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129185",
+   "school_name": "MOGBONGCOGON ES",
+   "total_resources": 63220,
+   "total_volunteers": 666,
+   "total_records": 46,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 25750,
+     "volunteers": 121,
+     "records": 8
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 13500,
+     "volunteers": 88,
+     "records": 7
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 19000,
+     "volunteers": 162,
+     "records": 9
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2768,
+     "volunteers": 159,
+     "records": 12
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2202,
+     "volunteers": 136,
+     "records": 10
+    }
+   ]
+  },
+  {
+   "school_id": "129296",
+   "school_name": "NANGAN ELEMENTARY SCHOOL",
+   "total_resources": 6022,
+   "total_volunteers": 167,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 510,
+     "volunteers": 41,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 512,
+     "volunteers": 42,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2000,
+     "volunteers": 32,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2500,
+     "volunteers": 42,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 500,
+     "volunteers": 10,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "304329",
+   "school_name": "NANGAN NATIONAL HIGH SCHOOL",
+   "total_resources": 3500,
+   "total_volunteers": 60,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 3500,
+     "volunteers": 60,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "102321",
+   "school_name": "Nasa Elementary School",
+   "total_resources": 45230.5,
+   "total_volunteers": 1319,
+   "total_records": 11,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5744,
+     "volunteers": 516,
+     "records": 4
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1161,
+     "volunteers": 129,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 4036.5,
+     "volunteers": 387,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 4257,
+     "volunteers": 129,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 30032,
+     "volunteers": 158,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "205512",
+   "school_name": "NURSERY ELEMENTARY SCHOOL",
+   "total_resources": 1422,
+   "total_volunteers": 376,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 7,
+     "volunteers": 94,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 3,
+     "volunteers": 47,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3,
+     "volunteers": 47,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1404,
+     "volunteers": 141,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 5,
+     "volunteers": 47,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "501425",
+   "school_name": "OREGON INTEGRATED SCHOOL",
+   "total_resources": 303,
+   "total_volunteers": 55,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 153,
+     "volunteers": 52,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 150,
+     "volunteers": 3,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129203",
+   "school_name": "OWABANGON ES",
+   "total_resources": 19962.5,
+   "total_volunteers": 2290,
+   "total_records": 17,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 3775,
+     "volunteers": 498,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 11031.25,
+     "volunteers": 1252,
+     "records": 8
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2331.25,
+     "volunteers": 180,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1387.5,
+     "volunteers": 180,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1437.5,
+     "volunteers": 180,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129172",
+   "school_name": "PANJUGAN ELEMENTARY SCHOOL",
+   "total_resources": 9000,
+   "total_volunteers": 312,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5000,
+     "volunteers": 78,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 900,
+     "volunteers": 78,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2600,
+     "volunteers": 78,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 500,
+     "volunteers": 78,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129242",
+   "school_name": "PANTUYAN ELEMENTARY SCHOOL",
+   "total_resources": 23860,
+   "total_volunteers": 2328,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 2000,
+     "volunteers": 316,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 10700,
+     "volunteers": 316,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3000,
+     "volunteers": 316,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 6200,
+     "volunteers": 748,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1960,
+     "volunteers": 632,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "316113",
+   "school_name": "PAULINA GAMBONG ABAYON NATIONAL HIGH SCHOOL ",
+   "total_resources": 98375,
+   "total_volunteers": 1710,
+   "total_records": 21,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 14157.5,
+     "volunteers": 160,
+     "records": 4
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 19812.5,
+     "volunteers": 234,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 15280,
+     "volunteers": 339,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 23437.5,
+     "volunteers": 396,
+     "records": 4
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 25687.5,
+     "volunteers": 581,
+     "records": 7
+    }
+   ]
+  },
+  {
+   "school_id": "129187",
+   "school_name": "PINTATAGAN ES",
+   "total_resources": 21378.5,
+   "total_volunteers": 3926,
+   "total_records": 28,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 963.5,
+     "volunteers": 1724,
+     "records": 5
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 25,
+     "volunteers": 753,
+     "records": 6
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 8766,
+     "volunteers": 419,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 9260,
+     "volunteers": 574,
+     "records": 7
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2364,
+     "volunteers": 456,
+     "records": 6
+    }
+   ]
+  },
+  {
+   "school_id": "129188",
+   "school_name": "PISO CAMP ES",
+   "total_resources": 113,
+   "total_volunteers": 2596,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 24,
+     "volunteers": 1038,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 89,
+     "volunteers": 1558,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129159",
+   "school_name": "POO ELEMENTARY SCHOOL",
+   "total_resources": 17080,
+   "total_volunteers": 384,
+   "total_records": 25,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 6250,
+     "volunteers": 164,
+     "records": 7
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 2805,
+     "volunteers": 45,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2250,
+     "volunteers": 55,
+     "records": 5
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 3642,
+     "volunteers": 70,
+     "records": 5
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2133,
+     "volunteers": 50,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129268",
+   "school_name": "Poo ES",
+   "total_resources": 27400,
+   "total_volunteers": 518,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5400,
+     "volunteers": 389,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 22000,
+     "volunteers": 129,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "501966",
+   "school_name": "Potenciano A. Mabanding IS",
+   "total_resources": 28812.5,
+   "total_volunteers": 5104,
+   "total_records": 29,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 4237.5,
+     "volunteers": 352,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1912.5,
+     "volunteers": 352,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 4412.5,
+     "volunteers": 704,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 3787.5,
+     "volunteers": 880,
+     "records": 5
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 14462.5,
+     "volunteers": 2816,
+     "records": 16
+    }
+   ]
+  },
+  {
+   "school_id": "129298",
+   "school_name": "PUNDAGUITAN ELEMENTARY SCHOOL",
+   "total_resources": 15555,
+   "total_volunteers": 111,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5,
+     "volunteers": 35,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 7900,
+     "volunteers": 28,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3150,
+     "volunteers": 7,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2600,
+     "volunteers": 19,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1900,
+     "volunteers": 22,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "304330",
+   "school_name": "PUNDAGUITAN NATIONAL HIGH SCHOOL",
+   "total_resources": 20550,
+   "total_volunteers": 839,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-08",
+     "resources": 2700,
+     "volunteers": 560,
+     "records": 2
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 3500,
+     "volunteers": 62,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 6250,
+     "volunteers": 109,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3500,
+     "volunteers": 31,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 3600,
+     "volunteers": 47,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1000,
+     "volunteers": 30,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "304331",
+   "school_name": "PUNTALINAO NHS",
+   "total_resources": 36364.5,
+   "total_volunteers": 1235,
+   "total_records": 11,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1114,
+     "volunteers": 116,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 14687.5,
+     "volunteers": 944,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 6059,
+     "volunteers": 90,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1004,
+     "volunteers": 0,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 13500,
+     "volunteers": 85,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129299",
+   "school_name": "QUEZON ELEMENTARY SCHOOL",
+   "total_resources": 0,
+   "total_volunteers": 2007,
+   "total_records": 12,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 0,
+     "volunteers": 183,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 0,
+     "volunteers": 175,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 0,
+     "volunteers": 1399,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 156,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 0,
+     "volunteers": 94,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129336",
+   "school_name": "R. SUMAMBOT ELEM. SCHOOL",
+   "total_resources": 300,
+   "total_volunteers": 9305,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 300,
+     "volunteers": 9305,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129368",
+   "school_name": "RONQUILLO AND DAYANGHIRANG ES",
+   "total_resources": 788121,
+   "total_volunteers": 45100,
+   "total_records": 54,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 138605,
+     "volunteers": 16800,
+     "records": 16
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 365346,
+     "volunteers": 10450,
+     "records": 11
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 88006,
+     "volunteers": 6750,
+     "records": 9
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 111894,
+     "volunteers": 7800,
+     "records": 12
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 84270,
+     "volunteers": 3300,
+     "records": 6
+    }
+   ]
+  },
+  {
+   "school_id": "129174",
+   "school_name": "SALINGCOMOT ELEMENTARY SCHOOL",
+   "total_resources": 15000,
+   "total_volunteers": 2160,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5000,
+     "volunteers": 360,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 2000,
+     "volunteers": 720,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1500,
+     "volunteers": 360,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1000,
+     "volunteers": 360,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 5500,
+     "volunteers": 360,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129256",
+   "school_name": "SAN ANTONIO ES",
+   "total_resources": 141202,
+   "total_volunteers": 1771,
+   "total_records": 20,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 3550,
+     "volunteers": 29,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 4802,
+     "volunteers": 656,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 37600,
+     "volunteers": 375,
+     "records": 5
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 41250,
+     "volunteers": 396,
+     "records": 6
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 54000,
+     "volunteers": 315,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "304310",
+   "school_name": "SAN ANTONIO NATIONAL HIGH SCHOOL",
+   "total_resources": 44314,
+   "total_volunteers": 4643,
+   "total_records": 11,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 9242,
+     "volunteers": 1266,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 67,
+     "volunteers": 844,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 755,
+     "volunteers": 1266,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 33250,
+     "volunteers": 844,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1000,
+     "volunteers": 423,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129367",
+   "school_name": "SAN FERMIN ELEM. SCHOOL",
+   "total_resources": 8500,
+   "total_volunteers": 49,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 2750,
+     "volunteers": 26,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 5750,
+     "volunteers": 23,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "205506",
+   "school_name": "SAN ISIDRO CENTRAL SCHOOL SPED CENTER",
+   "total_resources": 7075,
+   "total_volunteers": 2187,
+   "total_records": 3,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 7075,
+     "volunteers": 2187,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "501421",
+   "school_name": "SAN ISIDRO INTEGRATED SCHOOL",
+   "total_resources": 51940,
+   "total_volunteers": 8417,
+   "total_records": 19,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 11800,
+     "volunteers": 2658,
+     "records": 6
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 5000,
+     "volunteers": 443,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 7500,
+     "volunteers": 443,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 13640,
+     "volunteers": 3101,
+     "records": 7
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 14000,
+     "volunteers": 1772,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "304332",
+   "school_name": "SAN ISIDRO NHS",
+   "total_resources": 173892.08000000002,
+   "total_volunteers": 2916,
+   "total_records": 25,
+   "entries": [
+    {
+     "date": "2026-06-10",
+     "resources": 5920,
+     "volunteers": 110,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 38847.16,
+     "volunteers": 1348,
+     "records": 8
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 18380,
+     "volunteers": 242,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 24435.63,
+     "volunteers": 371,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 51256.04,
+     "volunteers": 423,
+     "records": 4
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 35053.25,
+     "volunteers": 422,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129244",
+   "school_name": "SAN JOSE CES - Caraga South",
+   "total_resources": 18640,
+   "total_volunteers": 1854,
+   "total_records": 29,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 351,
+     "volunteers": 43,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1753,
+     "volunteers": 124,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3524,
+     "volunteers": 270,
+     "records": 9
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 12960,
+     "volunteers": 1229,
+     "records": 11
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 52,
+     "volunteers": 188,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129204",
+   "school_name": "San Jose ES - Boston",
+   "total_resources": 38057,
+   "total_volunteers": 2177,
+   "total_records": 13,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 7750,
+     "volunteers": 672,
+     "records": 4
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 6752,
+     "volunteers": 504,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3555,
+     "volunteers": 504,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 11875,
+     "volunteers": 336,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 8125,
+     "volunteers": 161,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129317",
+   "school_name": "SAN JOSE ES - Lupon East",
+   "total_resources": 1100,
+   "total_volunteers": 153,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 0,
+     "volunteers": 34,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 600,
+     "volunteers": 44,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 51,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 500,
+     "volunteers": 24,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129225",
+   "school_name": "SAN LUIS ES",
+   "total_resources": 500,
+   "total_volunteers": 259,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 500,
+     "volunteers": 259,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "501956",
+   "school_name": "SAN MIGUEL INTEGRATED SCHOOL",
+   "total_resources": 3020,
+   "total_volunteers": 242,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 2500,
+     "volunteers": 51,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 500,
+     "volunteers": 29,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 0,
+     "volunteers": 45,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 10,
+     "volunteers": 45,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 10,
+     "volunteers": 72,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "501965",
+   "school_name": "San Pedro Integrated School",
+   "total_resources": 1270,
+   "total_volunteers": 792,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 850,
+     "volunteers": 396,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 120,
+     "volunteers": 198,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 300,
+     "volunteers": 198,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "501961",
+   "school_name": "SAN RAFAEL INTEGRATED SCHOOL",
+   "total_resources": 6900,
+   "total_volunteers": 15,
+   "total_records": 7,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 1400,
+     "volunteers": 4,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 5500,
+     "volunteers": 11,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129191",
+   "school_name": "SAN ROQUE ES - BANAYBANAY",
+   "total_resources": 406,
+   "total_volunteers": 160,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-08",
+     "resources": 6,
+     "volunteers": 149,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 400,
+     "volunteers": 11,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129432",
+   "school_name": "SAN ROQUE ES - SAN ISIDRO NORTH",
+   "total_resources": 11059,
+   "total_volunteers": 1105,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 6,
+     "volunteers": 410,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 2855,
+     "volunteers": 313,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3,
+     "volunteers": 70,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2320,
+     "volunteers": 170,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 5875,
+     "volunteers": 142,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129192",
+   "school_name": "SAN VICENTE ES",
+   "total_resources": 3220,
+   "total_volunteers": 1649,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 14,
+     "volunteers": 356,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 10,
+     "volunteers": 166,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1604,
+     "volunteers": 396,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 930,
+     "volunteers": 376,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 662,
+     "volunteers": 355,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129161",
+   "school_name": "SAN VICTOR ES",
+   "total_resources": 27035,
+   "total_volunteers": 328,
+   "total_records": 13,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 9570,
+     "volunteers": 51,
+     "records": 5
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1925,
+     "volunteers": 180,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 9452,
+     "volunteers": 45,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2438,
+     "volunteers": 21,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 3650,
+     "volunteers": 31,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129227",
+   "school_name": "SANGAB ES",
+   "total_resources": 950,
+   "total_volunteers": 306,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 950,
+     "volunteers": 306,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "304334",
+   "school_name": "SANGAB NATIONAL HIGH SCHOOL",
+   "total_resources": 6000,
+   "total_volunteers": 1130,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 1000,
+     "volunteers": 158,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1200,
+     "volunteers": 64,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 500,
+     "volunteers": 116,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2300,
+     "volunteers": 190,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1000,
+     "volunteers": 602,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129246",
+   "school_name": "SANTIAGO ELEMENTARY SCHOOL",
+   "total_resources": 57520,
+   "total_volunteers": 34749,
+   "total_records": 99,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 13770,
+     "volunteers": 9828,
+     "records": 28
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 13750,
+     "volunteers": 7371,
+     "records": 21
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 30000,
+     "volunteers": 17550,
+     "records": 50
+    }
+   ]
+  },
+  {
+   "school_id": "304335",
+   "school_name": "SANTIAGO NATIONAL HIGH SCHOOL",
+   "total_resources": 34214,
+   "total_volunteers": 1282,
+   "total_records": 22,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5080,
+     "volunteers": 506,
+     "records": 6
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 5600,
+     "volunteers": 134,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 6802,
+     "volunteers": 139,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 5801,
+     "volunteers": 341,
+     "records": 4
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 10931,
+     "volunteers": 162,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "129175",
+   "school_name": "SAOQUIGUE ELEMENTARY SCHOOL",
+   "total_resources": 51806.5,
+   "total_volunteers": 6244,
+   "total_records": 28,
+   "entries": [
+    {
+     "date": "2026-06-08",
+     "resources": 560,
+     "volunteers": 248,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 14175,
+     "volunteers": 754,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 3961,
+     "volunteers": 1256,
+     "records": 7
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 15537.5,
+     "volunteers": 812,
+     "records": 6
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 213,
+     "volunteers": 692,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 17360,
+     "volunteers": 2482,
+     "records": 9
+    }
+   ]
+  },
+  {
+   "school_id": "129289",
+   "school_name": "SERAPION C. BASALO ELEMENTARY SCHOOL",
+   "total_resources": 5800,
+   "total_volunteers": 101,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 5440,
+     "volunteers": 90,
+     "records": 6
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 220,
+     "volunteers": 7,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 140,
+     "volunteers": 4,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129312",
+   "school_name": "Sergio Mawalic ES",
+   "total_resources": 3226,
+   "total_volunteers": 36,
+   "total_records": 1,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 3226,
+     "volunteers": 36,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129335",
+   "school_name": "SEVERINO TAMING ELEM. SCHOOL",
+   "total_resources": 7100,
+   "total_volunteers": 648,
+   "total_records": 8,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 0,
+     "volunteers": 81,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 3600,
+     "volunteers": 324,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1000,
+     "volunteers": 81,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2500,
+     "volunteers": 162,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129205",
+   "school_name": "SIBAJAY ES",
+   "total_resources": 800,
+   "total_volunteers": 6,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-01",
+     "resources": 800,
+     "volunteers": 6,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "304336",
+   "school_name": "SIGABOY AGRICULTURAL VOCATIONAL HIGH SCHOOL",
+   "total_resources": 35000,
+   "total_volunteers": 1175,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 5500,
+     "volunteers": 350,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 10000,
+     "volunteers": 341,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 9500,
+     "volunteers": 268,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 10000,
+     "volunteers": 216,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129286",
+   "school_name": "SIGABOY CENTRAL ELEMENTARY SCHOOL",
+   "total_resources": 84,
+   "total_volunteers": 10013,
+   "total_records": 9,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 24,
+     "volunteers": 2223,
+     "records": 2
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 5,
+     "volunteers": 2226,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 11,
+     "volunteers": 1113,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 34,
+     "volunteers": 3339,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 10,
+     "volunteers": 1112,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "502247",
+   "school_name": "SIMULAO IS",
+   "total_resources": 50752,
+   "total_volunteers": 3717,
+   "total_records": 13,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 9050,
+     "volunteers": 1228,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 40000,
+     "volunteers": 954,
+     "records": 4
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1200,
+     "volunteers": 614,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 502,
+     "volunteers": 921,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129162",
+   "school_name": "STA. CRUZ ES",
+   "total_resources": 359612,
+   "total_volunteers": 2952,
+   "total_records": 30,
+   "entries": [
+    {
+     "date": "2026-06-11",
+     "resources": 235050,
+     "volunteers": 1146,
+     "records": 12
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 56212,
+     "volunteers": 440,
+     "records": 4
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 14000,
+     "volunteers": 330,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 34400,
+     "volunteers": 486,
+     "records": 6
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 7875,
+     "volunteers": 220,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 12075,
+     "volunteers": 330,
+     "records": 3
+    }
+   ]
+  },
+  {
+   "school_id": "129258",
+   "school_name": "STA. FILOMENA ES",
+   "total_resources": 41626,
+   "total_volunteers": 942,
+   "total_records": 7,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 36024,
+     "volunteers": 642,
+     "records": 2
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 2,
+     "volunteers": 16,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 5600,
+     "volunteers": 284,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "129163",
+   "school_name": "SUNLON ELEMENTARY SCHOOL",
+   "total_resources": 65519.740000000005,
+   "total_volunteers": 2764,
+   "total_records": 32,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 21462.5,
+     "volunteers": 602,
+     "records": 7
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 3121.5,
+     "volunteers": 430,
+     "records": 5
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 14353.87,
+     "volunteers": 688,
+     "records": 8
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 17289.37,
+     "volunteers": 688,
+     "records": 8
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 9292.5,
+     "volunteers": 356,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "306221",
+   "school_name": "Surop National High School",
+   "total_resources": 10801,
+   "total_volunteers": 214,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5501,
+     "volunteers": 212,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 5300,
+     "volunteers": 2,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129193",
+   "school_name": "T. PATRICIO ELEMENTARY SCHOOL",
+   "total_resources": 10500,
+   "total_volunteers": 1690,
+   "total_records": 10,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5500,
+     "volunteers": 507,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 5000,
+     "volunteers": 676,
+     "records": 4
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 0,
+     "volunteers": 169,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 169,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 0,
+     "volunteers": 169,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129247",
+   "school_name": "TAGBANAHAW ES",
+   "total_resources": 1761,
+   "total_volunteers": 204,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 250,
+     "volunteers": 34,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 6,
+     "volunteers": 34,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 5,
+     "volunteers": 34,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1000,
+     "volunteers": 68,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 500,
+     "volunteers": 34,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "316109",
+   "school_name": "TAGBOA AGRI-VOC HS",
+   "total_resources": 21200,
+   "total_volunteers": 124,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 2000,
+     "volunteers": 15,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 10950,
+     "volunteers": 21,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1250,
+     "volunteers": 20,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 4312.5,
+     "volunteers": 39,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 2687.5,
+     "volunteers": 29,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129319",
+   "school_name": "Tagboa ES",
+   "total_resources": 300,
+   "total_volunteers": 96,
+   "total_records": 5,
+   "entries": [
+    {
+     "date": "2026-06-04",
+     "resources": 0,
+     "volunteers": 90,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 200,
+     "volunteers": 4,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 100,
+     "volunteers": 2,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "304337",
+   "school_name": "TAGUGPO NATIONAL HIGH SCHOOL",
+   "total_resources": 600,
+   "total_volunteers": 6,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 0,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 600,
+     "volunteers": 6,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129442",
+   "school_name": "TALISAY  ELEM. SCHOOL",
+   "total_resources": 44915.75,
+   "total_volunteers": 3273,
+   "total_records": 15,
+   "entries": [
+    {
+     "date": "2026-06-08",
+     "resources": 2400,
+     "volunteers": 218,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 12500.5,
+     "volunteers": 654,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 4,
+     "volunteers": 218,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 20407.75,
+     "volunteers": 654,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2379.5,
+     "volunteers": 1313,
+     "records": 6
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 7224,
+     "volunteers": 216,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "305517",
+   "school_name": "TALISAY NATIONAL HIGH SCHOOL",
+   "total_resources": 28758.4,
+   "total_volunteers": 40,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-09",
+     "resources": 5400,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 1200,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 1872,
+     "volunteers": 15,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 16666,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 2995.4,
+     "volunteers": 15,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 625,
+     "volunteers": 10,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129300",
+   "school_name": "TAMBAN ELEMENTARY SCHOOL",
+   "total_resources": 1550,
+   "total_volunteers": 27,
+   "total_records": 4,
+   "entries": [
+    {
+     "date": "2026-06-03",
+     "resources": 800,
+     "volunteers": 7,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 500,
+     "volunteers": 19,
+     "records": 2
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 250,
+     "volunteers": 1,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "305963",
+   "school_name": "TAMBAN NATIONAL HIGH SCHOOL",
+   "total_resources": 1200,
+   "total_volunteers": 707,
+   "total_records": 7,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 400,
+     "volunteers": 303,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 100,
+     "volunteers": 101,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 100,
+     "volunteers": 101,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 600,
+     "volunteers": 202,
+     "records": 2
+    }
+   ]
+  },
+  {
+   "school_id": "129287",
+   "school_name": "TANDANG SORA ES",
+   "total_resources": 48744.5,
+   "total_volunteers": 3759,
+   "total_records": 21,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 4760.5,
+     "volunteers": 1719,
+     "records": 6
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 10500,
+     "volunteers": 948,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 1500,
+     "volunteers": 17,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 3044,
+     "volunteers": 223,
+     "records": 3
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 28940,
+     "volunteers": 852,
+     "records": 8
+    }
+   ]
+  },
+  {
+   "school_id": "129372",
+   "school_name": "TENGSON ES",
+   "total_resources": 3000,
+   "total_volunteers": 20,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 2000,
+     "volunteers": 10,
+     "records": 1
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 1000,
+     "volunteers": 10,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "304340",
+   "school_name": "TIBANBAN NATIONAL HIGH SCHOOL",
+   "total_resources": 168811,
+   "total_volunteers": 3170,
+   "total_records": 28,
+   "entries": [
+    {
+     "date": "2026-06-11",
+     "resources": 4475,
+     "volunteers": 55,
+     "records": 8
+    },
+    {
+     "date": "2026-06-10",
+     "resources": 1400,
+     "volunteers": 92,
+     "records": 1
+    },
+    {
+     "date": "2026-06-09",
+     "resources": 5525,
+     "volunteers": 92,
+     "records": 1
+    },
+    {
+     "date": "2026-06-06",
+     "resources": 600,
+     "volunteers": 92,
+     "records": 1
+    },
+    {
+     "date": "2026-06-05",
+     "resources": 13887,
+     "volunteers": 327,
+     "records": 3
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 21030,
+     "volunteers": 414,
+     "records": 3
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 41575,
+     "volunteers": 488,
+     "records": 3
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 40745,
+     "volunteers": 830,
+     "records": 4
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 39574,
+     "volunteers": 780,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "129248",
+   "school_name": "TIGBAWAN ELEMENTARY SCHOOL - CARAGA SOUTH",
+   "total_resources": 17750,
+   "total_volunteers": 329,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 250,
+     "volunteers": 38,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 7000,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 7000,
+     "volunteers": 244,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 500,
+     "volunteers": 20,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 3000,
+     "volunteers": 27,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "302077",
+   "school_name": "TIOMBOCAN NATIONAL HIGH SCHOOL",
+   "total_resources": 9350,
+   "total_volunteers": 402,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-02",
+     "resources": 7500,
+     "volunteers": 67,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 1850,
+     "volunteers": 335,
+     "records": 5
+    }
+   ]
+  },
+  {
+   "school_id": "129434",
+   "school_name": "TIRSO R. ARGUELLES MEM. ELEMENTARY SCHOOL",
+   "total_resources": 57356.5,
+   "total_volunteers": 1365,
+   "total_records": 23,
+   "entries": [
+    {
+     "date": "2026-06-05",
+     "resources": 5241.25,
+     "volunteers": 425,
+     "records": 6
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 20312,
+     "volunteers": 447,
+     "records": 7
+    },
+    {
+     "date": "2026-06-03",
+     "resources": 3434.5,
+     "volunteers": 198,
+     "records": 2
+    },
+    {
+     "date": "2026-06-02",
+     "resources": 8031.25,
+     "volunteers": 141,
+     "records": 4
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 20337.5,
+     "volunteers": 154,
+     "records": 4
+    }
+   ]
+  },
+  {
+   "school_id": "129463",
+   "school_name": "TUBAON ES",
+   "total_resources": 302,
+   "total_volunteers": 0,
+   "total_records": 2,
+   "entries": [
+    {
+     "date": "2026-06-09",
+     "resources": 2,
+     "volunteers": 0,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 300,
+     "volunteers": 0,
+     "records": 1
+    }
+   ]
+  },
+  {
+   "school_id": "129424",
+   "school_name": "TUBURAN VILLAGE ELEMENTARY SCHOOL",
+   "total_resources": 6801,
+   "total_volunteers": 792,
+   "total_records": 6,
+   "entries": [
+    {
+     "date": "2026-06-12",
+     "resources": 3290,
+     "volunteers": 258,
+     "records": 2
+    },
+    {
+     "date": "2026-06-09",
+     "resources": 20,
+     "volunteers": 117,
+     "records": 1
+    },
+    {
+     "date": "2026-06-04",
+     "resources": 16,
+     "volunteers": 108,
+     "records": 1
+    },
+    {
+     "date": "2026-06-01",
+     "resources": 3475,
+     "volunteers": 309,
+     "records": 2
+    }
+   ]
+  }
+ ],
+ "generated_at": "2026-08-10T08:59:04+08:00"
+}

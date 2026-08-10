@@ -18,6 +18,19 @@ class AccomplishmentItem with _$AccomplishmentItem {
     @Default('') String year,
     @Default('') String achieved,
     @Default('') String target,
+    @Default('') String monthAcc,
+    @Default('') String weekAcc,
+    @Default('') String activityCategory,
+    @Default('') String particulars,
+    @Default('') String venue,
+    @Default('') String targetDate,
+    @Default('') String encoder,
+    @Default('') String accomplishmentScope,
+    @Default('') String resources,
+    @Default('') String notes,
+    @Default('') String perIndicators,
+    @Default('') String remarks,
+    @Default('') String secGroup,
   }) = _AccomplishmentItem;
 
   factory AccomplishmentItem.fromJson(Map<String, dynamic> json) =>

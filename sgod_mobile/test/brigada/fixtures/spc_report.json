@@ -1,0 +1,374 @@
+{
+ "sy": "2026-2027",
+ "submission_count": 90,
+ "categories": [
+  {
+   "id": 1,
+   "name": "Facilities and Infrastructure",
+   "items": [
+    {
+     "id": 1,
+     "ordinal": 1,
+     "description": "Classrooms are clean, well-ventilated, and conducive to learning",
+     "answer_field": "q11",
+     "fully": 65,
+     "partially": 24,
+     "not_prepared": 1,
+     "responses": 90
+    },
+    {
+     "id": 2,
+     "ordinal": 2,
+     "description": "Electrical wiring, outlets, and lighting systems are inspected and functional",
+     "answer_field": "q12",
+     "fully": 58,
+     "partially": 28,
+     "not_prepared": 2,
+     "responses": 88
+    },
+    {
+     "id": 3,
+     "ordinal": 3,
+     "description": "Water supply, plumbing, and sanitation facilities are clean and operational",
+     "answer_field": "q13",
+     "fully": 57,
+     "partially": 31,
+     "not_prepared": 1,
+     "responses": 89
+    },
+    {
+     "id": 4,
+     "ordinal": 4,
+     "description": "Furniture (desks, chairs, tables) is in good condition and sufficient for enrolled learners",
+     "answer_field": "q14",
+     "fully": 61,
+     "partially": 29,
+     "not_prepared": 0,
+     "responses": 90
+    },
+    {
+     "id": 5,
+     "ordinal": 5,
+     "description": "Emergency exits are clearly marked and accessible",
+     "answer_field": "q15",
+     "fully": 58,
+     "partially": 28,
+     "not_prepared": 2,
+     "responses": 88
+    },
+    {
+     "id": 6,
+     "ordinal": 6,
+     "description": "School grounds are free from hazards (e.g., debris, broken glass, etc.)",
+     "answer_field": "q16",
+     "fully": 74,
+     "partially": 15,
+     "not_prepared": 1,
+     "responses": 90
+    }
+   ],
+   "fully": 373,
+   "partially": 155,
+   "not_prepared": 7
+  },
+  {
+   "id": 2,
+   "name": "Learning Resources",
+   "items": [
+    {
+     "id": 7,
+     "ordinal": 1,
+     "description": "Sufficient textbooks, modules, and other learning materials are available",
+     "answer_field": "q21",
+     "fully": 46,
+     "partially": 32,
+     "not_prepared": 0,
+     "responses": 78
+    },
+    {
+     "id": 8,
+     "ordinal": 2,
+     "description": "Teaching aids (projectors, visual materials, etc.) are functional and accessible",
+     "answer_field": "q22",
+     "fully": 45,
+     "partially": 33,
+     "not_prepared": 0,
+     "responses": 78
+    },
+    {
+     "id": 9,
+     "ordinal": 3,
+     "description": "ICT equipment (computers, tablets) is tested and ready for use",
+     "answer_field": "q23",
+     "fully": 30,
+     "partially": 29,
+     "not_prepared": 19,
+     "responses": 78
+    },
+    {
+     "id": 10,
+     "ordinal": 4,
+     "description": "Libraries and reading corners are organized and equipped",
+     "answer_field": "q24",
+     "fully": 31,
+     "partially": 35,
+     "not_prepared": 11,
+     "responses": 77
+    }
+   ],
+   "fully": 152,
+   "partially": 129,
+   "not_prepared": 30
+  },
+  {
+   "id": 3,
+   "name": "Health and Safety",
+   "items": [
+    {
+     "id": 11,
+     "ordinal": 1,
+     "description": "First aid kits are complete and easily accessible",
+     "answer_field": "q31",
+     "fully": 50,
+     "partially": 23,
+     "not_prepared": 3,
+     "responses": 76
+    },
+    {
+     "id": 12,
+     "ordinal": 2,
+     "description": "Emergency contact information is updated and displayed prominently",
+     "answer_field": "q32",
+     "fully": 53,
+     "partially": 22,
+     "not_prepared": 2,
+     "responses": 77
+    },
+    {
+     "id": 13,
+     "ordinal": 3,
+     "description": "School disaster preparedness plan is reviewed and communicated to staff",
+     "answer_field": "q33",
+     "fully": 58,
+     "partially": 18,
+     "not_prepared": 0,
+     "responses": 76
+    },
+    {
+     "id": 14,
+     "ordinal": 4,
+     "description": "Health protocols (e.g., handwashing stations, sanitation supplies) are in place",
+     "answer_field": "q34",
+     "fully": 52,
+     "partially": 24,
+     "not_prepared": 0,
+     "responses": 76
+    }
+   ],
+   "fully": 213,
+   "partially": 87,
+   "not_prepared": 5
+  },
+  {
+   "id": 4,
+   "name": "Staff and Personnel",
+   "items": [
+    {
+     "id": 15,
+     "ordinal": 1,
+     "description": "Teachers have received orientation or briefing on school policies and programs",
+     "answer_field": "q41",
+     "fully": 68,
+     "partially": 8,
+     "not_prepared": 0,
+     "responses": 76
+    },
+    {
+     "id": 16,
+     "ordinal": 2,
+     "description": "Security personnel are properly assigned and briefed on protocols",
+     "answer_field": "q42",
+     "fully": 52,
+     "partially": 15,
+     "not_prepared": 8,
+     "responses": 75
+    },
+    {
+     "id": 17,
+     "ordinal": 3,
+     "description": "Guidance counselors and support staff are available as needed",
+     "answer_field": "q43",
+     "fully": 53,
+     "partially": 11,
+     "not_prepared": 9,
+     "responses": 73
+    }
+   ],
+   "fully": 173,
+   "partially": 34,
+   "not_prepared": 17
+  },
+  {
+   "id": 5,
+   "name": "Enrollment and Documentation",
+   "items": [
+    {
+     "id": 18,
+     "ordinal": 1,
+     "description": "Updated student records, including contact details and medical information",
+     "answer_field": "q51",
+     "fully": 59,
+     "partially": 17,
+     "not_prepared": 0,
+     "responses": 76
+    },
+    {
+     "id": 19,
+     "ordinal": 2,
+     "description": "Class schedules, sections, and teacher assignments are finalized",
+     "answer_field": "q52",
+     "fully": 55,
+     "partially": 21,
+     "not_prepared": 0,
+     "responses": 76
+    },
+    {
+     "id": 20,
+     "ordinal": 3,
+     "description": "Parent-teacher communication channels are established",
+     "answer_field": "q53",
+     "fully": 64,
+     "partially": 11,
+     "not_prepared": 0,
+     "responses": 75
+    }
+   ],
+   "fully": 178,
+   "partially": 49,
+   "not_prepared": 0
+  },
+  {
+   "id": 6,
+   "name": "Partnerships and Community Engagement",
+   "items": [
+    {
+     "id": 21,
+     "ordinal": 1,
+     "description": "Partnerships with local stakeholders (e.g., LGUs, NGOs) are coordinated",
+     "answer_field": "q61",
+     "fully": 58,
+     "partially": 17,
+     "not_prepared": 1,
+     "responses": 76
+    },
+    {
+     "id": 22,
+     "ordinal": 2,
+     "description": "Volunteers for school maintenance and volunteer activities are identified",
+     "answer_field": "q62",
+     "fully": 64,
+     "partially": 13,
+     "not_prepared": 0,
+     "responses": 77
+    },
+    {
+     "id": 23,
+     "ordinal": 3,
+     "description": "Advocacy campaigns for Brigada Eskwela are implemented",
+     "answer_field": "q63",
+     "fully": 67,
+     "partially": 10,
+     "not_prepared": 0,
+     "responses": 77
+    }
+   ],
+   "fully": 189,
+   "partially": 40,
+   "not_prepared": 1
+  },
+  {
+   "id": 7,
+   "name": "Emergency and Disaster Preparedness",
+   "items": [
+    {
+     "id": 24,
+     "ordinal": 1,
+     "description": "Fire extinguishers, emergency alarms, and evacuation plans are in place",
+     "answer_field": "q71",
+     "fully": 46,
+     "partially": 29,
+     "not_prepared": 0,
+     "responses": 75
+    },
+    {
+     "id": 25,
+     "ordinal": 2,
+     "description": "Emergency drills (earthquake, fire, etc.) are scheduled and communicated",
+     "answer_field": "q72",
+     "fully": 66,
+     "partially": 10,
+     "not_prepared": 0,
+     "responses": 76
+    },
+    {
+     "id": 26,
+     "ordinal": 3,
+     "description": "Designated evacuation areas are identified and prepared",
+     "answer_field": "q73",
+     "fully": 65,
+     "partially": 11,
+     "not_prepared": 0,
+     "responses": 76
+    }
+   ],
+   "fully": 177,
+   "partially": 50,
+   "not_prepared": 0
+  },
+  {
+   "id": 8,
+   "name": "Support for Learners",
+   "items": [
+    {
+     "id": 27,
+     "ordinal": 1,
+     "description": "Counseling support services are available",
+     "answer_field": "q81",
+     "fully": 56,
+     "partially": 18,
+     "not_prepared": 2,
+     "responses": 76
+    },
+    {
+     "id": 28,
+     "ordinal": 2,
+     "description": "Inclusive education measures for learners with special needs are implemented",
+     "answer_field": "q82",
+     "fully": 59,
+     "partially": 17,
+     "not_prepared": 0,
+     "responses": 76
+    },
+    {
+     "id": 29,
+     "ordinal": 3,
+     "description": "School feeding programs are prepared if applicable",
+     "answer_field": "q83",
+     "fully": 57,
+     "partially": 12,
+     "not_prepared": 5,
+     "responses": 74
+    }
+   ],
+   "fully": 172,
+   "partially": 47,
+   "not_prepared": 7
+  }
+ ],
+ "totals": {
+  "fully": 1627,
+  "partially": 591,
+  "not_prepared": 67
+ },
+ "generated_at": "2026-08-10T08:59:04+08:00"
+}

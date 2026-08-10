@@ -40,4 +40,39 @@ class AccomplishmentsRepository {
       rethrow;
     }
   }
+
+  /// Delete an accomplishment by id.
+  Future<void> delete(String id) async {
+    await _api.post('api/accomplishments_delete', body: {'id': id});
+    _cache?.remove(_key);
+  }
+
+  /// Copy (duplicate) an accomplishment, returns the new id.
+  Future<String> copy(String id) async {
+    final data = await _api.post('api/accomplishments_copy', body: {'id': id});
+    _cache?.remove(_key);
+    return (data?['id'] ?? 0).toString();
+  }
+
+  /// Save (create or update) an accomplishment.
+  /// If [id] is non-empty, updates; otherwise creates.
+  Future<String> save(Map<String, dynamic> fields, {String id = ''}) async {
+    final body = <String, dynamic>{...fields};
+    if (id.isNotEmpty) body['id'] = id;
+    final data = await _api.post('api/accomplishments_save', body: body);
+    _cache?.remove(_key);
+    return (data?['id'] ?? 0).toString();
+  }
+
+  /// List attachment reports for an accomplishment.
+  Future<List<Map<String, dynamic>>> listReports(String accId) async {
+    final data = await _api.get('api/accomplishment_reports', query: {'acc_id': accId});
+    if (data == null) return const [];
+    return (data as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
+  /// Delete an attachment report.
+  Future<void> deleteReport(String id) async {
+    await _api.post('api/accomplishment_reports_delete', body: {'id': id});
+  }
 }

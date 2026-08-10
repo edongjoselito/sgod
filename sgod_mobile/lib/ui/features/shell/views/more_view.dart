@@ -12,9 +12,10 @@ import '../../settings/views/settings_view.dart';
 
 /// "More" tab — iOS-style grouped list linking to secondary features.
 class MoreView extends StatelessWidget {
-  const MoreView({super.key, required this.profile});
+  const MoreView({super.key, required this.profile, this.onMenuTap});
 
   final UserProfile profile;
+  final VoidCallback? onMenuTap;
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +23,19 @@ class MoreView extends StatelessWidget {
       backgroundColor: AppColors.background,
       child: CustomScrollView(
         slivers: [
-          const CupertinoSliverNavigationBar(
-            largeTitle: Text('More'),
+          CupertinoSliverNavigationBar(
+            largeTitle: const Text('More'),
             backgroundColor: AppColors.surface,
-            border: Border(
+            border: const Border(
                 bottom: BorderSide(color: AppColors.separator, width: 0.5)),
+            leading: onMenuTap != null
+                ? CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: onMenuTap,
+                    child: const Icon(CupertinoIcons.line_horizontal_3,
+                        size: 26, color: AppColors.label),
+                  )
+                : null,
           ),
           SliverSafeArea(
             minimum: const EdgeInsets.only(top: 8),

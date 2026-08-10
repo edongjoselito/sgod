@@ -1,0 +1,295 @@
+{
+ "sy": "2026-2027",
+ "school_id": "129152",
+ "school_name": "BAN-AO ES",
+ "district": "Baganga North",
+ "submitted": true,
+ "item_count": 29,
+ "answered": 6,
+ "fully": 6,
+ "partially": 0,
+ "not_prepared": 0,
+ "categories": [
+  {
+   "id": 1,
+   "name": "Facilities and Infrastructure",
+   "items": [
+    {
+     "id": 1,
+     "ordinal": 1,
+     "description": "Classrooms are clean, well-ventilated, and conducive to learning",
+     "value": 1,
+     "label": "Fully Prepared",
+     "remark": "EVIDENT"
+    },
+    {
+     "id": 2,
+     "ordinal": 2,
+     "description": "Electrical wiring, outlets, and lighting systems are inspected and functional",
+     "value": 1,
+     "label": "Fully Prepared",
+     "remark": "EVIDENT"
+    },
+    {
+     "id": 3,
+     "ordinal": 3,
+     "description": "Water supply, plumbing, and sanitation facilities are clean and operational",
+     "value": 1,
+     "label": "Fully Prepared",
+     "remark": "EVIDENT"
+    },
+    {
+     "id": 4,
+     "ordinal": 4,
+     "description": "Furniture (desks, chairs, tables) is in good condition and sufficient for enrolled learners",
+     "value": 1,
+     "label": "Fully Prepared",
+     "remark": "EVIDENT"
+    },
+    {
+     "id": 5,
+     "ordinal": 5,
+     "description": "Emergency exits are clearly marked and accessible",
+     "value": 1,
+     "label": "Fully Prepared",
+     "remark": "EVIDENT"
+    },
+    {
+     "id": 6,
+     "ordinal": 6,
+     "description": "School grounds are free from hazards (e.g., debris, broken glass, etc.)",
+     "value": 1,
+     "label": "Fully Prepared",
+     "remark": "EVIDENT"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "name": "Learning Resources",
+   "items": [
+    {
+     "id": 7,
+     "ordinal": 1,
+     "description": "Sufficient textbooks, modules, and other learning materials are available",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 8,
+     "ordinal": 2,
+     "description": "Teaching aids (projectors, visual materials, etc.) are functional and accessible",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 9,
+     "ordinal": 3,
+     "description": "ICT equipment (computers, tablets) is tested and ready for use",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 10,
+     "ordinal": 4,
+     "description": "Libraries and reading corners are organized and equipped",
+     "value": null,
+     "label": null,
+     "remark": ""
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "name": "Health and Safety",
+   "items": [
+    {
+     "id": 11,
+     "ordinal": 1,
+     "description": "First aid kits are complete and easily accessible",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 12,
+     "ordinal": 2,
+     "description": "Emergency contact information is updated and displayed prominently",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 13,
+     "ordinal": 3,
+     "description": "School disaster preparedness plan is reviewed and communicated to staff",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 14,
+     "ordinal": 4,
+     "description": "Health protocols (e.g., handwashing stations, sanitation supplies) are in place",
+     "value": null,
+     "label": null,
+     "remark": ""
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "name": "Staff and Personnel",
+   "items": [
+    {
+     "id": 15,
+     "ordinal": 1,
+     "description": "Teachers have received orientation or briefing on school policies and programs",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 16,
+     "ordinal": 2,
+     "description": "Security personnel are properly assigned and briefed on protocols",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 17,
+     "ordinal": 3,
+     "description": "Guidance counselors and support staff are available as needed",
+     "value": null,
+     "label": null,
+     "remark": ""
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "name": "Enrollment and Documentation",
+   "items": [
+    {
+     "id": 18,
+     "ordinal": 1,
+     "description": "Updated student records, including contact details and medical information",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 19,
+     "ordinal": 2,
+     "description": "Class schedules, sections, and teacher assignments are finalized",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 20,
+     "ordinal": 3,
+     "description": "Parent-teacher communication channels are established",
+     "value": null,
+     "label": null,
+     "remark": ""
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "name": "Partnerships and Community Engagement",
+   "items": [
+    {
+     "id": 21,
+     "ordinal": 1,
+     "description": "Partnerships with local stakeholders (e.g., LGUs, NGOs) are coordinated",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 22,
+     "ordinal": 2,
+     "description": "Volunteers for school maintenance and volunteer activities are identified",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 23,
+     "ordinal": 3,
+     "description": "Advocacy campaigns for Brigada Eskwela are implemented",
+     "value": null,
+     "label": null,
+     "remark": ""
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "name": "Emergency and Disaster Preparedness",
+   "items": [
+    {
+     "id": 24,
+     "ordinal": 1,
+     "description": "Fire extinguishers, emergency alarms, and evacuation plans are in place",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 25,
+     "ordinal": 2,
+     "description": "Emergency drills (earthquake, fire, etc.) are scheduled and communicated",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 26,
+     "ordinal": 3,
+     "description": "Designated evacuation areas are identified and prepared",
+     "value": null,
+     "label": null,
+     "remark": ""
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "name": "Support for Learners",
+   "items": [
+    {
+     "id": 27,
+     "ordinal": 1,
+     "description": "Counseling support services are available",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 28,
+     "ordinal": 2,
+     "description": "Inclusive education measures for learners with special needs are implemented",
+     "value": null,
+     "label": null,
+     "remark": ""
+    },
+    {
+     "id": 29,
+     "ordinal": 3,
+     "description": "School feeding programs are prepared if applicable",
+     "value": null,
+     "label": null,
+     "remark": ""
+    }
+   ]
+  }
+ ],
+ "generated_at": "2026-08-10T09:00:26+08:00"
+}

@@ -1,0 +1,141 @@
+{
+ "sy": "2026-2027",
+ "district_id": 1,
+ "district_name": "Baganga North",
+ "schools": [
+  {
+   "school_id": "134717",
+   "school_name": "AUREO D. CA\u00d1AL ES",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "129152",
+   "school_name": "BAN-AO ES",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": true
+  },
+  {
+   "school_id": "129153",
+   "school_name": "CAMPAWAN ELEMENTARY SCHOOL",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "304312",
+   "school_name": "CRISPIN E. ROJAS NATIONAL HIGH SCHOOL",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "129154",
+   "school_name": "DAPNAN ES",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "304316",
+   "school_name": "DR. BEATO C. MACAYRA NHS",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": true
+  },
+  {
+   "school_id": "137311",
+   "school_name": "Felomino Monday Layupan Sr. Es",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "109430",
+   "school_name": "IBA\u00d1EZ ES",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "129155",
+   "school_name": "KIAGBAAN ES",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "129156",
+   "school_name": "KINABLANGAN ES",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "129157",
+   "school_name": "LAMBAJON CENTRAL ELEMENTARY SCHOOL SPED CENTER",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": true
+  },
+  {
+   "school_id": "010101",
+   "school_name": "LUZ PARON SCHOOL OF TOMORROW",
+   "school_type": "",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "137302",
+   "school_name": "Magtunod Elementary School",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "129158",
+   "school_name": "MIKIT ES",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "129159",
+   "school_name": "POO ELEMENTARY SCHOOL",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "501421",
+   "school_name": "SAN ISIDRO INTEGRATED SCHOOL",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "129161",
+   "school_name": "SAN VICTOR ES",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  },
+  {
+   "school_id": "129162",
+   "school_name": "STA. CRUZ ES",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": true
+  },
+  {
+   "school_id": "129163",
+   "school_name": "SUNLON ELEMENTARY SCHOOL",
+   "school_type": "Public",
+   "district": "Baganga North",
+   "submitted": false
+  }
+ ],
+ "generated_at": "2026-08-10T08:59:04+08:00"
+}
