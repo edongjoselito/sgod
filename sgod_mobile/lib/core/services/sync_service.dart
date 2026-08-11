@@ -39,6 +39,12 @@ class SyncService extends ChangeNotifier {
   int _pendingCount = 0;
   int get pendingCount => _pendingCount;
 
+  List<SyncOutboxRow> _conflicted = [];
+  List<SyncOutboxRow> get conflicted => _conflicted;
+
+  List<SyncOutboxRow> _failed = [];
+  List<SyncOutboxRow> get failed => _failed;
+
   late final StreamSubscription<bool> _onlineSub;
 
   /// Refresh the pending-outbox count — call after login and after writes.
@@ -50,6 +56,50 @@ class SyncService extends ChangeNotifier {
       _pendingCount = 0;
     }
     notifyListeners();
+  }
+
+  /// Loads conflicted and failed outbox entries for UI display.
+  Future<void> loadIssues() async {
+    try {
+      final all = await (db.select(db.syncOutboxTable)
+            ..where((t) =>
+                t.failed.equals(true) | t.conflict.equals(true))
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+          .get();
+      _conflicted = all.where((e) => e.conflict).toList();
+      _failed = all.where((e) => e.failed && !e.conflict).toList();
+    } catch (e) {
+      debugPrint('SyncService.loadIssues error: $e');
+    }
+    notifyListeners();
+  }
+
+  /// Discards a conflicted or failed outbox entry.
+  Future<void> discardIssue(int id) async {
+    try {
+      await db.dequeueOutbox(id);
+      await loadIssues();
+      await refreshPendingCount();
+    } catch (e) {
+      debugPrint('SyncService.discardIssue error: $e');
+    }
+  }
+
+  /// Retries a failed outbox entry by clearing its failed flag.
+  Future<void> retryIssue(int id) async {
+    try {
+      await (db.update(db.syncOutboxTable)
+            ..where((t) => t.id.equals(id)))
+          .write(const SyncOutboxTableCompanion(
+        failed: Value(false),
+        conflict: Value(false),
+        errorMessage: Value(null),
+      ));
+      await loadIssues();
+      await sync();
+    } catch (e) {
+      debugPrint('SyncService.retryIssue error: $e');
+    }
   }
 
   /// Run a full sync cycle (pull then push). Safe to call repeatedly.
@@ -71,6 +121,7 @@ class SyncService extends ChangeNotifier {
     } finally {
       _syncing = false;
       await refreshPendingCount();
+      await loadIssues();
       notifyListeners();
     }
   }
@@ -85,11 +136,44 @@ class SyncService extends ChangeNotifier {
   }
 
   // ── Pull ────────────────────────────────────────────────────────────────
+  /// Calls the sync manifest endpoint to check for server-side changes.
+  /// The manifest returns per-table last-modified timestamps and counts.
+  /// We compare these against our stored SyncMetadata watermarks to
+  /// determine which tables need a full refresh. The actual data refresh
+  /// happens on the next read from each repository (cache miss → API fetch).
   Future<void> _pull() async {
-    // Call the manifest endpoint to check for server-side changes.
-    // The manifest returns per-table last-modified timestamps.
     try {
-      await api.get('api/sync_manifest');
+      final data = await api.get('api/sync_manifest');
+      if (data == null) return;
+      final tables = data['tables'] as Map<String, dynamic>?;
+      if (tables == null) return;
+
+      for (final entry in tables.entries) {
+        final key = entry.key;
+        final info = entry.value as Map<String, dynamic>;
+        final lastUpdated = info['last_updated']?.toString() ?? '';
+        final count = int.tryParse('${info['count']}') ?? 0;
+
+        // Read our stored watermark
+        final meta = await db.getMetadata(key);
+        final lastSynced = meta?.lastSyncedAt;
+        final storedEtag = meta?.etag ?? '';
+
+        // If the server's last_updated changed, invalidate the cache
+        // so the next read pulls fresh data from the API.
+        if (storedEtag != lastUpdated || (count == 0 && lastSynced == null)) {
+          try {
+            await db.removeCache(key);
+          } catch (_) {}
+          // Update the watermark
+          await db.upsertMetadata(SyncMetadataTableCompanion.insert(
+            tableKey: key,
+            etag: Value(lastUpdated),
+            lastSyncedAt: Value(DateTime.now()),
+          ));
+        }
+      }
+      debugPrint('SyncService._pull: manifest processed, ${tables.length} tables');
     } on ApiException catch (e) {
       debugPrint('SyncService._pull manifest error: $e');
     } catch (e) {
@@ -134,20 +218,9 @@ class SyncService extends ChangeNotifier {
 
   Future<void> _flushEntry(SyncOutboxRow entry) async {
     final payload = jsonDecode(entry.payload) as Map<String, dynamic>;
-    final path = 'api/${entry.entity}';
-    switch (entry.operation) {
-      case 'create':
-        await api.post(path, body: payload);
-        break;
-      case 'update':
-        await api.post(path, body: payload);
-        break;
-      case 'delete':
-        await api.post(path, body: payload);
-        break;
-      default:
-        throw ApiException('Unknown outbox operation: ${entry.operation}');
-    }
+    // The entity field stores the full API path (e.g. 'api/memos_save'
+    // or 'api_brigada/contribution_create').
+    await api.post(entry.entity, body: payload);
   }
 
   /// Enqueue a write — used by repositories when offline.
@@ -173,26 +246,34 @@ class SyncService extends ChangeNotifier {
 
   /// Try a write — if online, send directly; if offline, enqueue.
   /// This is the method repositories should call for all mutations.
+  ///
+  /// [endpoint] is the API path without the prefix (e.g. `memos_save`).
+  /// [prefix] is the API namespace (default `api`, or `api_brigada`).
+  /// [entity] is the human-readable entity name for outbox tracking.
+  /// [operation] is `create`, `update`, or `delete`.
   Future<dynamic> writeOrQueue({
+    required String endpoint,
     required String entity,
     required String operation,
     required Map<String, dynamic> payload,
+    String prefix = 'api',
   }) async {
+    final fullPath = '$prefix/$endpoint';
     if (connectivity.isOnline) {
       try {
-        return await api.post('api/$entity', body: payload);
+        return await api.post(fullPath, body: payload);
       } catch (e) {
         // If it's a network error, queue for later
         if (e is ApiException || e.toString().contains('ClientException') || e.toString().contains('Timeout')) {
           debugPrint('SyncService: write failed ($e), queuing for later');
-          await enqueue(operation: operation, entity: entity, payload: payload);
+          await enqueue(operation: operation, entity: fullPath, payload: payload);
           rethrow;
         }
         rethrow;
       }
     } else {
       // Offline — queue the write
-      await enqueue(operation: operation, entity: entity, payload: payload);
+      await enqueue(operation: operation, entity: fullPath, payload: payload);
       throw ApiException('Offline — change queued for sync');
     }
   }

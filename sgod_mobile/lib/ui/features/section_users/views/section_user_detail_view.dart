@@ -39,7 +39,7 @@ class SectionUserDetailView extends StatelessWidget {
                       width: 88,
                       height: 88,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.14),
+                        color: AppColors.primary.withValues(alpha: 0.14),
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
@@ -75,7 +75,7 @@ class SectionUserDetailView extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: badgeColor.withOpacity(0.12),
+                        color: badgeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

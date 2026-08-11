@@ -31,7 +31,9 @@ class AuthRepository {
     api.clearToken();
     try {
       await storage.clearToken();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('AuthRepository: clearToken failed (non-fatal): $e');
+    }
 
     final data = await api.post('api/auth_login', body: {
       'username': username,
@@ -109,7 +111,9 @@ class AuthRepository {
             api.clearToken();
             try {
               await storage.clearToken();
-            } catch (_) {}
+            } catch (e) {
+              debugPrint('AuthRepository: clearToken on 401 failed: $e');
+            }
             return null;
           }
           // Any other server error: keep the session and run off the cache.
@@ -129,12 +133,16 @@ class AuthRepository {
   Future<void> logout() async {
     try {
       await api.post('api/auth_logout');
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('AuthRepository: logout call failed (non-fatal): $e');
+    }
     api.clearToken();
     try {
       await storage.clearAll();
       await db.clearAll();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('AuthRepository: clearAll failed (non-fatal): $e');
+    }
   }
 
   UserProfile _profileFromJson(Map<String, dynamic> json, String loginSource) {

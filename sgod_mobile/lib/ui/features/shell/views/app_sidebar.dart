@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -10,10 +11,13 @@ import '../../schools/views/schools_view.dart';
 import '../../section_users/views/section_users_view.dart';
 import '../../whereabouts/views/whereabouts_view.dart';
 import '../../activity_designs/views/activity_designs_view.dart';
-import '../views/placeholder_view.dart';
 import '../../adopt_a_school/views/partners_view.dart';
 import '../../adopt_a_school/views/donations_view.dart';
 import '../../adopt_a_school/views/asp_tracking_view.dart';
+import '../../school_profile/views/school_profile_view.dart';
+import '../../personnel/views/personnel_view.dart';
+import '../../pmcf/views/pmcf_list_view.dart';
+import '../../enrollment/views/enrollment_view.dart';
 // Brigada Eskwela module — self-contained under lib/brigada/.
 import '../../../../brigada/ui/hub/brigada_hub_view.dart';
 import '../../../../brigada/ui/preparedness/spc_districts_view.dart';
@@ -91,11 +95,7 @@ class AppSidebar extends StatelessWidget {
         icon: PhosphorIconsRegular.fileText,
         iconColor: AppColors.info,
         title: 'PMCF',
-        page: const PlaceholderView(
-          title: 'PMCF',
-          subtitle: 'Program Management Consolidated Form',
-          icon: PhosphorIconsRegular.fileText,
-        ),
+        page: PmcfListView(profile: profile),
       ),
     ];
 
@@ -179,31 +179,19 @@ class AppSidebar extends StatelessWidget {
         icon: PhosphorIconsRegular.graduationCap,
         iconColor: AppColors.primary,
         title: 'School Profile',
-        page: const PlaceholderView(
-          title: 'School Profile',
-          subtitle: 'View and update your school information',
-          icon: PhosphorIconsRegular.graduationCap,
-        ),
+        page: SchoolProfileView(profile: profile),
       ),
       _item(
         icon: PhosphorIconsRegular.usersThree,
         iconColor: AppColors.info,
         title: 'Personnel',
-        page: const PlaceholderView(
-          title: 'Personnel',
-          subtitle: 'Manage school personnel records',
-          icon: PhosphorIconsRegular.usersThree,
-        ),
+        page: PersonnelView(profile: profile),
       ),
       _item(
         icon: PhosphorIconsRegular.chartBar,
         iconColor: AppColors.success,
         title: 'Enrollment Details',
-        page: const PlaceholderView(
-          title: 'Enrollment Details',
-          subtitle: 'View enrollment statistics',
-          icon: PhosphorIconsRegular.chartBar,
-        ),
+        page: EnrollmentView(profile: profile),
       ),
     ];
 
@@ -227,7 +215,6 @@ class AppSidebar extends StatelessWidget {
       case Role.smme:
       case Role.district:
       case Role.unknown:
-      default:
         // SGOD section users: full sidebar with all sections
         // SMN section additionally gets Brigada + Adopt-A-School
         final isSmn = profile.section
@@ -245,31 +232,65 @@ class AppSidebar extends StatelessWidget {
 
   // ── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            Color.lerp(AppColors.primary, const Color(0xFF000000), 0.25)!,
-          ],
-        ),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(20),
-        ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: AppColors.primary,
       ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primary, AppColors.primaryDark],
+          ),
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(20),
+          ),
+        ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Brand row — seal + ONE DepED wordmark
+          Row(
+            children: [
+              Image.asset(
+                'assets/icons/DepEd-ONE.png',
+                width: 30,
+                height: 30,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'ONE DepED',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: CupertinoColors.white,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Gold accent rule under the brand — mirrors the login header.
+          Container(
+            width: 36,
+            height: 3,
+            decoration: BoxDecoration(
+              color: AppColors.accent,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 14),
+          // User row
           Row(
             children: [
               Container(
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: CupertinoColors.white.withOpacity(0.2),
+                  color: CupertinoColors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -298,7 +319,7 @@ class AppSidebar extends StatelessWidget {
                       profile.section,
                       style: TextStyle(
                         fontSize: 12,
-                        color: CupertinoColors.white.withOpacity(0.8),
+                        color: CupertinoColors.white.withValues(alpha: 0.8),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -309,6 +330,7 @@ class AppSidebar extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }
@@ -326,7 +348,7 @@ class AppSidebar extends StatelessWidget {
                   size: 18, color: AppColors.tertiaryLabel),
               const SizedBox(width: 8),
               const Text(
-                'e-Brigada',
+                'ONE DepED',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -338,7 +360,7 @@ class AppSidebar extends StatelessWidget {
                 'v1.0.0',
                 style: TextStyle(
                   fontSize: 11,
-                  color: AppColors.tertiaryLabel.withOpacity(0.6),
+                  color: AppColors.tertiaryLabel.withValues(alpha: 0.6),
                 ),
               ),
             ],
@@ -387,14 +409,14 @@ class AppSidebar extends StatelessWidget {
         }
       },
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
-      minSize: 0,
+      minimumSize: Size.zero,
       child: Row(
         children: [
           Container(
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.12),
+              color: iconColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(7),
             ),
             child: Icon(icon, size: 16, color: iconColor),
@@ -476,14 +498,14 @@ class _ExpandableItemState extends State<_ExpandableItem> {
         CupertinoButton(
           onPressed: () => setState(() => _expanded = !_expanded),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
-          minSize: 0,
+          minimumSize: Size.zero,
           child: Row(
             children: [
               Container(
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: widget.iconColor.withOpacity(0.12),
+                  color: widget.iconColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(7),
                 ),
                 child: Icon(widget.icon, size: 16, color: widget.iconColor),
@@ -517,7 +539,7 @@ class _ExpandableItemState extends State<_ExpandableItem> {
                 return CupertinoButton(
                   onPressed: () => widget.onNavigate(s.page),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  minSize: 0,
+                  minimumSize: Size.zero,
                   child: Row(
                     children: [
                       Container(

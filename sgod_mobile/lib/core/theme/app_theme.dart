@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// Theme for the e-Brigada mobile app.
+/// Theme for the ONE DepED mobile app.
 class AppTheme {
   AppTheme._();
 
@@ -18,7 +18,9 @@ class AppTheme {
       colorScheme: ColorScheme.light(
         primary: AppColors.primary,
         onPrimary: AppColors.surface,
-        secondary: AppColors.info,
+        secondary: AppColors.accent,
+        onSecondary: AppColors.primary,
+        tertiary: AppColors.info,
         error: AppColors.danger,
         surface: AppColors.surface,
         onSurface: AppColors.label,
@@ -29,7 +31,6 @@ class AppTheme {
         foregroundColor: AppColors.label,
         elevation: 0,
       ),
-      dialogBackgroundColor: AppColors.surface,
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surface,
         titleTextStyle: TextStyle(

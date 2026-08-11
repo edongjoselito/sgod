@@ -3,9 +3,16 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../data/models/accomplishment_item.dart';
 import '../../../../data/models/dashboard_data.dart';
+import '../../../../data/models/memo_item.dart';
 import '../../../../data/models/user_profile.dart';
+import '../../../../data/models/whereabouts_item.dart';
 import '../../../core/di.dart';
+import '../../accomplishments/views/accomplishment_detail_view.dart';
+import '../../memos/views/memo_detail_view.dart';
+import '../../profile/views/profile_view.dart';
+import '../../whereabouts/views/whereabouts_detail_view.dart';
 import '../view_models/dashboard_view_model.dart';
 
 /// iOS-native dashboard — designed for mobile, not a shrunk web page.
@@ -73,12 +80,16 @@ class _DashboardViewState extends State<DashboardView> {
                     )
                   : null,
               trailing: GestureDetector(
-                onTap: () {},
+                onTap: () => Navigator.of(context).push(
+                  CupertinoPageRoute(
+                    builder: (_) => ProfileView(profile: widget.profile),
+                  ),
+                ),
                 child: Container(
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
+                    color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(CupertinoIcons.person_fill,
@@ -215,14 +226,11 @@ class _DashboardViewState extends State<DashboardView> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            accent,
-            Color.lerp(accent, const Color(0xFF000000), 0.30)!,
-          ],
+          colors: [AppColors.primary, AppColors.primaryDark],
         ),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.25),
+            color: AppColors.primary.withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -231,50 +239,88 @@ class _DashboardViewState extends State<DashboardView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top row: name + section pill ────────────────────────────
+          // ── Brand row: seal + name + role accent ──────────────────────
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  widget.profile.fullName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: CupertinoColors.white,
-                    height: 1.1,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Image.asset(
+                'assets/icons/DepEd-ONE.png',
+                width: 36,
+                height: 36,
+                fit: BoxFit.contain,
               ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.white.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    _shortSection(sectionLabel),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: CupertinoColors.white,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.profile.fullName,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: CupertinoColors.white,
+                        height: 1.1,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        // Role accent dot — subtle at-a-glance role signal,
+                        // preserved now that the hero wears brand navy.
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: accent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: CupertinoColors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              _shortSection(sectionLabel),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: CupertinoColors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          // ── Gold accent rule — the brand signal ───────────────────────
+          Container(
+            width: 40,
+            height: 3,
+            decoration: BoxDecoration(
+              color: AppColors.accent,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
           const SizedBox(height: 12),
           // ── KPI row (3 stats) ───────────────────────────────────────
           if (picked.isNotEmpty) ...[
             Container(
               height: 0.5,
-              color: CupertinoColors.white.withOpacity(0.2),
+              color: CupertinoColors.white.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 10),
             Row(
@@ -284,7 +330,7 @@ class _DashboardViewState extends State<DashboardView> {
                     Container(
                       width: 0.5,
                       height: 32,
-                      color: CupertinoColors.white.withOpacity(0.15),
+                      color: CupertinoColors.white.withValues(alpha: 0.15),
                     ),
                     const SizedBox(width: 0),
                   ],
@@ -307,7 +353,7 @@ class _DashboardViewState extends State<DashboardView> {
   Widget _heroStat(String value, String label, IconData icon) {
     return Column(
       children: [
-        Icon(icon, size: 16, color: CupertinoColors.white.withOpacity(0.7)),
+        Icon(icon, size: 16, color: CupertinoColors.white.withValues(alpha: 0.7)),
         const SizedBox(height: 4),
         Text(
           value,
@@ -322,7 +368,7 @@ class _DashboardViewState extends State<DashboardView> {
           label,
           style: TextStyle(
             fontSize: 10,
-            color: CupertinoColors.white.withOpacity(0.7),
+            color: CupertinoColors.white.withValues(alpha: 0.7),
           ),
           textAlign: TextAlign.center,
           maxLines: 1,
@@ -430,7 +476,7 @@ class _DashboardViewState extends State<DashboardView> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.1),
+                    color: accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -573,9 +619,20 @@ class _MemoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
-      onPressed: () {},
+      onPressed: () => Navigator.of(context).push(
+        CupertinoPageRoute(
+          builder: (_) => MemoDetailView(
+            memo: MemoItem(
+              id: memo.id,
+              title: memo.title,
+              memoNo: memo.memoNo,
+              addedBy: memo.addedBy,
+            ),
+          ),
+        ),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      minSize: 0,
+      minimumSize: Size.zero,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -583,7 +640,7 @@ class _MemoTile extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(7),
             ),
             child: const Icon(PhosphorIconsRegular.bell,
@@ -637,9 +694,21 @@ class _AccomplishmentTile extends StatelessWidget {
     final pct =
         double.tryParse(item.percentageAccom.replaceAll('%', '')) ?? 0;
     return CupertinoButton(
-      onPressed: () {},
+      onPressed: () => Navigator.of(context).push(
+        CupertinoPageRoute(
+          builder: (_) => AccomplishmentDetailView(
+            item: AccomplishmentItem(
+              id: item.id,
+              activity: item.activity,
+              section: item.section,
+              dateConducted: item.dateConducted,
+              percentageAccom: item.percentageAccom,
+            ),
+          ),
+        ),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      minSize: 0,
+      minimumSize: Size.zero,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -647,7 +716,7 @@ class _AccomplishmentTile extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(7),
             ),
             child: const Icon(PhosphorIconsRegular.checkSquare,
@@ -714,9 +783,24 @@ class _WhereaboutsTile extends StatelessWidget {
     final isOnField = item.status.toLowerCase().contains('field');
     final statusColor = isOnField ? AppColors.warning : AppColors.success;
     return CupertinoButton(
-      onPressed: () {},
+      onPressed: () => Navigator.of(context).push(
+        CupertinoPageRoute(
+          builder: (_) => WhereaboutsDetailView(
+            item: WhereaboutsItem(
+              id: item.id,
+              fName: item.fName,
+              lName: item.lName,
+              section: item.section,
+              date: item.date,
+              location: item.location,
+              activity: item.activity,
+              status: item.status,
+            ),
+          ),
+        ),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      minSize: 0,
+      minimumSize: Size.zero,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -724,7 +808,7 @@ class _WhereaboutsTile extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(7),
             ),
             child: Icon(
@@ -777,7 +861,7 @@ class _WhereaboutsTile extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Text(

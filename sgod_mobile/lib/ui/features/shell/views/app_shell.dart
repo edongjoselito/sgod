@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/connectivity_banner.dart';
 import '../../../../data/models/user_profile.dart';
 import '../../../core/di.dart';
@@ -12,9 +11,10 @@ import '../../auth/view_models/auth_view_model.dart';
 import '../../dashboard/views/dashboard_view.dart';
 import '../../memos/views/memos_view.dart';
 import '../../schools/views/schools_view.dart';
+import '../../school_profile/views/school_profile_view.dart';
+import '../../personnel/views/personnel_view.dart';
 import 'app_sidebar.dart';
 import 'more_view.dart';
-import 'placeholder_view.dart';
 
 /// iOS-style app shell — CupertinoTabBar + slide-out sidebar.
 ///
@@ -36,6 +36,7 @@ class _AppShellState extends State<AppShell> {
   bool _isOnline = true;
   bool _isSyncing = false;
   int _pendingCount = 0;
+  DateTime? _lastSync;
   StreamSubscription<bool>? _connectivitySub;
 
   @override
@@ -44,6 +45,7 @@ class _AppShellState extends State<AppShell> {
     _isOnline = DI.connectivity.isOnline;
     _isSyncing = DI.sync.syncing;
     _pendingCount = DI.sync.pendingCount;
+    _lastSync = DI.sync.lastSync;
     DI.sync.addListener(_onSyncChanged);
     _connectivitySub = DI.connectivity.stream.listen(_onConnectivityChanged);
     // Trigger initial sync on app launch
@@ -70,6 +72,7 @@ class _AppShellState extends State<AppShell> {
     setState(() {
       _isSyncing = DI.sync.syncing;
       _pendingCount = DI.sync.pendingCount;
+      _lastSync = DI.sync.lastSync;
     });
   }
 
@@ -104,6 +107,7 @@ class _AppShellState extends State<AppShell> {
               isOnline: _isOnline,
               isSyncing: _isSyncing,
               pendingCount: _pendingCount,
+              lastSync: _lastSync,
             ),
             Expanded(
               child: CupertinoTabScaffold(
@@ -136,7 +140,7 @@ class _AppShellState extends State<AppShell> {
           GestureDetector(
             onTap: _closeSidebar,
             child: Container(
-              color: CupertinoColors.black.withOpacity(0.4),
+              color: CupertinoColors.black.withValues(alpha: 0.4),
             ),
           ),
           // Sidebar with slide animation
@@ -181,9 +185,8 @@ class _AppShellState extends State<AppShell> {
           icon: PhosphorIconsRegular.graduationCap,
           activeIcon: PhosphorIconsFill.graduationCap,
           label: 'Profile',
-          page: PlaceholderView(
-            title: 'School Profile',
-            icon: PhosphorIconsRegular.graduationCap,
+          page: SchoolProfileView(
+            profile: profile,
             onMenuTap: _openSidebar,
           ),
         ),
@@ -191,9 +194,8 @@ class _AppShellState extends State<AppShell> {
           icon: PhosphorIconsRegular.usersThree,
           activeIcon: PhosphorIconsFill.usersThree,
           label: 'Personnel',
-          page: PlaceholderView(
-            title: 'Personnel',
-            icon: PhosphorIconsRegular.usersThree,
+          page: PersonnelView(
+            profile: profile,
             onMenuTap: _openSidebar,
           ),
         ),

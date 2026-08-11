@@ -3798,6 +3798,273 @@ class SyncMetadataTableCompanion extends UpdateCompanion<SyncMetadataRow> {
   }
 }
 
+class $ApiCacheTableTable extends ApiCacheTable
+    with TableInfo<$ApiCacheTableTable, ApiCacheRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ApiCacheTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _cacheKeyMeta = const VerificationMeta(
+    'cacheKey',
+  );
+  @override
+  late final GeneratedColumn<String> cacheKey = GeneratedColumn<String>(
+    'cache_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cachedAtMeta = const VerificationMeta(
+    'cachedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+    'cached_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [cacheKey, payload, cachedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'api_cache_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ApiCacheRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('cache_key')) {
+      context.handle(
+        _cacheKeyMeta,
+        cacheKey.isAcceptableOrUnknown(data['cache_key']!, _cacheKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cacheKeyMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(
+        _cachedAtMeta,
+        cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {cacheKey};
+  @override
+  ApiCacheRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ApiCacheRow(
+      cacheKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cache_key'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      cachedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cached_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ApiCacheTableTable createAlias(String alias) {
+    return $ApiCacheTableTable(attachedDatabase, alias);
+  }
+}
+
+class ApiCacheRow extends DataClass implements Insertable<ApiCacheRow> {
+  final String cacheKey;
+  final String payload;
+  final DateTime cachedAt;
+  const ApiCacheRow({
+    required this.cacheKey,
+    required this.payload,
+    required this.cachedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['cache_key'] = Variable<String>(cacheKey);
+    map['payload'] = Variable<String>(payload);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    return map;
+  }
+
+  ApiCacheTableCompanion toCompanion(bool nullToAbsent) {
+    return ApiCacheTableCompanion(
+      cacheKey: Value(cacheKey),
+      payload: Value(payload),
+      cachedAt: Value(cachedAt),
+    );
+  }
+
+  factory ApiCacheRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ApiCacheRow(
+      cacheKey: serializer.fromJson<String>(json['cacheKey']),
+      payload: serializer.fromJson<String>(json['payload']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'cacheKey': serializer.toJson<String>(cacheKey),
+      'payload': serializer.toJson<String>(payload),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+    };
+  }
+
+  ApiCacheRow copyWith({
+    String? cacheKey,
+    String? payload,
+    DateTime? cachedAt,
+  }) => ApiCacheRow(
+    cacheKey: cacheKey ?? this.cacheKey,
+    payload: payload ?? this.payload,
+    cachedAt: cachedAt ?? this.cachedAt,
+  );
+  ApiCacheRow copyWithCompanion(ApiCacheTableCompanion data) {
+    return ApiCacheRow(
+      cacheKey: data.cacheKey.present ? data.cacheKey.value : this.cacheKey,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ApiCacheRow(')
+          ..write('cacheKey: $cacheKey, ')
+          ..write('payload: $payload, ')
+          ..write('cachedAt: $cachedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(cacheKey, payload, cachedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ApiCacheRow &&
+          other.cacheKey == this.cacheKey &&
+          other.payload == this.payload &&
+          other.cachedAt == this.cachedAt);
+}
+
+class ApiCacheTableCompanion extends UpdateCompanion<ApiCacheRow> {
+  final Value<String> cacheKey;
+  final Value<String> payload;
+  final Value<DateTime> cachedAt;
+  final Value<int> rowid;
+  const ApiCacheTableCompanion({
+    this.cacheKey = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ApiCacheTableCompanion.insert({
+    required String cacheKey,
+    required String payload,
+    this.cachedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : cacheKey = Value(cacheKey),
+       payload = Value(payload);
+  static Insertable<ApiCacheRow> custom({
+    Expression<String>? cacheKey,
+    Expression<String>? payload,
+    Expression<DateTime>? cachedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (cacheKey != null) 'cache_key': cacheKey,
+      if (payload != null) 'payload': payload,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ApiCacheTableCompanion copyWith({
+    Value<String>? cacheKey,
+    Value<String>? payload,
+    Value<DateTime>? cachedAt,
+    Value<int>? rowid,
+  }) {
+    return ApiCacheTableCompanion(
+      cacheKey: cacheKey ?? this.cacheKey,
+      payload: payload ?? this.payload,
+      cachedAt: cachedAt ?? this.cachedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (cacheKey.present) {
+      map['cache_key'] = Variable<String>(cacheKey.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ApiCacheTableCompanion(')
+          ..write('cacheKey: $cacheKey, ')
+          ..write('payload: $payload, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3815,6 +4082,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $SyncMetadataTableTable syncMetadataTable =
       $SyncMetadataTableTable(this);
+  late final $ApiCacheTableTable apiCacheTable = $ApiCacheTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3827,6 +4095,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     schoolPersonnelTable,
     syncOutboxTable,
     syncMetadataTable,
+    apiCacheTable,
   ];
 }
 
@@ -5765,6 +6034,168 @@ typedef $$SyncMetadataTableTableProcessedTableManager =
       SyncMetadataRow,
       PrefetchHooks Function()
     >;
+typedef $$ApiCacheTableTableCreateCompanionBuilder =
+    ApiCacheTableCompanion Function({
+      required String cacheKey,
+      required String payload,
+      Value<DateTime> cachedAt,
+      Value<int> rowid,
+    });
+typedef $$ApiCacheTableTableUpdateCompanionBuilder =
+    ApiCacheTableCompanion Function({
+      Value<String> cacheKey,
+      Value<String> payload,
+      Value<DateTime> cachedAt,
+      Value<int> rowid,
+    });
+
+class $$ApiCacheTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ApiCacheTableTable> {
+  $$ApiCacheTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get cacheKey => $composableBuilder(
+    column: $table.cacheKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ApiCacheTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ApiCacheTableTable> {
+  $$ApiCacheTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get cacheKey => $composableBuilder(
+    column: $table.cacheKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ApiCacheTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ApiCacheTableTable> {
+  $$ApiCacheTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get cacheKey =>
+      $composableBuilder(column: $table.cacheKey, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+}
+
+class $$ApiCacheTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ApiCacheTableTable,
+          ApiCacheRow,
+          $$ApiCacheTableTableFilterComposer,
+          $$ApiCacheTableTableOrderingComposer,
+          $$ApiCacheTableTableAnnotationComposer,
+          $$ApiCacheTableTableCreateCompanionBuilder,
+          $$ApiCacheTableTableUpdateCompanionBuilder,
+          (
+            ApiCacheRow,
+            BaseReferences<_$AppDatabase, $ApiCacheTableTable, ApiCacheRow>,
+          ),
+          ApiCacheRow,
+          PrefetchHooks Function()
+        > {
+  $$ApiCacheTableTableTableManager(_$AppDatabase db, $ApiCacheTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ApiCacheTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ApiCacheTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ApiCacheTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> cacheKey = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<DateTime> cachedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ApiCacheTableCompanion(
+                cacheKey: cacheKey,
+                payload: payload,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String cacheKey,
+                required String payload,
+                Value<DateTime> cachedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ApiCacheTableCompanion.insert(
+                cacheKey: cacheKey,
+                payload: payload,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ApiCacheTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ApiCacheTableTable,
+      ApiCacheRow,
+      $$ApiCacheTableTableFilterComposer,
+      $$ApiCacheTableTableOrderingComposer,
+      $$ApiCacheTableTableAnnotationComposer,
+      $$ApiCacheTableTableCreateCompanionBuilder,
+      $$ApiCacheTableTableUpdateCompanionBuilder,
+      (
+        ApiCacheRow,
+        BaseReferences<_$AppDatabase, $ApiCacheTableTable, ApiCacheRow>,
+      ),
+      ApiCacheRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5783,4 +6214,6 @@ class $AppDatabaseManager {
       $$SyncOutboxTableTableTableManager(_db, _db.syncOutboxTable);
   $$SyncMetadataTableTableTableManager get syncMetadataTable =>
       $$SyncMetadataTableTableTableManager(_db, _db.syncMetadataTable);
+  $$ApiCacheTableTableTableManager get apiCacheTable =>
+      $$ApiCacheTableTableTableManager(_db, _db.apiCacheTable);
 }

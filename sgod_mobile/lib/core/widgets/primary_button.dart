@@ -52,9 +52,9 @@ class PrimaryButton extends StatelessWidget {
         width: double.infinity,
         child: CupertinoButton(
           onPressed: disabled ? null : onPressed,
-          color: disabled ? bg.withOpacity(0.4) : bg,
+          color: disabled ? bg.withValues(alpha: 0.4) : bg,
           borderRadius: BorderRadius.circular(14),
-          minSize: 50,
+          minimumSize: const Size(0, 50),
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: child,
         ),
@@ -62,9 +62,9 @@ class PrimaryButton extends StatelessWidget {
     }
     return CupertinoButton(
       onPressed: disabled ? null : onPressed,
-      color: disabled ? bg.withOpacity(0.4) : bg,
+      color: disabled ? bg.withValues(alpha: 0.4) : bg,
       borderRadius: BorderRadius.circular(14),
-      minSize: 50,
+      minimumSize: const Size(0, 50),
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: child,
     );
@@ -91,7 +91,7 @@ class SecondaryButton extends StatelessWidget {
     return CupertinoButton(
       onPressed: onPressed,
       borderRadius: BorderRadius.circular(14),
-      minSize: 50,
+      minimumSize: const Size(0, 50),
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         mainAxisSize: MainAxisSize.min,

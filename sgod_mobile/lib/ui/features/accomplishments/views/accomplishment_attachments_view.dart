@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -7,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../data/models/accomplishment_item.dart';
-import '../../../../data/repositories/accomplishments_repository.dart';
 import '../../../core/di.dart';
 
 /// Attachments page for an accomplishment.
@@ -242,14 +242,14 @@ class _AttachmentRow extends StatelessWidget {
             child: CupertinoButton(
               onPressed: () => _openUrl(url),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              minSize: 0,
+              minimumSize: Size.zero,
               child: Row(
                 children: [
                   Container(
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.1),
+                      color: AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(PhosphorIconsRegular.filePdf,
@@ -293,7 +293,7 @@ class _AttachmentRow extends StatelessWidget {
           CupertinoButton(
             onPressed: onDelete,
             padding: const EdgeInsets.only(right: 12),
-            minSize: 0,
+            minimumSize: Size.zero,
             child: const Icon(CupertinoIcons.delete_simple,
                 size: 18, color: AppColors.danger),
           ),
@@ -351,7 +351,7 @@ class _UploadSheetState extends State<_UploadSheet> {
             width: 36,
             height: 5,
             decoration: BoxDecoration(
-              color: AppColors.tertiaryLabel.withOpacity(0.3),
+              color: AppColors.tertiaryLabel.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(3),
             ),
           ),
@@ -407,7 +407,7 @@ class _UploadSheetState extends State<_UploadSheet> {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: _fileBytes != null
-                              ? AppColors.success.withOpacity(0.3)
+                              ? AppColors.success.withValues(alpha: 0.3)
                               : AppColors.separator,
                           width: 1,
                         ),
@@ -487,14 +487,23 @@ class _UploadSheetState extends State<_UploadSheet> {
     );
   }
 
-  void _pickFile() {
-    // For web, we use file_picker_web; for native, file_picker
-    // Simplified: show a message for now since file picking needs platform-specific code
-    AppDialogs.alert(
-      context,
-      'File Picker',
-      'File picking requires the file_picker package. For now, please upload via the web version.',
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'],
+      withData: true,
     );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    setState(() {
+      _fileBytes = file.bytes;
+      _fileName = file.name;
+      if (_nameController.text.trim().isEmpty) {
+        // Pre-fill the document name with the file name (minus extension).
+        final dot = file.name.lastIndexOf('.');
+        _nameController.text = dot > 0 ? file.name.substring(0, dot) : file.name;
+      }
+    });
   }
 
   Future<void> _upload() async {
@@ -509,8 +518,12 @@ class _UploadSheetState extends State<_UploadSheet> {
 
     setState(() => _uploading = true);
     try {
-      // This would use DI.api.upload() with the file bytes
-      // For now, show success since file picking is platform-specific
+      await DI.accomplishments.uploadReport(
+        accId: widget.itemId,
+        documentName: _nameController.text.trim(),
+        fileBytes: _fileBytes!,
+        fileName: _fileName,
+      );
       if (mounted) {
         widget.onUploaded();
       }

@@ -183,7 +183,7 @@ class _AspTrackingCard extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.info.withOpacity(0.12),
+                      color: AppColors.info.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(PhosphorIconsRegular.handshake,

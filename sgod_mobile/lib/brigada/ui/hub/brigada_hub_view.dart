@@ -14,6 +14,9 @@ import '../preparedness/spc_districts_view.dart';
 import '../report/spc_report_view.dart';
 import '../summary/brigada_summary_view.dart';
 import '../survey/survey_results_view.dart';
+import '../workstreams/my_contributions_view.dart';
+import '../workstreams/validation_queue_view.dart';
+import '../workstreams/yoy_analytics_view.dart';
 
 /// Brigada Eskwela home — the mobile counterpart of the web sidebar group.
 ///
@@ -212,6 +215,33 @@ class _BrigadaHubViewState extends State<BrigadaHubView> {
                     title: 'Survey Results',
                     subtitle: 'Partner satisfaction ratings',
                     onTap: () => _open(const SurveyResultsView()),
+                  ),
+                  const BrigadaSectionHeader('Contributions'),
+                  _reportTile(
+                    icon: PhosphorIconsRegular.handshake,
+                    color: AppColors.primary,
+                    title: 'My Contributions',
+                    subtitle: 'Record and track school contributions',
+                    onTap: () => _open(MyContributionsView(
+                      username: widget.username,
+                      sy: _sy,
+                    )),
+                  ),
+                  const SizedBox(height: 10),
+                  _reportTile(
+                    icon: PhosphorIconsRegular.checkSquare,
+                    color: AppColors.success,
+                    title: 'Validation Queue',
+                    subtitle: 'Review and validate submissions',
+                    onTap: () => _open(ValidationQueueView(sy: _sy)),
+                  ),
+                  const SizedBox(height: 10),
+                  _reportTile(
+                    icon: PhosphorIconsRegular.chartLineUp,
+                    color: AppColors.info,
+                    title: 'Year-over-Year',
+                    subtitle: 'Compare analytics across school years',
+                    onTap: () => _open(const YoyAnalyticsView()),
                   ),
                   const BrigadaSectionHeader('Offline'),
                   _offlineCard(sync),

@@ -272,7 +272,7 @@ class _DonationDetailViewState extends State<DonationDetailView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -364,7 +364,7 @@ class _DonationDetailViewState extends State<DonationDetailView> {
   }) {
     return CupertinoButton(
       onPressed: _busy ? null : onTap,
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(10),
       minimumSize: const Size(0, 48),
       padding: const EdgeInsets.symmetric(vertical: 10),

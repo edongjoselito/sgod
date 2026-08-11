@@ -114,14 +114,18 @@ class _DonationEditViewState extends State<DonationEditView> {
             .firstOrNull;
         if (match != null) _selectedPartnerName = match.name;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('DonationEdit: loadPartners failed (non-fatal): $e');
+    }
     if (mounted) setState(() => _partnersLoading = false);
   }
 
   Future<void> _loadContributionTypes() async {
     try {
       _contributionTypes = await DI.adoptASchool.fetchContributionTypes();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('DonationEdit: loadContributionTypes failed (non-fatal): $e');
+    }
     if (mounted) setState(() {});
   }
 

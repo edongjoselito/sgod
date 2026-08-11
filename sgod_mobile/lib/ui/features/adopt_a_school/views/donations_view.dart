@@ -297,14 +297,14 @@ class _DonationRow extends StatelessWidget {
     return CupertinoButton(
       onPressed: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      minSize: 0,
+      minimumSize: Size.zero,
       child: Row(
         children: [
           Container(
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: AppColors.info.withOpacity(0.1),
+              color: AppColors.info.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(7),
             ),
             child: const Icon(PhosphorIconsRegular.currencyCircleDollar,
@@ -374,7 +374,7 @@ class _DonationRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.12),
+                color: AppColors.success.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: const Text(

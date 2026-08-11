@@ -264,12 +264,42 @@ class Api_model extends CI_Model {
    * @return array
    */
   public function sync_manifest() {
+    // Map cache keys to actual table names. The mobile app uses these
+    // keys to compare against its stored SyncMetadata watermarks.
     $tables = array(
-      'memos', 'accomplishments', 'schools', 'school_personnel',
+      'memos'            => 'one_sgod_memo',
+      'accomplishments'  => 'one_sgod_accomplishments',
+      'schools'          => 'schools',
+      'school_personnel' => 'one_school_personnel',
+      'whereabouts'      => 'one_sgod_whereabouts',
+      'issues'           => 'section_issues_concerns',
+      'activity_designs' => 'activity_designs',
+      'section_users'    => 'one_sgod_users',
     );
     $out = array();
-    foreach ($tables as $t) {
-      $out[$t] = date('Y-m-d H:i:s');
+    foreach ($tables as $key => $table) {
+      if ($this->db->table_exists($table)) {
+        // Try updated_at first, fall back to created_at, then to a constant
+        $row = $this->db->select('MAX(updated_at) as last_updated, COUNT(*) as row_count')
+                        ->from($table)
+                        ->get()->row();
+        $lastUpdated = $row && $row->last_updated ? $row->last_updated : null;
+        if (!$lastUpdated) {
+          $row2 = $this->db->select('MAX(created_at) as last_created')
+                           ->from($table)
+                           ->get()->row();
+          $lastUpdated = $row2 && $row2->last_created ? $row2->last_created : date('Y-m-d H:i:s');
+        }
+        $out[$key] = array(
+          'last_updated' => $lastUpdated,
+          'count'        => $row ? (int)$row->row_count : 0,
+        );
+      } else {
+        $out[$key] = array(
+          'last_updated' => null,
+          'count'        => 0,
+        );
+      }
     }
     return $out;
   }
@@ -527,5 +557,112 @@ class Api_model extends CI_Model {
       return 'District';
     }
     return $position;
+  }
+
+  // ── PMCF (Program Management Consolidated Form) ───────────────────────────
+
+  /** List PMCF records for a user, newest first. */
+  public function list_pmcf($username) {
+    if (!$this->db->table_exists('one_pmcf')) {
+      return array();
+    }
+    return $this->db->where('username', $username)
+      ->order_by('id', 'DESC')
+      ->get('one_pmcf')
+      ->result_array();
+  }
+
+  /** Insert a PMCF record and return the new insert ID. */
+  public function create_pmcf($data) {
+    if (!$this->db->table_exists('one_pmcf')) {
+      // Auto-create the table on first use (mirrors the web controller).
+      $this->load->dbforge();
+      $this->dbforge->add_field(array(
+        'id' => array('type' => 'INT', 'unsigned' => TRUE, 'auto_increment' => TRUE),
+        'teacher_observed' => array('type' => 'VARCHAR', 'constraint' => 255),
+        'grade_level' => array('type' => 'VARCHAR', 'constraint' => 50),
+        'section' => array('type' => 'VARCHAR', 'constraint' => 100),
+        'district' => array('type' => 'VARCHAR', 'constraint' => 255),
+        'school' => array('type' => 'VARCHAR', 'constraint' => 255),
+        'quarter' => array('type' => 'VARCHAR', 'constraint' => 50),
+        'date_observed' => array('type' => 'DATE', 'null' => TRUE),
+        'time_observed' => array('type' => 'VARCHAR', 'constraint' => 50, 'null' => TRUE),
+        'subject_area' => array('type' => 'VARCHAR', 'constraint' => 255),
+        'instructional_supervisor' => array('type' => 'VARCHAR', 'constraint' => 255),
+        'designation' => array('type' => 'VARCHAR', 'constraint' => 255),
+        'significant_incidents_description' => array('type' => 'TEXT'),
+        'impact_on_job' => array('type' => 'TEXT'),
+        'coaching_mechanisms' => array('type' => 'VARCHAR', 'constraint' => 255),
+        'coaching_mechanisms_others' => array('type' => 'VARCHAR', 'constraint' => 255, 'null' => TRUE),
+        'feedback_recommendation' => array('type' => 'TEXT'),
+        'progress_to_date' => array('type' => 'TEXT'),
+        'username' => array('type' => 'VARCHAR', 'constraint' => 100),
+        'user_section' => array('type' => 'VARCHAR', 'constraint' => 255),
+        'secGroup' => array('type' => 'VARCHAR', 'constraint' => 50),
+        'created_at' => array('type' => 'DATETIME'),
+        'updated_at' => array('type' => 'DATETIME'),
+      ));
+      $this->dbforge->add_key('id', TRUE);
+      $this->dbforge->create_table('one_pmcf', TRUE);
+    }
+    $this->db->insert('one_pmcf', $data);
+    return (int) $this->db->insert_id();
+  }
+
+  /** List distinct districts from the schools table. */
+  public function list_districts() {
+    if (!$this->db->table_exists('schools')) {
+      return array();
+    }
+    return $this->db->distinct()
+      ->select('district')
+      ->where('district !=', '')
+      ->order_by('district', 'ASC')
+      ->get('schools')
+      ->result_array();
+  }
+
+  /** List school names + IDs in a given district. */
+  public function list_schools_by_district($district) {
+    if (!$this->db->table_exists('schools')) {
+      return array();
+    }
+    return $this->db->select('schoolID, schoolName')
+      ->where('district', $district)
+      ->order_by('schoolName', 'ASC')
+      ->get('schools')
+      ->result_array();
+  }
+
+  // ── School Enrollment Details ─────────────────────────────────────────────
+
+  /** List enrollment records for a school, optionally filtered by school year. */
+  public function list_enrollment($schoolId, $schoolYear = '') {
+    if (!$this->db->table_exists('one_school_enrollment_details')) {
+      // Auto-create on first use (mirrors the web controller).
+      $this->load->dbforge();
+      $this->dbforge->add_field(array(
+        'id' => array('type' => 'INT', 'unsigned' => TRUE, 'auto_increment' => TRUE),
+        'school_id' => array('type' => 'VARCHAR', 'constraint' => 50),
+        'school_year' => array('type' => 'VARCHAR', 'constraint' => 20),
+        'semester' => array('type' => 'VARCHAR', 'constraint' => 50),
+        'grade_level' => array('type' => 'VARCHAR', 'constraint' => 100),
+        'male_count' => array('type' => 'INT', 'default' => 0),
+        'female_count' => array('type' => 'INT', 'default' => 0),
+        'created_at' => array('type' => 'DATETIME', 'null' => TRUE),
+      ));
+      $this->dbforge->add_key('id', TRUE);
+      $this->dbforge->add_key('school_id');
+      $this->dbforge->create_table('one_school_enrollment_details', TRUE);
+      return array();
+    }
+    if ($schoolYear !== '') {
+      $this->db->where('school_year', $schoolYear);
+    }
+    return $this->db->where('school_id', $schoolId)
+      ->order_by('school_year', 'DESC')
+      ->order_by('grade_level', 'ASC')
+      ->get('one_school_enrollment_details')
+      ->result_array();
   }
 }
