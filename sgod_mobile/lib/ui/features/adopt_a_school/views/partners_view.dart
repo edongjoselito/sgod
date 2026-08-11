@@ -277,14 +277,14 @@ class _PartnerRow extends StatelessWidget {
     return CupertinoButton(
       onPressed: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      minSize: 0,
+      minimumSize: Size.zero,
       child: Row(
         children: [
           Container(
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: typeColor.withOpacity(0.1),
+              color: typeColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(7),
             ),
             child: Icon(PhosphorIconsRegular.handshake, size: 16, color: typeColor),
@@ -339,7 +339,7 @@ class _PartnerRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: typeColor.withOpacity(0.12),
+                color: typeColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(

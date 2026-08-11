@@ -85,8 +85,48 @@ lib/
 
 ## Phases
 - **Phase 0 (DONE)**: Scaffold, theme, API client, Drift DB, auth, shell, dashboards
-- **Phase 1**: Wire SGOD dashboard to live API data
-- **Phase 2**: Remaining 5 dashboards
-- **Phase 3**: CRUD modules (accomplishments, memos, schools, personnel, brigada, ipcrf)
+- **Phase 1 (DONE)**: Wire SGOD dashboard to live API data
+- **Phase 2 (DONE)**: Remaining 5 dashboards
+- **Phase 3 (DONE)**: CRUD modules (accomplishments, memos, schools, personnel, brigada, PMCF, enrollment)
 - **Phase 4**: Sync hardening, push notifications, biometric login
 - **Phase 5**: Polish, tablet layout, launcher icons, splash
+
+## Implemented Features
+
+### PMCF (Program Management Consolidated Form)
+- Backend: `api/pmcf_index`, `api/pmcf_create`, `api/pmcf_districts`, `api/pmcf_schools`
+- Mobile: `lib/ui/features/pmcf/views/` (list, detail, add form)
+- CID-only access, per-user record isolation, cascading district→school selection
+
+### Enrollment Details
+- Backend: `api/enrollment_index`, `api/enrollment_save`, `api/enrollment_delete`
+- Mobile: `lib/ui/features/enrollment/views/enrollment_view.dart`
+- School-only access, year filter, male/female/total stat cards, add/edit/delete
+
+### Brigada Workstreams
+- **My Contributions (F)**: `lib/brigada/ui/workstreams/my_contributions_view.dart` + `contribution_form_view.dart`
+  - School contribution list with validation status, flags, attachment counts
+  - Full create/edit form with partner/type pickers, tax incentive toggle
+  - Optimistic concurrency via `expected_updated_at`; validated records locked
+- **Validation Queue (B)**: `lib/brigada/ui/workstreams/validation_queue_view.dart`
+  - Filterable queue (SY + status), validate/return actions with remarks
+  - SMN/SGOD-only access
+- **Attachments (C)**: `lib/brigada/ui/workstreams/attachments_view.dart`
+  - List/upload/delete supporting documents (PDF, JPG, PNG, DOCX, XLSX, max 10MB)
+  - Uses `file_picker` + `http.MultipartFile.fromBytes` + `url_launcher`
+- **YoY Analytics (D)**: `lib/brigada/ui/workstreams/yoy_analytics_view.dart`
+  - Year A vs Year B comparison: totals, district breakdown, contribution types, top schools/stakeholders
+
+## Verification
+```bash
+# Flutter analyze (0 errors expected; remaining warnings are pre-existing freezed JsonKey annotations)
+flutter analyze
+
+# PHP syntax checks
+php -l application/controllers/Api.php
+php -l application/models/Api_model.php
+
+# Build APK
+flutter build apk --release
+# Output: build/app/outputs/flutter-apk/app-release.apk
+```

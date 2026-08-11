@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import 'db_native.dart' if (dart.library.html) 'db_web.dart' as platform;
@@ -110,6 +112,20 @@ class SyncMetadataTable extends Table {
   Set<Column> get primaryKey => {tableKey};
 }
 
+/// Generic JSON document cache for API list responses. Each row stores
+/// a full JSON-encoded list response keyed by the cache key (e.g.
+/// `memos`, `accomplishments`, `schools`). This provides persistent
+/// offline reads across app restarts without needing per-entity tables.
+@DataClassName('ApiCacheRow')
+class ApiCacheTable extends Table {
+  TextColumn get cacheKey => text()();
+  TextColumn get payload => text()(); // JSON-encoded list
+  DateTimeColumn get cachedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {cacheKey};
+}
+
 @DriftDatabase(tables: [
   UserProfileTable,
   MemoTable,
@@ -118,6 +134,7 @@ class SyncMetadataTable extends Table {
   SchoolPersonnelTable,
   SyncOutboxTable,
   SyncMetadataTable,
+  ApiCacheTable,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
@@ -125,7 +142,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(apiCacheTable);
+          }
+        },
+      );
 
   // ── UserProfile ────────────────────────────────────────────────────────
   Future<void> upsertProfile(UserProfileTableCompanion entry) =>
@@ -226,6 +253,65 @@ class AppDatabase extends _$AppDatabase {
   Future<void> upsertMetadata(SyncMetadataTableCompanion entry) =>
       into(syncMetadataTable).insertOnConflictUpdate(entry);
 
+  // ── API cache (generic JSON document cache) ────────────────────────────
+
+  /// Reads a cached JSON payload by key. Returns `null` if not cached.
+  Future<ApiCacheRow?> getCached(String key) =>
+      (select(apiCacheTable)..where((t) => t.cacheKey.equals(key)))
+          .getSingleOrNull();
+
+  /// Stores or replaces a cached JSON payload.
+  Future<void> upsertCache(String key, String payload) =>
+      into(apiCacheTable).insertOnConflictUpdate(
+        ApiCacheTableCompanion.insert(
+          cacheKey: key,
+          payload: payload,
+        ),
+      );
+
+  /// Removes a cached entry by key.
+  Future<void> removeCache(String key) =>
+      (delete(apiCacheTable)..where((t) => t.cacheKey.equals(key))).go();
+
+  /// Reads a cached JSON list as `List<Map<String, dynamic>>`.
+  /// Returns `null` if the key is not cached.
+  Future<List<Map<String, dynamic>>?> getCachedList(String key) async {
+    final row = await getCached(key);
+    if (row == null) return null;
+    try {
+      final decoded = jsonDecode(row.payload);
+      if (decoded is List) {
+        return decoded
+            .map((e) => e is Map<String, dynamic>
+                ? e
+                : Map<String, dynamic>.from(e as Map))
+            .toList();
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Caches a list of JSON-serializable items.
+  Future<void> cacheList(String key, List<Map<String, dynamic>> items) =>
+      upsertCache(key, jsonEncode(items));
+
+  /// Reads a cached JSON object as `Map<String, dynamic>`.
+  /// Returns `null` if the key is not cached.
+  Future<Map<String, dynamic>?> getCachedObject(String key) async {
+    final row = await getCached(key);
+    if (row == null) return null;
+    try {
+      final decoded = jsonDecode(row.payload);
+      if (decoded is Map<String, dynamic>) return decoded;
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    return null;
+  }
+
+  /// Caches a single JSON-serializable object.
+  Future<void> cacheObject(String key, Map<String, dynamic> obj) =>
+      upsertCache(key, jsonEncode(obj));
+
   /// Wipe all cached data — used on logout.
   Future<void> clearAll() async {
     await batch((b) {
@@ -236,6 +322,7 @@ class AppDatabase extends _$AppDatabase {
       b.deleteAll(schoolPersonnelTable);
       b.deleteAll(syncOutboxTable);
       b.deleteAll(syncMetadataTable);
+      b.deleteAll(apiCacheTable);
     });
   }
 }

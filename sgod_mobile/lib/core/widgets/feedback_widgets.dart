@@ -31,7 +31,7 @@ class EmptyState extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, size: 28, color: AppColors.primary),
@@ -90,7 +90,7 @@ class ConnectivityBanner extends StatelessWidget {
         : '$pendingCount change${pendingCount == 1 ? '' : 's'} pending sync';
 
     return Container(
-      color: !isOnline ? AppColors.warning.withOpacity(0.12) : AppColors.info.withOpacity(0.12),
+      color: !isOnline ? AppColors.warning.withValues(alpha: 0.12) : AppColors.info.withValues(alpha: 0.12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [

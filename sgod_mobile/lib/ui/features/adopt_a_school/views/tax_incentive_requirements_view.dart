@@ -178,7 +178,7 @@ class _TaxIncentiveRequirementsViewState
                     width: 36,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: AppColors.tertiaryLabel.withOpacity(0.3),
+                      color: AppColors.tertiaryLabel.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -448,7 +448,7 @@ class _RequirementCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: _statusColor().withOpacity(0.12),
+                  color: _statusColor().withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(PhosphorIconsRegular.certificate,
@@ -491,7 +491,7 @@ class _RequirementCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _statusColor().withOpacity(0.12),
+                    color: _statusColor().withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

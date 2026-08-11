@@ -1,16 +1,26 @@
 import 'package:flutter/cupertino.dart';
 
-/// iOS-style design system for the SGOD mobile app.
+/// iOS-style design system for the ONE DepED mobile app.
 ///
-/// Uses Cupertino colors, SF Pro-style typography (Instrument Sans as the
-/// closest available geometric sans), and iOS conventions throughout.
+/// Leads with the official DepEd navy as the primary brand color for an
+/// authoritative, government-grade feel. DepEd gold is reserved as a refined
+/// accent (active states, highlights, the seal) so it never reads as garish.
+/// Uses SF Pro-style typography (Instrument Sans as the closest available
+/// geometric sans) and iOS conventions throughout.
 class AppColors {
   AppColors._();
 
-  // ── iOS system colors ───────────────────────────────────────────────────
-  static const Color primary = CupertinoColors.systemBlue;
-  static const Color primaryDark = Color(0xFF003F88); // DepEd navy for brand moments
-  static const Color accent = Color(0xFFFCD116);      // DepEd gold
+  // ── Brand ───────────────────────────────────────────────────────────────
+  /// Official DepEd navy — the app's primary brand color. Used for headers,
+  /// primary buttons, the sidebar gradient, and active/selected states.
+  static const Color primary = Color(0xFF003F88);
+  /// A deeper navy for gradient endpoints and pressed states.
+  static const Color primaryDark = Color(0xFF002A5C);
+  /// DepEd gold — accent only. Use sparingly for the seal, active tab
+  /// indicators, and key highlights.
+  static const Color accent = Color(0xFFFCD116);
+  /// Subtle gold tint for accent backgrounds (12% opacity equivalent).
+  static const Color accentTint = Color(0x1EFCD116);
 
   // ── Surfaces ────────────────────────────────────────────────────────────
   static const Color background = CupertinoColors.systemGroupedBackground;
@@ -30,7 +40,9 @@ class AppColors {
   static const Color info = CupertinoColors.systemBlue;
 
   // ── Role accents ────────────────────────────────────────────────────────
-  static const Color sgod = Color(0xFF007AFF);       // systemBlue
+  /// SGOD wears the brand navy; other divisions keep distinct hues so the
+  /// role is recognizable at a glance without breaking the palette.
+  static const Color sgod = Color(0xFF003F88);       // DepEd navy
   static const Color shns = Color(0xFF34C759);       // systemGreen
   static const Color school = Color(0xFF5856D6);     // systemIndigo
   static const Color sned = Color(0xFF32ADE6);       // systemTeal

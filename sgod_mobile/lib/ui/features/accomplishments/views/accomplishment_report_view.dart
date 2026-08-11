@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show LinearProgressIndicator;
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../data/models/accomplishment_item.dart';
@@ -75,11 +74,11 @@ class AccomplishmentReportView extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 6,
                       children: [
-                        _pill('Q${item.quarter}', CupertinoColors.white.withOpacity(0.2)),
+                        _pill('Q${item.quarter}', CupertinoColors.white.withValues(alpha: 0.2)),
                         if (item.year.isNotEmpty)
-                          _pill(item.year, CupertinoColors.white.withOpacity(0.2)),
+                          _pill(item.year, CupertinoColors.white.withValues(alpha: 0.2)),
                         if (item.section.isNotEmpty)
-                          _pill(item.section, CupertinoColors.white.withOpacity(0.2)),
+                          _pill(item.section, CupertinoColors.white.withValues(alpha: 0.2)),
                       ],
                     ),
                   ],

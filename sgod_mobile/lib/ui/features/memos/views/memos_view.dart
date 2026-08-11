@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show DataTable, DataColumn, DataRow, DataCell, Material, Colors, WidgetStateProperty, WidgetState, TableBorder;
+import 'package:flutter/material.dart' show DataTable, DataColumn, DataRow, DataCell, Material, Colors, WidgetStateProperty, TableBorder;
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -192,7 +192,7 @@ class _MemosViewState extends State<MemosView> {
                             onPressed: vm.loadMore,
                             color: AppColors.secondaryBackground,
                             borderRadius: BorderRadius.circular(10),
-                            minSize: 36,
+                            minimumSize: const Size(0, 36),
                             child: const Text(
                               'Load More',
                               style: TextStyle(
@@ -384,7 +384,7 @@ class _MemoRow extends StatelessWidget {
     return CupertinoButton(
       onPressed: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      minSize: 0,
+      minimumSize: Size.zero,
       child: Row(
         children: [
           Expanded(
@@ -500,7 +500,7 @@ class _EmptyState extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(CupertinoIcons.doc_text,

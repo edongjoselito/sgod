@@ -218,14 +218,14 @@ class _DesignRow extends StatelessWidget {
     return CupertinoButton(
       onPressed: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      minSize: 0,
+      minimumSize: Size.zero,
       child: Row(
         children: [
           Container(
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: AppColors.danger.withOpacity(0.1),
+              color: AppColors.danger.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(7),
             ),
             child: const Icon(PhosphorIconsRegular.pencilSimple,

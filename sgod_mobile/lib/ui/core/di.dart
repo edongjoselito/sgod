@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/network/api_client.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/services/app_database.dart';
 import '../../core/services/cache_service.dart';
 import '../../core/services/connectivity_service.dart';
@@ -45,12 +46,49 @@ class DI {
 
   /// Execute a write operation — sends directly if online, queues if offline.
   /// All repositories should use this for mutations.
+  ///
+  /// [endpoint] is the API path without the prefix (e.g. `memos_save`).
+  /// [entity] is the entity name for outbox tracking (e.g. `memos`).
+  /// [prefix] is the API namespace (default `api`, or `api_brigada`).
   static Future<dynamic> writeOrQueue({
+    required String endpoint,
     required String entity,
     required String operation,
     required Map<String, dynamic> payload,
+    String prefix = 'api',
   }) async {
-    return sync.writeOrQueue(entity: entity, operation: operation, payload: payload);
+    return sync.writeOrQueue(
+      endpoint: endpoint,
+      entity: entity,
+      operation: operation,
+      payload: payload,
+      prefix: prefix,
+    );
+  }
+
+  /// Like [writeOrQueue] but returns `null` when the write was queued
+  /// offline instead of throwing. Use this in repositories that need
+  /// to return a value — check for `null` to know if it was queued.
+  static Future<Map<String, dynamic>?> write({
+    required String endpoint,
+    required String entity,
+    required String operation,
+    required Map<String, dynamic> payload,
+    String prefix = 'api',
+  }) async {
+    try {
+      final data = await sync.writeOrQueue(
+        endpoint: endpoint,
+        entity: entity,
+        operation: operation,
+        payload: payload,
+        prefix: prefix,
+      );
+      return data as Map<String, dynamic>?;
+    } on ApiException catch (e) {
+      if (e.message.contains('queued')) return null;
+      rethrow;
+    }
   }
 
   static Future<void> init() async {
@@ -78,15 +116,15 @@ class DI {
     }
 
     auth = AuthRepository(api: api, storage: storage, db: db);
-    dashboard = DashboardRepository(api, cache);
-    memos = MemosRepository(api, cache);
-    accomplishments = AccomplishmentsRepository(api, cache);
-    schools = SchoolsRepository(api, cache);
-    whereabouts = WhereaboutsRepository(api, cache);
-    issues = IssuesRepository(api, cache);
-    sectionUsers = SectionUsersRepository(api, cache);
-    activityDesigns = ActivityDesignsRepository(api, cache);
-    adoptASchool = AdoptASchoolRepository(api, cache);
+    dashboard = DashboardRepository(api, cache, db);
+    memos = MemosRepository(api, cache, db);
+    accomplishments = AccomplishmentsRepository(api, cache, db);
+    schools = SchoolsRepository(api, cache, db);
+    whereabouts = WhereaboutsRepository(api, cache, db);
+    issues = IssuesRepository(api, cache, db);
+    sectionUsers = SectionUsersRepository(api, cache, db);
+    activityDesigns = ActivityDesignsRepository(api, cache, db);
+    adoptASchool = AdoptASchoolRepository(api, cache, db);
 
     api.onUnauthorized = () {
       debugPrint('ApiClient: 401 received — session invalidated.');
@@ -106,6 +144,8 @@ class DI {
       connectivity.dispose();
       sync.dispose();
       db.close();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('DI: dispose failed (non-fatal): $e');
+    }
   }
 }

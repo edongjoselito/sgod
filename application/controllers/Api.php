@@ -179,6 +179,18 @@ class Api extends CI_Controller {
     $this->_ok(NULL, 'Logged out.');
   }
 
+  // ── Sync ──────────────────────────────────────────────────────────────────
+
+  /** GET /api/sync/manifest?since=YYYY-MM-DD HH:MM:SS */
+  public function sync_manifest() {
+    if (!$this->_require_auth()) return;
+    $manifest = $this->Api_model->sync_manifest();
+    $this->_ok(array(
+      'tables'    => $manifest,
+      'server_at' => date('Y-m-d H:i:s'),
+    ));
+  }
+
   /**
    * GET /api/schema_check — boolean-only diagnostic.
    *
@@ -214,18 +226,6 @@ class Api extends CI_Controller {
     }
     $data = $this->Api_model->dashboard($position, $section, $secGroup);
     $this->_ok($data);
-  }
-
-  // ── Sync ──────────────────────────────────────────────────────────────────
-
-  /** GET /api/sync/manifest?since=YYYY-MM-DD HH:MM:SS */
-  public function sync_manifest() {
-    if (!$this->_require_auth()) return;
-    $manifest = $this->Api_model->sync_manifest();
-    $this->_ok(array(
-      'tables'    => $manifest,
-      'server_at' => date('Y-m-d H:i:s'),
-    ));
   }
 
   // ── Memos ─────────────────────────────────────────────────────────────────
@@ -1002,5 +1002,189 @@ class Api extends CI_Controller {
       $d['requirements'] = $reqs;
     }
     $this->_ok($donations);
+  }
+
+  // ── PMCF (Program Management Consolidated Form) ───────────────────────────
+  //
+  // PMCF is a CID-only teacher observation/coaching form stored in
+  // `one_pmcf`. The web app restricts access to secGroup === 'cid' and
+  // filters records by username (per-user). These endpoints mirror that.
+
+  /** GET /api/pmcf_index — list the authenticated user's PMCF records. */
+  public function pmcf_index() {
+    if (!$this->_require_auth()) return;
+    $user = $this->api_auth->user();
+    $username = $user->username ?? '';
+    if ($username === '') {
+      $this->_error('Could not resolve username.', 422);
+      return;
+    }
+    $this->_ok($this->Api_model->list_pmcf($username));
+  }
+
+  /** POST /api/pmcf_create — insert a new PMCF record. */
+  public function pmcf_create() {
+    if (!$this->_require_auth()) return;
+    $user     = $this->api_auth->user();
+    $username = $user->username ?? '';
+    if ($username === '') {
+      $this->_error('Could not resolve username.', 422);
+      return;
+    }
+
+    $teacherObserved = trim((string) $this->_input('teacher_observed'));
+    $dateObserved    = trim((string) $this->_input('date_observed'));
+    if ($teacherObserved === '' || $dateObserved === '') {
+      $this->_error('Teacher observed and date observed are required.', 422);
+      return;
+    }
+
+    // Resolve section/secGroup the same way the dashboard does.
+    if ($this->api_auth->login_source() === 'sgod') {
+      $section  = $user->section ?? '';
+      $secGroup = $user->secGroup ?? 'SGOD';
+    } else {
+      $section  = $user->position ?? '';
+      $secGroup = $user->position ?? '';
+    }
+
+    $data = array(
+      'teacher_observed'                => $teacherObserved,
+      'grade_level'                     => trim((string) $this->_input('grade_level')),
+      'section'                         => trim((string) $this->_input('section')),
+      'district'                        => trim((string) $this->_input('district')),
+      'school'                          => trim((string) $this->_input('school')),
+      'quarter'                         => trim((string) $this->_input('quarter')),
+      'date_observed'                   => $dateObserved,
+      'time_observed'                   => trim((string) $this->_input('time_observed')),
+      'subject_area'                    => trim((string) $this->_input('subject_area')),
+      'instructional_supervisor'        => trim((string) $this->_input('instructional_supervisor')),
+      'designation'                     => trim((string) $this->_input('designation')),
+      'significant_incidents_description' => trim((string) $this->_input('significant_incidents_description')),
+      'impact_on_job'                   => trim((string) $this->_input('impact_on_job')),
+      'coaching_mechanisms'             => trim((string) $this->_input('coaching_mechanisms')),
+      'coaching_mechanisms_others'      => trim((string) $this->_input('coaching_mechanisms_others')),
+      'feedback_recommendation'         => trim((string) $this->_input('feedback_recommendation')),
+      'progress_to_date'                => trim((string) $this->_input('progress_to_date')),
+      'username'                        => $username,
+      'user_section'                    => $section,
+      'secGroup'                        => $secGroup,
+      'created_at'                      => date('Y-m-d H:i:s'),
+      'updated_at'                      => date('Y-m-d H:i:s'),
+    );
+
+    $newId = $this->Api_model->create_pmcf($data);
+    if ($newId === 0) {
+      $this->_error('Could not save PMCF record.', 500);
+      return;
+    }
+    $this->_ok(array('id' => $newId), 'PMCF record saved.');
+  }
+
+  /** GET /api/pmcf_districts — distinct districts from the schools table. */
+  public function pmcf_districts() {
+    if (!$this->_require_auth()) return;
+    $this->_ok($this->Api_model->list_districts());
+  }
+
+  /** GET /api/pmcf_schools?district=X — schools in a district. */
+  public function pmcf_schools() {
+    if (!$this->_require_auth()) return;
+    $district = trim((string) $this->input->get('district', TRUE));
+    if ($district === '') {
+      $this->_error('district is required.', 422);
+      return;
+    }
+    $this->_ok($this->Api_model->list_schools_by_district($district));
+  }
+
+  // ── School Enrollment Details ─────────────────────────────────────────────
+  //
+  // School-role users record enrollment counts by grade level, gender, and
+  // school year in `one_school_enrollment_details`. The school_id is the
+  // user's username (matching the web app convention).
+
+  /** GET /api/enrollment_index?school_year=X — list enrollment for the school. */
+  public function enrollment_index() {
+    if (!$this->_require_auth()) return;
+    $user = $this->api_auth->user();
+    $schoolId = $user->username ?? '';
+    if ($schoolId === '') {
+      $this->_error('Could not resolve school ID.', 422);
+      return;
+    }
+    $schoolYear = trim((string) $this->input->get('school_year', TRUE));
+    $this->_ok($this->Api_model->list_enrollment($schoolId, $schoolYear));
+  }
+
+  /** POST /api/enrollment_save — create or update an enrollment record. */
+  public function enrollment_save() {
+    if (!$this->_require_auth()) return;
+    $user = $this->api_auth->user();
+    $schoolId = $user->username ?? '';
+    if ($schoolId === '') {
+      $this->_error('Could not resolve school ID.', 422);
+      return;
+    }
+
+    $schoolYear = trim((string) $this->_input('school_year'));
+    $gradeLevel = trim((string) $this->_input('grade_level'));
+    if ($schoolYear === '' || $gradeLevel === '') {
+      $this->_error('School year and grade level are required.', 422);
+      return;
+    }
+
+    $maleCount   = (int) $this->_input('male_count', 0);
+    $femaleCount = (int) $this->_input('female_count', 0);
+    $id          = (int) $this->_input('id', 0);
+
+    $data = array(
+      'school_id'    => $schoolId,
+      'school_year'  => $schoolYear,
+      'semester'     => 'Annual',
+      'grade_level'  => $gradeLevel,
+      'male_count'   => $maleCount,
+      'female_count' => $femaleCount,
+    );
+
+    if ($id > 0) {
+      // Update — but only if the record belongs to this school.
+      $existing = $this->db->where('id', $id)->get('one_school_enrollment_details', 1)->row_array();
+      if (!$existing || $existing['school_id'] !== $schoolId) {
+        $this->_error('Record not found or does not belong to your school.', 404);
+        return;
+      }
+      $this->db->where('id', $id)->update('one_school_enrollment_details', $data);
+      $this->_ok(array('id' => $id), 'Enrollment record updated.');
+    } else {
+      $data['created_at'] = date('Y-m-d H:i:s');
+      $this->db->insert('one_school_enrollment_details', $data);
+      $newId = (int) $this->db->insert_id();
+      if ($newId === 0) {
+        $this->_error('Could not save enrollment record.', 500);
+        return;
+      }
+      $this->_ok(array('id' => $newId), 'Enrollment record saved.');
+    }
+  }
+
+  /** POST /api/enrollment_delete { id } — delete an enrollment record. */
+  public function enrollment_delete() {
+    if (!$this->_require_auth()) return;
+    $user = $this->api_auth->user();
+    $schoolId = $user->username ?? '';
+    $id = (int) $this->_input('id', 0);
+    if ($id <= 0) {
+      $this->_error('Valid id is required.', 422);
+      return;
+    }
+    // Ownership check — only delete if it belongs to this school.
+    $existing = $this->db->where('id', $id)->get('one_school_enrollment_details', 1)->row_array();
+    if (!$existing || $existing['school_id'] !== $schoolId) {
+      $this->_error('Record not found or does not belong to your school.', 404);
+      return;
+    }
+    $this->db->where('id', $id)->delete('one_school_enrollment_details');
+    $this->_ok(array('id' => $id), 'Enrollment record deleted.');
   }
 }

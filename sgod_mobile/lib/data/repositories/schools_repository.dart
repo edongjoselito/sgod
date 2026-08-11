@@ -1,14 +1,16 @@
 import '../../core/network/api_client.dart';
+import '../../core/services/app_database.dart';
 import '../../core/services/cache_service.dart';
+import '../../ui/core/di.dart';
 import '../models/school_item.dart';
 
-/// Fetches the list of schools from the API and supports client-side
-/// filtering by name, district, division, course, or school type.
+/// Fetches the list of schools from the API with persistent offline cache.
 class SchoolsRepository {
-  SchoolsRepository(this._api, [this._cache]);
+  SchoolsRepository(this._api, [this._cache, this._db]);
 
   final ApiClient _api;
   final CacheService? _cache;
+  final AppDatabase? _db;
 
   static const _key = 'schools';
 
@@ -25,10 +27,26 @@ class SchoolsRepository {
               .map((e) => SchoolItem.fromJson(e as Map<String, dynamic>))
               .toList();
       _cache?.set(_key, items);
+      if (_db != null && items.isNotEmpty) {
+        try {
+          await _db.cacheList(
+            _key,
+            items.map((e) => e.toJson()).toList(),
+          );
+        } catch (_) {}
+      }
       return items;
     } catch (e) {
-      final cached = _cache?.get<List<SchoolItem>>(_key);
-      if (cached != null) return cached;
+      if (_db != null) {
+        try {
+          final cached = await _db.getCachedList(_key);
+          if (cached != null && cached.isNotEmpty) {
+            return cached.map((e) => SchoolItem.fromJson(e)).toList();
+          }
+        } catch (_) {}
+      }
+      final memCached = _cache?.get<List<SchoolItem>>(_key);
+      if (memCached != null) return memCached;
       rethrow;
     }
   }
@@ -48,16 +66,27 @@ class SchoolsRepository {
     }).toList();
   }
 
-  /// Delete a school by recID.
+  /// Delete a school by recID. Queues offline.
   Future<void> delete(String recID) async {
-    await _api.post('api/schools_delete', body: {'recID': recID});
+    await DI.write(
+      endpoint: 'schools_delete',
+      entity: 'schools',
+      operation: 'delete',
+      payload: {'recID': recID},
+    );
     _cache?.remove(_key);
   }
 
   /// Save (update) a school record. [recID] is required.
+  /// Returns the recID, or the passed-in recID if queued offline.
   Future<String> save(Map<String, dynamic> fields, {required String recID}) async {
     final body = <String, dynamic>{...fields, 'recID': recID};
-    final data = await _api.post('api/schools_save', body: body);
+    final data = await DI.write(
+      endpoint: 'schools_save',
+      entity: 'schools',
+      operation: 'update',
+      payload: body,
+    );
     _cache?.remove(_key);
     return (data?['recID'] ?? recID).toString();
   }

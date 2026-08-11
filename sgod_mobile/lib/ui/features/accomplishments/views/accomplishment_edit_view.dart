@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../data/models/accomplishment_item.dart';
-import '../../../../data/repositories/accomplishments_repository.dart';
 import '../../../core/di.dart';
 
 /// Edit or add an accomplishment.
@@ -73,7 +72,9 @@ class _AccomplishmentEditViewState extends State<AccomplishmentEditView> {
     try {
       final dt = DateTime.tryParse(displayDate);
       if (dt != null) return dt.toIso8601String().split('T')[0];
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('AccomplishmentEdit: date parse failed for "$displayDate": $e');
+    }
     return displayDate;
   }
 

@@ -23,7 +23,7 @@ class SgodApp extends StatelessWidget {
       child: Consumer<AuthViewModel>(
         builder: (context, auth, _) {
           return CupertinoApp.router(
-            title: 'e-Brigada',
+            title: 'ONE DepED',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.build(),
             routerConfig: buildRouter(auth),

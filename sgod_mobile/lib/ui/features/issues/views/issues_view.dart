@@ -299,20 +299,20 @@ class _PriorityBadge extends StatelessWidget {
     switch (priority.toLowerCase()) {
       case 'high':
         color = AppColors.danger;
-        bg = AppColors.danger.withOpacity(0.12);
+        bg = AppColors.danger.withValues(alpha: 0.12);
         break;
       case 'medium':
       case 'normal':
         color = AppColors.warning;
-        bg = AppColors.warning.withOpacity(0.12);
+        bg = AppColors.warning.withValues(alpha: 0.12);
         break;
       case 'low':
         color = AppColors.success;
-        bg = AppColors.success.withOpacity(0.12);
+        bg = AppColors.success.withValues(alpha: 0.12);
         break;
       default:
         color = AppColors.tertiaryLabel;
-        bg = AppColors.tertiaryLabel.withOpacity(0.12);
+        bg = AppColors.tertiaryLabel.withValues(alpha: 0.12);
     }
     return _Badge(label: priority, color: color, background: bg);
   }
@@ -330,23 +330,23 @@ class _StatusBadge extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'open':
         color = AppColors.info;
-        bg = AppColors.info.withOpacity(0.12);
+        bg = AppColors.info.withValues(alpha: 0.12);
         break;
       case 'in progress':
         color = AppColors.warning;
-        bg = AppColors.warning.withOpacity(0.12);
+        bg = AppColors.warning.withValues(alpha: 0.12);
         break;
       case 'resolved':
         color = AppColors.success;
-        bg = AppColors.success.withOpacity(0.12);
+        bg = AppColors.success.withValues(alpha: 0.12);
         break;
       case 'closed':
         color = AppColors.tertiaryLabel;
-        bg = AppColors.tertiaryLabel.withOpacity(0.12);
+        bg = AppColors.tertiaryLabel.withValues(alpha: 0.12);
         break;
       default:
         color = AppColors.tertiaryLabel;
-        bg = AppColors.tertiaryLabel.withOpacity(0.12);
+        bg = AppColors.tertiaryLabel.withValues(alpha: 0.12);
     }
     return _Badge(label: status, color: color, background: bg);
   }
