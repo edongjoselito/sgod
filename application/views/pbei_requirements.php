@@ -21,6 +21,10 @@ $escape = function($value) { return htmlspecialchars((string) $value, ENT_QUOTES
         .pbei-eyebrow { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; opacity: .85; }
         .table td { vertical-align: middle; }
         .requirement-name { font-weight: 600; color: #343a40; }
+        .requirement-actions .btn { min-width: 108px; }
+        .requirement-actions .dropdown-menu { min-width: 150px; padding: 6px; border: 0; border-radius: 10px; box-shadow: 0 10px 28px rgba(28, 39, 74, .16); }
+        .requirement-actions .dropdown-item { border-radius: 7px; font-size: .86rem; font-weight: 600; }
+        .requirement-actions .dropdown-item i { width: 18px; }
     </style>
 </head>
 <body>
@@ -63,9 +67,15 @@ $escape = function($value) { return htmlspecialchars((string) $value, ENT_QUOTES
                                     <tr>
                                         <td><?= (int) $row->sort_order; ?></td>
                                         <td><div class="requirement-name"><?= $escape($row->requirement); ?></div><?php if (trim((string) $row->description) !== ''): ?><small class="text-muted"><?= $escape($row->description); ?></small><?php endif; ?></td>
-                                        <td class="text-right">
-                                            <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#requirementModal" onclick='openRequirementForm(<?= json_encode(array("id" => (int) $row->id, "requirement" => $row->requirement, "description" => $row->description, "sort_order" => (int) $row->sort_order), JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_HEX_TAG); ?>)'><i class="mdi mdi-pencil"></i> Edit</button>
-                                            <form method="post" action="<?= base_url(); ?>Page/pbei_requirement_delete" class="d-inline" onsubmit="return confirm('Delete this requirement?');"><input type="hidden" name="id" value="<?= (int) $row->id; ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-delete"></i></button></form>
+                                        <td class="text-right requirement-actions">
+                                            <div class="dropdown d-inline-block">
+                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="mdi mdi-dots-horizontal"></i> Actions</button>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <button type="button" class="dropdown-item" data-toggle="modal" data-target="#requirementModal" onclick='openRequirementForm(<?= json_encode(array("id" => (int) $row->id, "requirement" => $row->requirement, "description" => $row->description, "sort_order" => (int) $row->sort_order), JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_HEX_TAG); ?>)'><i class="mdi mdi-pencil"></i> Edit</button>
+                                                    <div class="dropdown-divider"></div>
+                                                    <form method="post" action="<?= base_url(); ?>Page/pbei_requirement_delete" onsubmit="return confirm('Delete this requirement?');"><input type="hidden" name="id" value="<?= (int) $row->id; ?>"><button type="submit" class="dropdown-item text-danger"><i class="mdi mdi-delete-outline"></i> Delete</button></form>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -87,7 +97,7 @@ $escape = function($value) { return htmlspecialchars((string) $value, ENT_QUOTES
             <div class="modal-body">
                 <input type="hidden" name="id" id="requirementId">
                 <div class="form-group"><label>Order</label><input type="number" class="form-control" name="sort_order" id="requirementOrder" min="1" value="<?= $nextOrder; ?>"></div>
-                <div class="form-group"><label>Requirement <span class="text-danger">*</span></label><textarea class="form-control" name="requirement" id="requirementName" rows="3" maxlength="255" required></textarea></div>
+                <div class="form-group"><label>Requirement <span class="text-danger">*</span></label><textarea class="form-control" name="requirement" id="requirementName" rows="3" required></textarea></div>
                 <div class="form-group"><label>Description (optional)</label><textarea class="form-control" name="description" id="requirementDescription" rows="3"></textarea></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save Requirement</button></div>

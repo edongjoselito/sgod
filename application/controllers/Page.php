@@ -3442,7 +3442,9 @@ public function memo_delete(){
 	$result['schools'] = $this->db
 		->select('s.school_id, sch.schoolName, MAX(s.updated_at) AS last_submission')
 		->from('school_pbei_requirement_submissions s')
-		->join('schools sch', 'sch.schoolID = s.school_id', 'left')
+		// Older tables may use different utf8mb4 collations. Compare the account
+		// identifiers as bytes so the submission list remains compatible.
+		->join('schools sch', 'BINARY sch.schoolID = BINARY s.school_id', 'left', FALSE)
 		->group_by('s.school_id')->group_by('sch.schoolName')
 		->order_by('sch.schoolName', 'ASC')->order_by('s.school_id', 'ASC')
 		->get()->result();
@@ -3705,7 +3707,7 @@ public function memo_delete(){
   private function ensure_pbei_requirements_table(){
 	$this->db->query("CREATE TABLE IF NOT EXISTS pbei_requirements (
 		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-		requirement VARCHAR(255) NOT NULL,
+		requirement MEDIUMTEXT NOT NULL,
 		description TEXT NULL,
 		sort_order INT UNSIGNED NOT NULL DEFAULT 0,
 		created_at DATETIME NULL,
@@ -3713,6 +3715,13 @@ public function memo_delete(){
 		PRIMARY KEY (id),
 		KEY idx_pbei_requirements_sort (sort_order)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	// Earlier versions limited the requirement text to 255 characters. Allow
+	// detailed requirements in both new and existing installations.
+	foreach($this->db->field_data('pbei_requirements') as $field){
+		if($field->name === 'requirement' && strtolower((string) $field->type) !== 'mediumtext'){
+			$this->db->query('ALTER TABLE pbei_requirements MODIFY requirement MEDIUMTEXT NOT NULL');
+		}
+	}
 
 	// Migrate databases created by the initial PBEI register version.
 	foreach(array('category', 'is_required', 'is_active') as $column){

@@ -2,6 +2,9 @@
 $requirements = isset($requirements) && is_array($requirements) ? $requirements : array();
 $disclosure = isset($disclosure) ? $disclosure : null;
 $esc = function($value) { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); };
+$submittedCount = 0;
+foreach ($requirements as $requirement) { if (!empty($requirement->submission_id)) $submittedCount++; }
+$requirementCount = count($requirements);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,42 +16,55 @@ $esc = function($value) { return htmlspecialchars((string) $value, ENT_QUOTES, '
     <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet" type="text/css">
     <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css">
     <style>
-        body { background: #f4f7fb; }
-        .pbei-school-hero { margin: 20px 0 24px; padding: 30px; border-radius: 18px; color: #fff; background: linear-gradient(135deg, #272b8c, #565de8); }
-        .pbei-school-hero h2 { color: #fff; margin: 8px 0 0; }
-        .pbei-school-hero p { margin: 9px 0 0; color: rgba(255,255,255,.84); }
-        .pbei-order-link { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; padding: 9px 13px; border: 1px solid rgba(255,255,255,.52); border-radius: 9px; color: #fff; background: rgba(255,255,255,.12); font-size: .84rem; font-weight: 700; text-decoration: none; }
-        .pbei-order-link:hover { color: #363ba8; background: #fff; text-decoration: none; }
-        .pbei-item { border: 0; border-radius: 16px; box-shadow: 0 8px 24px rgba(34, 52, 87, .08); overflow: hidden; }
-        .pbei-item + .pbei-item { margin-top: 18px; }
-        .pbei-order { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; color: #363ba8; background: #e9ebff; font-weight: 700; }
-        .pbei-title { color: #30365f; font-weight: 700; }
-        .pbei-status { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; white-space: nowrap; }
-        .pbei-status--submitted { color: #1d7047; background: #e0f5e8; }
-        .pbei-status--pending { color: #7b6570; background: #f1edf0; }
-        .pbei-file { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; color: #287b4d; font-size: .87rem; font-weight: 600; }
-        .pbei-upload-status { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
-        .pbei-file { margin-top: 0; }
-        .pbei-remarks { color: #59657e; font-size: .87rem; }
-        .pbei-remarks--validation { color: #dc3545; }
-        .pbei-remarks--validated { color: #198754; }
-        .pbei-validator-notes { margin-top: 10px; padding: 10px 12px; border-left: 3px solid #565de8; border-radius: 4px; color: #495570; background: #f3f4ff; font-size: .87rem; white-space: pre-line; }
-        .disclosure-card { margin-top: 28px; border: 0; border-radius: 16px; box-shadow: 0 8px 24px rgba(34, 52, 87, .08); }
-        .disclosure-title { color: #30365f; font-weight: 700; text-transform: uppercase; }
-        .pbei-saved { color: #74809b; font-size: .8rem; }
-        .custom-file-label::after { content: 'Browse'; }
+        :root { --pbei-navy:#142b52; --pbei-blue:#2064a1; --pbei-aqua:#4bc1be; --pbei-gold:#f5c35b; --pbei-ink:#20314a; --pbei-muted:#64748b; --pbei-border:#e4eaf1; }
+        body { background:radial-gradient(circle at 6% 4%,rgba(75,193,190,.12),transparent 22rem),radial-gradient(circle at 98% 25%,rgba(245,195,91,.11),transparent 20rem),#f6f8fb; color:var(--pbei-ink); }
+        .pbei-shell { max-width:1240px; margin:0 auto; padding-bottom:50px; }
+        .pbei-school-hero { position:relative; overflow:hidden; margin:24px 0; padding:clamp(28px,4vw,46px); border-radius:25px; color:#fff; background:linear-gradient(125deg,#142b52,#1b659d 62%,#2383aa); box-shadow:0 24px 56px rgba(20,43,82,.19); }
+        .pbei-school-hero::after { position:absolute; right:-55px; bottom:-115px; width:245px; height:245px; content:""; border:43px solid rgba(255,255,255,.10); border-radius:50%; }
+        .pbei-school-hero > * { position:relative; z-index:1; }
+        .pbei-kicker { display:inline-flex; align-items:center; gap:8px; color:#ffe4a4; font-size:.72rem; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
+        .pbei-school-hero h2 { margin:11px 0 0; color:#fff; font-size:clamp(1.9rem,3vw,2.6rem); font-weight:800; letter-spacing:-.035em; }
+        .pbei-school-hero p { max-width:590px; margin:10px 0 0; color:rgba(255,255,255,.85); line-height:1.65; }
+        .pbei-hero-footer { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:24px; }
+        .pbei-order-link { display:inline-flex; align-items:center; gap:7px; padding:10px 14px; border:1px solid rgba(255,255,255,.48); border-radius:11px; color:#fff; background:rgba(255,255,255,.12); font-size:.84rem; font-weight:700; text-decoration:none; transition:background .2s ease,color .2s ease,transform .2s ease; }
+        .pbei-order-link:hover { color:#174b7b; background:#fff; text-decoration:none; transform:translateY(-1px); }
+        .pbei-progress { display:inline-flex; align-items:center; gap:9px; padding:10px 14px; border-radius:11px; color:#fff; background:rgba(9,28,57,.25); font-size:.84rem; }
+        .pbei-progress strong { color:#fff0ba; font-size:1rem; }
+        .pbei-item { border:1px solid var(--pbei-border); border-radius:19px; box-shadow:0 12px 34px rgba(20,43,82,.065); overflow:hidden; transition:transform .2s ease,box-shadow .2s ease; }
+        .pbei-item + .pbei-item { margin-top:16px; }
+        .pbei-item:hover { transform:translateY(-2px); box-shadow:0 18px 40px rgba(20,43,82,.10); }
+        .pbei-item .card-body { padding:26px !important; }
+        .pbei-order { flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:12px; color:var(--pbei-blue); background:#e9f3f7; font-size:.9rem; font-weight:800; }
+        .pbei-title { color:var(--pbei-navy); font-size:1.12rem; font-weight:800; }
+        .pbei-title + p { color:var(--pbei-muted)!important; font-size:.92rem; line-height:1.55; }
+        .pbei-status { display:inline-flex; align-items:center; gap:5px; padding:7px 11px; border-radius:999px; font-size:.75rem; font-weight:800; white-space:nowrap; }
+        .pbei-status--submitted { color:#147049; background:#e1f7ed; }
+        .pbei-status--pending { color:#8a5d10; background:#fff4d8; }
+        .pbei-item label { color:var(--pbei-ink); font-size:.83rem; font-weight:800; }
+        .pbei-item .form-control,.pbei-item .custom-file-label { border-color:#dce5ef; border-radius:9px; box-shadow:none; }
+        .pbei-item textarea.form-control { min-height:106px; resize:vertical; }
+        .pbei-file { display:inline-flex; align-items:center; gap:6px; margin-top:0; color:#187c56; font-size:.87rem; font-weight:700; }
+        .pbei-upload-status { display:flex; align-items:center; gap:12px; margin-top:12px; }
+        .pbei-remarks { color:var(--pbei-muted); font-size:.87rem; }
+        .pbei-remarks--validation { color:#b45309; }.pbei-remarks--validated { color:#198754; }
+        .pbei-validator-notes { margin-top:12px; padding:11px 13px; border-left:3px solid var(--pbei-blue); border-radius:8px; color:#44536b; background:#eff6fb; font-size:.87rem; line-height:1.55; white-space:pre-line; }
+        .pbei-saved { color:#7b8799; font-size:.8rem; }.pbei-item .btn-primary,.disclosure-card .btn-primary { border-color:var(--pbei-blue); background:var(--pbei-blue); }
+        .disclosure-card { margin-top:28px; border:1px solid var(--pbei-border); border-radius:19px; box-shadow:0 12px 34px rgba(20,43,82,.065); }
+        .disclosure-card .card-body { padding:28px !important; }.disclosure-title { color:var(--pbei-navy); font-size:.92rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
+        .custom-file-label::after { content:'Browse'; border-radius:0 8px 8px 0; color:var(--pbei-navy); background:#edf3f8; font-weight:700; }
+        @media(max-width:575px){ .pbei-shell{padding-right:4px;padding-left:4px}.pbei-school-hero{margin-top:14px;border-radius:20px}.pbei-item .card-body,.disclosure-card .card-body{padding:20px!important}.pbei-item .d-flex.justify-content-between{gap:14px}.pbei-status{font-size:.68rem}.pbei-hero-footer{align-items:stretch}.pbei-order-link,.pbei-progress{justify-content:center;width:100%;}.pbei-item form > .d-flex{align-items:flex-start!important;flex-direction:column;}.pbei-item form > .d-flex .btn{width:100%;} }
     </style>
 </head>
 <body>
 <div id="wrapper">
     <?php include('includes/top-bar.php'); ?>
     <?php include('includes/sidebar.php'); ?>
-    <div class="content-page"><div class="content"><main class="container-fluid">
+    <div class="content-page"><div class="content"><main class="container-fluid pbei-shell">
         <section class="pbei-school-hero">
-            <div class="d-flex align-items-center"><i class="mdi mdi-trophy-outline font-24 mr-2"></i><span class="text-uppercase font-weight-bold small">PBEI</span></div>
+            <div class="pbei-kicker"><i class="mdi mdi-trophy-outline font-20"></i> PBEI Recognition</div>
             <h2>Mandatory Requirements</h2>
-            <p>Attach the supporting PDF and add notes for each item.</p>
-            <a class="pbei-order-link" href="https://www.deped.gov.ph/wp-content/uploads/DO_s2026_012r.pdf" target="_blank" rel="noopener noreferrer"><i class="mdi mdi-file-document-outline"></i> Read DepEd Order No. 12, s. 2026</a>
+            <p>Submit your supporting documents and notes for review. Your progress is saved as you complete each requirement.</p>
+            <div class="pbei-hero-footer"><a class="pbei-order-link" href="https://www.deped.gov.ph/wp-content/uploads/DO_s2026_012r.pdf" target="_blank" rel="noopener noreferrer"><i class="mdi mdi-file-document-outline"></i> Read DepEd Order No. 12, s. 2026</a><span class="pbei-progress"><i class="mdi mdi-check-circle-outline"></i><strong><?= $submittedCount; ?>/<?= $requirementCount; ?></strong> requirements submitted</span></div>
         </section>
 
         <?php if ($this->session->flashdata('success')): ?><div class="alert alert-success alert-dismissible fade show" role="alert"><?= $esc($this->session->flashdata('success')); ?><button type="button" class="close" data-dismiss="alert">&times;</button></div><?php endif; ?>

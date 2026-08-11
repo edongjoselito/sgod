@@ -1145,7 +1145,6 @@
                             <li><a href="<?= base_url(); ?>Brigada/spc_admin_report">SPC Report</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/brigada_summary_v2">Summary Report</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/yoy">Year-on-Year</a></li>
-                            <li><a href="<?= base_url(); ?>Brigada/validation_queue">Validation Queue</a></li>
                             <li><a href="<?= base_url(); ?>Page/satisfaction_survey_results">Survey Results</a></li>
                         </ul>
                     </li>
