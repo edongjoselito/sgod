@@ -1,341 +1,101 @@
+<?php
+$record = isset($record) ? $record : null;
+if (!$record) { show_404(); return; }
+$input = function($name, $fallback = '') {
+    $posted = $this->input->post($name);
+    return $posted !== NULL ? (string) $posted : (string) $fallback;
+};
+$isIsoDate = function($value) { return preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $value); };
+$fromDate = $input('activityDateFrom', $isIsoDate($record->targetDate) ? $record->targetDate : '');
+$toDate = $input('activityDateTo', $isIsoDate($record->targetDate) ? $record->targetDate : '');
+$scope = $input('accomplishmentScope', $record->accomplishmentScope ?: 'section') === 'personal' ? 'personal' : 'section';
+$kraId = (int) $input('kra_id', $record->kra_id);
+$objectiveId = (int) $input('objective_id', $record->objective_id);
+$uploadError = isset($uploadError) ? trim((string) $uploadError) : '';
+?>
 <!DOCTYPE html>
 <html lang="en">
-
-    <head>
-        <meta charset="utf-8" />
-        <?php include('includes/page-title.php'); ?>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="Responsive bootstrap 4 admin template" name="description" />
-        <meta content="Coderthemes" name="author" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <!-- App favicon -->
-        <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
-
-        <!-- Plugins css-->
-        <link href="<?= base_url(); ?>assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
-
-        <!-- App css -->
-        <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" id="bootstrap-stylesheet" />
-        <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-        <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-stylesheet" />
-
-        <link href="<?= base_url(); ?>assets/libs/custombox/custombox.min.css" rel="stylesheet" type="text/css">
-
- <!-- third party css -->
-        <link href="<?= base_url(); ?>assets/libs/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-        <link href="<?= base_url(); ?>assets/libs/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-        <link href="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-        <link href="<?= base_url(); ?>assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" /> 
-
-    </head>
-
-    <body>
-
-        <!-- Begin page -->
-        <div id="wrapper">
-
-            
-            <!-- Topbar Start -->
-                <?php include('includes/top-bar.php'); ?>
-            <!-- end Topbar --> 
-
-<!-- ========== Left Sidebar Start ========== -->
-
-<?php include('includes/sidebar.php') ?>
-
-<!-- Left Sidebar End -->
-
-            <!-- ============================================================== -->
-            <!-- Start Page Content here -->
-            <!-- ============================================================== -->
-
-            <div class="content-page">
-                <div class="content">
-
-                    <!-- Start Content-->
-                    <div class="container-fluid">
-
-                        <!-- start page title -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="page-title-box">
-                                    <!-- <h4 class="page-title" id="myLargeModalLabel">                            
-                                        <button type="button" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target=".bs-example-modal-lg">+ ADD NEW</button>
-                                        <a href="acc" class="btn btn-info waves-effect waves-light" target="_blank">REPORTS</a>
-                                    </h4> -->
-                                    <!-- <div class="page-title-right">
-                                        <ol class="breadcrumb p-0 m-0">
-                                            <li class="breadcrumb-item">SGOD Management System v1.0</li>
-                                        </ol>
-                                    </div> -->
-                                    <div class="clearfix"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end page title -->
-
-
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h4 class="header-title mb-4">Update Accomplishments</h4>
-                                        <div class="table-responsive">
-                                        
-                                        <form class="parsley-examples" method="post" >
-                                        <input type="hidden" value="<?php echo $data[0]->id; ?>" name="id">
-                                            <div class="row">
-                                            
-                                                <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label >Quarter</label>
-                                                            <select class="form-control" name="quarter" required>
-                                                                <option value="<?php echo $data[0]->quarter; ?>"><?php echo $data[0]->quarter; ?> Quarter</option>
-                                                                <?php $arg = array('1st','2nd','3rd','4th'); 
-                                                                   foreach($arg as $row){
-                                                                    echo "<option value=".$row.">".$row." Quarter</option>";
-                                                                   }
-                                                                ?>
-                                                                
-                                                            </select>
-                                                        </div>
-                                                </div>
-                                                    <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label >Year</label>
-                                                            <input type="text" name="year" value="<?= $data[0]->year; ?>" required class="form-control" >
-                                                        </div>
-                                                    </div>
-
-
-                                                    <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label >Month</label>
-                                                            <select class="form-control" name="monthAcc" required>
-                                                                <option value="<?php echo $data[0]->monthAcc; ?>"> <?php echo $data[0]->monthAcc; ?></option>
-                                                                <?php 
-                                                                for($i=1;$i<13;$i++)
-                                                                    echo("<option>".date('F',strtotime('01.'.$i.'.2023'))."</option>");
-                                                                ?>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label >Week</label>
-                                                            <select class="form-control" name="weekAcc" required>
-                                                                <option value="<?php echo $data[0]->weekAcc; ?>">Week <?php echo $data[0]->weekAcc; ?></option>
-                                                                <?php 
-                                                                        for ($x = 1; $x <=5; $x++){
-                                                                            echo '<option value="'.$x.'"> Week '. $x.'</option>';
-                                                                    } ?>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-                                           
-    
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                        <div class="form-group">
-                                                            <label >Activity  <span class="text-danger">*</span></label>
-                                                             <input type="text" required class="form-control" value="<?php echo $data[0]->activity; ?>"  name="activity">
-                                                        </div>
-                                                </div>
-
-                                                <!-- <div class="col-lg-6">
-                                                        <div class="form-group">
-                                                            <label >Particulars </label>
-                                                             <input type="text" class="form-control" value="<?php echo $data[0]->particulars; ?>" name="particulars">
-                                                        </div>
-                                                </div> -->
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="col-lg-2">
-                                                        <div class="form-group">
-                                                                <label >Activity Category</label>
-                                                                    <select class="form-control" name="activityCategory">
-                                                                        <option><?php echo $data[0]->activityCategory; ?></option>
-                                                                        <option>Accomplishment</option> 
-                                                                        <option>Updates</option> 
-                                                                    </select>
-                                                         </div>
-                                                </div>
-
-                                                <div class="col-lg-2">
-                                                        <div class="form-group">
-                                                            <label >Target Date</label>
-                                                             <input type="text" class="form-control" value="<?php echo $data[0]->targetDate; ?>" name="targetDate">
-                                                        </div>
-                                                </div>
-
-
-                                                <div class="col-lg-2">
-                                                        <div class="form-group">
-                                                            <label >Actual Date Conducted </label>
-                                                            <input type="text"  class="form-control" value="<?php echo $data[0]->dateConducted; ?>" name="dateConducted" >
-                                                        </div>
-                                                </div>
-
-                                                <div class="col-lg-6">
-                                                        <div class="form-group">
-                                                            <label >Venue</label>
-                                                            <input type="text"  class="form-control" value="<?php echo $data[0]->venue; ?>" name="venue" >
-                                                        </div>
-                                                </div>
-
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label >Performance Indicators </label>
-                                                            <input type="text"  class="form-control" value="<?php echo $data[0]->perIndicators; ?>" name="perIndicators" >
-                                                        </div>
-                                                </div>
-
-                                                <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label >Target </label>
-                                                            <input type="text"  class="form-control" value="<?php echo $data[0]->target; ?>" name="target" >
-                                                        </div>
-                                                </div>
-
-                                                <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label >Achieved</label>
-                                                            <input type="text"  class="form-control" value="<?php echo $data[0]->achieved; ?>" name="achieved" >
-                                                        </div>
-                                                </div>
-
-                                                <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label >Accomplishment Percentage </label>
-                                                            <input type="text"  class="form-control" value="<?php echo $data[0]->percentageAccom; ?>" name="percentageAccom" >
-                                                        </div>
-                                                </div>
-
-
-                                            </div>
-
-                                           
-                                            
-                                            <div class="row">
-                                                <div class="col-lg-6">
-                                                        <div class="form-group">
-                                                            <label >Resources Link</label>
-                                                            <textarea name="resources" class="form-control" id="exampleFormControlTextarea1" rows="3"><?php echo $data[0]->resources; ?></textarea>
-                                                        </div>
-                                                </div>
-
-                                                <div class="col-lg-6">
-                                                        <div class="form-group">
-                                                            <label >Additional Notes</label>
-                                                            <textarea name="notes" class="form-control" id="exampleFormControlTextarea1" rows="3"><?php echo $data[0]->notes; ?></textarea>
-                                                        </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                        <div class="form-group">
-                                                            <label >Remarks</label>
-                                                            <input type="text"  class="form-control" name="remarks" value="<?php echo $data[0]->remarks; ?>">
-                                                        </div>
-                                                </div>
-
-                                                
-                                            </div>
-
-
-                                            <div class="form-group text-right mb-0">
-                                               <input type="submit" name="update" value="Update" class="btn btn-primary waves-effect waves-light mr-1">
-                                                
-                                               
-                                            </div>
-
-                                        </form>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                        </div>
-                        <!--- end row -->
-
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include('includes/page-title.php'); ?>
+    <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
+    <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet">
+    <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet">
+    <link href="<?= base_url(); ?>assets/libs/summernote/summernote-bs4.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(180deg,#f4f7fc,#eef3fb); }
+        .edit-shell { max-width: 1180px; padding: 25px 15px 45px; }
+        .edit-hero { padding: 30px; border-radius: 24px 24px 0 0; color: #fff; background: linear-gradient(135deg,#272b8c,#3c40c6 58%,#6f74ff); }
+        .edit-hero h1 { margin: 8px 0 0; color: #fff; font-size: 1.75rem; }
+        .edit-card { border: 0; border-radius: 0 0 24px 24px; box-shadow: 0 18px 42px rgba(39,43,140,.12); }
+        .section-block { padding: 25px 30px; border-bottom: 1px solid #edf0f7; }
+        .section-title { margin-bottom: 18px; color: #272b8c; font-size: .9rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+        .field-grid { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 17px; }
+        .span-12 { grid-column: span 12; } .span-6 { grid-column: span 6; } .span-4 { grid-column: span 4; }
+        .field-label { display: block; margin-bottom: 7px; color: #343957; font-size: .84rem; font-weight: 700; }
+        .field-input,.field-textarea { width: 100%; padding: 10px 12px; border: 1px solid #dce1ed; border-radius: 8px; color: #343957; background: #fff; }
+        .field-textarea { min-height: 95px; resize: vertical; } .required { color: #d64545; }
+        .field-help { display: block; margin-top: 6px; color: #77809b; font-size: .78rem; }
+        .photo-preview { display: block; max-width: 270px; max-height: 160px; margin-top: 10px; border-radius: 9px; object-fit: cover; }
+        .form-actions { display: flex; justify-content: space-between; gap: 14px; padding: 23px 30px; }
+        .btn-form { border: 0; border-radius: 9px; padding: 11px 18px; font-weight: 700; text-decoration: none; }
+        .btn-cancel { color: #343957; background: #eef1f8; } .btn-save { color: #fff; background: #3c40c6; }
+        .note-editor.note-frame { border-color: #dce1ed; border-radius: 8px; }
+        @media(max-width:700px){.section-block{padding:21px}.span-6,.span-4{grid-column:span 12}.form-actions{padding:21px;flex-direction:column-reverse}.btn-form{text-align:center}}
+    </style>
+</head>
+<body>
+<div id="wrapper">
+    <?php include('includes/top-bar.php'); include('includes/sidebar.php'); ?>
+    <div class="content-page"><div class="content"><main class="container-fluid edit-shell">
+        <section class="edit-hero"><div>Update entry</div><h1>Edit Accomplishment</h1></section>
+        <section class="card edit-card">
+            <?php if ($uploadError !== '') : ?><div class="alert alert-warning m-3 mb-0"><?= htmlspecialchars($uploadError,ENT_QUOTES,'UTF-8'); ?></div><?php endif; ?>
+            <form method="post" action="<?= base_url(); ?>Page/updateAccomplishments?id=<?= (int) $record->id; ?>" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="<?= (int) $record->id; ?>">
+                <input type="hidden" name="activityCategory" value="<?= htmlspecialchars($input('activityCategory',$record->activityCategory ?: 'Accomplishment'),ENT_QUOTES,'UTF-8'); ?>">
+                <div class="section-block">
+                    <div class="section-title"><i class="mdi mdi-calendar-range"></i> Activity Date</div>
+                    <div class="field-grid">
+                        <div class="span-4"><label class="field-label" for="accomplishmentScope">Scope <span class="required">*</span></label><select class="field-input" id="accomplishmentScope" name="accomplishmentScope" required><option value="section" <?= $scope==='section'?'selected':''; ?>>Section Accomplishments</option><option value="personal" <?= $scope==='personal'?'selected':''; ?>>Personal Accomplishments</option></select></div>
+                        <div class="span-4"><label class="field-label" for="activityDateFrom">From</label><input class="field-input" type="date" id="activityDateFrom" name="activityDateFrom" value="<?= htmlspecialchars($fromDate,ENT_QUOTES,'UTF-8'); ?>"></div>
+                        <div class="span-4"><label class="field-label" for="activityDateTo">To</label><input class="field-input" type="date" id="activityDateTo" name="activityDateTo" value="<?= htmlspecialchars($toDate,ENT_QUOTES,'UTF-8'); ?>"></div>
                     </div>
-                    <!-- end container-fluid -->
-
                 </div>
-                <!-- end content -->
-
-            
-
-
-            <!-- ============================================================== -->
-            <!-- End Page content -->
-            <!-- ============================================================== -->
-
-             <!-- Footer Start -->
-             <?php include('includes/footer.php'); ?>
-            <!-- end Footer -->
-
-        </div>
-        <!-- END wrapper -->
-
-        
-        <!-- Right Sidebar -->
-            <?php include('includes/right-sidebar.php'); ?> 
-        <!-- /Right-bar -->
-
-        <!-- Right bar overlay-->
-        <div class="rightbar-overlay"></div>
-
-        <!-- <a href="javascript:void(0);" class="right-bar-toggle demos-show-btn">
-            <i class="mdi mdi-settings-outline mdi-spin"></i> &nbsp;Choose Demos
-        </a> -->
-
-        <!-- Vendor js -->
-        <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
-
-        <!-- App js -->
-        <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
-
-
- <!-- Required datatable js -->
- <script src="<?= base_url(); ?>assets/libs/datatables/jquery.dataTables.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/datatables/dataTables.bootstrap4.min.js"></script>
-        <!-- Buttons examples -->
-        <script src="<?= base_url(); ?>assets/libs/datatables/dataTables.buttons.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/datatables/buttons.bootstrap4.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/jszip/jszip.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/pdfmake/pdfmake.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/pdfmake/vfs_fonts.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/datatables/buttons.html5.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/datatables/buttons.print.min.js"></script>
-
-                <!-- Plugin js-->
-                <script src="<?= base_url(); ?>assets/libs/parsleyjs/parsley.min.js"></script>
-
-<!-- Validation init js-->
-<script src="<?= base_url(); ?>assets/js/pages/form-validation.init.js"></script>
-
-        <!-- Responsive examples -->
-        <script src="<?= base_url(); ?>assets/libs/datatables/dataTables.responsive.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.js"></script>
-
-        <script src="<?= base_url(); ?>assets/libs/datatables/dataTables.keyTable.min.js"></script>
-        <script src="<?= base_url(); ?>assets/libs/datatables/dataTables.select.min.js"></script>
-
-        <!-- Datatables init -->
-        <script src="<?= base_url(); ?>assets/js/pages/datatables.init.js"></script>
-
-
-    </body>
-</html>
+                <div class="section-block">
+                    <div class="section-title"><i class="mdi mdi-clipboard-text-outline"></i> Activity Details / Accomplishment Details</div>
+                    <div class="field-grid">
+                        <div class="span-12"><label class="field-label" for="activity">Activity/Accomplishment Title <span class="required">*</span></label><input class="field-input" id="activity" name="activity" value="<?= htmlspecialchars($input('activity',$record->activity),ENT_QUOTES,'UTF-8'); ?>" required></div>
+                        <div class="span-12"><label class="field-label" for="particulars">Activity/Accomplishment Details</label><textarea class="field-textarea" id="particulars" name="particulars"><?= htmlspecialchars($input('particulars',$record->particulars),ENT_QUOTES,'UTF-8'); ?></textarea></div>
+                        <div class="span-12"><label class="field-label" for="venue">Venue</label><input class="field-input" id="venue" name="venue" value="<?= htmlspecialchars($input('venue',$record->venue),ENT_QUOTES,'UTF-8'); ?>"></div>
+                        <div class="span-12"><label class="field-label" for="featured_photo">Featured Photo</label><input class="field-input" type="file" id="featured_photo" name="featured_photo" accept="image/jpeg,image/png,image/gif"><span class="field-help">Optional. JPG, PNG, or GIF image up to 5 MB. Uploading a new photo replaces the current one.</span><?php if (!empty($record->featured_photo)) : ?><img class="photo-preview" src="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($record->featured_photo); ?>" alt="Current featured photo"><?php endif; ?></div>
+                        <div class="span-6"><label class="field-label" for="kra_id">KRA</label><select class="field-input" id="kra_id" name="kra_id"><option value="">-- Select KRA --</option><option value="0" <?= $kraId===0?'selected':''; ?>>Not Related</option><?php foreach($kraOptions as $kra) : ?><option value="<?= (int)$kra->id; ?>" <?= $kraId===(int)$kra->id?'selected':''; ?>><?= htmlspecialchars($kra->title,ENT_QUOTES,'UTF-8'); ?></option><?php endforeach; ?></select></div>
+                        <div class="span-6"><label class="field-label" for="objective_id">Objective</label><select class="field-input" id="objective_id" name="objective_id"><option value="">-- Select Objective --</option><option value="0" <?= $objectiveId===0?'selected':''; ?>>Not Related</option><?php foreach($objectiveOptions as $objective) : ?><option value="<?= (int)$objective->id; ?>" data-kra="<?= (int)$objective->template_kra_id; ?>" <?= $objectiveId===(int)$objective->id?'selected':''; ?>><?= htmlspecialchars($objective->code.' - '.$objective->objective,ENT_QUOTES,'UTF-8'); ?></option><?php endforeach; ?></select></div>
+                    </div>
+                </div>
+                <div class="section-block">
+                    <div class="section-title"><i class="mdi mdi-link-variant"></i> Supporting Notes</div>
+                    <div class="field-grid">
+                        <div class="span-12"><label class="field-label" for="resources">Resources Link</label><textarea class="field-textarea" id="resources" name="resources"><?= htmlspecialchars($input('resources',$record->resources),ENT_QUOTES,'UTF-8'); ?></textarea></div>
+                        <div class="span-12"><label class="field-label" for="notes">Additional Notes</label><textarea class="field-textarea" id="notes" name="notes"><?= htmlspecialchars($input('notes',$record->notes),ENT_QUOTES,'UTF-8'); ?></textarea></div>
+                    </div>
+                </div>
+                <div class="form-actions"><a class="btn-form btn-cancel" href="<?= base_url(); ?>Page/viewSecAccomplishments">Cancel</a><button class="btn-form btn-save" type="submit" name="update" value="1"><i class="mdi mdi-content-save-outline"></i> Update Accomplishment</button></div>
+            </form>
+        </section>
+    </main></div><?php include('includes/footer.php'); ?></div>
+</div>
+<script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
+<script src="<?= base_url(); ?>assets/libs/summernote/summernote-bs4.min.js"></script>
+<script src="<?= base_url(); ?>assets/js/app.min.js"></script>
+<script>
+(function($){
+    $('#particulars').summernote({height:220,toolbar:[['style',['style']],['font',['bold','italic','underline','clear']],['para',['ul','ol','paragraph']],['insert',['link']],['view',['codeview']]]});
+    var kra=$('#kra_id'), objective=$('#objective_id'), options=objective.find('option[data-kra]').clone();
+    function filterObjectives(kraId){var selected=objective.val();objective.empty().append('<option value="">-- Select Objective --</option>').append('<option value="0">Not Related</option>');options.each(function(){var option=$(this);if(String(kraId)!=='0'&&(!kraId||String(option.data('kra'))===String(kraId)))objective.append(option.clone());});objective.val(objective.find('option[value="'+selected+'"]').length?selected:(String(kraId)==='0'?'0':''));}
+    kra.on('change',function(){filterObjectives($(this).val());}); filterObjectives(kra.val());
+})(jQuery);
+</script>
+</body></html>

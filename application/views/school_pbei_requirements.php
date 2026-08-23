@@ -63,7 +63,6 @@ $requirementCount = count($requirements);
         <section class="pbei-school-hero">
             <div class="pbei-kicker"><i class="mdi mdi-trophy-outline font-20"></i> PBEI Recognition</div>
             <h2>Mandatory Requirements</h2>
-            <p>Submit your supporting documents and notes for review. Your progress is saved as you complete each requirement.</p>
             <div class="pbei-hero-footer"><a class="pbei-order-link" href="https://www.deped.gov.ph/wp-content/uploads/DO_s2026_012r.pdf" target="_blank" rel="noopener noreferrer"><i class="mdi mdi-file-document-outline"></i> Read DepEd Order No. 12, s. 2026</a><span class="pbei-progress"><i class="mdi mdi-check-circle-outline"></i><strong><?= $submittedCount; ?>/<?= $requirementCount; ?></strong> requirements submitted</span></div>
         </section>
 

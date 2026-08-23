@@ -97,6 +97,12 @@ class Page extends CI_Controller{
 	}
   }
 
+  private function ensure_accomplishment_featured_photo_column(){
+	if(!$this->db->field_exists('featured_photo', 'one_sgod_accomplishments')){
+		$this->db->query("ALTER TABLE one_sgod_accomplishments ADD COLUMN featured_photo VARCHAR(255) NOT NULL DEFAULT '' AFTER objective_id");
+	}
+  }
+
   private function ensure_ipcrf_objective_template_id(){
 	if(!$this->db->field_exists('template_id', 'ipcrf_template_objectives')){
 		$this->db->query("ALTER TABLE ipcrf_template_objectives ADD COLUMN template_id INT UNSIGNED NOT NULL DEFAULT 0 AFTER template_kra_id");
@@ -197,6 +203,28 @@ class Page extends CI_Controller{
 		'uploaded' => TRUE,
 		'data' => $this->upload->data()
 	);
+  }
+
+  private function upload_accomplishment_featured_photo($fieldName = 'featured_photo'){
+	if(empty($_FILES[$fieldName]['name'])){
+		return array('success' => TRUE, 'uploaded' => FALSE);
+	}
+
+	$uploadPath = FCPATH . 'upload/accomplishment_featured_photos/';
+	if(!is_dir($uploadPath)) mkdir($uploadPath, 0775, TRUE);
+	$config = array(
+		'upload_path' => $uploadPath,
+		'allowed_types' => 'jpg|jpeg|png|gif',
+		'max_size' => 5120,
+		'encrypt_name' => TRUE,
+		'remove_spaces' => TRUE
+	);
+	$this->load->library('upload');
+	$this->upload->initialize($config);
+	if(!$this->upload->do_upload($fieldName)){
+		return array('success' => FALSE, 'uploaded' => FALSE, 'message' => trim(strip_tags($this->upload->display_errors('', ''))));
+	}
+	return array('success' => TRUE, 'uploaded' => TRUE, 'data' => $this->upload->data());
   }
 
   private function delete_accomplishment_reports($accomplishmentId){
@@ -2180,6 +2208,89 @@ public function memo_delete(){
 		$this->load->view('sect_accomplishments',$result);
 	}
 
+	function accomplishment_flipbook(){
+		$secGroup = $this->session->userdata('secGroup');
+		$section = $this->session->userdata('section');
+		$username = $this->session->userdata('username');
+		$scope = strtolower(trim((string) $this->input->get('scope', TRUE)));
+		if($scope !== 'personal') $scope = 'section';
+		$monthInput = $this->input->get('month', TRUE);
+		$yearInput = $this->input->get('year', TRUE);
+		$selectedMonth = $monthInput === NULL ? date('F') : trim((string) $monthInput);
+		$selectedYear = $yearInput === NULL ? date('Y') : trim((string) $yearInput);
+		$months = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+		$filterNoDate = $selectedMonth === '__unspecified__' || $selectedYear === '__unspecified__';
+		if($filterNoDate){
+			$selectedMonth = '__unspecified__';
+			$selectedYear = '__unspecified__';
+		} else {
+			if(!in_array($selectedMonth, $months, TRUE)) $selectedMonth = '';
+			if(!preg_match('/^\\d{4}$/', $selectedYear)) $selectedYear = '';
+		}
+
+		$this->ensure_accomplishment_scope_column();
+		$this->ensure_accomplishment_report_table();
+		$this->ensure_accomplishment_featured_photo_column();
+		$records = $this->SGODModel->viewSecAccomplishments($section, $secGroup, $scope, $username);
+		$availableYears = array();
+		foreach($records as $record){
+			$recordYear = trim((string) $record->year);
+			if(preg_match('/^\\d{4}$/', $recordYear)) $availableYears[$recordYear] = $recordYear;
+		}
+		krsort($availableYears, SORT_NUMERIC);
+		if($selectedYear !== '' && $selectedYear !== '__unspecified__') $availableYears[$selectedYear] = $selectedYear;
+		krsort($availableYears, SORT_NUMERIC);
+		if($filterNoDate){
+			$records = array_values(array_filter($records, function($record){
+				return trim((string) $record->targetDate) === '' && trim((string) $record->dateConducted) === '';
+			}));
+		} elseif($selectedMonth !== '' || $selectedYear !== ''){
+			$records = array_values(array_filter($records, function($record) use ($selectedMonth, $selectedYear){
+				return ($selectedMonth === '' || (string) $record->monthAcc === $selectedMonth)
+					&& ($selectedYear === '' || (string) $record->year === $selectedYear);
+			}));
+		}
+		$result['sectionName'] = $section;
+		$result['scope'] = $scope;
+		$result['selectedMonth'] = $selectedMonth;
+		$result['selectedYear'] = $selectedYear;
+		$result['availableYears'] = array_values($availableYears);
+		$result['records'] = $records;
+		$result['kraTitles'] = array();
+		foreach($this->get_active_kras() as $kra){
+			$result['kraTitles'][(int) $kra->id] = trim((string) $kra->title);
+		}
+		$accomplishmentIds = array();
+		foreach($result['records'] as $record){
+			$accomplishmentIds[] = (int) $record->id;
+		}
+		$result['reportGroups'] = $this->SGODModel->get_accomplishment_report_groups($accomplishmentIds);
+		$this->load->view('accomplishment_flipbook', $result);
+	}
+
+	function accomplishment_flipbook_filter(){
+		$secGroup = $this->session->userdata('secGroup');
+		$section = $this->session->userdata('section');
+		$username = $this->session->userdata('username');
+		$scope = strtolower(trim((string) $this->input->get('scope', TRUE)));
+		if($scope !== 'personal') $scope = 'section';
+		$this->ensure_accomplishment_scope_column();
+		$records = $this->SGODModel->viewSecAccomplishments($section, $secGroup, $scope, $username);
+		$years = array();
+		foreach($records as $record){
+			$year = trim((string) $record->year);
+			if(preg_match('/^\d{4}$/', $year)) $years[$year] = $year;
+		}
+		$years[date('Y')] = date('Y');
+		krsort($years, SORT_NUMERIC);
+		$result = array(
+			'sectionName' => $section,
+			'scope' => $scope,
+			'availableYears' => array_values($years)
+		);
+		$this->load->view('accomplishment_flipbook_filter', $result);
+	}
+
 	function addAccomplishmentAttachment(){
 		$this->ensure_accomplishment_report_table();
 
@@ -3029,6 +3140,7 @@ public function memo_delete(){
 		$result = array();
 		$this->ensure_accomplishment_scope_column();
 		$this->ensure_kra_objective_columns();
+		$this->ensure_accomplishment_featured_photo_column();
 		$this->ensure_ipcrf_objective_template_id();
 		$result['kraOptions'] = $this->get_active_kras();
 		$result['objectiveOptions'] = $this->get_active_objectives();
@@ -3037,21 +3149,22 @@ public function memo_delete(){
 	  {
 	  $activityDateFrom = $this->normalize_activity_date($this->input->post('activityDateFrom'));
 	  $activityDateTo = $this->normalize_activity_date($this->input->post('activityDateTo'));
-	  if($activityDateFrom === '' || $activityDateTo === ''){
-		$result['uploadError'] = 'Please provide valid activity dates for both From and To.';
-		$this->load->view('sect_accomplishments_add', $result);
-		return;
+	  // Dates are optional. A single date represents a one-day accomplishment.
+	  if($activityDateFrom === '' && $activityDateTo !== ''){
+		$activityDateFrom = $activityDateTo;
+	  } elseif($activityDateTo === '' && $activityDateFrom !== ''){
+		$activityDateTo = $activityDateFrom;
 	  }
 
-	  if(strtotime($activityDateTo) < strtotime($activityDateFrom)){
+	  if($activityDateFrom !== '' && $activityDateTo !== '' && strtotime($activityDateTo) < strtotime($activityDateFrom)){
 		$result['uploadError'] = 'The Activity Date To must be on or after the Activity Date From.';
 		$this->load->view('sect_accomplishments_add', $result);
 		return;
 	  }
 
-	  $quarter=$this->get_quarter_from_date($activityDateFrom); 
-	  $year=date('Y', strtotime($activityDateFrom));
-	  $monthAcc=date('F', strtotime($activityDateFrom));
+	  $quarter = $activityDateFrom !== '' ? $this->get_quarter_from_date($activityDateFrom) : '';
+	  $year = $activityDateFrom !== '' ? date('Y', strtotime($activityDateFrom)) : '';
+	  $monthAcc = $activityDateFrom !== '' ? date('F', strtotime($activityDateFrom)) : '';
 	  $weekAcc='';
 	  $section=$this->session->userdata('section'); 
 	  $activity=trim((string) $this->input->post('activity')); 
@@ -3061,7 +3174,7 @@ public function memo_delete(){
 	  $kraId = (int) $this->input->post('kra_id');
 	  $objectiveId = (int) $this->input->post('objective_id');
 	  $targetDate=$activityDateFrom;
-	  $dateConducted=$this->format_activity_date_range($activityDateFrom, $activityDateTo);
+	  $dateConducted = $activityDateFrom !== '' ? $this->format_activity_date_range($activityDateFrom, $activityDateTo) : '';
 	  $resources=trim((string) $this->input->post('resources'));
 	  $notes=trim((string) $this->input->post('notes'));
 	  $remarks=trim((string) $this->input->post('remarks'));
@@ -3073,6 +3186,13 @@ public function memo_delete(){
 	  $target=trim((string) $this->input->post('target'));
 	  $achieved=trim((string) $this->input->post('achieved'));
 	  $percentageAccom=trim((string) $this->input->post('percentageAccom'));
+	  $photoUpload = $this->upload_accomplishment_featured_photo('featured_photo');
+	  if(!$photoUpload['success']){
+		$result['uploadError'] = $photoUpload['message'];
+		$this->load->view('sect_accomplishments_add', $result);
+		return;
+	  }
+	  $featuredPhoto = !empty($photoUpload['uploaded']) ? (string) $photoUpload['data']['file_name'] : '';
 
 	  $accomplishmentData = array(
 		'quarter' => $quarter,
@@ -3086,6 +3206,7 @@ public function memo_delete(){
 		'venue' => $venue,
 		'kra_id' => $kraId,
 		'objective_id' => $objectiveId,
+		'featured_photo' => $featuredPhoto,
 		'targetDate' => $targetDate,
 		'dateConducted' => $dateConducted,
 		'encoder' => $encoder,
@@ -3102,6 +3223,10 @@ public function memo_delete(){
 
 	  $saved = $this->db->insert('one_sgod_accomplishments', $accomplishmentData);
 	  if(!$saved){
+		if($featuredPhoto !== ''){
+			$photoPath = FCPATH . 'upload/accomplishment_featured_photos/' . $featuredPhoto;
+			if(file_exists($photoPath)) @unlink($photoPath);
+		}
 		$result['uploadError'] = 'Unable to save the accomplishment entry right now. Please try again.';
 		$this->load->view('sect_accomplishments_add', $result);
 		return;
@@ -3116,42 +3241,67 @@ public function memo_delete(){
   }
   
   function updateAccomplishments(){
-	$id=$this->input->get('id');
+	$id = (int) ($this->input->post('id') ?: $this->input->get('id'));
 	$this->ensure_accomplishment_scope_column();
-	$result['data']=$this->SGODModel->accombyid($id);
-	$this->load->view('sect_accom_update',$result);
- 
-	if($this->input->post('update'))
-  {
-  //get data from the form
- 
-  $quarter=$this->input->post('quarter'); 
-  $year=$this->input->post('year');
-  $weekAcc=$this->input->post('weekAcc');
-  $monthAcc=$this->input->post('monthAcc');
-  $particulars=addslashes($this->input->post('particulars'));
-  $targetDate=$this->input->post('targetDate');
-  $section=$this->session->userdata('section'); 
-  $activity=addslashes($this->input->post('activity')); 
-  $activityCategory=$this->input->post('activityCategory');
-  $venue=$this->input->post('venue');
-  $dateConducted=$this->input->post('dateConducted');
-  $encoder=$this->session->userdata('username');
-  $resources=addslashes($this->input->post('resources'));
-  $notes=addslashes($this->input->post('notes'));
-  $remarks=addslashes($this->input->post('remarks'));
+	$this->ensure_kra_objective_columns();
+	$this->ensure_accomplishment_featured_photo_column();
+	$this->ensure_ipcrf_objective_template_id();
+	$record = $this->get_owned_accomplishment($id);
+	if(!$record){ show_404(); return; }
+	$result = array('record' => $record, 'kraOptions' => $this->get_active_kras(), 'objectiveOptions' => $this->get_active_objectives());
 
-  $perIndicators=$this->input->post('perIndicators');
-  $target=$this->input->post('target');
-  $achieved=$this->input->post('achieved');
-  $percentageAccom=$this->input->post('percentageAccom');
-  
-  $que=$this->db->query("update one_sgod_accomplishments set quarter='$quarter', year='$year', monthAcc='$monthAcc', weekAcc='$weekAcc', section='$section', activity='$activity', activityCategory='$activityCategory', particulars='$particulars', venue='$venue', targetDate='$targetDate', dateConducted='$dateConducted',resources='$resources',notes='$notes',perIndicators='$perIndicators',target='$target',achieved='$achieved',percentageAccom='$percentageAccom',remarks='$remarks' where id='".$id."'");
-  $this->session->set_flashdata('success', ' Updated Successfully!');
-  redirect('Page/viewSecAccomplishments');
+	if($this->input->post('update')){
+		$from = $this->normalize_activity_date($this->input->post('activityDateFrom'));
+		$to = $this->normalize_activity_date($this->input->post('activityDateTo'));
+		if($from === '' && $to !== '') $from = $to;
+		if($to === '' && $from !== '') $to = $from;
+		if($from !== '' && $to !== '' && strtotime($to) < strtotime($from)){
+			$result['uploadError'] = 'The Activity Date To must be on or after the Activity Date From.';
+			$this->load->view('sect_accom_update', $result); return;
+		}
+		$activity = trim((string) $this->input->post('activity'));
+		if($activity === ''){
+			$result['uploadError'] = 'Activity/Accomplishment is required.';
+			$this->load->view('sect_accom_update', $result); return;
+		}
+		$photoUpload = $this->upload_accomplishment_featured_photo('featured_photo');
+		if(!$photoUpload['success']){
+			$result['uploadError'] = $photoUpload['message'];
+			$this->load->view('sect_accom_update', $result); return;
+		}
+		$featuredPhoto = !empty($photoUpload['uploaded']) ? (string) $photoUpload['data']['file_name'] : (string) $record->featured_photo;
+		$payload = array(
+			'quarter' => $from !== '' ? $this->get_quarter_from_date($from) : '',
+			'year' => $from !== '' ? date('Y', strtotime($from)) : '',
+			'monthAcc' => $from !== '' ? date('F', strtotime($from)) : '',
+			'weekAcc' => '',
+			'activity' => $activity,
+			'particulars' => trim((string) $this->input->post('particulars')),
+			'activityCategory' => trim((string) $this->input->post('activityCategory')),
+			'venue' => trim((string) $this->input->post('venue')),
+			'kra_id' => (int) $this->input->post('kra_id'),
+			'objective_id' => (int) $this->input->post('objective_id'),
+			'targetDate' => $from,
+			'dateConducted' => $from !== '' ? $this->format_activity_date_range($from, $to) : '',
+			'accomplishmentScope' => $this->normalize_accomplishment_scope($this->input->post('accomplishmentScope')),
+			'resources' => trim((string) $this->input->post('resources')),
+			'notes' => trim((string) $this->input->post('notes')),
+			'featured_photo' => $featuredPhoto
+		);
+		$saved = $this->db->where('id', $id)->where('section', $this->session->userdata('section'))->where('secGroup', $this->session->userdata('secGroup'))->update('one_sgod_accomplishments', $payload);
+		if($saved){
+			if(!empty($photoUpload['uploaded']) && $record->featured_photo !== ''){
+				$oldPhoto = FCPATH . 'upload/accomplishment_featured_photos/' . $record->featured_photo;
+				if(file_exists($oldPhoto)) @unlink($oldPhoto);
+			}
+			$this->session->set_flashdata('success', 'Updated successfully!');
+			redirect('Page/viewSecAccomplishments'); return;
+		}
+		if(!empty($photoUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_featured_photos/' . $featuredPhoto);
+		$result['uploadError'] = 'Unable to update the accomplishment entry right now. Please try again.';
+	}
+	$this->load->view('sect_accom_update', $result);
   }
-  
-  }	
   
 	function deleteAccomplishment(){
 		$id=$this->input->get('id');
@@ -3964,7 +4114,7 @@ public function memo_delete(){
 		$schoolId = (string) $this->session->userdata('username');
 		$result['personnel'] = $this->db->where('school_id', $schoolId)->order_by('full_name', 'ASC')->get('one_school_personnel')->result();
 		$editId = (int) $this->input->get('edit');
-		$result['editPersonnel'] = $editId ? $this->db->where('id', $editId)->where('school_id', $schoolId)->get('one_school_personnel', 1)->row() : null;
+		if($editId){ redirect('Page/school_personnel_form/' . $editId); return; }
 		$result['totals'] = array(
 			'total' => $this->db->where('school_id', $schoolId)->count_all_results('one_school_personnel'),
 			'licensed' => $this->db->where(array('school_id' => $schoolId, 'personnel_type' => 'Teaching', 'licensed' => 1))->count_all_results('one_school_personnel'),
@@ -3972,6 +4122,22 @@ public function memo_delete(){
 			'full_time' => $this->db->where(array('school_id' => $schoolId, 'personnel_type' => 'Teaching', 'employment_status' => 'Full-time'))->count_all_results('one_school_personnel'),
 			'part_time' => $this->db->where(array('school_id' => $schoolId, 'personnel_type' => 'Teaching', 'employment_status' => 'Part-time'))->count_all_results('one_school_personnel')
 		);
+		$this->load->view('school_personnel', $result);
+	}
+
+	function school_personnel_form($id = 0){
+		if($this->session->userdata('section') !== 'School'){
+			show_error('Access Denied', 403); return;
+		}
+		$this->ensure_school_personnel_table();
+		$result['personnelRecord'] = null;
+		if((int) $id){
+			$result['personnelRecord'] = $this->db->where('id', (int) $id)->where('school_id', (string) $this->session->userdata('username'))->get('one_school_personnel', 1)->row();
+			if(!$result['personnelRecord']){ show_404(); return; }
+		}
+		// Load through the established personnel view so deployments with a cached
+		// view-path configuration can still resolve the new form template.
+		$result['personnelFormOnly'] = true;
 		$this->load->view('school_personnel', $result);
 	}
 
@@ -3985,8 +4151,10 @@ public function memo_delete(){
 		$lastName = trim((string) $this->input->post('last_name', TRUE));
 		$fullName = trim(implode(' ', array_filter(array($firstName, $middleName, $lastName))));
 		if($fullName === '') $fullName = trim((string) $this->input->post('full_name', TRUE));
+		$recordId = (int) $this->input->post('id');
+		$formUrl = 'Page/school_personnel_form' . ($recordId ? '/' . $recordId : '');
 		if($fullName === ''){
-			$this->session->set_flashdata('danger', 'Personnel name is required.'); redirect('Page/school_personnel'); return;
+			$this->session->set_flashdata('danger', 'Personnel name is required.'); redirect($formUrl); return;
 		}
 		$payload = array(
 			'school_id' => (string) $this->session->userdata('username'),
@@ -4007,13 +4175,16 @@ public function memo_delete(){
 			'prc_expiration' => trim((string) $this->input->post('prc_expiration', TRUE)),
 			'non_teaching_role' => trim((string) $this->input->post('non_teaching_role', TRUE)),
 			'non_teaching_other' => trim((string) $this->input->post('non_teaching_other', TRUE)),
+			'salary_range' => trim((string) $this->input->post('salary_range', TRUE)),
+			'work_assignment' => trim((string) $this->input->post('work_assignment', TRUE)),
+			'working_days_per_week' => (int) $this->input->post('working_days_per_week', TRUE),
+			'benefits' => implode('|', array_filter((array) $this->input->post('benefits', TRUE))),
 			'email' => trim((string) $this->input->post('email', TRUE)),
 			'mobile_no' => trim((string) $this->input->post('mobile_no', TRUE))
 		);
 		if($payload['email'] !== '' && !filter_var($payload['email'], FILTER_VALIDATE_EMAIL)){
-			$this->session->set_flashdata('danger', 'Enter a valid email address.'); redirect('Page/school_personnel'); return;
+			$this->session->set_flashdata('danger', 'Enter a valid email address.'); redirect($formUrl); return;
 		}
-		$recordId = (int) $this->input->post('id');
 		if($recordId){
 			$this->db->where('id', $recordId)->where('school_id', (string) $this->session->userdata('username'))->update('one_school_personnel', $payload);
 			$this->session->set_flashdata('success', 'Personnel record updated successfully.');
@@ -4096,7 +4267,7 @@ public function memo_delete(){
 
 	private function ensure_school_personnel_table(){
 		$this->db->query('CREATE TABLE IF NOT EXISTS one_school_personnel (id INT UNSIGNED NOT NULL AUTO_INCREMENT, school_id VARCHAR(50) NOT NULL, employee_no VARCHAR(100) NULL, full_name VARCHAR(255) NOT NULL, first_name VARCHAR(100) NULL, middle_name VARCHAR(100) NULL, last_name VARCHAR(100) NULL, sex VARCHAR(20) NULL, position_title VARCHAR(255) NULL, personnel_type VARCHAR(30) NOT NULL DEFAULT \'Teaching\', licensed TINYINT(1) NOT NULL DEFAULT 0, employment_status VARCHAR(30) NOT NULL DEFAULT \'Full-time\', highest_education VARCHAR(255) NULL, education_course VARCHAR(255) NULL, major_specialization VARCHAR(255) NULL, prc_license_no VARCHAR(100) NULL, prc_expiration DATE NULL, non_teaching_role VARCHAR(100) NULL, non_teaching_other VARCHAR(255) NULL, email VARCHAR(255) NULL, mobile_no VARCHAR(100) NULL, created_at DATETIME NULL, PRIMARY KEY (id), KEY one_school_personnel_school_id (school_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
-		$columns = array('first_name' => 'VARCHAR(100) NULL', 'middle_name' => 'VARCHAR(100) NULL', 'last_name' => 'VARCHAR(100) NULL', 'highest_education' => 'VARCHAR(255) NULL', 'education_course' => 'VARCHAR(255) NULL', 'major_specialization' => 'VARCHAR(255) NULL', 'prc_license_no' => 'VARCHAR(100) NULL', 'prc_expiration' => 'DATE NULL', 'non_teaching_role' => 'VARCHAR(100) NULL', 'non_teaching_other' => 'VARCHAR(255) NULL');
+		$columns = array('first_name' => 'VARCHAR(100) NULL', 'middle_name' => 'VARCHAR(100) NULL', 'last_name' => 'VARCHAR(100) NULL', 'highest_education' => 'VARCHAR(255) NULL', 'education_course' => 'VARCHAR(255) NULL', 'major_specialization' => 'VARCHAR(255) NULL', 'prc_license_no' => 'VARCHAR(100) NULL', 'prc_expiration' => 'DATE NULL', 'non_teaching_role' => 'VARCHAR(100) NULL', 'non_teaching_other' => 'VARCHAR(255) NULL', 'salary_range' => 'VARCHAR(100) NULL', 'work_assignment' => 'VARCHAR(255) NULL', 'working_days_per_week' => 'TINYINT UNSIGNED NULL', 'benefits' => 'TEXT NULL');
 		foreach($columns as $column => $definition){
 			if(!$this->db->field_exists($column, 'one_school_personnel')) $this->db->query('ALTER TABLE one_school_personnel ADD COLUMN ' . $column . ' ' . $definition);
 		}

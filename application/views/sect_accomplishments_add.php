@@ -4,8 +4,8 @@ $secGroupName = $this->session->userdata('secGroup') ?: '';
 $selectedAccomplishmentScope = $this->input->post('accomplishmentScope') && strtolower((string) $this->input->post('accomplishmentScope')) === 'personal'
     ? 'personal'
     : 'section';
-$activityDateFromValue = $this->input->post('activityDateFrom') ? (string) $this->input->post('activityDateFrom') : date('Y-m-d');
-$activityDateToValue = $this->input->post('activityDateTo') ? (string) $this->input->post('activityDateTo') : $activityDateFromValue;
+$activityDateFromValue = (string) $this->input->post('activityDateFrom');
+$activityDateToValue = (string) $this->input->post('activityDateTo');
 $activityValue = $this->input->post('activity') ? (string) $this->input->post('activity') : '';
 $categoryValue = $this->input->post('activityCategory') ? (string) $this->input->post('activityCategory') : 'Accomplishment';
 $venueValue = $this->input->post('venue') ? (string) $this->input->post('venue') : '';
@@ -39,6 +39,7 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
         <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" id="bootstrap-stylesheet" />
         <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
         <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-stylesheet" />
+        <link href="<?= base_url(); ?>assets/libs/summernote/summernote-bs4.css" rel="stylesheet" type="text/css" />
 
         <style>
             :root {
@@ -60,6 +61,22 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
 
             .content-page {
                 background: transparent;
+            }
+
+            .note-editor.note-frame {
+                border: 1px solid var(--accom-border);
+                border-radius: 10px;
+                overflow: hidden;
+            }
+
+            .note-editor.note-frame .note-toolbar {
+                background: #f8f9ff;
+                border-bottom: 1px solid var(--accom-border);
+            }
+
+            .note-editor.note-frame .note-editing-area .note-editable {
+                min-height: 180px;
+                color: var(--accom-ink);
             }
 
             .accom-add-shell {
@@ -613,7 +630,7 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                         </div>
                                     <?php } ?>
 
-                                    <form method="post" action="<?= base_url(); ?>Page/addAccomplishments">
+                                    <form method="post" action="<?= base_url(); ?>Page/addAccomplishments" enctype="multipart/form-data">
                                         <div class="section-block">
                                             <div class="section-title">
                                                 <i class="mdi mdi-calendar-range"></i>
@@ -629,13 +646,13 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                                 </div>
 
                                                 <div class="field-span-4">
-                                                    <label class="field-label" for="activityDateFrom">From <span class="required">*</span></label>
-                                                    <input type="date" class="field-input" id="activityDateFrom" name="activityDateFrom" value="<?= htmlspecialchars($activityDateFromValue, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                                    <label class="field-label" for="activityDateFrom">From</label>
+                                                    <input type="date" class="field-input" id="activityDateFrom" name="activityDateFrom" value="<?= htmlspecialchars($activityDateFromValue, ENT_QUOTES, 'UTF-8'); ?>">
                                                 </div>
 
                                                 <div class="field-span-4">
-                                                    <label class="field-label" for="activityDateTo">To <span class="required">*</span></label>
-                                                    <input type="date" class="field-input" id="activityDateTo" name="activityDateTo" value="<?= htmlspecialchars($activityDateToValue, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                                    <label class="field-label" for="activityDateTo">To</label>
+                                                    <input type="date" class="field-input" id="activityDateTo" name="activityDateTo" value="<?= htmlspecialchars($activityDateToValue, ENT_QUOTES, 'UTF-8'); ?>">
                                                 </div>
                                             </div>
                                         </div>
@@ -643,12 +660,17 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                         <div class="section-block">
                                             <div class="section-title">
                                                 <i class="mdi mdi-clipboard-text-outline"></i>
-                                                Activity Details
+                                                Activity Details / Accomplishment Details
                                             </div>
                                             <div class="field-grid">
                                                 <div class="field-span-12">
-                                                    <label class="field-label" for="activity">Activity <span class="required">*</span></label>
-                                                    <textarea class="field-textarea" id="activity" name="activity" required><?= htmlspecialchars($activityValue, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                                                    <label class="field-label" for="activity">Activity/Accomplishment Title <span class="required">*</span></label>
+                                                    <input type="text" class="field-input" id="activity" name="activity" value="<?= htmlspecialchars($activityValue, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                                </div>
+
+                                                <div class="field-span-12">
+                                                    <label class="field-label" for="particulars">Activity/Accomplishment Details</label>
+                                                    <textarea class="field-textarea" id="particulars" name="particulars"><?= htmlspecialchars($this->input->post('particulars') ? (string) $this->input->post('particulars') : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
                                                 </div>
 
                                                 <input type="hidden" id="activityCategory" name="activityCategory" value="<?= htmlspecialchars($categoryValue, ENT_QUOTES, 'UTF-8'); ?>">
@@ -663,10 +685,17 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                                     <input type="text" class="field-input" id="venue" name="venue" value="<?= htmlspecialchars($venueValue, ENT_QUOTES, 'UTF-8'); ?>">
                                                 </div>
 
+                                                <div class="field-span-12">
+                                                    <label class="field-label" for="featured_photo">Featured Photo</label>
+                                                    <input type="file" class="field-input" id="featured_photo" name="featured_photo" accept="image/jpeg,image/png,image/gif">
+                                                    <small class="form-text text-muted">Optional. JPG, PNG, or GIF image up to 5 MB. It will appear on this accomplishment’s Flipbook page.</small>
+                                                </div>
+
                                                 <div class="field-span-6">
                                                     <label class="field-label" for="kra_id">KRA</label>
                                                     <select class="field-input" id="kra_id" name="kra_id">
                                                         <option value="">-- Select KRA --</option>
+                                                        <option value="0" <?= (string) $this->input->post('kra_id') === '0' ? 'selected' : ''; ?>>Not Related</option>
                                                         <?php if (!empty($kraOptions)) : ?>
                                                             <?php foreach ($kraOptions as $kra) : ?>
                                                                 <option value="<?= (int) $kra->id; ?>" <?= (int) ($kraIdValue ?? 0) === (int) $kra->id ? 'selected' : ''; ?>>
@@ -681,6 +710,7 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                                     <label class="field-label" for="objective_id">Objective</label>
                                                     <select class="field-input" id="objective_id" name="objective_id">
                                                         <option value="">-- Select Objective --</option>
+                                                        <option value="0" <?= (string) $this->input->post('objective_id') === '0' ? 'selected' : ''; ?>>Not Related</option>
                                                         <?php if (!empty($objectiveOptions)) : ?>
                                                             <?php foreach ($objectiveOptions as $objective) : ?>
                                                                 <option value="<?= (int) $objective->id; ?>" data-kra="<?= (int) $objective->template_kra_id; ?>" <?= (int) ($objectiveIdValue ?? 0) === (int) $objective->id ? 'selected' : ''; ?>>
@@ -776,9 +806,22 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
         <?php include('includes/right-sidebar.php'); ?>
 
         <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
+        <script src="<?= base_url(); ?>assets/libs/summernote/summernote-bs4.min.js"></script>
         <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
         <script>
             (function ($) {
+                $('#particulars').summernote({
+                    height: 220,
+                    placeholder: 'Enter the activity or accomplishment details',
+                    toolbar: [
+                        ['style', ['style']],
+                        ['font', ['bold', 'italic', 'underline', 'clear']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['insert', ['link']],
+                        ['view', ['codeview']]
+                    ]
+                });
+
                 var weeklyReportModal = $('#weeklyReportModal');
 
                 weeklyReportModal.on('show.bs.modal', function (event) {
@@ -799,10 +842,12 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
 
                 function filterObjectives(kraId) {
                     var selectedObjective = objectiveSelect.val();
-                    objectiveSelect.empty().append('<option value="">-- Select Objective --</option>');
+                    objectiveSelect.empty()
+                        .append('<option value="">-- Select Objective --</option>')
+                        .append('<option value="0">Not Related</option>');
                     allObjectives.each(function () {
                         var option = $(this);
-                        if (!kraId || String(option.data('kra')) === String(kraId)) {
+                        if (String(kraId) !== '0' && (!kraId || String(option.data('kra')) === String(kraId))) {
                             objectiveSelect.append(option.clone());
                         }
                     });
@@ -814,7 +859,11 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                 }
 
                 kraSelect.on('change', function () {
-                    filterObjectives($(this).val());
+                    var kraId = $(this).val();
+                    filterObjectives(kraId);
+                    if (String(kraId) === '0') {
+                        objectiveSelect.val('0');
+                    }
                 });
 
                 filterObjectives(kraSelect.val());

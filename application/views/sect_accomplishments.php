@@ -213,6 +213,52 @@ if (!function_exists('sect_accom_resource_markup')) {
                 background: rgba(255, 255, 255, 0.08);
             }
 
+            .quick-action-menu {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin: -8px 18px 24px;
+                padding: 9px;
+                border: 1px solid rgba(60, 64, 198, 0.10);
+                border-radius: 16px;
+                background: rgba(255, 255, 255, 0.94);
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+            }
+
+            .quick-action {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                padding: 10px 13px;
+                border: 0;
+                border-radius: 10px;
+                color: var(--user-ink);
+                background: transparent;
+                font: inherit;
+                font-size: .86rem;
+                font-weight: 700;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+            .quick-action:hover,
+            .quick-action:focus {
+                color: var(--user-blue);
+                background: rgba(60, 64, 198, 0.08);
+                text-decoration: none;
+            }
+
+            .quick-action--primary {
+                color: #fff;
+                background: linear-gradient(135deg, #272b8c, #565de8);
+            }
+
+            .quick-action--primary:hover,
+            .quick-action--primary:focus {
+                color: #fff;
+                background: linear-gradient(135deg, #1d216f, #464fd0);
+            }
+
             .flash-alert {
                 border: none;
                 border-radius: 18px;
@@ -735,6 +781,33 @@ if (!function_exists('sect_accom_resource_markup')) {
                 border-top: 1px solid rgba(60, 64, 198, 0.08);
             }
 
+            #accomplishmentFilterModal .modal-content,
+            #accomplishmentReportModal .modal-content {
+                border: 0;
+                border-radius: 20px;
+                overflow: hidden;
+            }
+
+            #accomplishmentFilterModal .modal-header,
+            #accomplishmentReportModal .modal-header {
+                border: 0;
+                color: #fff;
+                background: linear-gradient(135deg, #272b8c, #565de8);
+            }
+
+            #accomplishmentFilterModal .modal-title,
+            #accomplishmentReportModal .modal-title {
+                margin-top: 10px;
+                color: #fff;
+            }
+
+            #accomplishmentFilterModal .close,
+            #accomplishmentFilterModal .panel-kicker,
+            #accomplishmentReportModal .close,
+            #accomplishmentReportModal .panel-kicker {
+                color: #fff;
+            }
+
             .dataTables_wrapper .row:first-child {
                 margin-bottom: 16px;
             }
@@ -813,6 +886,10 @@ if (!function_exists('sect_accom_resource_markup')) {
                     justify-content: flex-start;
                 }
 
+                .quick-action-menu {
+                    margin: -8px 0 20px;
+                }
+
                 .panel-head {
                     margin-bottom: 18px;
                 }
@@ -849,72 +926,12 @@ if (!function_exists('sect_accom_resource_markup')) {
                             </div>
                         </div>
 
-                        <div class="panel-card" style="margin-top: 24px;">
-                            <div class="panel-head">
-                                <div>
-                                    <div class="panel-kicker">Quick Actions & Filter</div>
-                                </div>
-                                <div class="panel-summary">
-                                    <i class="mdi mdi-filter-outline"></i>
-                                    <span><?= sect_accom_escape($filterSummary); ?></span>
-                                </div>
-                            </div>
-
-                            <div class="filter-actions" style="margin-bottom: 20px;">
-                                <a href="<?= base_url(); ?>Page/addAccomplishments" class="shell-button shell-button--primary">
-                                    <i class="mdi mdi-plus-circle-outline"></i>
-                                    Add Accomplishment
-                                </a>
-                                <a target="_blank" rel="noopener noreferrer" href="<?= base_url(); ?>Page/print_report/<?= rawurlencode($sectionName); ?>" class="shell-button shell-button--secondary">
-                                    <i class="mdi mdi-printer-outline"></i>
-                                    Generate Report
-                                </a>
-                            </div>
-
-                            <?php $att = array('class' => 'parsley-examples'); ?>
-                            <?= form_open('Page/viewSecAccomplishments', $att); ?>
-                                <div class="filter-grid">
-                                    <div class="smart-field">
-                                        <label class="smart-label" for="filterScope">Scope</label>
-                                        <select class="smart-select" id="filterScope" name="scope" required>
-                                            <option value="section" <?= $selectedScope === 'section' ? 'selected' : ''; ?>>Section Accomplishments</option>
-                                            <option value="personal" <?= $selectedScope === 'personal' ? 'selected' : ''; ?>>Personal Accomplishments</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="smart-field">
-                                        <label class="smart-label" for="filterYear">Year</label>
-                                        <select class="smart-select" id="filterYear" name="year" required>
-                                            <?php for ($i = 2022; $i < date('Y') + 8; $i++) { ?>
-                                                <option value="<?= $i; ?>" <?= (string) $selectedYear === (string) $i ? 'selected' : ''; ?>><?= $i; ?></option>
-                                            <?php } ?>
-                                        </select>
-                                    </div>
-
-                                    <div class="smart-field">
-                                        <label class="smart-label" for="filterMonth">Month</label>
-                                        <select class="smart-select" id="filterMonth" name="month" required>
-                                            <option value="" disabled <?= $selectedMonth === '' ? 'selected' : ''; ?>>Select month</option>
-                                            <?php for ($m = 1; $m <= 12; ++$m) { ?>
-                                                <?php $monthName = date('F', mktime(0, 0, 0, $m, 1)); ?>
-                                                <option value="<?= $monthName; ?>" <?= $selectedMonth === $monthName ? 'selected' : ''; ?>><?= $monthName; ?></option>
-                                            <?php } ?>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="filter-actions">
-                                    <button type="submit" name="submit" value="1" class="shell-button shell-button--primary">
-                                        <i class="mdi mdi-filter-check-outline"></i>
-                                        Apply Filter
-                                    </button>
-                                    <a href="<?= base_url(); ?>Page/viewSecAccomplishments" class="shell-button shell-button--secondary">
-                                        <i class="mdi mdi-refresh"></i>
-                                        Reset Filters
-                                    </a>
-                                </div>
-                            </form>
-                        </div>
+                        <nav class="quick-action-menu" aria-label="Quick actions">
+                            <a href="<?= base_url(); ?>Page/addAccomplishments" class="quick-action quick-action--primary"><i class="mdi mdi-plus-circle-outline"></i><span>Add Entry</span></a>
+                            <button type="button" class="quick-action" data-toggle="modal" data-target="#accomplishmentFilterModal"><i class="mdi mdi-filter-outline"></i><span>Filter List</span></button>
+                            <button type="button" class="quick-action" data-toggle="modal" data-target="#accomplishmentReportModal"><i class="mdi mdi-printer-outline"></i><span>Generate Report</span></button>
+                            <a href="<?= base_url(); ?>Page/accomplishment_flipbook_filter?scope=<?= rawurlencode($selectedScope); ?>" class="quick-action"><i class="mdi mdi-book-open-page-variant"></i><span>Generate Flipbook</span></a>
+                        </nav>
 
                         <?php if ($this->session->flashdata('success')) { ?>
                             <div class="alert alert-success flash-alert alert-dismissible fade show" role="alert">
@@ -934,12 +951,12 @@ if (!function_exists('sect_accom_resource_markup')) {
                             </div>
                         <?php } ?>
 
-                        <div class="panel-card table-shell">
+                        <div class="panel-card table-shell" id="accomplishment-records">
                             <div class="panel-head">
                                 <div>
                                     <div class="panel-kicker">Records</div>
                                     <h4 class="panel-title">Accomplishment list</h4>
-                                    <p class="panel-copy">Review, copy, update, or remove accomplishment entries for your section.</p>
+                                    <p class="panel-copy">Review, copy, update, or remove accomplishment entries for your section. Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to jump to search.</p>
                                 </div>
                                 <div class="panel-summary">
                                     <i class="mdi mdi-format-list-checks"></i>
@@ -967,6 +984,8 @@ if (!function_exists('sect_accom_resource_markup')) {
                                             <?php
                                                 $category = trim((string) $row->activityCategory);
                                                 $categoryClass = strtolower($category) === 'updates' ? 'category-pill category-pill--updates' : 'category-pill';
+                                                $activityTimestamp = strtotime((string) $row->targetDate);
+                                                $activityDateOrder = $activityTimestamp ? $activityTimestamp : 0;
                                                 $reportRecords = isset($reportGroups[(int) $row->id]) ? $reportGroups[(int) $row->id] : array();
                                                 $attachmentPayload = array();
 
@@ -984,7 +1003,7 @@ if (!function_exists('sect_accom_resource_markup')) {
                                                 <td class="activity-cell"><?= sect_accom_escape($row->activity); ?></td>
                                                 <td><span class="<?= $categoryClass; ?>"><?= sect_accom_escape($category ?: 'Uncategorized'); ?></span></td>
                                                 <td class="wide-cell"><?= sect_accom_escape($row->venue); ?></td>
-                                                <td class="date-cell"><?= sect_accom_escape($row->dateConducted); ?></td>
+                                                <td class="date-cell" data-order="<?= $activityDateOrder; ?>"><?= sect_accom_escape($row->dateConducted); ?></td>
                                                 <td class="wide-cell"><?= sect_accom_resource_markup($row->resources); ?></td>
                                                 <td class="notes-cell"><?= nl2br(sect_accom_escape($row->notes)); ?></td>
                                                 <td class="notes-cell"><?= nl2br(sect_accom_escape($row->remarks)); ?></td>
@@ -1046,6 +1065,120 @@ if (!function_exists('sect_accom_resource_markup')) {
                 </div>
 
                 <?php include('includes/footer.php'); ?>
+            </div>
+        </div>
+
+        <div class="modal fade" id="accomplishmentFilterModal" tabindex="-1" role="dialog" aria-labelledby="accomplishmentFilterModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div>
+                            <span class="panel-kicker panel-kicker--light"><i class="mdi mdi-filter-outline"></i> List Filter</span>
+                            <h5 class="modal-title" id="accomplishmentFilterModalLabel">Filter Accomplishments</h5>
+                        </div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <form method="post" action="<?= base_url(); ?>Page/viewSecAccomplishments">
+                        <div class="modal-body">
+                            <p class="modal-note">Narrow the list by scope, year, and month.</p>
+                            <div class="filter-grid">
+                                <div class="smart-field">
+                                    <label class="smart-label" for="filterScope">Scope</label>
+                                    <select class="smart-select" id="filterScope" name="scope" required>
+                                        <option value="section" <?= $selectedScope === 'section' ? 'selected' : ''; ?>>Section Accomplishments</option>
+                                        <option value="personal" <?= $selectedScope === 'personal' ? 'selected' : ''; ?>>Personal Accomplishments</option>
+                                    </select>
+                                </div>
+                                <div class="smart-field">
+                                    <label class="smart-label" for="filterYear">Year</label>
+                                    <select class="smart-select" id="filterYear" name="year" required>
+                                        <?php for ($i = 2022; $i < date('Y') + 8; $i++) : ?><option value="<?= $i; ?>" <?= (string) $selectedYear === (string) $i ? 'selected' : ''; ?>><?= $i; ?></option><?php endfor; ?>
+                                    </select>
+                                </div>
+                                <div class="smart-field">
+                                    <label class="smart-label" for="filterMonth">Month</label>
+                                    <select class="smart-select" id="filterMonth" name="month" required>
+                                        <?php for ($m = 1; $m <= 12; ++$m) : ?><?php $monthName = date('F', mktime(0, 0, 0, $m, 1)); ?><option value="<?= $monthName; ?>" <?= $selectedMonth === $monthName ? 'selected' : ''; ?>><?= $monthName; ?></option><?php endfor; ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <a href="<?= base_url(); ?>Page/viewSecAccomplishments" class="shell-button shell-button--secondary"><i class="mdi mdi-refresh"></i> Reset Filters</a>
+                            <button type="submit" name="submit" value="1" class="shell-button shell-button--primary"><i class="mdi mdi-filter-check-outline"></i> Apply Filter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="accomplishmentReportModal" tabindex="-1" role="dialog" aria-labelledby="accomplishmentReportModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div>
+                            <span class="panel-kicker panel-kicker--light"><i class="mdi mdi-printer-outline"></i> Report Filter</span>
+                            <h5 class="modal-title" id="accomplishmentReportModalLabel">Generate Accomplishment Report</h5>
+                        </div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <form method="post" action="<?= base_url(); ?>Page/reportv2" target="_blank">
+                        <input type="hidden" name="print" value="true">
+                        <input type="hidden" name="activityCategory" value="accomplishment">
+                        <input type="hidden" name="sec" value="<?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?>">
+                        <div class="modal-body">
+                            <p class="modal-note">Choose the reporting period. The completed report will open in a new tab.</p>
+                            <div class="smart-field">
+                                <label class="smart-label" for="reportFilterType">Report period</label>
+                                <select class="smart-select" id="reportFilterType" name="filterType">
+                                    <option value="day">Date range</option>
+                                    <option value="week">Week</option>
+                                    <option value="month">Month</option>
+                                </select>
+                            </div>
+                            <div class="filter-grid report-filter-fields" data-report-period="day">
+                                <div class="smart-field">
+                                    <label class="smart-label" for="reportDateFrom">From date</label>
+                                    <input class="smart-select" type="date" id="reportDateFrom" name="dateFrom" value="<?= date('Y-m-d'); ?>">
+                                </div>
+                                <div class="smart-field">
+                                    <label class="smart-label" for="reportDateTo">To date</label>
+                                    <input class="smart-select" type="date" id="reportDateTo" name="dateTo" value="<?= date('Y-m-d'); ?>">
+                                </div>
+                            </div>
+                            <div class="filter-grid report-filter-fields d-none" data-report-period="week">
+                                <div class="smart-field">
+                                    <label class="smart-label" for="reportWeekMonth">Month</label>
+                                    <select class="smart-select" id="reportWeekMonth" name="month" disabled>
+                                        <?php for ($m = 1; $m <= 12; ++$m) : ?><?php $monthName = date('F', mktime(0, 0, 0, $m, 1)); ?><option value="<?= $monthName; ?>" <?= date('F') === $monthName ? 'selected' : ''; ?>><?= $monthName; ?></option><?php endfor; ?>
+                                    </select>
+                                </div>
+                                <div class="smart-field">
+                                    <label class="smart-label" for="reportWeek">Week</label>
+                                    <select class="smart-select" id="reportWeek" name="weekAcc" disabled>
+                                        <?php $currentWeek = (int) ceil((int) date('d') / 7); for ($week = 1; $week <= 5; ++$week) : ?><option value="<?= $week; ?>" <?= $currentWeek === $week ? 'selected' : ''; ?>>Week <?= $week; ?></option><?php endfor; ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="filter-grid report-filter-fields d-none" data-report-period="month">
+                                <div class="smart-field">
+                                    <label class="smart-label" for="reportMonth">Month</label>
+                                    <select class="smart-select" id="reportMonth" name="month" disabled>
+                                        <?php for ($m = 1; $m <= 12; ++$m) : ?><?php $monthName = date('F', mktime(0, 0, 0, $m, 1)); ?><option value="<?= $monthName; ?>" <?= date('F') === $monthName ? 'selected' : ''; ?>><?= $monthName; ?></option><?php endfor; ?>
+                                    </select>
+                                </div>
+                                <div class="smart-field">
+                                    <label class="smart-label" for="reportYear">Year</label>
+                                    <input class="smart-select" type="number" id="reportYear" name="year" min="2022" max="<?= date('Y') + 8; ?>" value="<?= date('Y'); ?>" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="shell-button shell-button--secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="shell-button shell-button--primary"><i class="mdi mdi-printer"></i> Generate Report</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -1120,11 +1253,11 @@ if (!function_exists('sect_accom_resource_markup')) {
 
         <script>
             $(document).ready(function() {
-                $('#datatable').DataTable({
+                var accomplishmentTable = $('#datatable').DataTable({
                     responsive: true,
                     autoWidth: false,
                     pageLength: 10,
-                    order: [],
+                    order: [[3, 'desc']],
                     columnDefs: [
                         {
                             targets: -1,
@@ -1141,6 +1274,26 @@ if (!function_exists('sect_accom_resource_markup')) {
                         emptyTable: 'No accomplishments found for the selected filter.'
                     }
                 });
+
+                $(document).on('keydown', function(event) {
+                    if ((event.ctrlKey || event.metaKey) && String(event.key).toLowerCase() === 'k') {
+                        event.preventDefault();
+                        $('#datatable_filter input').trigger('focus');
+                    }
+                });
+
+                function toggleReportFilterFields() {
+                    const selectedPeriod = $('#reportFilterType').val();
+
+                    $('.report-filter-fields').each(function() {
+                        const isActive = $(this).data('report-period') === selectedPeriod;
+                        $(this).toggleClass('d-none', !isActive);
+                        $(this).find(':input').prop('disabled', !isActive);
+                    });
+                }
+
+                $('#reportFilterType').on('change', toggleReportFilterFields);
+                $('#accomplishmentReportModal').on('shown.bs.modal', toggleReportFilterFields);
 
                 $(document).on('click', '.js-delete-accomplishment', function(event) {
                     event.preventDefault();
