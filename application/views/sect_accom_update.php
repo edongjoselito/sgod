@@ -6,9 +6,13 @@ $input = function($name, $fallback = '') {
     return $posted !== NULL ? (string) $posted : (string) $fallback;
 };
 $isIsoDate = function($value) { return preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $value); };
-$fromDate = $input('activityDateFrom', $isIsoDate($record->targetDate) ? $record->targetDate : '');
-$toDate = $input('activityDateTo', $isIsoDate($record->targetDate) ? $record->targetDate : '');
-$scope = $input('accomplishmentScope', $record->accomplishmentScope ?: 'section') === 'personal' ? 'personal' : 'section';
+$fromDate = $input('activityDateFrom', $isIsoDate($record->activityDateFrom) ? $record->activityDateFrom : ($isIsoDate($record->targetDate) ? $record->targetDate : ''));
+$toDate = $input('activityDateTo', $isIsoDate($record->activityDateTo) ? $record->activityDateTo : ($isIsoDate($record->targetDate) ? $record->targetDate : ''));
+$postedScope = $this->input->post('accomplishmentScope');
+$scopeValues = $postedScope === NULL ? array($record->accomplishmentScope ?: 'section') : (is_array($postedScope) ? $postedScope : array($postedScope));
+$scopeValues = array_map(function($scope) { return strtolower(trim((string) $scope)); }, $scopeValues);
+$sectionScopeSelected = in_array('section', $scopeValues, TRUE) || in_array('both', $scopeValues, TRUE);
+$personalScopeSelected = in_array('personal', $scopeValues, TRUE) || in_array('both', $scopeValues, TRUE);
 $kraId = (int) $input('kra_id', $record->kra_id);
 $objectiveId = (int) $input('objective_id', $record->objective_id);
 $uploadError = isset($uploadError) ? trim((string) $uploadError) : '';
@@ -59,7 +63,7 @@ $uploadError = isset($uploadError) ? trim((string) $uploadError) : '';
                 <div class="section-block">
                     <div class="section-title"><i class="mdi mdi-calendar-range"></i> Activity Date</div>
                     <div class="field-grid">
-                        <div class="span-4"><label class="field-label" for="accomplishmentScope">Scope <span class="required">*</span></label><select class="field-input" id="accomplishmentScope" name="accomplishmentScope" required><option value="section" <?= $scope==='section'?'selected':''; ?>>Section Accomplishments</option><option value="personal" <?= $scope==='personal'?'selected':''; ?>>Personal Accomplishments</option></select></div>
+                        <div class="span-4"><span class="field-label">Scope <span class="required">*</span></span><div class="d-flex flex-wrap" style="gap:16px;padding:10px 0;"><label class="mb-0"><input type="checkbox" name="accomplishmentScope[]" value="section" <?= $sectionScopeSelected?'checked':''; ?>> Section Accomplishments</label><label class="mb-0"><input type="checkbox" name="accomplishmentScope[]" value="personal" <?= $personalScopeSelected?'checked':''; ?>> Personal Accomplishments</label></div><span class="field-help">Select one or both scopes.</span></div>
                         <div class="span-4"><label class="field-label" for="activityDateFrom">From</label><input class="field-input" type="date" id="activityDateFrom" name="activityDateFrom" value="<?= htmlspecialchars($fromDate,ENT_QUOTES,'UTF-8'); ?>"></div>
                         <div class="span-4"><label class="field-label" for="activityDateTo">To</label><input class="field-input" type="date" id="activityDateTo" name="activityDateTo" value="<?= htmlspecialchars($toDate,ENT_QUOTES,'UTF-8'); ?>"></div>
                     </div>

@@ -119,10 +119,10 @@ class SGODModel extends CI_Model
 		$this->db->where('section', $section);
 		$this->db->where('secGroup', $secGroup);
 		if($scope === 'personal' && trim((string) $username) !== ''){
-			$this->db->where('accomplishmentScope', 'personal');
+			$this->db->where_in('accomplishmentScope', array('personal', 'both'));
 			$this->db->where('encoder', trim((string) $username));
 		}else{
-			$this->db->where('accomplishmentScope', 'section');
+			$this->db->where_in('accomplishmentScope', array('section', 'both'));
 		}
 	}
 
@@ -216,6 +216,15 @@ class SGODModel extends CI_Model
 		$this->db->order_by('id', 'DESC');
 		$result = $this->db->get('one_sgod_accomplishments');
 		return $result->result();
+	}
+
+	public function get_accomplishment_by_date_range($dateFrom, $dateTo, $section, $secGroup, $scope = 'section', $username = ''){
+		$this->apply_accomplishment_scope($section, $secGroup, $scope, $username);
+		// An accomplishment is included when any portion of its activity range overlaps the selected range.
+		if($dateFrom !== '') $this->db->where('activityDateTo >=', $dateFrom);
+		if($dateTo !== '') $this->db->where('activityDateFrom <=', $dateTo);
+		$this->db->order_by('activityDateFrom', 'DESC')->order_by('id', 'DESC');
+		return $this->db->get('one_sgod_accomplishments')->result();
 	}
 
 	function get_table_where($id,$table){

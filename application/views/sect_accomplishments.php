@@ -1,8 +1,8 @@
 <?php
 $sectionName = $this->session->userdata('section') ?: 'Section';
 $secGroupName = $this->session->userdata('secGroup') ?: '';
-$selectedYear = $this->input->post('year') ? (string) $this->input->post('year') : date('Y');
-$selectedMonth = $this->input->post('month') ? (string) $this->input->post('month') : date('F');
+$filterDateFrom = isset($filterDateFrom) ? (string) $filterDateFrom : '';
+$filterDateTo = isset($filterDateTo) ? (string) $filterDateTo : '';
 $selectedScope = isset($selectedScope) && strtolower((string) $selectedScope) === 'personal' ? 'personal' : 'section';
 $scopeLabel = $selectedScope === 'personal' ? 'Personal Accomplishments' : 'Section Accomplishments';
 $isFiltered = (bool) $this->input->post('submit');
@@ -11,8 +11,8 @@ $reportGroups = isset($reportGroups) && is_array($reportGroups) ? $reportGroups 
 $attachmentModalAccId = (int) $this->session->flashdata('attachment_modal_acc_id');
 $attachmentDocumentName = (string) $this->session->flashdata('attachment_document_name');
 $recordCount = count($records);
-$filterSummary = $isFiltered
-    ? sprintf('Showing %s for %s / %s.', $scopeLabel, $selectedMonth, $selectedYear)
+$filterSummary = $isFiltered && ($filterDateFrom !== '' || $filterDateTo !== '')
+    ? sprintf('Showing %s from %s to %s.', $scopeLabel, $filterDateFrom ?: 'the beginning', $filterDateTo ?: 'the present')
     : sprintf('Showing all %s.', strtolower($scopeLabel));
 
 if (!function_exists('sect_accom_escape')) {
@@ -1080,7 +1080,7 @@ if (!function_exists('sect_accom_resource_markup')) {
                     </div>
                     <form method="post" action="<?= base_url(); ?>Page/viewSecAccomplishments">
                         <div class="modal-body">
-                            <p class="modal-note">Narrow the list by scope, year, and month.</p>
+                            <p class="modal-note">Narrow the list by scope and an activity date range.</p>
                             <div class="filter-grid">
                                 <div class="smart-field">
                                     <label class="smart-label" for="filterScope">Scope</label>
@@ -1090,16 +1090,12 @@ if (!function_exists('sect_accom_resource_markup')) {
                                     </select>
                                 </div>
                                 <div class="smart-field">
-                                    <label class="smart-label" for="filterYear">Year</label>
-                                    <select class="smart-select" id="filterYear" name="year" required>
-                                        <?php for ($i = 2022; $i < date('Y') + 8; $i++) : ?><option value="<?= $i; ?>" <?= (string) $selectedYear === (string) $i ? 'selected' : ''; ?>><?= $i; ?></option><?php endfor; ?>
-                                    </select>
+                                    <label class="smart-label" for="filterDateFrom">Activity Date From</label>
+                                    <input class="smart-select" id="filterDateFrom" name="dateFrom" type="date" value="<?= sect_accom_escape($filterDateFrom); ?>">
                                 </div>
                                 <div class="smart-field">
-                                    <label class="smart-label" for="filterMonth">Month</label>
-                                    <select class="smart-select" id="filterMonth" name="month" required>
-                                        <?php for ($m = 1; $m <= 12; ++$m) : ?><?php $monthName = date('F', mktime(0, 0, 0, $m, 1)); ?><option value="<?= $monthName; ?>" <?= $selectedMonth === $monthName ? 'selected' : ''; ?>><?= $monthName; ?></option><?php endfor; ?>
-                                    </select>
+                                    <label class="smart-label" for="filterDateTo">Activity Date To</label>
+                                    <input class="smart-select" id="filterDateTo" name="dateTo" type="date" value="<?= sect_accom_escape($filterDateTo); ?>">
                                 </div>
                             </div>
                         </div>

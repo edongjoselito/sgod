@@ -88,6 +88,17 @@ class Page extends CI_Controller{
 	$this->db->query("UPDATE one_sgod_accomplishments SET accomplishmentScope = 'section' WHERE accomplishmentScope IS NULL OR TRIM(accomplishmentScope) = ''");
   }
 
+  private function ensure_accomplishment_activity_date_columns(){
+	if(!$this->db->field_exists('activityDateFrom', 'one_sgod_accomplishments')){
+		$this->db->query("ALTER TABLE one_sgod_accomplishments ADD COLUMN activityDateFrom DATE NULL AFTER targetDate");
+	}
+	if(!$this->db->field_exists('activityDateTo', 'one_sgod_accomplishments')){
+		$this->db->query("ALTER TABLE one_sgod_accomplishments ADD COLUMN activityDateTo DATE NULL AFTER activityDateFrom");
+	}
+	// Preserve historical one-day entries for the new range filter.
+	$this->db->query("UPDATE one_sgod_accomplishments SET activityDateFrom = targetDate, activityDateTo = targetDate WHERE targetDate IS NOT NULL AND targetDate <> '' AND (activityDateFrom IS NULL OR activityDateTo IS NULL)");
+  }
+
   private function ensure_kra_objective_columns(){
 	if(!$this->db->field_exists('kra_id', 'one_sgod_accomplishments')){
 		$this->db->query("ALTER TABLE one_sgod_accomplishments ADD COLUMN kra_id INT UNSIGNED NOT NULL DEFAULT 0 AFTER venue");
@@ -305,8 +316,14 @@ class Page extends CI_Controller{
   }
 
   private function normalize_accomplishment_scope($value){
-	$value = strtolower(trim((string) $value));
-	return $value === 'personal' ? 'personal' : 'section';
+	$values = is_array($value) ? $value : array($value);
+	$values = array_map(function($scope){
+		return strtolower(trim((string) $scope));
+	}, $values);
+	$hasSection = in_array('section', $values, TRUE) || in_array('both', $values, TRUE);
+	$hasPersonal = in_array('personal', $values, TRUE) || in_array('both', $values, TRUE);
+	if($hasSection && $hasPersonal) return 'both';
+	return $hasPersonal ? 'personal' : 'section';
   }
 
   private function extract_section_member_idnumber($value){
@@ -2176,20 +2193,29 @@ public function memo_delete(){
 		$section=$this->session->userdata('section');
 		$username=$this->session->userdata('username');
 		$this->ensure_accomplishment_scope_column();
+		$this->ensure_accomplishment_activity_date_columns();
 		$scope=strtolower(trim((string) $this->input->post('scope')));
 		if($scope !== 'personal'){
 			$scope='section';
 		}
 		$this->ensure_accomplishment_report_table();
 		$result['selectedScope']=$scope;
+		$result['filterDateFrom'] = '';
+		$result['filterDateTo'] = '';
 
 		if($this->input->post('submit')){
-			$month = $this->input->post('month');
-			$year = $this->input->post('year');
+			$dateFrom = $this->normalize_activity_date($this->input->post('dateFrom'));
+			$dateTo = $this->normalize_activity_date($this->input->post('dateTo'));
+			$result['filterDateFrom'] = $dateFrom;
+			$result['filterDateTo'] = $dateTo;
 			$secGroup=$this->session->userdata('secGroup');
 			$section=$this->session->userdata('section');
 
-			$result['data']=$this->SGODModel->get_accomplishment_by_date($year, $month, $section, $secGroup, $scope, $username);
+			if($dateFrom !== '' || $dateTo !== ''){
+				$result['data']=$this->SGODModel->get_accomplishment_by_date_range($dateFrom, $dateTo, $section, $secGroup, $scope, $username);
+			}else{
+				$result['data']=$this->SGODModel->viewSecAccomplishments($section, $secGroup, $scope, $username);
+			}
 
 		}else{
 			$result['data']=$this->SGODModel->viewSecAccomplishments($section,$secGroup, $scope, $username);
@@ -2214,47 +2240,20 @@ public function memo_delete(){
 		$username = $this->session->userdata('username');
 		$scope = strtolower(trim((string) $this->input->get('scope', TRUE)));
 		if($scope !== 'personal') $scope = 'section';
-		$monthInput = $this->input->get('month', TRUE);
-		$yearInput = $this->input->get('year', TRUE);
-		$selectedMonth = $monthInput === NULL ? date('F') : trim((string) $monthInput);
-		$selectedYear = $yearInput === NULL ? date('Y') : trim((string) $yearInput);
-		$months = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
-		$filterNoDate = $selectedMonth === '__unspecified__' || $selectedYear === '__unspecified__';
-		if($filterNoDate){
-			$selectedMonth = '__unspecified__';
-			$selectedYear = '__unspecified__';
-		} else {
-			if(!in_array($selectedMonth, $months, TRUE)) $selectedMonth = '';
-			if(!preg_match('/^\\d{4}$/', $selectedYear)) $selectedYear = '';
-		}
+		$dateFrom = $this->normalize_activity_date($this->input->get('dateFrom', TRUE));
+		$dateTo = $this->normalize_activity_date($this->input->get('dateTo', TRUE));
 
 		$this->ensure_accomplishment_scope_column();
+		$this->ensure_accomplishment_activity_date_columns();
 		$this->ensure_accomplishment_report_table();
 		$this->ensure_accomplishment_featured_photo_column();
-		$records = $this->SGODModel->viewSecAccomplishments($section, $secGroup, $scope, $username);
-		$availableYears = array();
-		foreach($records as $record){
-			$recordYear = trim((string) $record->year);
-			if(preg_match('/^\\d{4}$/', $recordYear)) $availableYears[$recordYear] = $recordYear;
-		}
-		krsort($availableYears, SORT_NUMERIC);
-		if($selectedYear !== '' && $selectedYear !== '__unspecified__') $availableYears[$selectedYear] = $selectedYear;
-		krsort($availableYears, SORT_NUMERIC);
-		if($filterNoDate){
-			$records = array_values(array_filter($records, function($record){
-				return trim((string) $record->targetDate) === '' && trim((string) $record->dateConducted) === '';
-			}));
-		} elseif($selectedMonth !== '' || $selectedYear !== ''){
-			$records = array_values(array_filter($records, function($record) use ($selectedMonth, $selectedYear){
-				return ($selectedMonth === '' || (string) $record->monthAcc === $selectedMonth)
-					&& ($selectedYear === '' || (string) $record->year === $selectedYear);
-			}));
-		}
+		$records = ($dateFrom !== '' || $dateTo !== '')
+			? $this->SGODModel->get_accomplishment_by_date_range($dateFrom, $dateTo, $section, $secGroup, $scope, $username)
+			: $this->SGODModel->viewSecAccomplishments($section, $secGroup, $scope, $username);
 		$result['sectionName'] = $section;
 		$result['scope'] = $scope;
-		$result['selectedMonth'] = $selectedMonth;
-		$result['selectedYear'] = $selectedYear;
-		$result['availableYears'] = array_values($availableYears);
+		$result['filterDateFrom'] = $dateFrom;
+		$result['filterDateTo'] = $dateTo;
 		$result['records'] = $records;
 		$result['kraTitles'] = array();
 		foreach($this->get_active_kras() as $kra){
@@ -2275,18 +2274,10 @@ public function memo_delete(){
 		$scope = strtolower(trim((string) $this->input->get('scope', TRUE)));
 		if($scope !== 'personal') $scope = 'section';
 		$this->ensure_accomplishment_scope_column();
-		$records = $this->SGODModel->viewSecAccomplishments($section, $secGroup, $scope, $username);
-		$years = array();
-		foreach($records as $record){
-			$year = trim((string) $record->year);
-			if(preg_match('/^\d{4}$/', $year)) $years[$year] = $year;
-		}
-		$years[date('Y')] = date('Y');
-		krsort($years, SORT_NUMERIC);
+		$this->ensure_accomplishment_activity_date_columns();
 		$result = array(
 			'sectionName' => $section,
-			'scope' => $scope,
-			'availableYears' => array_values($years)
+			'scope' => $scope
 		);
 		$this->load->view('accomplishment_flipbook_filter', $result);
 	}
@@ -3139,6 +3130,7 @@ public function memo_delete(){
 	function addAccomplishments(){
 		$result = array();
 		$this->ensure_accomplishment_scope_column();
+		$this->ensure_accomplishment_activity_date_columns();
 		$this->ensure_kra_objective_columns();
 		$this->ensure_accomplishment_featured_photo_column();
 		$this->ensure_ipcrf_objective_template_id();
@@ -3208,6 +3200,8 @@ public function memo_delete(){
 		'objective_id' => $objectiveId,
 		'featured_photo' => $featuredPhoto,
 		'targetDate' => $targetDate,
+		'activityDateFrom' => $activityDateFrom !== '' ? $activityDateFrom : NULL,
+		'activityDateTo' => $activityDateTo !== '' ? $activityDateTo : NULL,
 		'dateConducted' => $dateConducted,
 		'encoder' => $encoder,
 		'accomplishmentScope' => $accomplishmentScope,
@@ -3243,6 +3237,7 @@ public function memo_delete(){
   function updateAccomplishments(){
 	$id = (int) ($this->input->post('id') ?: $this->input->get('id'));
 	$this->ensure_accomplishment_scope_column();
+	$this->ensure_accomplishment_activity_date_columns();
 	$this->ensure_kra_objective_columns();
 	$this->ensure_accomplishment_featured_photo_column();
 	$this->ensure_ipcrf_objective_template_id();
@@ -3282,6 +3277,8 @@ public function memo_delete(){
 			'kra_id' => (int) $this->input->post('kra_id'),
 			'objective_id' => (int) $this->input->post('objective_id'),
 			'targetDate' => $from,
+			'activityDateFrom' => $from !== '' ? $from : NULL,
+			'activityDateTo' => $to !== '' ? $to : NULL,
 			'dateConducted' => $from !== '' ? $this->format_activity_date_range($from, $to) : '',
 			'accomplishmentScope' => $this->normalize_accomplishment_scope($this->input->post('accomplishmentScope')),
 			'resources' => trim((string) $this->input->post('resources')),

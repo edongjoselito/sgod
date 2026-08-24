@@ -1,9 +1,13 @@
 <?php
 $sectionName = $this->session->userdata('section') ?: 'Section';
 $secGroupName = $this->session->userdata('secGroup') ?: '';
-$selectedAccomplishmentScope = $this->input->post('accomplishmentScope') && strtolower((string) $this->input->post('accomplishmentScope')) === 'personal'
-    ? 'personal'
-    : 'section';
+$postedAccomplishmentScope = $this->input->post('accomplishmentScope');
+$selectedAccomplishmentScopes = is_array($postedAccomplishmentScope) ? $postedAccomplishmentScope : array($postedAccomplishmentScope ?: 'section');
+$selectedAccomplishmentScopes = array_map(function($scope) {
+    return strtolower(trim((string) $scope));
+}, $selectedAccomplishmentScopes);
+$sectionScopeSelected = in_array('section', $selectedAccomplishmentScopes, TRUE) || in_array('both', $selectedAccomplishmentScopes, TRUE);
+$personalScopeSelected = in_array('personal', $selectedAccomplishmentScopes, TRUE) || in_array('both', $selectedAccomplishmentScopes, TRUE);
 $activityDateFromValue = (string) $this->input->post('activityDateFrom');
 $activityDateToValue = (string) $this->input->post('activityDateTo');
 $activityValue = $this->input->post('activity') ? (string) $this->input->post('activity') : '';
@@ -638,11 +642,12 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                             </div>
                                             <div class="field-grid">
                                                 <div class="field-span-4">
-                                                    <label class="field-label" for="accomplishmentScope">Scope <span class="required">*</span></label>
-                                                    <select class="field-select" id="accomplishmentScope" name="accomplishmentScope" required>
-                                                        <option value="section" <?= $selectedAccomplishmentScope === 'section' ? 'selected' : ''; ?>>Section Accomplishments</option>
-                                                        <option value="personal" <?= $selectedAccomplishmentScope === 'personal' ? 'selected' : ''; ?>>Personal Accomplishments</option>
-                                                    </select>
+                                                    <span class="field-label">Scope <span class="required">*</span></span>
+                                                    <div class="d-flex flex-wrap" style="gap: 16px; padding: 10px 0;">
+                                                        <label class="mb-0"><input type="checkbox" name="accomplishmentScope[]" value="section" <?= $sectionScopeSelected ? 'checked' : ''; ?>> Section Accomplishments</label>
+                                                        <label class="mb-0"><input type="checkbox" name="accomplishmentScope[]" value="personal" <?= $personalScopeSelected ? 'checked' : ''; ?>> Personal Accomplishments</label>
+                                                    </div>
+                                                    <small class="form-text text-muted">Select one or both scopes.</small>
                                                 </div>
 
                                                 <div class="field-span-4">
