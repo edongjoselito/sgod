@@ -22,6 +22,54 @@ if (!function_exists('accomplishment_flipbook_text')) {
     }
 }
 
+if (!function_exists('accomplishment_flipbook_rich_text')) {
+    function accomplishment_flipbook_rich_text($value) {
+        $value = trim(html_entity_decode((string) $value, ENT_QUOTES, 'UTF-8'));
+        if ($value === '') return '';
+
+        // Summernote stores paragraph and list markup. Keep only its text-formatting tags,
+        // remove every attribute, and never pass executable markup through to the report.
+        $value = preg_replace('~<(script|style)[^>]*>.*?</\\1>~is', '', $value);
+        $value = strip_tags($value, '<p><br><strong><b><em><i><u><ul><ol><li><span>');
+        $value = preg_replace_callback('~<(/?)(p|br|strong|b|em|i|u|ul|ol|li|span)([^>]*)>~i', function ($match) {
+            $closing = $match[1] === '/';
+            $tag = strtolower($match[2]);
+            if ($tag !== 'span' || $closing) {
+                return '<' . ($closing ? '/' : '') . $tag . '>';
+            }
+
+            // Some editors encode emphasis as styled spans instead of b/i/u tags.
+            // Keep only these three presentation properties.
+            $style = '';
+            if (preg_match('~style\\s*=\\s*(["\\\'])(.*?)\\1~is', $match[3], $styleMatch)) {
+                $encodedStyle = $styleMatch[2];
+                if (preg_match('~(?:^|;)\\s*font-weight\\s*:\\s*(bold|[5-9]00)\\s*(?:;|$)~i', $encodedStyle)) $style .= 'font-weight:bold;';
+                if (preg_match('~(?:^|;)\\s*font-style\\s*:\\s*italic\\s*(?:;|$)~i', $encodedStyle)) $style .= 'font-style:italic;';
+                if (preg_match('~(?:^|;)\\s*text-decoration(?:-line)?\\s*:\\s*[^;]*underline[^;]*~i', $encodedStyle)) $style .= 'text-decoration:underline;';
+            }
+            return $style === '' ? '<span>' : '<span style="' . $style . '">';
+        }, $value);
+
+        if (strip_tags($value) === $value) {
+            return nl2br(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+        }
+
+        return $value;
+    }
+}
+
+if (!function_exists('accomplishment_flipbook_rich_text_linkify')) {
+    function accomplishment_flipbook_rich_text_linkify($html) {
+        return preg_replace_callback('~(?:https?://|www\\.)[^\\s<]+~i', function ($match) {
+            $url = rtrim($match[0], '.,;:!?)]}');
+            $suffix = substr($match[0], strlen($url));
+            $href = stripos($url, 'www.') === 0 ? 'https://' . $url : $url;
+            if (!filter_var($href, FILTER_VALIDATE_URL)) return $match[0];
+            return '<a class="record-link-button" href="' . htmlspecialchars($href, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer"><i class="mdi mdi-open-in-new"></i>Open Link</a>' . $suffix;
+        }, $html);
+    }
+}
+
 if (!function_exists('accomplishment_flipbook_linkify')) {
     function accomplishment_flipbook_linkify($value) {
         $parts = preg_split('~((?:https?://|www\.)[^\s<]+)~i', (string) $value, -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -93,11 +141,17 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
         .record-section { margin-top: 22px; }
         .record-section h3 { margin: 0 0 9px; color: var(--blue); font-size: .83rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
         .record-section p { margin: 0; color: #343952; line-height: 1.7; white-space: pre-wrap; }
+        .rich-text { color: #343952; line-height: 1.7; }
+        .rich-text p { margin: 0 0 1em; white-space: normal; }
+        .rich-text p:last-child { margin-bottom: 0; }
+        .rich-text ul, .rich-text ol { margin: 0 0 1em; padding-left: 1.4em; }
+        .rich-text li { margin: .25em 0; }
         .record-link-button { display: inline-flex; align-items: center; gap: 6px; margin: 3px 4px 3px 0; padding: 7px 10px; border-radius: 8px; color: #fff; background: #3c40c6; font-size: .82rem; font-weight: 700; line-height: 1.25; text-decoration: none; word-break: break-all; }
         .record-link-button:hover { color: #fff; background: #272b8c; }
         .reference-hero { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 22px; margin-top: 24px; padding: 20px 22px; border-radius: 14px; color: #fff; background: linear-gradient(135deg,#272b8c,#565de8); }
         .reference-hero h3 { margin: 0 0 12px; color: rgba(255,255,255,.82); font-size: .75rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
         .reference-hero p { margin: 0; color: #fff; line-height: 1.7; white-space: pre-wrap; }
+        .reference-hero .rich-text, .reference-hero .rich-text p { color: #fff; }
         .reference-hero .record-link-button { color: #272b8c; background: #fff; }
         .reference-hero .record-link-button:hover { color: #272b8c; background: #e9ebff; }
         @media (max-width: 700px) { .reference-hero { grid-template-columns: 1fr; } }
@@ -147,6 +201,8 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
                         $featuredPhoto = isset($record->featured_photo) ? trim((string) $record->featured_photo) : '';
                         $kraTitle = isset($kraTitles[(int) $record->kra_id]) ? $kraTitles[(int) $record->kra_id] : '';
                         $resourceText = trim((string) $record->resources);
+						$particularsHtml = accomplishment_flipbook_rich_text($record->particulars);
+						$notesHtml = accomplishment_flipbook_rich_text_linkify(accomplishment_flipbook_rich_text($record->notes));
                     ?>
                     <article class="book-page">
                         <div class="page-kicker">Accomplishment <?= $index + 1; ?></div>
@@ -158,16 +214,16 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
                             </div>
                         </div>
                         <div class="record-intro <?= $featuredPhoto === '' ? 'record-intro--no-photo' : ''; ?>">
-                            <?php if (accomplishment_flipbook_text($record->particulars) !== '') : ?>
-                                <section class="record-section"><h3>Activity/Accomplishment Details</h3><p><?= accomplishment_flipbook_escape(accomplishment_flipbook_text($record->particulars)); ?></p></section>
+                            <?php if ($particularsHtml !== '') : ?>
+                                <section class="record-section"><h3>Activity/Accomplishment Details</h3><div class="rich-text"><?= $particularsHtml; ?></div></section>
                             <?php endif; ?>
                             <?php if ($featuredPhoto !== '') : ?>
                                 <a class="featured-photo js-photo-lightbox" href="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($featuredPhoto); ?>" aria-label="View full featured photo"><img src="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($featuredPhoto); ?>" alt="Featured photo for <?= accomplishment_flipbook_escape(accomplishment_flipbook_text($record->activity)); ?>"></a>
                             <?php endif; ?>
                         </div>
-                        <?php if (accomplishment_flipbook_text($record->notes) !== '' || $resourceText !== '') : ?>
+                        <?php if ($notesHtml !== '' || $resourceText !== '') : ?>
                             <section class="reference-hero">
-                                <?php if (accomplishment_flipbook_text($record->notes) !== '') : ?><div class="reference-item"><h3>Additional Notes</h3><p><?= accomplishment_flipbook_linkify(accomplishment_flipbook_text($record->notes)); ?></p></div><?php endif; ?>
+                                <?php if ($notesHtml !== '') : ?><div class="reference-item"><h3>Additional Notes</h3><div class="rich-text"><?= $notesHtml; ?></div></div><?php endif; ?>
                                 <?php if ($resourceText !== '') : ?><div class="reference-item"><h3>Resource Link</h3><p><?= accomplishment_flipbook_linkify($resourceText); ?></p></div><?php endif; ?>
                             </section>
                         <?php endif; ?>
