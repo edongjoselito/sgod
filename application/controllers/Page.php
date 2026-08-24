@@ -80,6 +80,17 @@ class Page extends CI_Controller{
 	}
   }
 
+  private function ensure_accomplishment_additional_photos_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS one_sgod_accomplishment_additional_photos (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		acc_id INT UNSIGNED NOT NULL,
+		file_name VARCHAR(255) NOT NULL,
+		original_name VARCHAR(255) NOT NULL DEFAULT '',
+		created_at DATETIME NOT NULL,
+		PRIMARY KEY (id), KEY idx_acc_id (acc_id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+
   private function ensure_accomplishment_scope_column(){
 	if(!$this->db->field_exists('accomplishmentScope', 'one_sgod_accomplishments')){
 		$this->db->query("ALTER TABLE one_sgod_accomplishments ADD COLUMN accomplishmentScope VARCHAR(20) NOT NULL DEFAULT 'section' AFTER encoder");
@@ -236,6 +247,32 @@ class Page extends CI_Controller{
 		return array('success' => FALSE, 'uploaded' => FALSE, 'message' => trim(strip_tags($this->upload->display_errors('', ''))));
 	}
 	return array('success' => TRUE, 'uploaded' => TRUE, 'data' => $this->upload->data());
+  }
+
+  private function upload_accomplishment_additional_photos($fieldName = 'additional_photos'){
+	if(empty($_FILES[$fieldName]['name']) || !is_array($_FILES[$fieldName]['name'])) return array('success' => TRUE, 'files' => array());
+	$uploadPath = FCPATH . 'upload/accomplishment_additional_photos/';
+	if(!is_dir($uploadPath)) mkdir($uploadPath, 0775, TRUE);
+	$config = array('upload_path' => $uploadPath, 'allowed_types' => 'jpg|jpeg|png|gif', 'max_size' => 5120, 'encrypt_name' => TRUE, 'remove_spaces' => TRUE);
+	$this->load->library('upload');
+	$files = array();
+	foreach($_FILES[$fieldName]['name'] as $index => $originalName){
+		if($originalName === '') continue;
+		$_FILES['_additional_photo'] = array(
+			'name' => $_FILES[$fieldName]['name'][$index], 'type' => $_FILES[$fieldName]['type'][$index],
+			'tmp_name' => $_FILES[$fieldName]['tmp_name'][$index], 'error' => $_FILES[$fieldName]['error'][$index], 'size' => $_FILES[$fieldName]['size'][$index]
+		);
+		$this->upload->initialize($config);
+		if(!$this->upload->do_upload('_additional_photo')){
+			foreach($files as $file) @unlink($uploadPath . $file['file_name']);
+			unset($_FILES['_additional_photo']);
+			return array('success' => FALSE, 'files' => array(), 'message' => trim(strip_tags($this->upload->display_errors('', ''))));
+		}
+		$data = $this->upload->data();
+		$files[] = array('file_name' => $data['file_name'], 'original_name' => $data['orig_name']);
+	}
+	unset($_FILES['_additional_photo']);
+	return array('success' => TRUE, 'files' => $files);
   }
 
   private function delete_accomplishment_reports($accomplishmentId){
@@ -2247,6 +2284,7 @@ public function memo_delete(){
 		$this->ensure_accomplishment_activity_date_columns();
 		$this->ensure_accomplishment_report_table();
 		$this->ensure_accomplishment_featured_photo_column();
+		$this->ensure_accomplishment_additional_photos_table();
 		$records = ($dateFrom !== '' || $dateTo !== '')
 			? $this->SGODModel->get_accomplishment_by_date_range($dateFrom, $dateTo, $section, $secGroup, $scope, $username)
 			: $this->SGODModel->viewSecAccomplishments($section, $secGroup, $scope, $username);
@@ -2264,6 +2302,11 @@ public function memo_delete(){
 			$accomplishmentIds[] = (int) $record->id;
 		}
 		$result['reportGroups'] = $this->SGODModel->get_accomplishment_report_groups($accomplishmentIds);
+		$result['additionalPhotoGroups'] = array();
+		if(!empty($accomplishmentIds)){
+			$additionalPhotos = $this->db->where_in('acc_id', $accomplishmentIds)->order_by('id', 'ASC')->get('one_sgod_accomplishment_additional_photos')->result();
+			foreach($additionalPhotos as $photo) $result['additionalPhotoGroups'][(int) $photo->acc_id][] = $photo;
+		}
 		$this->load->view('accomplishment_flipbook', $result);
 	}
 
@@ -3133,6 +3176,7 @@ public function memo_delete(){
 		$this->ensure_accomplishment_activity_date_columns();
 		$this->ensure_kra_objective_columns();
 		$this->ensure_accomplishment_featured_photo_column();
+		$this->ensure_accomplishment_additional_photos_table();
 		$this->ensure_ipcrf_objective_template_id();
 		$result['kraOptions'] = $this->get_active_kras();
 		$result['objectiveOptions'] = $this->get_active_objectives();
@@ -3184,6 +3228,13 @@ public function memo_delete(){
 		$this->load->view('sect_accomplishments_add', $result);
 		return;
 	  }
+	  $additionalPhotoUpload = $this->upload_accomplishment_additional_photos('additional_photos');
+	  if(!$additionalPhotoUpload['success']){
+		if(!empty($photoUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_featured_photos/' . $photoUpload['data']['file_name']);
+		$result['uploadError'] = $additionalPhotoUpload['message'];
+		$this->load->view('sect_accomplishments_add', $result);
+		return;
+	  }
 	  $featuredPhoto = !empty($photoUpload['uploaded']) ? (string) $photoUpload['data']['file_name'] : '';
 
 	  $accomplishmentData = array(
@@ -3219,11 +3270,16 @@ public function memo_delete(){
 	  if(!$saved){
 		if($featuredPhoto !== ''){
 			$photoPath = FCPATH . 'upload/accomplishment_featured_photos/' . $featuredPhoto;
-			if(file_exists($photoPath)) @unlink($photoPath);
+		if(file_exists($photoPath)) @unlink($photoPath);
 		}
+		foreach($additionalPhotoUpload['files'] as $photo) @unlink(FCPATH . 'upload/accomplishment_additional_photos/' . $photo['file_name']);
 		$result['uploadError'] = 'Unable to save the accomplishment entry right now. Please try again.';
 		$this->load->view('sect_accomplishments_add', $result);
 		return;
+	  }
+	  $accomplishmentId = (int) $this->db->insert_id();
+	  foreach($additionalPhotoUpload['files'] as $photo){
+		$this->db->insert('one_sgod_accomplishment_additional_photos', array('acc_id' => $accomplishmentId, 'file_name' => $photo['file_name'], 'original_name' => $photo['original_name'], 'created_at' => date('Y-m-d H:i:s')));
 	  }
 
 	  $this->session->set_flashdata('success', ' Add Successfully!');

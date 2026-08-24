@@ -83,6 +83,11 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                 color: var(--accom-ink);
             }
 
+            .photo-drop-zone { padding: 22px; border: 2px dashed var(--accom-border); border-radius: 12px; text-align: center; background: #f8f9ff; transition: .2s ease; }
+            .photo-drop-zone.is-dragging { border-color: var(--accom-blue); background: #eef0ff; }
+            .photo-drop-zone input { margin-top: 10px; }
+            .photo-selection { margin-top: 9px; color: var(--accom-muted); font-size: .82rem; }
+
             .accom-add-shell {
                 position: relative;
                 padding-bottom: 28px;
@@ -690,12 +695,6 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                                     <input type="text" class="field-input" id="venue" name="venue" value="<?= htmlspecialchars($venueValue, ENT_QUOTES, 'UTF-8'); ?>">
                                                 </div>
 
-                                                <div class="field-span-12">
-                                                    <label class="field-label" for="featured_photo">Featured Photo</label>
-                                                    <input type="file" class="field-input" id="featured_photo" name="featured_photo" accept="image/jpeg,image/png,image/gif">
-                                                    <small class="form-text text-muted">Optional. JPG, PNG, or GIF image up to 5 MB. It will appear on this accomplishment’s Flipbook page.</small>
-                                                </div>
-
                                                 <div class="field-span-6">
                                                     <label class="field-label" for="kra_id">KRA</label>
                                                     <select class="field-input" id="kra_id" name="kra_id">
@@ -744,6 +743,30 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                                     <textarea class="field-textarea" id="notes" name="notes"><?= htmlspecialchars($notesValue, ENT_QUOTES, 'UTF-8'); ?></textarea>
                                                 </div>
 
+                                            </div>
+                                        </div>
+
+                                        <div class="section-block">
+                                            <div class="section-title">
+                                                <i class="mdi mdi-image-outline"></i>
+                                                Featured Photo
+                                            </div>
+                                            <div class="field-grid">
+                                                <div class="field-span-12">
+                                                    <label class="field-label" for="featured_photo">Upload Photo</label>
+                                                    <input type="file" class="field-input" id="featured_photo" name="featured_photo" accept="image/jpeg,image/png,image/gif">
+                                                    <small class="form-text text-muted">Optional. JPG, PNG, or GIF image up to 5 MB. It will appear on this accomplishment’s Flipbook page.</small>
+                                                </div>
+                                                <div class="field-span-12">
+                                                    <label class="field-label" for="additional_photos">Additional Photos</label>
+                                                    <div class="photo-drop-zone" id="additionalPhotoDropZone">
+                                                        <i class="mdi mdi-image-multiple-outline" style="font-size:2rem;color:var(--accom-blue);"></i>
+                                                        <div>Drag multiple photos here, or choose files.</div>
+                                                        <input type="file" class="field-input" id="additional_photos" name="additional_photos[]" accept="image/jpeg,image/png,image/gif" multiple>
+                                                        <div class="photo-selection" id="additionalPhotoSelection">No additional photos selected.</div>
+                                                    </div>
+                                                    <small class="form-text text-muted">Optional. You can add multiple JPG, PNG, or GIF photos (up to 5 MB each).</small>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -872,6 +895,17 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                 });
 
                 filterObjectives(kraSelect.val());
+
+                var additionalInput = document.getElementById('additional_photos');
+                var dropZone = document.getElementById('additionalPhotoDropZone');
+                var selection = document.getElementById('additionalPhotoSelection');
+                function showAdditionalPhotoCount(files) { selection.textContent = files && files.length ? files.length + ' additional photo' + (files.length === 1 ? '' : 's') + ' selected.' : 'No additional photos selected.'; }
+                if (additionalInput && dropZone) {
+                    additionalInput.addEventListener('change', function () { showAdditionalPhotoCount(this.files); });
+                    ['dragenter', 'dragover'].forEach(function (eventName) { dropZone.addEventListener(eventName, function (event) { event.preventDefault(); dropZone.classList.add('is-dragging'); }); });
+                    ['dragleave', 'drop'].forEach(function (eventName) { dropZone.addEventListener(eventName, function (event) { event.preventDefault(); dropZone.classList.remove('is-dragging'); }); });
+                    dropZone.addEventListener('drop', function (event) { if (event.dataTransfer.files.length) { additionalInput.files = event.dataTransfer.files; showAdditionalPhotoCount(additionalInput.files); } });
+                }
             })(jQuery);
         </script>
 

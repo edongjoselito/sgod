@@ -4,6 +4,7 @@ $scope = isset($scope) && $scope === 'personal' ? 'personal' : 'section';
 $scopeLabel = $scope === 'personal' ? 'Personal Accomplishments' : 'Section Accomplishments';
 $records = isset($records) && is_array($records) ? $records : array();
 $reportGroups = isset($reportGroups) && is_array($reportGroups) ? $reportGroups : array();
+$additionalPhotoGroups = isset($additionalPhotoGroups) && is_array($additionalPhotoGroups) ? $additionalPhotoGroups : array();
 $kraTitles = isset($kraTitles) && is_array($kraTitles) ? $kraTitles : array();
 $selectedMonth = isset($selectedMonth) ? (string) $selectedMonth : '';
 $selectedYear = isset($selectedYear) ? (string) $selectedYear : '';
@@ -130,6 +131,9 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
         .record-intro .record-section { margin-top: 0; }
         .featured-photo { display: block; height: min(35vw, 310px); margin: 0; overflow: hidden; border: 0; border-radius: 12px; background: #eef0f8; cursor: zoom-in; }
         .featured-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .additional-photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 11px; margin: -8px 0 26px; }
+        .additional-photo-gallery a { display: block; height: 92px; overflow: hidden; border: 1px solid #dce1f1; border-radius: 9px; background: #eef0f8; }
+        .additional-photo-gallery img { display: block; width: 100%; height: 100%; object-fit: cover; }
         .photo-lightbox { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 28px; background: rgba(6,8,28,.9); }
         .photo-lightbox.is-open { display: flex; }
         .photo-lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 7px; box-shadow: 0 18px 60px rgba(0,0,0,.5); }
@@ -198,6 +202,7 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
                 <?php foreach ($records as $index => $record) : ?>
                     <?php
                         $attachments = isset($reportGroups[(int) $record->id]) ? $reportGroups[(int) $record->id] : array();
+						$additionalPhotos = isset($additionalPhotoGroups[(int) $record->id]) ? $additionalPhotoGroups[(int) $record->id] : array();
                         $featuredPhoto = isset($record->featured_photo) ? trim((string) $record->featured_photo) : '';
                         $kraTitle = isset($kraTitles[(int) $record->kra_id]) ? $kraTitles[(int) $record->kra_id] : '';
                         $resourceText = trim((string) $record->resources);
@@ -221,6 +226,9 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
                                 <a class="featured-photo js-photo-lightbox" href="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($featuredPhoto); ?>" aria-label="View full featured photo"><img src="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($featuredPhoto); ?>" alt="Featured photo for <?= accomplishment_flipbook_escape(accomplishment_flipbook_text($record->activity)); ?>"></a>
                             <?php endif; ?>
                         </div>
+                        <?php if (!empty($additionalPhotos)) : ?>
+                            <section class="record-section"><h3>Additional Photos</h3><div class="additional-photo-gallery"><?php foreach ($additionalPhotos as $photo) : ?><a class="js-photo-lightbox" href="<?= base_url(); ?>upload/accomplishment_additional_photos/<?= rawurlencode($photo->file_name); ?>" aria-label="View additional photo"><img src="<?= base_url(); ?>upload/accomplishment_additional_photos/<?= rawurlencode($photo->file_name); ?>" alt="Additional photo"></a><?php endforeach; ?></div></section>
+                        <?php endif; ?>
                         <?php if ($notesHtml !== '' || $resourceText !== '') : ?>
                             <section class="reference-hero">
                                 <?php if ($notesHtml !== '') : ?><div class="reference-item"><h3>Additional Notes</h3><div class="rich-text"><?= $notesHtml; ?></div></div><?php endif; ?>
