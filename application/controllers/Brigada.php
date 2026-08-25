@@ -22,11 +22,16 @@ class Brigada extends CI_Controller
         $this->ensure_brigada_contribution_report_tax_fields();
         $this->ensure_brigada_tax_incentive_requirements_table();
 
-        // Self-heal the e-Brigada alignment schema (Workstream A). Idempotent
-        // and additive-only — never drops anything the legacy ensure_* calls
-        // above created. See docs/E_BRIGADA_ALIGNMENT_SPEC.md §4.
-        $this->load->library('schema_guard');
-        $this->schema_guard->ensure();
+        // Self-heal the e-Brigada alignment schema when the optional library
+        // is deployed. Some production installations predate Schema_guard;
+        // those installations must still be able to load Brigada reports.
+        $schemaGuardFile = APPPATH . 'libraries/Schema_guard.php';
+        if (is_file($schemaGuardFile)) {
+            $this->load->library('schema_guard');
+            if (isset($this->schema_guard)) {
+                $this->schema_guard->ensure();
+            }
+        }
     }
 
     private function ensure_brigada_contribution_breakdown_table()
@@ -562,6 +567,102 @@ class Brigada extends CI_Controller
         $result['filter_year'] = $filter_year;
         
         $this->load->view('brigada_summary_report_v2', $result);
+    }
+
+    /**
+     * Division leaderboard for Brigada Eskwela resources. This intentionally
+     * uses brigada_contribution_report, the same source as Summary Report V2.
+     *
+     * `schools.course` contains both current values (e.g. "Junior High
+     * School") and legacy values (e.g. "Secondary"), so the two groups are
+     * deliberately normalized here instead of relying on one exact value.
+     */
+    public function top_schools()
+    {
+        $dateFrom = trim((string) $this->input->get('date_from', TRUE));
+        $dateTo = trim((string) $this->input->get('date_to', TRUE));
+        $datePattern = '/^\d{4}-\d{2}-\d{2}$/';
+        $filterError = '';
+        $isCurrentYearDefault = ($dateFrom === '' && $dateTo === '');
+        $defaultPeriodLabel = 'Current year (' . date('Y') . ')';
+        $defaultSchoolYear = '';
+
+        // Brigada reporting and Year-on-Year analytics are school-year based.
+        // Use the active school year by default so this page starts from the
+        // same data scope as the Year-on-Year rankings. Manual dates below
+        // always override this default.
+        if ($isCurrentYearDefault) {
+            $activeSy = trim((string) $this->session->userdata('cur_sy'));
+            if (preg_match('/^(\d{4})-(\d{4})$/', $activeSy, $matches)) {
+                $dateFrom = $matches[1] . '-06-01';
+                $dateTo = $matches[2] . '-05-31';
+                $defaultPeriodLabel = 'Current school year (' . $activeSy . ')';
+                $defaultSchoolYear = $activeSy;
+            } else {
+                $dateFrom = date('Y-01-01');
+                $dateTo = date('Y-12-31');
+            }
+        }
+
+        if ($dateFrom !== '' && !preg_match($datePattern, $dateFrom)) {
+            $dateFrom = '';
+            $filterError = 'The start date is not valid.';
+        }
+        if ($dateTo !== '' && !preg_match($datePattern, $dateTo)) {
+            $dateTo = '';
+            $filterError = 'The end date is not valid.';
+        }
+        if ($dateFrom !== '' && $dateTo !== '' && $dateFrom > $dateTo) {
+            $filterError = 'The start date must be on or before the end date.';
+        }
+
+        $applyDateFilter = ($filterError === '' && (!$isCurrentYearDefault || $defaultSchoolYear === ''));
+        $rankings = array(
+            'elementary' => $this->_top_schools_by_resource('elementary', $dateFrom, $dateTo, $applyDateFilter, $defaultSchoolYear),
+            'junior_high' => $this->_top_schools_by_resource('junior_high', $dateFrom, $dateTo, $applyDateFilter, $defaultSchoolYear),
+            'junior_high_with_senior_high' => $this->_top_schools_by_resource('junior_high_with_senior_high', $dateFrom, $dateTo, $applyDateFilter, $defaultSchoolYear)
+        );
+
+        $this->load->view('brigada_top_schools', array(
+            'title' => 'Brigada Eskwela Top Schools',
+            'rankings' => $rankings,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'filterError' => $filterError,
+            'isCurrentYearDefault' => $isCurrentYearDefault,
+            'defaultPeriodLabel' => $defaultPeriodLabel
+        ));
+    }
+
+    private function _top_schools_by_resource($level, $dateFrom, $dateTo, $applyDateFilter, $schoolYear = '')
+    {
+        $this->db->select('s.schoolID, MAX(s.schoolName) AS schoolName, MAX(s.district) AS district, MAX(s.course) AS course, SUM(COALESCE(r.amount, 0)) AS total_resources, COUNT(r.id) AS report_count', FALSE);
+        $this->db->from('brigada_contribution_report r');
+        $this->db->join('schools s', 's.schoolID = r.school_id', 'inner');
+
+        if ($level === 'elementary') {
+            $this->db->where("UPPER(TRIM(s.course)) LIKE '%ELEMENTARY%'", NULL, FALSE);
+        } elseif ($level === 'junior_high_with_senior_high') {
+            // Integrated schools are commonly encoded as "JHS with SHS",
+            // but older records use expanded or slash-separated variants.
+            $this->db->where("((UPPER(TRIM(s.course)) LIKE '%JHS%' OR UPPER(TRIM(s.course)) LIKE '%JUNIOR HIGH%' OR UPPER(TRIM(s.course)) LIKE '%HIGH SCHOOL%') AND (UPPER(TRIM(s.course)) LIKE '%SHS%' OR UPPER(TRIM(s.course)) LIKE '%SENIOR HIGH%'))", NULL, FALSE);
+        } else {
+            // Junior High-only schools use a mix of "Junior High School",
+            // "Secondary", and the older, shorter "High School" label.
+            $this->db->where("(UPPER(TRIM(s.course)) LIKE '%JUNIOR HIGH%' OR UPPER(TRIM(s.course)) LIKE '%SECONDARY%' OR UPPER(TRIM(s.course)) LIKE '%HIGH SCHOOL%')", NULL, FALSE);
+            $this->db->where("UPPER(TRIM(s.course)) NOT LIKE '%SENIOR HIGH%'", NULL, FALSE);
+            $this->db->where("UPPER(TRIM(s.course)) NOT LIKE '%SHS%'", NULL, FALSE);
+        }
+
+        if ($applyDateFilter && $dateFrom !== '') $this->db->where('r.c_date >=', $dateFrom);
+        if ($applyDateFilter && $dateTo !== '') $this->db->where('r.c_date <=', $dateTo);
+        if ($schoolYear !== '') $this->db->where('r.sy', $schoolYear);
+
+        return $this->db->group_by('s.schoolID')
+            ->order_by('total_resources', 'DESC')
+            ->order_by('schoolName', 'ASC')
+            ->limit(20)
+            ->get()->result();
     }
 
     function brigada_summary_v2_details()

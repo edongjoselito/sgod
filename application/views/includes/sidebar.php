@@ -1144,6 +1144,7 @@
                             <li><a href="<?= base_url(); ?>Brigada/spc_districts">School Preparedness</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/spc_admin_report">SPC Report</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/brigada_summary_v2">Summary Report</a></li>
+                            <li><a href="<?= base_url(); ?>Brigada/top_schools">Top Schools</a></li>
                             <li><a href="<?= base_url(); ?>Brigada/yoy">Year-on-Year</a></li>
                             <li><a href="<?= base_url(); ?>Page/satisfaction_survey_results">Survey Results</a></li>
                         </ul>
@@ -1350,7 +1351,8 @@
         <?php endif; ?>
 
         <script>
-        // Keep Issues / Concerns available in every role-specific sidebar.
+        // Keep Issues / Concerns available in role-specific sidebars, except School.
+        <?php if ($currentSidebarSection !== 'School'): ?>
         document.addEventListener('DOMContentLoaded', function () {
             var menu = document.getElementById('side-menu');
             var issuesUrl = <?= json_encode(site_url('Page/section_head_issues_concerns')); ?>;
@@ -1363,6 +1365,7 @@
             item.appendChild(link);
             menu.appendChild(item);
         });
+        <?php endif; ?>
 
         if (false) (function () {
             var menu = document.getElementById('side-menu');

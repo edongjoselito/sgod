@@ -3296,10 +3296,16 @@ public function memo_delete(){
 	$this->ensure_accomplishment_activity_date_columns();
 	$this->ensure_kra_objective_columns();
 	$this->ensure_accomplishment_featured_photo_column();
+	$this->ensure_accomplishment_additional_photos_table();
 	$this->ensure_ipcrf_objective_template_id();
 	$record = $this->get_owned_accomplishment($id);
 	if(!$record){ show_404(); return; }
-	$result = array('record' => $record, 'kraOptions' => $this->get_active_kras(), 'objectiveOptions' => $this->get_active_objectives());
+	$result = array(
+		'record' => $record,
+		'kraOptions' => $this->get_active_kras(),
+		'objectiveOptions' => $this->get_active_objectives(),
+		'additionalPhotos' => $this->db->where('acc_id', $id)->order_by('id', 'ASC')->get('one_sgod_accomplishment_additional_photos')->result()
+	);
 
 	if($this->input->post('update')){
 		$from = $this->normalize_activity_date($this->input->post('activityDateFrom'));
@@ -3320,7 +3326,20 @@ public function memo_delete(){
 			$result['uploadError'] = $photoUpload['message'];
 			$this->load->view('sect_accom_update', $result); return;
 		}
-		$featuredPhoto = !empty($photoUpload['uploaded']) ? (string) $photoUpload['data']['file_name'] : (string) $record->featured_photo;
+		$additionalPhotoUpload = $this->upload_accomplishment_additional_photos('additional_photos');
+		if(!$additionalPhotoUpload['success']){
+			if(!empty($photoUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_featured_photos/' . $photoUpload['data']['file_name']);
+			$result['uploadError'] = $additionalPhotoUpload['message'];
+			$this->load->view('sect_accom_update', $result); return;
+		}
+		$removeFeaturedPhoto = (string) $this->input->post('remove_featured_photo') === '1';
+		$requestedAdditionalRemovals = $this->input->post('removeAdditionalPhotos');
+		$requestedAdditionalRemovals = is_array($requestedAdditionalRemovals) ? array_unique(array_filter(array_map('intval', $requestedAdditionalRemovals))) : array();
+		$additionalPhotosToRemove = array();
+		if(!empty($requestedAdditionalRemovals)){
+			$additionalPhotosToRemove = $this->db->where('acc_id', $id)->where_in('id', $requestedAdditionalRemovals)->get('one_sgod_accomplishment_additional_photos')->result();
+		}
+		$featuredPhoto = !empty($photoUpload['uploaded']) ? (string) $photoUpload['data']['file_name'] : ($removeFeaturedPhoto ? '' : (string) $record->featured_photo);
 		$payload = array(
 			'quarter' => $from !== '' ? $this->get_quarter_from_date($from) : '',
 			'year' => $from !== '' ? date('Y', strtotime($from)) : '',
@@ -3339,18 +3358,32 @@ public function memo_delete(){
 			'accomplishmentScope' => $this->normalize_accomplishment_scope($this->input->post('accomplishmentScope')),
 			'resources' => trim((string) $this->input->post('resources')),
 			'notes' => trim((string) $this->input->post('notes')),
+			'perIndicators' => trim((string) $this->input->post('perIndicators')),
+			'target' => trim((string) $this->input->post('target')),
+			'achieved' => trim((string) $this->input->post('achieved')),
+			'percentageAccom' => trim((string) $this->input->post('percentageAccom')),
+			'remarks' => trim((string) $this->input->post('remarks')),
 			'featured_photo' => $featuredPhoto
 		);
 		$saved = $this->db->where('id', $id)->where('section', $this->session->userdata('section'))->where('secGroup', $this->session->userdata('secGroup'))->update('one_sgod_accomplishments', $payload);
 		if($saved){
-			if(!empty($photoUpload['uploaded']) && $record->featured_photo !== ''){
+			foreach($additionalPhotoUpload['files'] as $photo){
+				$this->db->insert('one_sgod_accomplishment_additional_photos', array('acc_id' => $id, 'file_name' => $photo['file_name'], 'original_name' => $photo['original_name'], 'created_at' => date('Y-m-d H:i:s')));
+			}
+			if((!empty($photoUpload['uploaded']) || $removeFeaturedPhoto) && $record->featured_photo !== ''){
 				$oldPhoto = FCPATH . 'upload/accomplishment_featured_photos/' . $record->featured_photo;
 				if(file_exists($oldPhoto)) @unlink($oldPhoto);
+			}
+			foreach($additionalPhotosToRemove as $photo){
+				$this->db->where('id', (int) $photo->id)->where('acc_id', $id)->delete('one_sgod_accomplishment_additional_photos');
+				$photoPath = FCPATH . 'upload/accomplishment_additional_photos/' . $photo->file_name;
+				if(file_exists($photoPath)) @unlink($photoPath);
 			}
 			$this->session->set_flashdata('success', 'Updated successfully!');
 			redirect('Page/viewSecAccomplishments'); return;
 		}
 		if(!empty($photoUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_featured_photos/' . $featuredPhoto);
+		foreach($additionalPhotoUpload['files'] as $photo) @unlink(FCPATH . 'upload/accomplishment_additional_photos/' . $photo['file_name']);
 		$result['uploadError'] = 'Unable to update the accomplishment entry right now. Please try again.';
 	}
 	$this->load->view('sect_accom_update', $result);

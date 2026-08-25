@@ -129,15 +129,21 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
         .record-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .8fr); gap: 25px; align-items: start; margin-bottom: 26px; }
         .record-intro--no-photo { display: block; }
         .record-intro .record-section { margin-top: 0; }
-        .featured-photo { display: block; height: min(35vw, 310px); margin: 0; overflow: hidden; border: 0; border-radius: 12px; background: #eef0f8; cursor: zoom-in; }
-        .featured-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
-        .additional-photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 11px; margin: -8px 0 26px; }
-        .additional-photo-gallery a { display: block; height: 92px; overflow: hidden; border: 1px solid #dce1f1; border-radius: 9px; background: #eef0f8; }
+        .featured-photo { display: flex; align-items: center; justify-content: center; width: 100%; max-height: min(48vw, 420px); margin: 0; overflow: hidden; border: 0; border-radius: 12px; background: #eef0f8; cursor: zoom-in; }
+        .featured-photo img { display: block; width: 100%; height: auto; max-height: min(48vw, 420px); object-fit: contain; }
+        .record-media-gallery { min-width: 0; }
+        .additional-photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; margin: 9px 0 0; }
+        .additional-photo-gallery a { display: block; height: 68px; overflow: hidden; border: 1px solid #dce1f1; border-radius: 8px; background: #eef0f8; }
         .additional-photo-gallery img { display: block; width: 100%; height: 100%; object-fit: cover; }
         .photo-lightbox { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 28px; background: rgba(6,8,28,.9); }
         .photo-lightbox.is-open { display: flex; }
         .photo-lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 7px; box-shadow: 0 18px 60px rgba(0,0,0,.5); }
-        .photo-lightbox button { position: absolute; top: 18px; right: 22px; width: 42px; height: 42px; border: 0; border-radius: 50%; color: #252b81; background: #fff; font-size: 1.5rem; cursor: pointer; }
+        .photo-lightbox button { border: 0; cursor: pointer; }
+        .photo-lightbox .lightbox-close { position: absolute; top: 18px; right: 22px; width: 42px; height: 42px; border-radius: 50%; color: #252b81; background: #fff; font-size: 1.5rem; }
+        .photo-lightbox .lightbox-nav { position: absolute; top: 50%; width: 48px; height: 48px; border-radius: 50%; color: #252b81; background: #fff; font-size: 1.9rem; line-height: 1; transform: translateY(-50%); }
+        .photo-lightbox .lightbox-prev { left: 24px; } .photo-lightbox .lightbox-next { right: 24px; }
+        .photo-lightbox .lightbox-nav:disabled { cursor: default; opacity: .35; }
+        .lightbox-count { position: absolute; bottom: 22px; padding: 6px 11px; border-radius: 999px; color: #fff; background: rgba(255,255,255,.15); font-size: .8rem; font-weight: 700; }
         .record-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 26px; }
         .meta-card { min-height: 74px; padding: 13px 15px; border-radius: 10px; background: #f4f5fc; }
         .meta-card span { display: block; margin-bottom: 5px; color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -163,14 +169,18 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
         .attachment-list li { margin: 6px 0; }
         .page-footer { position: absolute; right: 28px; bottom: 22px; color: #8c91a9; font-size: .76rem; }
         .book-page { position: relative; padding-bottom: 65px; }
-        .flipbook-controls { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 20px; color: #fff; }
-        .flipbook-controls button { width: 42px; height: 42px; border: 0; border-radius: 50%; color: var(--ink); background: #fff; font-size: 1.3rem; cursor: pointer; box-shadow: 0 5px 16px rgba(0,0,0,.18); }
+        .flipbook-stage-wrap { position: relative; }
+        .flipbook-controls { position: absolute; inset: 0; z-index: 3; margin: 0; color: #fff; pointer-events: none; }
+        .flipbook-controls button { position: absolute; top: 50%; width: 48px; height: 48px; border: 0; border-radius: 50%; color: var(--ink); background: #fff; font-size: 1.45rem; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.24); transform: translateY(-50%); pointer-events: auto; transition: transform .18s ease, box-shadow .18s ease; }
+        .flipbook-controls .js-prev { left: 18px; }
+        .flipbook-controls .js-next { right: 18px; }
+        .flipbook-controls button:hover:not(:disabled) { box-shadow: 0 9px 22px rgba(0,0,0,.3); transform: translateY(-50%) scale(1.07); }
         .flipbook-controls button:disabled { cursor: not-allowed; opacity: .4; }
-        .page-count { min-width: 115px; text-align: center; font-size: .88rem; font-weight: 700; }
+        .page-count { position: absolute; right: 50%; bottom: 17px; min-width: 115px; padding: 5px 10px; border-radius: 999px; color: #fff; background: rgba(10,13,50,.58); font-size: .78rem; font-weight: 700; text-align: center; transform: translateX(50%); }
         .empty-page { display: flex; align-items: center; justify-content: center; text-align: center; }
         .empty-page h2 { margin: 0 0 8px; font-size: 1.6rem; }
         .empty-page p { margin: 0; color: var(--muted); }
-        @media (max-width: 700px) { .flipbook-shell { padding: 18px 12px 30px; } .flipbook-topbar { align-items: flex-start; flex-direction: column; } .book-stage { min-height: 520px; padding: 7px; } .book-page { min-height: 500px; padding: 28px 22px 54px; } .record-intro { grid-template-columns: 1fr; } .featured-photo { height: min(62vw, 310px); } .record-meta { grid-template-columns: 1fr; gap: 9px; } }
+        @media (max-width: 700px) { .flipbook-shell { padding: 18px 12px 30px; } .flipbook-topbar { align-items: flex-start; flex-direction: column; } .book-stage { min-height: 520px; padding: 7px; } .book-page { min-height: 500px; padding: 28px 22px 54px; } .record-intro { grid-template-columns: 1fr; } .featured-photo, .featured-photo img { max-height: min(72vw, 420px); } .record-meta { grid-template-columns: 1fr; gap: 9px; } .flipbook-controls button { width: 40px; height: 40px; font-size: 1.2rem; } .flipbook-controls .js-prev { left: 11px; } .flipbook-controls .js-next { right: 11px; } .page-count { bottom: 11px; } .photo-lightbox { padding: 16px 58px; } .photo-lightbox .lightbox-nav { width: 40px; height: 40px; } .photo-lightbox .lightbox-prev { left: 10px; } .photo-lightbox .lightbox-next { right: 10px; } }
         @media print { body { background: #fff; } .flipbook-shell { width: auto; padding: 0; } .flipbook-topbar, .flipbook-controls { display: none; } .book-stage { padding: 0; background: #fff; box-shadow: none; } .book-page { display: block !important; min-height: auto; margin: 0; border-radius: 0; box-shadow: none; page-break-after: always; } .cover-page { min-height: 100vh; } }
     </style>
 </head>
@@ -185,6 +195,7 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
                 <a href="<?= base_url(); ?>Page/viewSecAccomplishments">Back to list</a>
             </div>
         </header>
+        <div class="flipbook-stage-wrap">
         <section class="book-stage" aria-label="Accomplishment flipbook">
             <article class="book-page cover-page is-active">
                 <div class="cover-icon"><i class="mdi mdi-book-open-page-variant"></i></div>
@@ -218,17 +229,17 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
                                 <span class="title-chip"><i class="mdi mdi-map-marker-outline"></i><?= accomplishment_flipbook_escape($record->venue ?: 'Venue not specified'); ?></span>
                             </div>
                         </div>
-                        <div class="record-intro <?= $featuredPhoto === '' ? 'record-intro--no-photo' : ''; ?>">
+                        <div class="record-intro <?= $featuredPhoto === '' && empty($additionalPhotos) ? 'record-intro--no-photo' : ''; ?>">
                             <?php if ($particularsHtml !== '') : ?>
                                 <section class="record-section"><h3>Activity/Accomplishment Details</h3><div class="rich-text"><?= $particularsHtml; ?></div></section>
                             <?php endif; ?>
-                            <?php if ($featuredPhoto !== '') : ?>
-                                <a class="featured-photo js-photo-lightbox" href="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($featuredPhoto); ?>" aria-label="View full featured photo"><img src="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($featuredPhoto); ?>" alt="Featured photo for <?= accomplishment_flipbook_escape(accomplishment_flipbook_text($record->activity)); ?>"></a>
+                            <?php if ($featuredPhoto !== '' || !empty($additionalPhotos)) : ?>
+                                <div class="record-media-gallery">
+                                    <?php if ($featuredPhoto !== '') : ?><a class="featured-photo js-photo-lightbox" href="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($featuredPhoto); ?>" aria-label="View full featured photo"><img src="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($featuredPhoto); ?>" alt="Featured photo for <?= accomplishment_flipbook_escape(accomplishment_flipbook_text($record->activity)); ?>"></a><?php endif; ?>
+                                    <?php if (!empty($additionalPhotos)) : ?><div class="additional-photo-gallery"><?php foreach ($additionalPhotos as $photo) : ?><a class="js-photo-lightbox" href="<?= base_url(); ?>upload/accomplishment_additional_photos/<?= rawurlencode($photo->file_name); ?>" aria-label="View additional photo"><img src="<?= base_url(); ?>upload/accomplishment_additional_photos/<?= rawurlencode($photo->file_name); ?>" alt="Additional photo"></a><?php endforeach; ?></div><?php endif; ?>
+                                </div>
                             <?php endif; ?>
                         </div>
-                        <?php if (!empty($additionalPhotos)) : ?>
-                            <section class="record-section"><h3>Additional Photos</h3><div class="additional-photo-gallery"><?php foreach ($additionalPhotos as $photo) : ?><a class="js-photo-lightbox" href="<?= base_url(); ?>upload/accomplishment_additional_photos/<?= rawurlencode($photo->file_name); ?>" aria-label="View additional photo"><img src="<?= base_url(); ?>upload/accomplishment_additional_photos/<?= rawurlencode($photo->file_name); ?>" alt="Additional photo"></a><?php endforeach; ?></div></section>
-                        <?php endif; ?>
                         <?php if ($notesHtml !== '' || $resourceText !== '') : ?>
                             <section class="reference-hero">
                                 <?php if ($notesHtml !== '') : ?><div class="reference-item"><h3>Additional Notes</h3><div class="rich-text"><?= $notesHtml; ?></div></div><?php endif; ?>
@@ -251,10 +262,14 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
             <span class="page-count" aria-live="polite"></span>
             <button type="button" class="js-next" aria-label="Next page"><i class="mdi mdi-chevron-right"></i></button>
         </nav>
+        </div>
     </main>
     <div class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Full featured photo">
-        <button type="button" aria-label="Close full image">&times;</button>
+        <button type="button" class="lightbox-close" aria-label="Close full image">&times;</button>
+        <button type="button" class="lightbox-nav lightbox-prev" aria-label="Previous image"><i class="mdi mdi-chevron-left"></i></button>
         <img src="" alt="Full featured photo">
+        <button type="button" class="lightbox-nav lightbox-next" aria-label="Next image"><i class="mdi mdi-chevron-right"></i></button>
+        <span class="lightbox-count" aria-live="polite"></span>
     </div>
     <script>
         (function () {
@@ -277,6 +292,7 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
             previous.addEventListener('click', function () { showPage(current - 1, 'prev'); });
             next.addEventListener('click', function () { showPage(current + 1, 'next'); });
             document.addEventListener('keydown', function (event) {
+                if (lightbox && lightbox.classList.contains('is-open')) return;
                 if (event.key === 'ArrowLeft') previous.click();
                 if (event.key === 'ArrowRight') next.click();
             });
@@ -284,17 +300,42 @@ if (!function_exists('accomplishment_flipbook_linkify')) {
 
             var lightbox = document.querySelector('.photo-lightbox');
             var lightboxImage = lightbox.querySelector('img');
-            function closeLightbox() { lightbox.classList.remove('is-open'); lightboxImage.src = ''; }
+            var lightboxPrevious = lightbox.querySelector('.lightbox-prev');
+            var lightboxNext = lightbox.querySelector('.lightbox-next');
+            var lightboxCount = lightbox.querySelector('.lightbox-count');
+            var galleryLinks = [];
+            var galleryIndex = 0;
+            function showLightboxImage(index) {
+                if (!galleryLinks.length) return;
+                galleryIndex = (index + galleryLinks.length) % galleryLinks.length;
+                var link = galleryLinks[galleryIndex];
+                lightboxImage.src = link.href;
+                lightboxImage.alt = link.querySelector('img') ? link.querySelector('img').alt : 'Accomplishment photo';
+                lightboxPrevious.disabled = galleryLinks.length < 2;
+                lightboxNext.disabled = galleryLinks.length < 2;
+                lightboxCount.textContent = galleryLinks.length > 1 ? (galleryIndex + 1) + ' of ' + galleryLinks.length : '';
+            }
+            function closeLightbox() { lightbox.classList.remove('is-open'); lightboxImage.src = ''; galleryLinks = []; }
             document.querySelectorAll('.js-photo-lightbox').forEach(function (link) {
                 link.addEventListener('click', function (event) {
                     event.preventDefault();
-                    lightboxImage.src = link.href;
+                    var gallery = link.closest('.record-media-gallery');
+                    galleryLinks = gallery ? Array.prototype.slice.call(gallery.querySelectorAll('.js-photo-lightbox')) : [link];
+                    galleryIndex = Math.max(0, galleryLinks.indexOf(link));
+                    showLightboxImage(galleryIndex);
                     lightbox.classList.add('is-open');
                 });
             });
-            lightbox.querySelector('button').addEventListener('click', closeLightbox);
+            lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+            lightboxPrevious.addEventListener('click', function () { showLightboxImage(galleryIndex - 1); });
+            lightboxNext.addEventListener('click', function () { showLightboxImage(galleryIndex + 1); });
             lightbox.addEventListener('click', function (event) { if (event.target === lightbox) closeLightbox(); });
-            document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeLightbox(); });
+            document.addEventListener('keydown', function (event) {
+                if (!lightbox.classList.contains('is-open')) return;
+                if (event.key === 'Escape') closeLightbox();
+                if (event.key === 'ArrowLeft') { event.preventDefault(); showLightboxImage(galleryIndex - 1); }
+                if (event.key === 'ArrowRight') { event.preventDefault(); showLightboxImage(galleryIndex + 1); }
+            });
         })();
     </script>
 </body>
