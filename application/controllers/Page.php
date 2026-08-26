@@ -3680,6 +3680,7 @@ public function memo_delete(){
 		show_error('Access Denied', 403);
 		return;
 	}
+	$this->ensure_school_letterhead_column();
 	$school = $this->db->where('schoolID', (string) $this->session->userdata('username'))->get('schools', 1)->row();
 	$result['representativeName'] = trim(implode(' ', array_filter(array(
 		trim((string) ($school->adminFName ?? '')),
@@ -3690,6 +3691,7 @@ public function memo_delete(){
 	$result['schoolName'] = trim((string) ($school->schoolName ?? ''));
 	$result['declarationDate'] = date('F j, Y');
 	$result['schoolCity'] = trim((string) ($school->city ?? ''));
+	$result['letterheadUrl'] = !empty($school->letterhead_file) ? base_url() . 'upload/school_letterheads/' . rawurlencode(basename((string) $school->letterhead_file)) : '';
 	$this->load->view('pbei_data_privacy_compliance', $result);
   }
 
@@ -4280,7 +4282,7 @@ public function memo_delete(){
 			'last_name' => $lastName,
 			'sex' => trim((string) $this->input->post('sex', TRUE)),
 			'position_title' => trim((string) $this->input->post('position_title', TRUE)),
-			'personnel_type' => $this->input->post('personnel_type', TRUE) === 'Non-Teaching' ? 'Non-Teaching' : 'Teaching',
+			'personnel_type' => in_array($this->input->post('personnel_type', TRUE), array('Administrative', 'Teaching', 'Non-Teaching'), true) ? $this->input->post('personnel_type', TRUE) : 'Teaching',
 			'licensed' => $this->input->post('licensed') ? 1 : 0,
 			'employment_status' => $this->input->post('employment_status', TRUE) === 'Part-time' ? 'Part-time' : 'Full-time',
 			'highest_education' => trim((string) $this->input->post('highest_education', TRUE)),
@@ -4294,6 +4296,7 @@ public function memo_delete(){
 			'work_assignment' => trim((string) $this->input->post('work_assignment', TRUE)),
 			'working_days_per_week' => (int) $this->input->post('working_days_per_week', TRUE),
 			'benefits' => implode('|', array_filter((array) $this->input->post('benefits', TRUE))),
+			'qualification_classification' => trim((string) $this->input->post('qualification_classification', TRUE)),
 			'email' => trim((string) $this->input->post('email', TRUE)),
 			'mobile_no' => trim((string) $this->input->post('mobile_no', TRUE))
 		);
@@ -4308,6 +4311,52 @@ public function memo_delete(){
 			$this->session->set_flashdata('success', 'Personnel record added successfully.');
 		}
 		redirect('Page/school_personnel');
+	}
+
+	function school_personnel_annex_d(){
+		if($this->session->userdata('section') !== 'School'){
+			show_error('Access Denied', 403); return;
+		}
+		$this->ensure_school_personnel_table();
+		$schoolId = (string) $this->session->userdata('username');
+		$result['personnel'] = $this->db->where('school_id', $schoolId)->order_by('full_name', 'ASC')->get('one_school_personnel')->result();
+		$this->ensure_school_letterhead_column();
+		$school = $this->db->select('schoolName, schoolID, letterhead_file')->where('schoolID', $schoolId)->get('schools', 1)->row();
+		$result['schoolName'] = trim((string) ($school->schoolName ?? $this->session->userdata('fName') ?? 'School'));
+		$result['letterheadUrl'] = !empty($school->letterhead_file) ? base_url() . 'upload/school_letterheads/' . rawurlencode(basename((string) $school->letterhead_file)) : '';
+		$this->load->view('school_personnel_annex_d', $result);
+	}
+
+	function school_letterhead(){
+		if($this->session->userdata('section') !== 'School'){ show_error('Access Denied', 403); return; }
+		$this->ensure_school_letterhead_column();
+		$schoolId = (string) $this->session->userdata('username');
+		$result['school'] = $this->db->select('schoolName, letterhead_file')->where('schoolID', $schoolId)->get('schools', 1)->row();
+		$this->load->view('school_letterhead', $result);
+	}
+
+	function school_letterhead_save(){
+		if($this->session->userdata('section') !== 'School'){ show_error('Access Denied', 403); return; }
+		$this->ensure_school_letterhead_column();
+		$schoolId = (string) $this->session->userdata('username');
+		if(empty($_FILES['letterhead']['name'])){
+			$this->session->set_flashdata('danger', 'Choose a PNG or JPG letterhead image first.'); redirect('Page/school_letterhead'); return;
+		}
+		$directory = FCPATH . 'upload/school_letterheads/';
+		if(!is_dir($directory) && !mkdir($directory, 0755, TRUE)){
+			$this->session->set_flashdata('danger', 'The letterhead upload folder could not be created.'); redirect('Page/school_letterhead'); return;
+		}
+		$config = array('upload_path' => $directory, 'allowed_types' => 'jpg|jpeg|png', 'max_size' => 4096, 'encrypt_name' => TRUE, 'remove_spaces' => TRUE);
+		$this->load->library('upload'); $this->upload->initialize($config);
+		if(!$this->upload->do_upload('letterhead')){
+			$this->session->set_flashdata('danger', strip_tags($this->upload->display_errors('', ''))); redirect('Page/school_letterhead'); return;
+		}
+		$upload = $this->upload->data();
+		$current = $this->db->select('letterhead_file')->where('schoolID', $schoolId)->get('schools', 1)->row();
+		$this->db->where('schoolID', $schoolId)->update('schools', array('letterhead_file' => $upload['file_name']));
+		$oldFile = basename((string) ($current->letterhead_file ?? ''));
+		if($oldFile !== '' && $oldFile !== $upload['file_name']){ $oldPath = $directory . $oldFile; if(is_file($oldPath)) @unlink($oldPath); }
+		$this->session->set_flashdata('success', 'Letterhead uploaded. It will appear on printable school reports.'); redirect('Page/school_letterhead');
 	}
 
 	function school_personnel_delete($id = 0){
@@ -4382,7 +4431,7 @@ public function memo_delete(){
 
 	private function ensure_school_personnel_table(){
 		$this->db->query('CREATE TABLE IF NOT EXISTS one_school_personnel (id INT UNSIGNED NOT NULL AUTO_INCREMENT, school_id VARCHAR(50) NOT NULL, employee_no VARCHAR(100) NULL, full_name VARCHAR(255) NOT NULL, first_name VARCHAR(100) NULL, middle_name VARCHAR(100) NULL, last_name VARCHAR(100) NULL, sex VARCHAR(20) NULL, position_title VARCHAR(255) NULL, personnel_type VARCHAR(30) NOT NULL DEFAULT \'Teaching\', licensed TINYINT(1) NOT NULL DEFAULT 0, employment_status VARCHAR(30) NOT NULL DEFAULT \'Full-time\', highest_education VARCHAR(255) NULL, education_course VARCHAR(255) NULL, major_specialization VARCHAR(255) NULL, prc_license_no VARCHAR(100) NULL, prc_expiration DATE NULL, non_teaching_role VARCHAR(100) NULL, non_teaching_other VARCHAR(255) NULL, email VARCHAR(255) NULL, mobile_no VARCHAR(100) NULL, created_at DATETIME NULL, PRIMARY KEY (id), KEY one_school_personnel_school_id (school_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
-		$columns = array('first_name' => 'VARCHAR(100) NULL', 'middle_name' => 'VARCHAR(100) NULL', 'last_name' => 'VARCHAR(100) NULL', 'highest_education' => 'VARCHAR(255) NULL', 'education_course' => 'VARCHAR(255) NULL', 'major_specialization' => 'VARCHAR(255) NULL', 'prc_license_no' => 'VARCHAR(100) NULL', 'prc_expiration' => 'DATE NULL', 'non_teaching_role' => 'VARCHAR(100) NULL', 'non_teaching_other' => 'VARCHAR(255) NULL', 'salary_range' => 'VARCHAR(100) NULL', 'work_assignment' => 'VARCHAR(255) NULL', 'working_days_per_week' => 'TINYINT UNSIGNED NULL', 'benefits' => 'TEXT NULL');
+		$columns = array('first_name' => 'VARCHAR(100) NULL', 'middle_name' => 'VARCHAR(100) NULL', 'last_name' => 'VARCHAR(100) NULL', 'highest_education' => 'VARCHAR(255) NULL', 'education_course' => 'VARCHAR(255) NULL', 'major_specialization' => 'VARCHAR(255) NULL', 'prc_license_no' => 'VARCHAR(100) NULL', 'prc_expiration' => 'DATE NULL', 'non_teaching_role' => 'VARCHAR(100) NULL', 'non_teaching_other' => 'VARCHAR(255) NULL', 'salary_range' => 'VARCHAR(100) NULL', 'work_assignment' => 'VARCHAR(255) NULL', 'working_days_per_week' => 'TINYINT UNSIGNED NULL', 'benefits' => 'TEXT NULL', 'qualification_classification' => 'VARCHAR(100) NULL');
 		foreach($columns as $column => $definition){
 			if(!$this->db->field_exists($column, 'one_school_personnel')) $this->db->query('ALTER TABLE one_school_personnel ADD COLUMN ' . $column . ' ' . $definition);
 		}
@@ -4476,8 +4525,15 @@ public function memo_delete(){
 		}
 	}
 
+	private function ensure_school_letterhead_column(){
+		if(!$this->db->field_exists('letterhead_file', 'schools')){
+			$this->db->query('ALTER TABLE schools ADD COLUMN letterhead_file VARCHAR(255) NULL');
+		}
+	}
+
 	private function ensure_school_profile_schema(){
 		$this->ensure_school_educational_levels_column();
+		$this->ensure_school_letterhead_column();
 		$this->ensure_school_recognition_columns();
 		$this->ensure_school_profile_detail_columns();
 	}

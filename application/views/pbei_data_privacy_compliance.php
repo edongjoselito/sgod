@@ -4,6 +4,14 @@ $representativeName = trim((string) ($representativeName ?? '')) ?: 'Name not re
 $representativeTitle = trim((string) ($representativeTitle ?? '')) ?: 'Title / Position not recorded';
 $schoolName = trim((string) ($schoolName ?? '')) ?: 'School name not recorded';
 $schoolCity = trim((string) ($schoolCity ?? '')) ?: 'City not recorded';
+$letterheadUrl = trim((string) ($letterheadUrl ?? ''));
+$letterheadMarkup = $letterheadUrl !== '' ? '<img class="print-letterhead" src="' . $esc($letterheadUrl) . '" alt="School letterhead">' : '';
+ob_start(function ($output) use ($letterheadMarkup) {
+    $output = str_replace('margin:34px auto;padding:62px', 'margin:12px auto;padding:42px 62px 62px', $output);
+    if ($letterheadMarkup === '') { return $output; }
+    $output = str_replace('</style>', '.print-letterhead{display:block;width:100%;max-height:145px;object-fit:contain;object-position:top;margin:0 0 25px}</style>', $output);
+    return str_replace('<main class="declaration">', '<main class="declaration">' . $letterheadMarkup, $output);
+});
 ?>
 <!DOCTYPE html>
 <html lang="en"><head>
