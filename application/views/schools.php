@@ -525,6 +525,68 @@ $metricCards = array(
                 box-shadow: 0 10px 18px rgba(15, 23, 42, 0.10);
             }
 
+            .school-actions {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+                min-width: 185px;
+            }
+
+            .school-actions .action-link {
+                padding: 9px 12px;
+            }
+
+            .action-icon-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                padding: 0;
+                border: 1px solid transparent;
+                border-radius: 12px;
+                font-size: 1.05rem;
+                transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            }
+
+            .action-icon-btn:hover,
+            .action-icon-btn:focus {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 16px rgba(15, 23, 42, 0.13);
+            }
+
+            .action-icon-btn--edit { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
+            .action-icon-btn--edit:hover, .action-icon-btn--edit:focus { color: #1d4ed8; background: #dbeafe; }
+            .action-icon-btn--delete { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
+            .action-icon-btn--delete:hover, .action-icon-btn--delete:focus { color: #b91c1c; background: #fee2e2; }
+            .school-actions form { margin: 0; }
+
+            .school-modal .modal-dialog { max-width: 900px; }
+            .school-modal .modal-content { overflow: hidden; border: 0; border-radius: 22px; box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24); }
+            .school-modal .modal-header { align-items: flex-start; padding: 24px 28px; color: #fff; border: 0; background: linear-gradient(135deg, #272b8c 0%, #3c40c6 58%, #6f74ff 100%); }
+            .school-modal .modal-title { color: #fff; font-size: 1.3rem; font-weight: 800; }
+            .school-modal .modal-subtitle { margin: 5px 0 0; color: rgba(255,255,255,.76); font-size: .88rem; }
+            .school-modal .modal-close { width: 38px; height: 38px; padding: 0; border: 1px solid rgba(255,255,255,.34); border-radius: 12px; color: #fff; background: rgba(255,255,255,.11); opacity: 1; text-shadow: none; }
+            .school-modal .modal-close:hover { color: #272b8c; background: #fff; }
+            .school-modal .modal-body { max-height: calc(100vh - 210px); padding: 26px 28px; overflow-y: auto; background: #f8faff; }
+            .school-modal .form-section { display: flex; align-items: center; gap: 9px; margin: 4px 0 18px; color: #272b8c; font-size: .78rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+            .school-modal .form-section::after { content: ''; height: 1px; flex: 1; background: #dbe3f5; }
+            .school-modal .form-group { margin-bottom: 18px; }
+            .school-modal label { margin-bottom: 7px; color: #465273; font-size: .84rem; font-weight: 700; }
+            .school-modal .form-control { min-height: 43px; border-color: #d9e1f0; border-radius: 10px; color: #253052; box-shadow: none; }
+            .school-modal .form-control:focus { border-color: #6f74ff; box-shadow: 0 0 0 3px rgba(111,116,255,.13); }
+            .school-modal .modal-footer { padding: 17px 28px; border-top: 1px solid #e4eaf5; background: #fff; }
+            .school-modal .btn-save { min-width: 135px; border: 0; border-radius: 10px; font-weight: 700; background: linear-gradient(135deg, #272b8c, #4f55dc); box-shadow: 0 8px 16px rgba(60,64,198,.22); }
+            .school-modal .btn-save:hover { transform: translateY(-1px); box-shadow: 0 11px 20px rgba(60,64,198,.28); }
+            .school-modal .btn-cancel { border-radius: 10px; font-weight: 700; }
+
+            @media (max-width: 575.98px) {
+                .school-modal .modal-header, .school-modal .modal-body, .school-modal .modal-footer { padding-left: 20px; padding-right: 20px; }
+                .school-modal .modal-footer { justify-content: stretch; }
+                .school-modal .modal-footer .btn { flex: 1; }
+            }
+
             .empty-state {
                 text-align: center;
                 padding: 42px 24px;
@@ -805,14 +867,16 @@ $metricCards = array(
                                                         <?php } ?>
                                                     </td>
                                                     <td>
-                                                        <a href="<?= base_url(); ?>Page/schoolDashoard?schoolid=<?= rawurlencode($schoolId); ?>" class="action-link">
-                                                            <i class="mdi mdi-arrow-right-circle-outline"></i>
-                                                            View Dashboard
-                                                        </a>
-                                                        <?php if ($canManageSchools): ?>
-                                                            <button type="button" class="btn btn-sm btn-outline-primary mt-2 js-edit-school" data-toggle="modal" data-target="#schoolModal" data-school-id="<?= schools_escape($schoolId); ?>" data-school-name="<?= schools_escape($schoolName); ?>" data-school-type="<?= schools_escape($schoolType); ?>" data-district="<?= schools_escape($district); ?>" data-sitio="<?= schools_escape($schoolRow->sitio ?? ''); ?>" data-brgy="<?= schools_escape($schoolRow->brgy ?? ''); ?>" data-city="<?= schools_escape($schoolRow->city ?? ''); ?>" data-province="<?= schools_escape($schoolRow->province ?? ''); ?>" data-admin-first="<?= schools_escape($schoolRow->adminFName ?? ''); ?>" data-admin-middle="<?= schools_escape($schoolRow->adminMName ?? ''); ?>" data-admin-last="<?= schools_escape($schoolRow->adminLName ?? ''); ?>" data-admin-designation="<?= schools_escape($designation); ?>" data-permit-no="<?= schools_escape($permitNo); ?>" data-recognition-no="<?= schools_escape($recognitionNo); ?>"><i class="mdi mdi-pencil-outline"></i> Edit</button>
-                                                            <form method="post" action="<?= base_url(); ?>Page/school_delete" class="mt-1" onsubmit="return confirm('Delete this school record?');"><input type="hidden" name="school_id" value="<?= schools_escape($schoolId); ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can-outline"></i> Delete</button></form>
-                                                        <?php endif; ?>
+                                                        <div class="school-actions">
+                                                            <a href="<?= base_url(); ?>Page/schoolDashoard?schoolid=<?= rawurlencode($schoolId); ?>" class="action-link" title="Open school dashboard">
+                                                                <i class="mdi mdi-arrow-top-right"></i>
+                                                                Dashboard
+                                                            </a>
+                                                            <?php if ($canManageSchools): ?>
+                                                                <button type="button" class="action-icon-btn action-icon-btn--edit js-edit-school" data-toggle="modal" data-target="#schoolModal" title="Edit <?= schools_escape($schoolName); ?>" aria-label="Edit <?= schools_escape($schoolName); ?>" data-school-id="<?= schools_escape($schoolId); ?>" data-school-name="<?= schools_escape($schoolName); ?>" data-school-type="<?= schools_escape($schoolType); ?>" data-course="<?= schools_escape($schoolRow->course ?? ''); ?>" data-district="<?= schools_escape($district); ?>" data-sitio="<?= schools_escape($schoolRow->sitio ?? ''); ?>" data-brgy="<?= schools_escape($schoolRow->brgy ?? ''); ?>" data-city="<?= schools_escape($schoolRow->city ?? ''); ?>" data-province="<?= schools_escape($schoolRow->province ?? ''); ?>" data-admin-first="<?= schools_escape($schoolRow->adminFName ?? ''); ?>" data-admin-middle="<?= schools_escape($schoolRow->adminMName ?? ''); ?>" data-admin-last="<?= schools_escape($schoolRow->adminLName ?? ''); ?>" data-admin-designation="<?= schools_escape($designation); ?>" data-permit-no="<?= schools_escape($permitNo); ?>" data-recognition-no="<?= schools_escape($recognitionNo); ?>"><i class="mdi mdi-pencil-outline"></i></button>
+                                                                <form method="post" action="<?= base_url(); ?>Page/school_delete" onsubmit="return confirm('Delete this school? This also removes its School account.');"><input type="hidden" name="school_id" value="<?= schools_escape($schoolId); ?>"><button type="submit" class="action-icon-btn action-icon-btn--delete" title="Delete <?= schools_escape($schoolName); ?>" aria-label="Delete <?= schools_escape($schoolName); ?>"><i class="mdi mdi-trash-can-outline"></i></button></form>
+                                                            <?php endif; ?>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             <?php } ?>
@@ -835,19 +899,23 @@ $metricCards = array(
                 </div>
 
                 <?php if ($canManageSchools): ?>
-                    <div class="modal fade" id="schoolModal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal fade school-modal" id="schoolModal" tabindex="-1" role="dialog" aria-hidden="true">
                         <div class="modal-dialog modal-lg" role="document"><div class="modal-content">
                             <form method="post" action="<?= base_url(); ?>Page/school_save" id="schoolForm" novalidate>
-                                <div class="modal-header"><h5 class="modal-title" id="schoolModalTitle">Add School</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+                                <div class="modal-header"><div><h5 class="modal-title" id="schoolModalTitle"><i class="mdi mdi-school-outline mr-2"></i>Add School</h5><p class="modal-subtitle" id="schoolModalSubtitle">Create a school record and dashboard account.</p></div><button type="button" class="close modal-close" data-dismiss="modal" aria-label="Close">&times;</button></div>
                                 <div class="modal-body">
                                     <input type="hidden" name="original_school_id" id="originalSchoolId">
+                                    <div class="form-section"><i class="mdi mdi-school-outline"></i> School details</div>
                                     <div class="form-row"><div class="form-group col-md-4"><label>School ID <small class="text-muted">(optional)</small></label><input class="form-control" name="schoolID" id="schoolIdInput"></div><div class="form-group col-md-5"><label>School Name <span class="text-danger">*</span></label><input class="form-control" name="schoolName" id="schoolNameInput" required><div class="invalid-feedback">Enter the School Name.</div></div><div class="form-group col-md-3"><label>Type</label><select class="form-control" name="schoolType" id="schoolTypeInput"><option value="Public">Public</option><option value="Private">Private</option><option value="Other">Other</option></select></div></div>
+                                    <div class="form-row"><div class="form-group col-md-6"><label>Program Offering</label><select class="form-control" name="course" id="schoolCourseInput"><option value="">Select program offering</option><option value="Elementary">Elementary</option><option value="JHS">JHS</option><option value="JHS with SHS">JHS with SHS</option></select></div></div>
                                     <div class="form-row"><div class="form-group col-md-6" id="schoolAccountEmailGroup"><label>School Account Email <span class="text-danger">*</span></label><input class="form-control" type="email" name="account_email" id="schoolAccountEmail" autocomplete="email" required><div class="invalid-feedback">Enter a valid School Account Email.</div><small class="form-text" id="schoolEmailStatus">Required for account credentials and login. It is used as the School ID when that field is blank.</small></div><div class="form-group col-md-6" id="schoolAccountPasswordGroup"><label>School Account Password <span class="text-danger">*</span></label><div class="input-group"><input class="form-control" type="password" name="account_password" id="schoolAccountPassword" minlength="6" autocomplete="new-password"><div class="input-group-append"><button class="btn btn-outline-secondary" type="button" id="toggleSchoolPassword" aria-label="Show password"><i class="mdi mdi-eye-outline"></i></button></div></div><div class="invalid-feedback d-none" id="schoolPasswordFeedback">Use at least 6 characters for the password.</div><div class="mt-2"><button class="btn btn-sm btn-outline-primary" type="button" id="generateSchoolPassword"><i class="mdi mdi-refresh"></i> Generate Password</button></div><small class="form-text text-muted">The School ID or email can be used to sign in to the School dashboard.</small></div></div>
+                                    <div class="form-section"><i class="mdi mdi-map-marker-outline"></i> Location</div>
                                     <div class="form-row"><div class="form-group col-md-4"><label>District</label><input class="form-control" name="district" id="schoolDistrictInput"></div><div class="form-group col-md-4"><label>City / Municipality</label><input class="form-control" name="city" id="schoolCityInput"></div><div class="form-group col-md-4"><label>Province</label><input class="form-control" name="province" id="schoolProvinceInput"></div></div>
                                     <div class="form-row"><div class="form-group col-md-6"><label>Sitio</label><input class="form-control" name="sitio" id="schoolSitioInput"></div><div class="form-group col-md-6"><label>Barangay</label><input class="form-control" name="brgy" id="schoolBrgyInput"></div></div>
-                                    <hr><div class="form-row"><div class="form-group col-md-4"><label>School Head First Name</label><input class="form-control" name="adminFName" id="schoolAdminFirstInput"></div><div class="form-group col-md-4"><label>Middle Name</label><input class="form-control" name="adminMName" id="schoolAdminMiddleInput"></div><div class="form-group col-md-4"><label>Last Name</label><input class="form-control" name="adminLName" id="schoolAdminLastInput"></div></div>
+                                    <div class="form-section"><i class="mdi mdi-account-tie-outline"></i> School head &amp; records</div>
+                                    <div class="form-row"><div class="form-group col-md-4"><label>School Head First Name</label><input class="form-control" name="adminFName" id="schoolAdminFirstInput"></div><div class="form-group col-md-4"><label>Middle Name</label><input class="form-control" name="adminMName" id="schoolAdminMiddleInput"></div><div class="form-group col-md-4"><label>Last Name</label><input class="form-control" name="adminLName" id="schoolAdminLastInput"></div></div>
                                     <div class="form-row"><div class="form-group col-md-4"><label>Designation</label><input class="form-control" name="adminDesignation" id="schoolDesignationInput"></div><div class="form-group col-md-4"><label>Permit No.</label><input class="form-control" name="permitNo" id="schoolPermitInput"></div><div class="form-group col-md-4"><label>Recognition No.</label><input class="form-control" name="recogNo" id="schoolRecognitionInput"></div></div>
-                                </div><div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save School</button></div>
+                                </div><div class="modal-footer"><button type="button" class="btn btn-light btn-cancel" data-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary btn-save" id="schoolModalSubmit"><i class="mdi mdi-content-save-outline mr-1"></i>Save School</button></div>
                             </form>
                         </div></div>
                     </div>
@@ -964,7 +1032,10 @@ $metricCards = array(
                 $('#schoolModal').on('show.bs.modal', function (event) {
                     var trigger = $(event.relatedTarget);
                     var isEdit = trigger.hasClass('js-edit-school');
-                    $('#schoolModalTitle').text(isEdit ? 'Edit School' : 'Add School');
+					var schoolName = isEdit ? (trigger.data('school-name') || 'School') : '';
+                    $('#schoolModalTitle').html('<i class="mdi ' + (isEdit ? 'mdi-pencil-outline' : 'mdi-school-outline') + ' mr-2"></i>' + (isEdit ? 'Edit School' : 'Add School'));
+					$('#schoolModalSubtitle').text(isEdit ? 'Update the details for ' + schoolName + '.' : 'Create a school record and dashboard account.');
+					$('#schoolModalSubmit').html('<i class="mdi mdi-content-save-outline mr-1"></i>' + (isEdit ? 'Save Changes' : 'Create School'));
 					$('#schoolForm').removeClass('was-validated');
                     $('#schoolAccountEmailGroup').toggle(!isEdit);
                     $('#schoolAccountEmail').prop('required', !isEdit).val('');
@@ -976,6 +1047,7 @@ $metricCards = array(
                     setSchoolField('#schoolIdInput', isEdit ? trigger.data('school-id') : '');
                     setSchoolField('#schoolNameInput', isEdit ? trigger.data('school-name') : '');
                     setSchoolField('#schoolTypeInput', isEdit ? trigger.data('school-type') : 'Public');
+                    setSchoolField('#schoolCourseInput', isEdit ? trigger.data('course') : '');
                     setSchoolField('#schoolDistrictInput', isEdit ? trigger.data('district') : '');
                     setSchoolField('#schoolSitioInput', isEdit ? trigger.data('sitio') : '');
                     setSchoolField('#schoolBrgyInput', isEdit ? trigger.data('brgy') : '');

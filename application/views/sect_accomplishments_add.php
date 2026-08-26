@@ -770,6 +770,14 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                             </div>
                                         </div>
 
+                                        <div class="section-block">
+                                            <div class="section-title"><i class="mdi mdi-file-pdf-outline"></i> Signed Accomplishment Report</div>
+                                            <div class="field-grid">
+                                                <div class="field-span-6"><label class="field-label" for="signed_report_name">Document Name</label><input type="text" class="field-input" id="signed_report_name" name="signed_report_name" value="<?= htmlspecialchars((string) $this->input->post('signed_report_name'), ENT_QUOTES, 'UTF-8'); ?>" placeholder="Signed Accomplishment Report"></div>
+                                                <div class="field-span-6"><label class="field-label" for="signed_report">Attach Signed Report (PDF)</label><input type="file" class="field-input" id="signed_report" name="signed_report" accept="application/pdf,.pdf"><small class="form-text text-muted">Optional. PDF only, up to 15 MB.</small></div>
+                                            </div>
+                                        </div>
+
                                         <div class="form-actions">
                                             <div class="action-group">
                                                 <a href="<?= base_url(); ?>Page/viewSecAccomplishments" class="shell-button shell-button--secondary">

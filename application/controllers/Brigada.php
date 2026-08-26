@@ -21,6 +21,8 @@ class Brigada extends CI_Controller
         $this->ensure_brigada_contribution_breakdown_table();
         $this->ensure_brigada_contribution_report_tax_fields();
         $this->ensure_brigada_tax_incentive_requirements_table();
+		$this->ensure_brigada_requirements_table();
+		$this->ensure_asp_tracking_table();
 
         // Self-heal the e-Brigada alignment schema when the optional library
         // is deployed. Some production installations predate Schema_guard;
@@ -74,6 +76,19 @@ class Brigada extends CI_Controller
             remarks TEXT DEFAULT NULL,
             PRIMARY KEY (id),
             KEY idx_donation_id (donation_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    }
+
+    /**
+     * Requirements are shared by the Tax Incentive and ASP Tracking screens.
+     * Older deployments can have tracking records without this lookup table.
+     */
+    private function ensure_brigada_requirements_table()
+    {
+        $this->db->query('CREATE TABLE IF NOT EXISTS brigada_requirements (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            requirement VARCHAR(255) NOT NULL,
+            PRIMARY KEY (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
     }
 
@@ -2423,7 +2438,8 @@ public function contribution_dpds_export()
             return;
         }
 
-        $this->ensure_asp_tracking_table();
+		$this->ensure_brigada_requirements_table();
+		$this->ensure_asp_tracking_table();
 
         $this->db->select('r.id as donation_id, r.c_date, p.id as partner_id, p.name as partner_name, s.schoolName, r.project_name, r.spicific_contribution, r.amount');
         $this->db->from('brigada_contribution_report r');

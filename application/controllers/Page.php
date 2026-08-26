@@ -3174,10 +3174,11 @@ public function memo_delete(){
 		$result = array();
 		$this->ensure_accomplishment_scope_column();
 		$this->ensure_accomplishment_activity_date_columns();
-		$this->ensure_kra_objective_columns();
-		$this->ensure_accomplishment_featured_photo_column();
-		$this->ensure_accomplishment_additional_photos_table();
-		$this->ensure_ipcrf_objective_template_id();
+	$this->ensure_kra_objective_columns();
+	$this->ensure_accomplishment_featured_photo_column();
+	$this->ensure_accomplishment_additional_photos_table();
+	$this->ensure_accomplishment_report_table();
+	$this->ensure_ipcrf_objective_template_id();
 		$result['kraOptions'] = $this->get_active_kras();
 		$result['objectiveOptions'] = $this->get_active_objectives();
 
@@ -3235,6 +3236,14 @@ public function memo_delete(){
 		$this->load->view('sect_accomplishments_add', $result);
 		return;
 	  }
+	  $reportUpload = $this->upload_accomplishment_report('signed_report');
+	  if(!$reportUpload['success']){
+		if(!empty($photoUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_featured_photos/' . $photoUpload['data']['file_name']);
+		foreach($additionalPhotoUpload['files'] as $photo) @unlink(FCPATH . 'upload/accomplishment_additional_photos/' . $photo['file_name']);
+		$result['uploadError'] = $reportUpload['message'];
+		$this->load->view('sect_accomplishments_add', $result);
+		return;
+	  }
 	  $featuredPhoto = !empty($photoUpload['uploaded']) ? (string) $photoUpload['data']['file_name'] : '';
 
 	  $accomplishmentData = array(
@@ -3273,6 +3282,7 @@ public function memo_delete(){
 		if(file_exists($photoPath)) @unlink($photoPath);
 		}
 		foreach($additionalPhotoUpload['files'] as $photo) @unlink(FCPATH . 'upload/accomplishment_additional_photos/' . $photo['file_name']);
+		if(!empty($reportUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_reports/' . $reportUpload['data']['file_name']);
 		$result['uploadError'] = 'Unable to save the accomplishment entry right now. Please try again.';
 		$this->load->view('sect_accomplishments_add', $result);
 		return;
@@ -3281,6 +3291,7 @@ public function memo_delete(){
 	  foreach($additionalPhotoUpload['files'] as $photo){
 		$this->db->insert('one_sgod_accomplishment_additional_photos', array('acc_id' => $accomplishmentId, 'file_name' => $photo['file_name'], 'original_name' => $photo['original_name'], 'created_at' => date('Y-m-d H:i:s')));
 	  }
+	  if(!empty($reportUpload['uploaded'])) $this->db->insert('one_sgod_accomplishment_reports', array('acc_id' => $accomplishmentId, 'document_name' => trim((string) $this->input->post('signed_report_name')) ?: 'Signed Accomplishment Report', 'original_name' => $reportUpload['data']['orig_name'], 'stored_name' => $reportUpload['data']['file_name'], 'uploaded_at' => date('Y-m-d H:i:s')));
 
 	  $this->session->set_flashdata('success', ' Add Successfully!');
 	  redirect('Page/viewSecAccomplishments');
@@ -3297,6 +3308,7 @@ public function memo_delete(){
 	$this->ensure_kra_objective_columns();
 	$this->ensure_accomplishment_featured_photo_column();
 	$this->ensure_accomplishment_additional_photos_table();
+	$this->ensure_accomplishment_report_table();
 	$this->ensure_ipcrf_objective_template_id();
 	$record = $this->get_owned_accomplishment($id);
 	if(!$record){ show_404(); return; }
@@ -3304,7 +3316,8 @@ public function memo_delete(){
 		'record' => $record,
 		'kraOptions' => $this->get_active_kras(),
 		'objectiveOptions' => $this->get_active_objectives(),
-		'additionalPhotos' => $this->db->where('acc_id', $id)->order_by('id', 'ASC')->get('one_sgod_accomplishment_additional_photos')->result()
+		'additionalPhotos' => $this->db->where('acc_id', $id)->order_by('id', 'ASC')->get('one_sgod_accomplishment_additional_photos')->result(),
+		'reports' => $this->SGODModel->get_accomplishment_reports($id)
 	);
 
 	if($this->input->post('update')){
@@ -3330,6 +3343,13 @@ public function memo_delete(){
 		if(!$additionalPhotoUpload['success']){
 			if(!empty($photoUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_featured_photos/' . $photoUpload['data']['file_name']);
 			$result['uploadError'] = $additionalPhotoUpload['message'];
+			$this->load->view('sect_accom_update', $result); return;
+		}
+		$reportUpload = $this->upload_accomplishment_report('signed_report');
+		if(!$reportUpload['success']){
+			if(!empty($photoUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_featured_photos/' . $photoUpload['data']['file_name']);
+			foreach($additionalPhotoUpload['files'] as $photo) @unlink(FCPATH . 'upload/accomplishment_additional_photos/' . $photo['file_name']);
+			$result['uploadError'] = $reportUpload['message'];
 			$this->load->view('sect_accom_update', $result); return;
 		}
 		$removeFeaturedPhoto = (string) $this->input->post('remove_featured_photo') === '1';
@@ -3370,6 +3390,7 @@ public function memo_delete(){
 			foreach($additionalPhotoUpload['files'] as $photo){
 				$this->db->insert('one_sgod_accomplishment_additional_photos', array('acc_id' => $id, 'file_name' => $photo['file_name'], 'original_name' => $photo['original_name'], 'created_at' => date('Y-m-d H:i:s')));
 			}
+			if(!empty($reportUpload['uploaded'])) $this->db->insert('one_sgod_accomplishment_reports', array('acc_id' => $id, 'document_name' => trim((string) $this->input->post('signed_report_name')) ?: 'Signed Accomplishment Report', 'original_name' => $reportUpload['data']['orig_name'], 'stored_name' => $reportUpload['data']['file_name'], 'uploaded_at' => date('Y-m-d H:i:s')));
 			if((!empty($photoUpload['uploaded']) || $removeFeaturedPhoto) && $record->featured_photo !== ''){
 				$oldPhoto = FCPATH . 'upload/accomplishment_featured_photos/' . $record->featured_photo;
 				if(file_exists($oldPhoto)) @unlink($oldPhoto);
@@ -3384,6 +3405,7 @@ public function memo_delete(){
 		}
 		if(!empty($photoUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_featured_photos/' . $featuredPhoto);
 		foreach($additionalPhotoUpload['files'] as $photo) @unlink(FCPATH . 'upload/accomplishment_additional_photos/' . $photo['file_name']);
+		if(!empty($reportUpload['uploaded'])) @unlink(FCPATH . 'upload/accomplishment_reports/' . $reportUpload['data']['file_name']);
 		$result['uploadError'] = 'Unable to update the accomplishment entry right now. Please try again.';
 	}
 	$this->load->view('sect_accom_update', $result);
@@ -4025,7 +4047,14 @@ public function memo_delete(){
 
   private function can_manage_schools(){
 	$section = strtolower(trim((string) $this->session->userdata('section')));
-	return strpos($section, 'school management') !== false
+	$secGroup = strtolower(trim((string) $this->session->userdata('secGroup')));
+	// The directory belongs to SGOD.  In addition to SMME users, its SGOD
+	// administrator and the Super Admin must be able to maintain records.
+	return $section === 'super admin'
+		|| ($section === 'system administrator' && $secGroup === 'sgod')
+		|| $section === 'chief - sgod'
+		|| $section === 'social mobilization and networking'
+		|| strpos($section, 'school management') !== false
 		|| strpos($section, 'monitoring and evaluation') !== false
 		|| $section === 'smme';
   }
@@ -4107,7 +4136,7 @@ public function memo_delete(){
 		}
 	}
 
-	$allowedFields = array('schoolID', 'schoolName', 'schoolType', 'district', 'sitio', 'brgy', 'city', 'province', 'adminFName', 'adminMName', 'adminLName', 'adminDesignation', 'permitNo', 'recogNo');
+	$allowedFields = array('schoolID', 'schoolName', 'schoolType', 'course', 'district', 'sitio', 'brgy', 'city', 'province', 'adminFName', 'adminMName', 'adminLName', 'adminDesignation', 'permitNo', 'recogNo');
 	$payload = array();
 	foreach($allowedFields as $field){
 		if($this->db->field_exists($field, 'schools')){

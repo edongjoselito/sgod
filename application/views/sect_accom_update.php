@@ -17,6 +17,7 @@ $kraId = (int) $input('kra_id', $record->kra_id);
 $objectiveId = (int) $input('objective_id', $record->objective_id);
 $uploadError = isset($uploadError) ? trim((string) $uploadError) : '';
 $additionalPhotos = isset($additionalPhotos) && is_array($additionalPhotos) ? $additionalPhotos : array();
+$reports = isset($reports) && is_array($reports) ? $reports : array();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -106,6 +107,14 @@ $additionalPhotos = isset($additionalPhotos) && is_array($additionalPhotos) ? $a
                     <div class="field-grid">
                         <div class="span-12"><label class="field-label" for="featured_photo">Upload Photo</label><input class="field-input" type="file" id="featured_photo" name="featured_photo" accept="image/jpeg,image/png,image/gif"><span class="field-help">Optional. JPG, PNG, or GIF image up to 5 MB. Uploading a new image replaces the current featured photo.</span><?php if (!empty($record->featured_photo)) : ?><img class="photo-preview" src="<?= base_url(); ?>upload/accomplishment_featured_photos/<?= rawurlencode($record->featured_photo); ?>" alt="Current featured photo"><label class="remove-photo-option"><input type="checkbox" name="remove_featured_photo" value="1"> Remove current featured photo</label><?php endif; ?></div>
                         <div class="span-12"><label class="field-label" for="additional_photos">Additional Photos</label><div class="photo-drop-zone" id="additionalPhotoDropZone"><i class="mdi mdi-image-multiple-outline" style="font-size:2rem;color:#3c40c6;"></i><div>Drag multiple photos here, or choose files.</div><input class="field-input" type="file" id="additional_photos" name="additional_photos[]" accept="image/jpeg,image/png,image/gif" multiple><div class="photo-selection" id="additionalPhotoSelection">No additional photos selected.</div></div><span class="field-help">Optional. Add multiple JPG, PNG, or GIF photos (up to 5 MB each). Existing photos are retained unless marked for removal below.</span><?php if (!empty($additionalPhotos)) : ?><div class="additional-photo-list"><?php foreach ($additionalPhotos as $photo) : ?><div class="additional-photo-item"><a href="<?= base_url(); ?>upload/accomplishment_additional_photos/<?= rawurlencode($photo->file_name); ?>" target="_blank" rel="noopener"><img src="<?= base_url(); ?>upload/accomplishment_additional_photos/<?= rawurlencode($photo->file_name); ?>" alt="Existing additional photo"></a><label><input type="checkbox" name="removeAdditionalPhotos[]" value="<?= (int) $photo->id; ?>"> Remove</label></div><?php endforeach; ?></div><?php endif; ?></div>
+                    </div>
+                </div>
+                <div class="section-block">
+                    <div class="section-title"><i class="mdi mdi-file-pdf-outline"></i> Signed Accomplishment Report</div>
+                    <div class="field-grid">
+                        <div class="span-6"><label class="field-label" for="signed_report_name">Document Name</label><input class="field-input" type="text" id="signed_report_name" name="signed_report_name" value="<?= htmlspecialchars($input('signed_report_name',''),ENT_QUOTES,'UTF-8'); ?>" placeholder="Signed Accomplishment Report"></div>
+                        <div class="span-6"><label class="field-label" for="signed_report">Attach Signed Report (PDF)</label><input class="field-input" type="file" id="signed_report" name="signed_report" accept="application/pdf,.pdf"><span class="field-help">Optional. PDF only, up to 15 MB. New uploads are added while existing reports are retained.</span></div>
+                        <?php if (!empty($reports)) : ?><div class="span-12"><span class="field-label">Attached Reports</span><?php foreach ($reports as $report) : ?><a class="record-link-button" target="_blank" rel="noopener" href="<?= base_url(); ?>upload/accomplishment_reports/<?= rawurlencode($report->stored_name); ?>"><i class="mdi mdi-file-pdf-outline"></i><?= htmlspecialchars($report->document_name ?: $report->original_name, ENT_QUOTES, 'UTF-8'); ?></a><?php endforeach; ?></div><?php endif; ?>
                     </div>
                 </div>
                 <div class="form-actions"><a class="btn-form btn-cancel" href="<?= base_url(); ?>Page/viewSecAccomplishments">Cancel</a><button class="btn-form btn-save" type="submit" name="update" value="1"><i class="mdi mdi-content-save-outline"></i> Update Accomplishment</button></div>
