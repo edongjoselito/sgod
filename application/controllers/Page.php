@@ -3591,9 +3591,9 @@ public function memo_delete(){
 	}
 
 	$existing = $this->db->where(array('school_id' => $schoolId, 'requirement_id' => $requirementId))->get('school_pbei_requirement_submissions', 1)->row();
-	$isValidated = $existing && $existing->submission_status === 'Validated';
-	if($isValidated && !empty($_FILES['requirement_pdf']['name'])){
-		$this->session->set_flashdata('danger', 'A validated attachment can no longer be replaced. You may still update your notes.');
+	$isValidated = $existing && strtoupper(trim((string) $existing->submission_status)) === 'VALIDATED';
+	if($isValidated){
+		$this->session->set_flashdata('danger', 'This requirement has been validated and can no longer be edited.');
 		redirect('Page/school_pbei_requirements');
 		return;
 	}
@@ -3636,6 +3636,36 @@ public function memo_delete(){
 		$this->db->insert('school_pbei_requirement_submissions', $payload);
 	}
 	$this->session->set_flashdata('success', 'PBEI requirement response saved.');
+	redirect('Page/school_pbei_requirements');
+  }
+
+  function school_pbei_requirement_remove_attachment(){
+	if(!$this->is_school_portal_account()){
+		show_error('Access Denied', 403);
+		return;
+	}
+	$this->ensure_school_pbei_requirement_submissions_table();
+	$requirementId = (int) $this->input->post('requirement_id');
+	$schoolId = (string) $this->session->userdata('username');
+	$submission = $this->db->where(array('school_id' => $schoolId, 'requirement_id' => $requirementId))->get('school_pbei_requirement_submissions', 1)->row();
+	if(!$submission || trim((string) $submission->stored_name) === ''){
+		$this->session->set_flashdata('danger', 'No attachment was found for this requirement.');
+		redirect('Page/school_pbei_requirements');
+		return;
+	}
+	if(strtoupper(trim((string) $submission->submission_status)) === 'VALIDATED'){
+		$this->session->set_flashdata('danger', 'A validated attachment can no longer be removed.');
+		redirect('Page/school_pbei_requirements');
+		return;
+	}
+	$filePath = FCPATH . 'upload/pbei_requirement_submissions/' . basename((string) $submission->stored_name);
+	if(is_file($filePath) && !@unlink($filePath)){
+		$this->session->set_flashdata('danger', 'The attachment could not be removed from storage. Please try again.');
+		redirect('Page/school_pbei_requirements');
+		return;
+	}
+	$this->db->where('id', $submission->id)->delete('school_pbei_requirement_submissions');
+	$this->session->set_flashdata('success', 'PBEI requirement attachment removed and the requirement is now marked Not Submitted.');
 	redirect('Page/school_pbei_requirements');
   }
 
