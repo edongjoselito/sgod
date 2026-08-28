@@ -330,8 +330,8 @@ function registration(){
                 'lName' => $misUser['lname'] ?? '',
                 'avatar' => !empty($misUser['image']) ? $misUser['image'] : 'avatar.png',
                 'email' => '',
-                'section' => $isSchoolAccount ? 'School' : 'DepEd MIS',
-                'secGroup' => $isSchoolAccount ? 'School' : 'DepEd MIS',
+                'section' => $isSchoolAccount ? 'Private' : 'DepEd MIS',
+                'secGroup' => $isSchoolAccount ? 'SGOD' : 'DepEd MIS',
                 'position' => $misUser['position'] ?? ''
             );
         }
@@ -466,7 +466,7 @@ function registration(){
             redirect('page/SMN');
 
         // access for the school
-        }elseif($section === 'School'){
+        }elseif($section === 'School' || $section === 'Private'){
             redirect('page/School');
 
         // access for regular section users

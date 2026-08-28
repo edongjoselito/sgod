@@ -8,7 +8,7 @@ $topbarUsername = trim((string) $this->session->userdata('username'));
 if (
     $topbarUsername !== '' &&
     $topbarSecGroup !== '' &&
-    !in_array($topbarSection, array('Super Admin', 'System Administrator', 'Chief - SGOD', 'School'), TRUE)
+    !in_array($topbarSection, array('Super Admin', 'System Administrator', 'Chief - SGOD', 'School', 'Private'), TRUE)
 ) {
     $topbarSectionHeadRecord = $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionHead', $topbarUsername, 'secGroup', $topbarSecGroup);
     if ($topbarSectionHeadRecord && trim((string) $topbarSectionHeadRecord->sectionName) === $topbarSection) {

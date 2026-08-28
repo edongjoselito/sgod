@@ -6,6 +6,7 @@
             $currentSidebarSecGroup = trim((string) $this->session->userdata('secGroup'));
             $currentSidebarSectionLower = strtolower($currentSidebarSection);
             $currentSidebarSecGroupLower = strtolower($currentSidebarSecGroup);
+			$isSchoolSidebar = in_array($currentSidebarSection, array('School', 'Private'), TRUE);
             // Section-head switching can use either the full SMME name or its abbreviation.
             $isSmmeSidebar = (
                 $currentSidebarSectionLower === 'smme'
@@ -63,7 +64,7 @@
             if (
                 $currentSidebarUsername !== '' &&
                 $currentSidebarSecGroup !== '' &&
-                !in_array($currentSidebarSection, array('Super Admin', 'System Administrator', 'Chief - SGOD', 'School'), TRUE)
+				!in_array($currentSidebarSection, array('Super Admin', 'System Administrator', 'Chief - SGOD', 'School', 'Private'), TRUE)
             ) {
                 $sidebarSectionHeadRecord = $this->db
                     ->where('sectionHead', $currentSidebarUsername)
@@ -495,7 +496,7 @@
             </div>
             <!-- End Sidebar -->
 
-        <?php elseif ($this->session->userdata('section') === 'School'): ?>
+		<?php elseif ($isSchoolSidebar): ?>
             <div id="sidebar-menu">
                 <ul class="metismenu" id="side-menu">
 
@@ -1352,7 +1353,7 @@
 
         <script>
         // Keep Issues / Concerns available in role-specific sidebars, except School.
-        <?php if ($currentSidebarSection !== 'School'): ?>
+		<?php if (!$isSchoolSidebar): ?>
         document.addEventListener('DOMContentLoaded', function () {
             var menu = document.getElementById('side-menu');
             var issuesUrl = <?= json_encode(site_url('Page/section_head_issues_concerns')); ?>;

@@ -818,8 +818,8 @@ $metrics = array(
                                                     <tr>
                                                         <th>Name</th>
                                                         <th>Username</th>
+										<th>Email</th>
                                                         <th>Section</th>
-                                                        <th>Position</th>
                                                         <th>Status</th>
                                                         <th class="text-center">Manage</th>
                                                     </tr>
@@ -836,15 +836,12 @@ $metrics = array(
                                                             $email = !empty($row->email) ? (string) $row->email : $username;
                                                             $section = trim((string) $row->section) !== '' ? (string) $row->section : 'Unassigned';
                                                             $accountStatus = strtolower((string) $row->acctStat) === 'active' ? 'Active' : 'Inactive';
-                                                            $positionName = isset($row->secPosition) ? trim((string) $row->secPosition) : '';
-                                                            $positionDisplay = $positionName !== '' ? $positionName : 'Unassigned';
                                                             $statusClass = $accountStatus === 'Active' ? 'status-active' : 'status-inactive';
                                                             $partnerReadOnly = $this->session->userdata('section') === 'Social Mobilization and Networking' && $section === 'Partner';
                                                             $partnerActivationAllowed = $partnerReadOnly;
                                                             $toggleStatus = $accountStatus === 'Active' ? 'Inactive' : 'Active';
                                                             $toggleLabel = $accountStatus === 'Active' ? 'Deactivate user' : 'Activate user';
                                                             $toggleUrl = base_url() . 'Page/deactivate_user?username=' . rawurlencode($username) . '&status=' . rawurlencode($toggleStatus);
-                                                            $resetUrl = base_url() . 'Page/reset_password?username=' . rawurlencode($username);
                                                             $deleteUrl = base_url() . 'Page/delete_account?id=' . rawurlencode($username);
                                                             ?>
                                                             <tr>
@@ -860,16 +857,16 @@ $metrics = array(
                                                                         <?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>
                                                                     </span>
                                                                 </td>
+										<td>
+											<span class="user-chip">
+												<i class="mdi mdi-email-outline"></i>
+												<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>
+											</span>
+										</td>
                                                                 <td>
                                                                     <span class="section-chip">
                                                                         <i class="mdi mdi-office-building-outline"></i>
                                                                         <?= htmlspecialchars($section, ENT_QUOTES, 'UTF-8'); ?>
-                                                                    </span>
-                                                                </td>
-                                                                <td>
-                                                                    <span class="section-chip">
-                                                                        <i class="mdi mdi-badge-account-horizontal-outline"></i>
-                                                                        <?= htmlspecialchars($positionDisplay, ENT_QUOTES, 'UTF-8'); ?>
                                                                     </span>
                                                                 </td>
                                                                 <td>
@@ -891,7 +888,6 @@ $metrics = array(
                                                                                 class="manage-select js-manage-select"
                                                                                 data-username="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>"
                                                                                 data-toggle-url="<?= htmlspecialchars($toggleUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                                                                data-reset-url="<?= htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8'); ?>"
                                                                                 data-delete-url="<?= htmlspecialchars($deleteUrl, ENT_QUOTES, 'UTF-8'); ?>"
                                                                                 data-edit-target="#editModal<?= $index; ?>"
                                                                                 data-password-target="#changePasswordModal<?= $index; ?>"
@@ -899,7 +895,6 @@ $metrics = array(
                                                                                 <option value="">Manage user...</option>
                                                                                 <option value="toggle"><?= htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?></option>
                                                                                 <option value="reset">Reset password</option>
-                                                                                <option value="password">Change password</option>
                                                                                 <option value="edit">Edit profile</option>
                                                                                 <option value="delete">Delete account</option>
                                                                             </select>
@@ -912,7 +907,7 @@ $metrics = array(
                                                         <?php endforeach; ?>
                                                     <?php else : ?>
                                                         <tr>
-                                                            <td colspan="6">
+										<td colspan="6">
                                                                 <div class="empty-state">
                                                                     <i class="mdi mdi-account-search-outline"></i>
                                                                     <h5>No user accounts found</h5>
@@ -1016,10 +1011,15 @@ $metrics = array(
                         <?php
                         $username = (string) $row->username;
                         $email = !empty($row->email) ? (string) $row->email : $username;
+						$isPrivateSchoolAccount = strtolower(trim((string) $row->section)) === 'private';
+						$modalDisplayName = $isPrivateSchoolAccount
+							? trim((string) $row->fName)
+							: trim(((string) $row->lName) . ', ' . ((string) $row->fName), ', ');
                         $fullName = trim(((string) $row->lName) . ', ' . ((string) $row->fName), ', ');
                         if ($fullName === '') {
                             $fullName = $username;
                         }
+						if ($modalDisplayName === '') { $modalDisplayName = $username; }
                         ?>
                         <div id="editModal<?= $index; ?>" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $index; ?>" aria-hidden="true">
                             <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -1032,7 +1032,14 @@ $metrics = array(
                                     <div class="modern-modal-body">
                                         <form method="post" action="<?= base_url(); ?>Page/update_user">
                                             <div class="form-card">
-                                                <div class="form-row">
+												<?php if ($isPrivateSchoolAccount) : ?>
+													<div class="form-group">
+														<label class="modern-label">School Name</label>
+														<input type="text" name="fName" class="form-control modern-input" value="<?= htmlspecialchars((string) $row->fName, ENT_QUOTES, 'UTF-8'); ?>" required />
+														<input type="hidden" name="lName" value="<?= htmlspecialchars((string) $row->lName, ENT_QUOTES, 'UTF-8'); ?>" />
+													</div>
+												<?php else : ?>
+												<div class="form-row">
                                                     <div class="form-group col-md-6">
                                                         <label class="modern-label">First Name</label>
                                                         <input type="text" name="fName" class="form-control modern-input" value="<?= htmlspecialchars((string) $row->fName, ENT_QUOTES, 'UTF-8'); ?>" required />
@@ -1042,6 +1049,7 @@ $metrics = array(
                                                         <input type="text" name="lName" class="form-control modern-input" value="<?= htmlspecialchars((string) $row->lName, ENT_QUOTES, 'UTF-8'); ?>" required />
                                                     </div>
                                                 </div>
+												<?php endif; ?>
 
                                                 <div class="form-row">
                                                     <div class="form-group col-md-6">
@@ -1050,11 +1058,12 @@ $metrics = array(
                                                     </div>
                                                     <div class="form-group col-md-6">
                                                         <label class="modern-label">E-mail</label>
-                                                        <input type="text" name="email" class="form-control modern-input" value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>" required />
+																		<input type="email" name="email" class="form-control modern-input" value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>" required />
                                                     </div>
                                                 </div>
 
-                                                <?php $rowSecPosition = isset($row->secPosition) ? (string) $row->secPosition : ''; ?>
+												<?php if (!$isPrivateSchoolAccount) : ?>
+												<?php $rowSecPosition = isset($row->secPosition) ? (string) $row->secPosition : ''; ?>
                                                 <div class="form-row">
                                                     <div class="form-group col-md-6">
                                                         <label class="modern-label">Section</label>
@@ -1089,6 +1098,9 @@ $metrics = array(
                                                         </small>
                                                     </div>
                                                 </div>
+												<?php else : ?>
+													<input type="hidden" name="section" value="Private" />
+												<?php endif; ?>
 
                                                 <div class="form-group mb-0">
                                                     <label class="modern-label">Password</label>
@@ -1114,34 +1126,38 @@ $metrics = array(
                                 <div class="modal-content">
                                     <div class="modern-modal-header">
                                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                                        <h5 class="modern-modal-title" id="changePasswordModalLabel<?= $index; ?>">Change Password</h5>
-                                        <p class="modern-modal-copy">Set a new password for this user account.</p>
+                                        <h5 class="modern-modal-title" id="changePasswordModalLabel<?= $index; ?>">Reset Password</h5>
+										<p class="modern-modal-copy">Type a new password or generate a secure password for this account.</p>
                                     </div>
                                     <div class="modern-modal-body">
                                         <form method="post" action="<?= base_url(); ?>Page/change_user_password">
                                             <div class="form-card">
                                                 <div class="form-group">
-                                                    <label class="modern-label">User</label>
-                                                    <input type="text" class="form-control modern-input" value="<?= htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>" readonly />
+													<label class="modern-label"><?= $isPrivateSchoolAccount ? 'School Name' : 'User'; ?></label>
+													<input type="text" class="form-control modern-input" value="<?= htmlspecialchars($modalDisplayName, ENT_QUOTES, 'UTF-8'); ?>" readonly />
                                                 </div>
 
                                                 <div class="form-row">
-                                                    <div class="form-group col-md-6 mb-0">
+														<div class="form-group col-md-6 mb-0">
                                                         <label class="modern-label">New Password</label>
-                                                        <input type="password" name="new_password" class="form-control modern-input" minlength="8" required />
+														<div class="input-group">
+															<input type="password" name="new_password" class="form-control modern-input js-new-password" minlength="8" required />
+															<div class="input-group-append"><button type="button" class="btn btn-outline-primary js-generate-password">Generate</button></div>
+														</div>
                                                     </div>
                                                     <div class="form-group col-md-6 mb-0">
                                                         <label class="modern-label">Confirm Password</label>
-                                                        <input type="password" name="confirm_password" class="form-control modern-input" minlength="8" required />
+														<input type="password" name="confirm_password" class="form-control modern-input js-confirm-password" minlength="8" required />
                                                     </div>
                                                 </div>
+												<div class="js-generated-password-note text-success small mt-2 d-none">Generated password is shown above. Copy it before saving.</div>
                                             </div>
 
                                             <input type="hidden" name="username" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>" />
 
                                             <div class="modal-footer-modern">
                                                 <button type="button" class="btn btn-soft-dark" data-dismiss="modal">Cancel</button>
-                                                <input type="submit" class="btn btn-gradient-primary" value="Change Password" />
+												<input type="submit" class="btn btn-gradient-primary" value="Reset Password" />
                                             </div>
                                         </form>
                                     </div>
@@ -1265,7 +1281,6 @@ $metrics = array(
                     const action = $select.val();
                     const username = $select.data('username');
                     const toggleUrl = $select.data('toggle-url');
-                    const resetUrl = $select.data('reset-url');
                     const deleteUrl = $select.data('delete-url');
                     const editTarget = $select.data('edit-target');
                     const passwordTarget = $select.data('password-target');
@@ -1286,15 +1301,8 @@ $metrics = array(
                         }
                     }
 
-                    if (action === 'reset') {
-                        if (window.confirm('Are you sure you want to reset password to default (123456) for ' + username + '?')) {
-                            window.location.href = resetUrl;
-                            return;
-                        }
-                    }
-
-                    if (action === 'password') {
-                        $(passwordTarget).modal('show');
+					if (action === 'reset') {
+						$(passwordTarget).modal('show');
                     }
 
                     if (action === 'edit') {
@@ -1310,6 +1318,22 @@ $metrics = array(
 
                     resetSelect();
                 });
+
+				$(document).on('click', '.js-generate-password', function () {
+					const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%*_-';
+					const length = 14;
+					let password = '';
+					if (window.crypto && window.crypto.getRandomValues) {
+						const bytes = new Uint32Array(length);
+						window.crypto.getRandomValues(bytes);
+						for (let i = 0; i < length; i++) password += alphabet[bytes[i] % alphabet.length];
+					} else {
+						for (let i = 0; i < length; i++) password += alphabet[Math.floor(Math.random() * alphabet.length)];
+					}
+					const $modal = $(this).closest('.modal');
+					$modal.find('.js-new-password, .js-confirm-password').val(password).attr('type', 'text');
+					$modal.find('.js-generated-password-note').removeClass('d-none');
+				});
             });
         </script>
     </body>

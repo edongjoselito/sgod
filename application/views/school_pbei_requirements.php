@@ -5,6 +5,7 @@ $esc = function($value) { return htmlspecialchars((string) $value, ENT_QUOTES, '
 $submittedCount = 0;
 foreach ($requirements as $requirement) { if (!empty($requirement->submission_id)) $submittedCount++; }
 $requirementCount = count($requirements);
+$pendingCount = max(0, $requirementCount - $submittedCount);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,6 +31,14 @@ $requirementCount = count($requirements);
         .pbei-order-link:hover { color:#174b7b; background:#fff; text-decoration:none; transform:translateY(-1px); }
         .pbei-progress { display:inline-flex; align-items:center; gap:9px; padding:10px 14px; border-radius:11px; color:#fff; background:rgba(9,28,57,.25); font-size:.84rem; }
         .pbei-progress strong { color:#fff0ba; font-size:1rem; }
+		.requirements-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; margin:0 0 20px; padding:17px 20px; border:1px solid var(--pbei-border); border-radius:16px; background:#fff; box-shadow:0 10px 26px rgba(20,43,82,.05); }
+		.requirements-summary { display:flex; flex-wrap:wrap; gap:18px; }
+		.requirements-summary-item { display:flex; align-items:center; gap:8px; color:var(--pbei-muted); font-size:.86rem; }
+		.requirements-summary-item strong { color:var(--pbei-navy); font-size:1rem; }
+		.requirement-filter { display:flex; flex-wrap:wrap; gap:7px; }
+		.requirement-filter button { padding:7px 11px; border:1px solid #dce5ef; border-radius:999px; color:#526276; background:#fff; font-size:.78rem; font-weight:800; }
+		.requirement-filter button.active,.requirement-filter button:hover { border-color:var(--pbei-blue); color:#fff; background:var(--pbei-blue); }
+		.pbei-item.is-filtered { display:none; }
         .pbei-item { border:1px solid var(--pbei-border); border-radius:19px; box-shadow:0 12px 34px rgba(20,43,82,.065); overflow:hidden; transition:transform .2s ease,box-shadow .2s ease; }
         .pbei-item + .pbei-item { margin-top:16px; }
         .pbei-item:hover { transform:translateY(-2px); box-shadow:0 18px 40px rgba(20,43,82,.10); }
@@ -69,12 +78,27 @@ $requirementCount = count($requirements);
         <?php if ($this->session->flashdata('success')): ?><div class="alert alert-success alert-dismissible fade show" role="alert"><?= $esc($this->session->flashdata('success')); ?><button type="button" class="close" data-dismiss="alert">&times;</button></div><?php endif; ?>
         <?php if ($this->session->flashdata('danger')): ?><div class="alert alert-danger alert-dismissible fade show" role="alert"><?= $esc($this->session->flashdata('danger')); ?><button type="button" class="close" data-dismiss="alert">&times;</button></div><?php endif; ?>
 
+		<?php if (!empty($requirements)): ?>
+		<section class="requirements-toolbar" aria-label="Requirements overview">
+			<div class="requirements-summary">
+				<div class="requirements-summary-item"><i class="mdi mdi-format-list-checks text-primary font-20"></i><span><strong><?= $requirementCount; ?></strong> total requirements</span></div>
+				<div class="requirements-summary-item"><i class="mdi mdi-check-circle-outline text-success font-20"></i><span><strong><?= $submittedCount; ?></strong> submitted</span></div>
+				<div class="requirements-summary-item"><i class="mdi mdi-clock-outline text-warning font-20"></i><span><strong><?= $pendingCount; ?></strong> remaining</span></div>
+			</div>
+			<div class="requirement-filter" role="group" aria-label="Filter requirements">
+				<button type="button" class="active" data-requirement-filter="all">All</button>
+				<button type="button" data-requirement-filter="pending">To submit</button>
+				<button type="button" data-requirement-filter="submitted">Submitted</button>
+			</div>
+		</section>
+		<?php endif; ?>
+
         <?php if (empty($requirements)): ?>
             <div class="alert alert-info">No PBEI requirements have been published yet.</div>
         <?php else: ?>
             <?php foreach ($requirements as $requirement): ?>
                 <?php $isValidated = ($requirement->submission_status ?? '') === 'Validated'; ?>
-                <section class="card pbei-item"><div class="card-body p-4">
+				<section class="card pbei-item" data-requirement-status="<?= !empty($requirement->submission_id) ? 'submitted' : 'pending'; ?>"><div class="card-body p-4">
                     <div class="d-flex align-items-start justify-content-between mb-3"><div class="d-flex align-items-start"><span class="pbei-order mr-3"><?= (int) $requirement->sort_order; ?></span><div><h5 class="pbei-title mb-1"><?= $esc($requirement->requirement); ?></h5><?php if (trim((string) $requirement->description) !== ''): ?><p class="text-muted mb-0"><?= nl2br($esc($requirement->description)); ?></p><?php endif; ?></div></div><span class="pbei-status <?= !empty($requirement->submission_id) ? 'pbei-status--submitted' : 'pbei-status--pending'; ?>"><i class="mdi <?= !empty($requirement->submission_id) ? 'mdi-check-circle-outline' : 'mdi-clock-outline'; ?>"></i><?= !empty($requirement->submission_id) ? 'Submitted' : 'Not Submitted'; ?></span></div>
                     <form method="post" action="<?= base_url(); ?>Page/school_pbei_requirement_save" enctype="multipart/form-data">
                         <input type="hidden" name="requirement_id" value="<?= (int) $requirement->id; ?>">
@@ -96,6 +120,6 @@ $requirementCount = count($requirements);
 </div>
 <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
 <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
-<script>$('.custom-file-input').on('change', function () { var name = this.files.length ? this.files[0].name : 'Choose a PDF file'; $(this).next('.custom-file-label').text(name); }); function toggleCriminalCaseDetails(){var isYes=$('input[name="pending_case"]:checked').val()==='Yes';$('#criminalCaseDetails').toggle(isYes);$('#caseDetails').prop('required',isYes);} $('input[name="pending_case"]').on('change',toggleCriminalCaseDetails);toggleCriminalCaseDetails();</script>
+<script>$('.custom-file-input').on('change', function () { var name = this.files.length ? this.files[0].name : 'Choose a PDF file'; $(this).next('.custom-file-label').text(name); }); function toggleCriminalCaseDetails(){var isYes=$('input[name="pending_case"]:checked').val()==='Yes';$('#criminalCaseDetails').toggle(isYes);$('#caseDetails').prop('required',isYes);} $('input[name="pending_case"]').on('change',toggleCriminalCaseDetails);toggleCriminalCaseDetails(); $('.requirement-filter button').on('click',function(){var filter=$(this).data('requirement-filter');$('.requirement-filter button').removeClass('active');$(this).addClass('active');$('.pbei-item').each(function(){var matches=filter==='all'||$(this).data('requirement-status')===filter;$(this).toggleClass('is-filtered',!matches);});});</script>
 </body>
 </html>

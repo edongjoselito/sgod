@@ -689,29 +689,6 @@ if ($yearEstablished === '') {
                                             <span class="school-chip"><i class="mdi mdi-domain"></i> <?= school_dashboard_escape($schoolType !== '' ? $schoolType : 'School type not listed'); ?></span>
                                         </div>
                                     </div>
-
-                                    <div class="hero-side-card">
-                                        <div class="hero-side-label">Profile Readiness</div>
-                                        <div class="hero-side-value"><?= school_dashboard_escape($profileCompleteness); ?>%</div>
-                                        <p class="hero-side-copy">
-                                            Based on the available school, contact, and compliance fields currently saved in the directory.
-                                        </p>
-
-                                        <div class="hero-side-list">
-                                            <div class="hero-side-item">
-                                                <span>Address</span>
-                                                <span><?= school_dashboard_escape($locationLine !== '' ? $locationLine : 'Pending'); ?></span>
-                                            </div>
-                                            <div class="hero-side-item">
-                                                <span>School Head</span>
-                                                <span><?= school_dashboard_escape($schoolHead !== '' ? $schoolHead : 'Pending'); ?></span>
-                                            </div>
-                                            <div class="hero-side-item">
-                                                <span>Contactable</span>
-                                                <span><?= school_dashboard_escape(($schoolEmail !== '' || $contactNumbers !== '') ? 'Yes' : 'No'); ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 

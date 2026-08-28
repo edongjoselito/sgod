@@ -553,6 +553,27 @@ class Page extends CI_Controller{
 	return FALSE;
   }
 
+  private function is_school_portal_account(){
+	return in_array((string) $this->session->userdata('section'), array('School', 'Private'), TRUE);
+  }
+
+  private function is_smme_user(){
+	$section = strtolower(trim((string) $this->session->userdata('section')));
+	return $section === 'smme'
+		|| strpos($section, 'school management') !== FALSE
+		|| strpos($section, 'monitoring and evaluation') !== FALSE;
+  }
+
+  private function migrate_school_accounts_to_private(){
+	// School portal accounts are managed by SMME as Private accounts. Keep this
+	// idempotent migration here so installations with existing accounts are
+	// updated as soon as the school directory is opened.
+	$this->db->where_in('section', array('School', 'Private'))->update('one_sgod_users', array(
+		'section' => 'Private',
+		'secGroup' => 'SGOD'
+	));
+  }
+
   function sgod(){
     //Allowing access to Admin only
     if($this->session->userdata('section')==='Chief - SGOD'){
@@ -568,7 +589,7 @@ class Page extends CI_Controller{
   }
 
   function School(){
-    if($this->session->userdata('section')==='School'){
+    if($this->is_school_portal_account()){
 		$schoolId = (string) $this->session->userdata('username');
 		$result['school'] = $this->db->where('schoolID', $schoolId)->get('schools', 1)->row();
 		$this->ensure_school_enrollment_table();
@@ -912,6 +933,9 @@ class Page extends CI_Controller{
 	}
 
 	$section = $this->session->userdata('section');
+	if($this->is_smme_user()){
+		$this->migrate_school_accounts_to_private();
+	}
 	$profileState = $this->get_current_user_profile_state();
 	$result['data'] = $this->SGODModel->cPublic();
 	$result['data1'] = $this->SGODModel->cPrivate();
@@ -3532,7 +3556,7 @@ public function memo_delete(){
   }
 
   function school_pbei_requirements(){
-	if($this->session->userdata('section') !== 'School'){
+	if(!$this->is_school_portal_account()){
 		show_error('Access Denied', 403);
 		return;
 	}
@@ -3551,7 +3575,7 @@ public function memo_delete(){
   }
 
   function school_pbei_requirement_save(){
-	if($this->session->userdata('section') !== 'School'){
+	if(!$this->is_school_portal_account()){
 		show_error('Access Denied', 403);
 		return;
 	}
@@ -3616,7 +3640,7 @@ public function memo_delete(){
   }
 
   function school_pbei_disclosure_save(){
-	if($this->session->userdata('section') !== 'School'){
+	if(!$this->is_school_portal_account()){
 		show_error('Access Denied', 403);
 		return;
 	}
@@ -3648,7 +3672,7 @@ public function memo_delete(){
   }
 
   function pbei_sworn_statement(){
-	if($this->session->userdata('section') !== 'School'){
+	if(!$this->is_school_portal_account()){
 		show_error('Access Denied', 403);
 		return;
 	}
@@ -3676,7 +3700,7 @@ public function memo_delete(){
   }
 
   function pbei_data_privacy_compliance(){
-	if($this->session->userdata('section') !== 'School'){
+	if(!$this->is_school_portal_account()){
 		show_error('Access Denied', 403);
 		return;
 	}
@@ -3747,6 +3771,9 @@ public function memo_delete(){
 		return;
 	}
 	$result['schoolId'] = $schoolId;
+	$misSettings = $this->get_mis_settings_division_region();
+	$result['misDivision'] = $misSettings['division'];
+	$result['misRegion'] = $misSettings['region'];
 	$result['submission'] = $this->db
 		->select('MIN(submitted_at) AS first_submitted_at, MAX(updated_at) AS last_updated_at')
 		->where('school_id', $schoolId)
@@ -3757,10 +3784,25 @@ public function memo_delete(){
   function pbei_school_submission_part_one_save(){
 	if(!$this->require_school_management_access()){ return; }
 	$this->ensure_school_profile_schema();
-	$schoolId = trim((string) $this->input->post('school_id', TRUE));
-	if($schoolId === '' || !$this->db->where('schoolID', $schoolId)->count_all_results('schools')){
+	$originalSchoolId = trim((string) $this->input->post('school_id', TRUE));
+	$schoolId = trim((string) $this->input->post('schoolID', TRUE));
+	if($schoolId === '') $schoolId = $originalSchoolId;
+	if($originalSchoolId === '' || !$this->db->where('schoolID', $originalSchoolId)->count_all_results('schools')){
 		$this->session->set_flashdata('danger', 'School record could not be found.');
 		redirect('Page/pbei_school_submissions');
+		return;
+	}
+	if($schoolId !== $originalSchoolId && $this->db->where('schoolID', $schoolId)->count_all_results('schools') > 0){
+		$this->session->set_flashdata('danger', 'That School ID is already in use.');
+		redirect('Page/pbei_school_submission_part_one?school_id=' . rawurlencode($originalSchoolId));
+		return;
+	}
+	if($schoolId !== $originalSchoolId && (
+		$this->db->where('username', $schoolId)->count_all_results('one_sgod_users') > 0
+		|| $this->db->where('username', $schoolId)->count_all_results('users') > 0
+	)){
+		$this->session->set_flashdata('danger', 'That School ID is already used by an account.');
+		redirect('Page/pbei_school_submission_part_one?school_id=' . rawurlencode($originalSchoolId));
 		return;
 	}
 	$fields = array('schoolName', 'schoolEmail', 'shs_tracks_offered', 'pbei_complete_school_address', 'division', 'region', 'schoolAdministrator', 'schoolAdministratorContactNo', 'school_year_effectivity', 'ocular_inspection_date', 'sdo_to_ro_submission_date');
@@ -3768,6 +3810,10 @@ public function memo_delete(){
 	foreach($fields as $field){
 		if($this->db->field_exists($field, 'schools')) $payload[$field] = trim((string) $this->input->post($field, TRUE));
 	}
+	$misSettings = $this->get_mis_settings_division_region();
+	if(!empty($misSettings['division']) && isset($payload['division'])) $payload['division'] = $misSettings['division'];
+	if(!empty($misSettings['region']) && isset($payload['region'])) $payload['region'] = $misSettings['region'];
+	$payload['schoolID'] = $schoolId;
 	if(empty($payload['schoolName'])){
 		$this->session->set_flashdata('danger', 'School name is required.');
 		redirect('Page/pbei_school_submission_part_one?school_id=' . rawurlencode($schoolId));
@@ -3778,11 +3824,44 @@ public function memo_delete(){
 		redirect('Page/pbei_school_submission_part_one?school_id=' . rawurlencode($schoolId));
 		return;
 	}
-	$this->db->where('schoolID', $schoolId)->update('schools', $payload);
-	$this->db->where('username', $schoolId)->where('section', 'School')->update('one_sgod_users', array('fName' => $payload['schoolName']));
+	$this->db->trans_begin();
+	$this->db->where('schoolID', $originalSchoolId)->update('schools', $payload);
+	if($schoolId !== $originalSchoolId){
+		$this->update_related_school_ids($originalSchoolId, $schoolId);
+	}
+	$this->db->where('username', $schoolId)->where('section', 'Private')->update('one_sgod_users', array('fName' => $payload['schoolName']));
 	$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('fname' => $payload['schoolName']));
+	if($this->db->trans_status() === FALSE){
+		$this->db->trans_rollback();
+		$this->session->set_flashdata('danger', 'School ID could not be updated.');
+		redirect('Page/pbei_school_submission_part_one?school_id=' . rawurlencode($originalSchoolId));
+		return;
+	}
+	$this->db->trans_commit();
 	$this->session->set_flashdata('success', 'Part I school information saved to the school profile.');
 	redirect('Page/pbei_school_submission_part_one?school_id=' . rawurlencode($schoolId));
+  }
+
+  private function update_related_school_ids($oldSchoolId, $newSchoolId){
+	$this->db->where('username', $oldSchoolId)->where('section', 'Private')->update('one_sgod_users', array('username' => $newSchoolId));
+	$this->db->where('username', $oldSchoolId)->where('position', 'School')->update('users', array('username' => $newSchoolId, 'user_id' => $newSchoolId));
+	foreach(array('school_pbei_requirement_submissions', 'school_pbei_disclosures', 'pbei_school_evaluations', 'pbei_school_evaluation_summaries', 'one_school_enrollment_details', 'one_school_personnel') as $table){
+		if($this->db->table_exists($table) && $this->db->field_exists('school_id', $table)){
+			$this->db->where('school_id', $oldSchoolId)->update($table, array('school_id' => $newSchoolId));
+		}
+	}
+  }
+
+  private function get_mis_settings_division_region(){
+	$settings = array('division' => '', 'region' => '');
+	if(!$this->db->table_exists('mis_settings')) return $settings;
+	$row = $this->db->get('mis_settings', 1)->row_array();
+	foreach((array) $row as $column => $value){
+		$key = strtolower(trim((string) $column));
+		if($key === 'division') $settings['division'] = trim((string) $value);
+		if($key === 'region') $settings['region'] = trim((string) $value);
+	}
+	return $settings;
   }
 
   function pbei_school_submission_part_three(){
@@ -4152,7 +4231,7 @@ public function memo_delete(){
 		$schoolAccount = array(
 			'username' => $schoolId, 'password' => sha1($accountPassword), 'fName' => $schoolName,
 			'mName' => '', 'lName' => '', 'avatar' => 'avatar.png', 'email' => $accountEmail,
-			'acctStat' => 'Active', 'section' => 'School', 'secGroup' => 'School'
+			'acctStat' => 'Active', 'section' => 'Private', 'secGroup' => 'SGOD'
 		);
 		$loginInserted = $schoolInserted && $this->db->insert('one_sgod_users', $schoolAccount);
 		$userAccount = array(
@@ -4187,10 +4266,10 @@ public function memo_delete(){
 		$this->db->trans_begin();
 		$this->db->where('schoolID', $originalSchoolId)->update('schools', $payload);
 		if($schoolId !== $originalSchoolId){
-			$this->db->where('username', $originalSchoolId)->where('section', 'School')->update('one_sgod_users', array('username' => $schoolId));
+			$this->db->where('username', $originalSchoolId)->where('section', 'Private')->update('one_sgod_users', array('username' => $schoolId));
 			$this->db->where('username', $originalSchoolId)->where('position', 'School')->update('users', array('username' => $schoolId, 'user_id' => $schoolId));
 		}
-		$this->db->where('username', $schoolId)->where('section', 'School')->update('one_sgod_users', array('fName' => $schoolName));
+		$this->db->where('username', $schoolId)->where('section', 'Private')->update('one_sgod_users', array('fName' => $schoolName));
 		$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('fname' => $schoolName));
 		if($this->db->trans_status() === FALSE){ $this->db->trans_rollback(); } else { $this->db->trans_commit(); }
 		$this->session->set_flashdata('success', 'School record updated successfully.');
@@ -4204,7 +4283,7 @@ public function memo_delete(){
 	if($schoolId !== ''){
 		$this->db->trans_begin();
 		$this->db->where('schoolID', $schoolId)->delete('schools');
-		$this->db->where('username', $schoolId)->where('section', 'School')->delete('one_sgod_users');
+		$this->db->where('username', $schoolId)->where('section', 'Private')->delete('one_sgod_users');
 		$this->db->where('username', $schoolId)->where('position', 'School')->delete('users');
 		if($this->db->trans_status() === FALSE){
 			$this->db->trans_rollback();
@@ -4224,7 +4303,7 @@ public function memo_delete(){
 	}
 
 	function school_personnel(){
-		if($this->session->userdata('section') !== 'School'){
+		if(!$this->is_school_portal_account()){
 			show_error('Access Denied', 403); return;
 		}
 		$this->ensure_school_personnel_table();
@@ -4243,7 +4322,7 @@ public function memo_delete(){
 	}
 
 	function school_personnel_form($id = 0){
-		if($this->session->userdata('section') !== 'School'){
+		if(!$this->is_school_portal_account()){
 			show_error('Access Denied', 403); return;
 		}
 		$this->ensure_school_personnel_table();
@@ -4259,7 +4338,7 @@ public function memo_delete(){
 	}
 
 	function school_personnel_save(){
-		if($this->session->userdata('section') !== 'School'){
+		if(!$this->is_school_portal_account()){
 			show_error('Access Denied', 403); return;
 		}
 		$this->ensure_school_personnel_table();
@@ -4314,7 +4393,7 @@ public function memo_delete(){
 	}
 
 	function school_personnel_annex_d(){
-		if($this->session->userdata('section') !== 'School'){
+		if(!$this->is_school_portal_account()){
 			show_error('Access Denied', 403); return;
 		}
 		$this->ensure_school_personnel_table();
@@ -4328,7 +4407,7 @@ public function memo_delete(){
 	}
 
 	function school_letterhead(){
-		if($this->session->userdata('section') !== 'School'){ show_error('Access Denied', 403); return; }
+		if(!$this->is_school_portal_account()){ show_error('Access Denied', 403); return; }
 		$this->ensure_school_letterhead_column();
 		$schoolId = (string) $this->session->userdata('username');
 		$result['school'] = $this->db->select('schoolName, letterhead_file')->where('schoolID', $schoolId)->get('schools', 1)->row();
@@ -4336,7 +4415,7 @@ public function memo_delete(){
 	}
 
 	function school_letterhead_save(){
-		if($this->session->userdata('section') !== 'School'){ show_error('Access Denied', 403); return; }
+		if(!$this->is_school_portal_account()){ show_error('Access Denied', 403); return; }
 		$this->ensure_school_letterhead_column();
 		$schoolId = (string) $this->session->userdata('username');
 		if(empty($_FILES['letterhead']['name'])){
@@ -4360,7 +4439,7 @@ public function memo_delete(){
 	}
 
 	function school_personnel_delete($id = 0){
-		if($this->session->userdata('section') !== 'School'){
+		if(!$this->is_school_portal_account()){
 			show_error('Access Denied', 403); return;
 		}
 		$this->ensure_school_personnel_table();
@@ -4369,7 +4448,7 @@ public function memo_delete(){
 	}
 
 	function school_personnel_details($id = 0){
-		if($this->session->userdata('section') !== 'School'){
+		if(!$this->is_school_portal_account()){
 			show_error('Access Denied', 403); return;
 		}
 		$this->ensure_school_personnel_table();
@@ -4379,7 +4458,7 @@ public function memo_delete(){
 	}
 
 	function school_enrollment_details(){
-		if($this->session->userdata('section') !== 'School') { show_error('Access Denied', 403); return; }
+		if(!$this->is_school_portal_account()) { show_error('Access Denied', 403); return; }
 		$this->ensure_school_enrollment_table();
 		$schoolId = (string) $this->session->userdata('username');
 		$selectedSchoolYear = trim((string) $this->input->get('school_year', TRUE));
@@ -4401,7 +4480,7 @@ public function memo_delete(){
 	}
 
 	function school_enrollment_save(){
-		if($this->session->userdata('section') !== 'School') { show_error('Access Denied', 403); return; }
+		if(!$this->is_school_portal_account()) { show_error('Access Denied', 403); return; }
 		$this->ensure_school_enrollment_table();
 		$schoolYear = trim((string) $this->input->post('school_year', TRUE));
 		$gradeLevel = trim((string) $this->input->post('grade_level', TRUE));
@@ -4419,7 +4498,7 @@ public function memo_delete(){
 	}
 
 	function school_enrollment_delete($id = 0){
-		if($this->session->userdata('section') !== 'School') { show_error('Access Denied', 403); return; }
+		if(!$this->is_school_portal_account()) { show_error('Access Denied', 403); return; }
 		$this->ensure_school_enrollment_table();
 		$this->db->where('id', (int) $id)->where('school_id', (string) $this->session->userdata('username'))->delete('one_school_enrollment_details');
 		$this->session->set_flashdata('success', 'Enrollment detail removed.'); redirect('Page/school_enrollment_details');
@@ -4444,7 +4523,7 @@ public function memo_delete(){
 		// School IDs may be email addresses. Decode the URL segment before comparing
 		// it to the logged-in account, otherwise an encoded "@" (%40) is rejected.
 		$schoolId = rawurldecode((string) $param);
-		if($this->session->userdata('section') === 'School' && strcasecmp($schoolId, (string) $this->session->userdata('username')) !== 0){
+		if($this->is_school_portal_account() && strcasecmp($schoolId, (string) $this->session->userdata('username')) !== 0){
 			show_error('Access Denied', 403);
 			return;
 		}
@@ -4454,7 +4533,7 @@ public function memo_delete(){
 	}
 
 	function school_profile_edit(){
-		if($this->session->userdata('section') !== 'School'){
+		if(!$this->is_school_portal_account()){
 			show_error('Access Denied', 403);
 			return;
 		}
@@ -4471,7 +4550,7 @@ public function memo_delete(){
 	}
 
 	function school_profile_update(){
-		if($this->session->userdata('section') !== 'School'){
+		if(!$this->is_school_portal_account()){
 			show_error('Access Denied', 403);
 			return;
 		}
@@ -4504,11 +4583,11 @@ public function memo_delete(){
 			return;
 		}
 		$this->db->where('schoolID', $schoolId)->update('schools', $payload);
-		$this->db->where('username', $schoolId)->where('section', 'School')->update('one_sgod_users', array('fName' => $payload['schoolName']));
+		$this->db->where('username', $schoolId)->where('section', 'Private')->update('one_sgod_users', array('fName' => $payload['schoolName']));
 		$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('fname' => $payload['schoolName']));
 		if($schoolEmail !== ''){
 			if($this->db->field_exists('email', 'one_sgod_users')){
-				$this->db->where('username', $schoolId)->where('section', 'School')->update('one_sgod_users', array('email' => $schoolEmail));
+				$this->db->where('username', $schoolId)->where('section', 'Private')->update('one_sgod_users', array('email' => $schoolEmail));
 			}
 			if($this->db->field_exists('email', 'users')){
 				$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('email' => $schoolEmail));
@@ -4681,11 +4760,16 @@ function usersList(){
   function usersListv2(){
 	$secGroup=$this->session->userdata('secGroup');
 	$section=$this->session->userdata('section');
+	if($this->is_smme_user()){
+		$this->migrate_school_accounts_to_private();
+	}
 
 	// SMN is the office that manages external partnerships. Give it a
 	// read-only directory view of Partner-level accounts, which use their own
 	// Partner secGroup, while keeping all other sections scoped as before.
-	if($section === 'Social Mobilization and Networking'){
+	if($this->is_smme_user()){
+		$result['data'] = $this->db->where('section', 'Private')->order_by('lName', 'ASC')->get('one_sgod_users')->result();
+	}elseif($section === 'Social Mobilization and Networking'){
 		$this->db->group_start()
 			->group_start()
 				->where('secGroup', $secGroup)
@@ -4700,6 +4784,9 @@ function usersList(){
 		$result['data']=$this->SGODModel->get_all_by_row2('secGroup','one_sgod_users', $secGroup, 'section', $section);
 	}
 	$result['data1']=$this->SGODModel->get_all_by_row2('secGroup','one_sgod_sections', $secGroup, 'sectionName', $section);
+	if($this->is_smme_user()){
+		$result['data1'][] = (object) array('sectionName' => 'Private', 'secGroup' => 'SGOD');
+	}
 	$result['partnerOptions'] = array();
 	if($section === 'Social Mobilization and Networking' && $this->db->table_exists('brigada_partners')){
 		$result['partnerOptions'] = $this->db->select('id, name, contact_person, contact')->order_by('name', 'ASC')->get('brigada_partners')->result();
@@ -4862,15 +4949,19 @@ public function update_user(){
 	$email = $this->input->post('email');
 	$section = $this->input->post('section');
 	$password = $this->input->post('password');
-	$secPosition = trim((string) $this->input->post('secPosition'));
+	$secPosition = $this->input->post('secPosition');
 
 	$data = array(
 		'fName' => $fName,
 		'lName' => $lName,
 		'email' => $email,
-		'section' => $section,
-		'secPosition' => $secPosition
+		'section' => $section
 	);
+	// Private school accounts do not use a personnel position. Leave an
+	// existing value untouched when the field is intentionally omitted.
+	if($secPosition !== NULL){
+		$data['secPosition'] = trim((string) $secPosition);
+	}
 
 	// Update password only if provided
 	if (!empty($password)) {
@@ -5196,6 +5287,10 @@ private function is_valid_section_for_current_user($section){
 		return (bool) $this->SGODModel->two_cond_row('one_sgod_sections', 'sectionName', $section, 'secGroup', $currentGroup);
 	}
 
+	if($this->is_smme_user()){
+		return $section === 'Private';
+	}
+
 	return $section === $currentSection;
 }
 
@@ -5208,6 +5303,9 @@ private function can_manage_user($username){
 
 	$currentSection = $this->session->userdata('section');
 	$currentGroup = $this->session->userdata('secGroup');
+	if($this->is_smme_user() && $user->section === 'Private'){
+		return TRUE;
+	}
 
 	if($user->secGroup !== $currentGroup){
 		return FALSE;
