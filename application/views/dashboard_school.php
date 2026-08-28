@@ -29,11 +29,10 @@ $dashboardConfig = array(
     'quick_links_title' => 'School Tools',
     'quick_links_caption' => 'Open the tools available to your School account',
     'quick_links_overlap' => FALSE,
-    'quick_links' => array(
-        array('label' => 'School Profile', 'context' => 'Review the school information on record.', 'href' => base_url() . 'Page/school_profile/' . rawurlencode($schoolId), 'icon' => 'mdi-card-account-details-outline'),
-        array('label' => 'Edit School Profile', 'context' => 'Update your school contact and profile details.', 'href' => base_url() . 'Page/school_profile_edit', 'icon' => 'mdi-pencil-outline'),
-        array('label' => 'Report Letterhead', 'context' => 'Upload the letterhead used on printable school reports.', 'href' => base_url() . 'Page/school_letterhead', 'icon' => 'mdi-file-image-outline')
-    ),
+	'quick_links' => array(
+		array('label' => 'School Profile', 'context' => 'Review the school information on record.', 'href' => base_url() . 'Page/school_profile/' . rawurlencode($schoolId), 'icon' => 'mdi-card-account-details-outline'),
+		array('label' => 'Edit School Profile', 'context' => 'Update your school contact and profile details.', 'href' => base_url() . 'Page/school_profile_edit', 'icon' => 'mdi-pencil-outline')
+	),
     'show_whereabouts' => FALSE
 );
 include(__DIR__ . '/includes/dashboard_standard.php');

@@ -4,6 +4,7 @@ $schoolAddress = isset($schoolAddress) && trim((string) $schoolAddress) !== '' ?
 $affiantName = isset($affiantName) && trim((string) $affiantName) !== '' ? $affiantName : 'Name not recorded';
 $affiantDesignation = isset($affiantDesignation) && trim((string) $affiantDesignation) !== '' ? $affiantDesignation : 'Designation not recorded';
 $schoolName = isset($schoolName) && trim((string) $schoolName) !== '' ? $schoolName : 'School name not recorded';
+$letterheadUrl = trim((string) ($letterheadUrl ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,6 +26,7 @@ $schoolName = isset($schoolName) && trim((string) $schoolName) !== '' ? $schoolN
         .notarial { margin-top: 78px; font-size: 1.05rem; line-height: 1.65; text-align: justify; }
         .notary-public { margin-top: 112px; margin-left: 62%; font-size: 1rem; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
         .doc-details { margin-top: 165px; font-size: 1rem; line-height: 1.45; }
+        .print-letterhead { display:block; width:100%; max-height:180px; object-fit:contain; object-position:top; margin:0 0 28px; }
         .print-actions { width: min(900px, calc(100% - 40px)); margin: 24px auto 0; font-family: Arial, Helvetica, sans-serif; }
         @media print { @page { margin: 0.75in 1in; } body { background: #fff !important; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .print-actions { display: none; } .statement { width: 100%; margin: 0; padding: 0; box-shadow: none; } h1 { font-size: 17pt; } h2 { font-size: 13pt; } p, .attested, .affiant, .notarial, .notary-public, .doc-details { font-size: 11.5pt; } }
     </style>
@@ -32,6 +34,7 @@ $schoolName = isset($schoolName) && trim((string) $schoolName) !== '' ? $schoolN
 <body>
     <div class="print-actions"><button type="button" class="btn btn-primary" onclick="window.print()">Print</button><button type="button" class="btn btn-light ml-2" onclick="window.close()">Close</button></div>
     <main class="statement">
+        <?php if($letterheadUrl !== ''): ?><img class="print-letterhead" src="<?= htmlspecialchars($letterheadUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="Division letterhead"><?php endif; ?>
         <h1>SWORN STATEMENT</h1>
         <h2>CERTIFICATION OF AUTHENTICITY AND VERACITY</h2>
         <p>I hereby certify that all information above are true and correct, and of my personal knowledge and/or records, and that the documents submitted herewith are original and/or certified true copies thereof. I authorize the Department of Education, or its authorized representative to verify or validate the contents stated therein. I agree that any misrepresentation made in this document and its attachments shall cause the filing of an administrative and/or criminal case/s against me.</p>

@@ -326,7 +326,6 @@
                         </a>
                     </li>
 
-
                     <!-- <li>
             <a href="javascript: void(0);" class="waves-effect">
                 <i class="mdi mdi-file-document-box-check"></i>
@@ -472,6 +471,7 @@
                                 <ul class="nav-third-level" aria-expanded="false">
                                     <li><a href="<?= base_url(); ?>Page/pbei_requirements">Requirements</a></li>
                                     <li><a href="<?= base_url(); ?>Page/pbei_evaluation_areas">Evaluation Areas</a></li>
+                                    <li><a href="<?= base_url(); ?>Page/school_letterhead">Letterhead</a></li>
                                 </ul>
                             </li>
                         </ul>

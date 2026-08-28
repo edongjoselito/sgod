@@ -11,7 +11,7 @@ ob_start(function ($output) use ($letterheadMarkup) {
         'This table reflects the aggregate data of the administrative, teaching, and non-teaching personnel as required under Item 6 of the mandatory documentary requirements.',
         $output
     );
-    $output = str_replace('</style>', '.print-letterhead{display:block;width:100%;max-height:145px;object-fit:contain;object-position:top;margin:0 0 12px}</style>', $output);
+    $output = str_replace('</style>', '.print-letterhead{display:block;width:100%;max-width:none;max-height:220px;object-fit:contain;object-position:top;margin:0 0 14px}</style>', $output);
     if ($letterheadMarkup !== '') {
         $output = str_replace('<main class="report">', '<main class="report">' . $letterheadMarkup, $output);
     }

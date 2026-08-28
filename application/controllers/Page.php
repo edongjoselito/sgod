@@ -3696,6 +3696,7 @@ public function memo_delete(){
 	))));
 	$result['affiantDesignation'] = trim((string) ($school->adminDesignation ?? ''));
 	$result['schoolName'] = trim((string) ($school->schoolName ?? ''));
+	$result['letterheadUrl'] = $this->get_mis_letterhead_url();
 	$this->load->view('pbei_sworn_statement', $result);
   }
 
@@ -3704,7 +3705,6 @@ public function memo_delete(){
 		show_error('Access Denied', 403);
 		return;
 	}
-	$this->ensure_school_letterhead_column();
 	$school = $this->db->where('schoolID', (string) $this->session->userdata('username'))->get('schools', 1)->row();
 	$result['representativeName'] = trim(implode(' ', array_filter(array(
 		trim((string) ($school->adminFName ?? '')),
@@ -3715,7 +3715,7 @@ public function memo_delete(){
 	$result['schoolName'] = trim((string) ($school->schoolName ?? ''));
 	$result['declarationDate'] = date('F j, Y');
 	$result['schoolCity'] = trim((string) ($school->city ?? ''));
-	$result['letterheadUrl'] = !empty($school->letterhead_file) ? base_url() . 'upload/school_letterheads/' . rawurlencode(basename((string) $school->letterhead_file)) : '';
+	$result['letterheadUrl'] = $this->get_mis_letterhead_url();
 	$this->load->view('pbei_data_privacy_compliance', $result);
   }
 
@@ -4379,6 +4379,11 @@ public function memo_delete(){
 			'email' => trim((string) $this->input->post('email', TRUE)),
 			'mobile_no' => trim((string) $this->input->post('mobile_no', TRUE))
 		);
+		if($payload['licensed'] && $payload['prc_license_no'] === ''){
+			$this->session->set_flashdata('danger', 'PRC License Number is required for a Licensed Teacher.');
+			redirect($formUrl);
+			return;
+		}
 		if($payload['email'] !== '' && !filter_var($payload['email'], FILTER_VALIDATE_EMAIL)){
 			$this->session->set_flashdata('danger', 'Enter a valid email address.'); redirect($formUrl); return;
 		}
@@ -4399,43 +4404,46 @@ public function memo_delete(){
 		$this->ensure_school_personnel_table();
 		$schoolId = (string) $this->session->userdata('username');
 		$result['personnel'] = $this->db->where('school_id', $schoolId)->order_by('full_name', 'ASC')->get('one_school_personnel')->result();
-		$this->ensure_school_letterhead_column();
-		$school = $this->db->select('schoolName, schoolID, letterhead_file')->where('schoolID', $schoolId)->get('schools', 1)->row();
+		$school = $this->db->select('schoolName, schoolID')->where('schoolID', $schoolId)->get('schools', 1)->row();
 		$result['schoolName'] = trim((string) ($school->schoolName ?? $this->session->userdata('fName') ?? 'School'));
-		$result['letterheadUrl'] = !empty($school->letterhead_file) ? base_url() . 'upload/school_letterheads/' . rawurlencode(basename((string) $school->letterhead_file)) : '';
+		$result['letterheadUrl'] = $this->get_mis_letterhead_url();
 		$this->load->view('school_personnel_annex_d', $result);
 	}
 
 	function school_letterhead(){
-		if(!$this->is_school_portal_account()){ show_error('Access Denied', 403); return; }
-		$this->ensure_school_letterhead_column();
-		$schoolId = (string) $this->session->userdata('username');
-		$result['school'] = $this->db->select('schoolName, letterhead_file')->where('schoolID', $schoolId)->get('schools', 1)->row();
+		if(!$this->is_smme_user()){ show_error('Access Denied', 403); return; }
+		$this->ensure_mis_letterhead_column();
+		$result['letterheadFile'] = '';
+		if($this->db->table_exists('mis_settings')){
+			$settings = $this->db->select('letterhead_file')->get('mis_settings', 1)->row();
+			$result['letterheadFile'] = trim((string) ($settings->letterhead_file ?? ''));
+		}
 		$this->load->view('school_letterhead', $result);
 	}
 
 	function school_letterhead_save(){
-		if(!$this->is_school_portal_account()){ show_error('Access Denied', 403); return; }
-		$this->ensure_school_letterhead_column();
-		$schoolId = (string) $this->session->userdata('username');
+		if(!$this->is_smme_user()){ show_error('Access Denied', 403); return; }
+		$this->ensure_mis_letterhead_column();
+		$redirectUrl = 'Page/school_letterhead';
+		if(!$this->db->table_exists('mis_settings') || !$this->db->count_all('mis_settings')){ show_error('MIS settings are not configured.', 500); return; }
 		if(empty($_FILES['letterhead']['name'])){
-			$this->session->set_flashdata('danger', 'Choose a PNG or JPG letterhead image first.'); redirect('Page/school_letterhead'); return;
+			$this->session->set_flashdata('danger', 'Choose a PNG or JPG letterhead image first.'); redirect($redirectUrl); return;
 		}
 		$directory = FCPATH . 'upload/school_letterheads/';
 		if(!is_dir($directory) && !mkdir($directory, 0755, TRUE)){
-			$this->session->set_flashdata('danger', 'The letterhead upload folder could not be created.'); redirect('Page/school_letterhead'); return;
+			$this->session->set_flashdata('danger', 'The letterhead upload folder could not be created.'); redirect($redirectUrl); return;
 		}
 		$config = array('upload_path' => $directory, 'allowed_types' => 'jpg|jpeg|png', 'max_size' => 4096, 'encrypt_name' => TRUE, 'remove_spaces' => TRUE);
 		$this->load->library('upload'); $this->upload->initialize($config);
 		if(!$this->upload->do_upload('letterhead')){
-			$this->session->set_flashdata('danger', strip_tags($this->upload->display_errors('', ''))); redirect('Page/school_letterhead'); return;
+			$this->session->set_flashdata('danger', strip_tags($this->upload->display_errors('', ''))); redirect($redirectUrl); return;
 		}
 		$upload = $this->upload->data();
-		$current = $this->db->select('letterhead_file')->where('schoolID', $schoolId)->get('schools', 1)->row();
-		$this->db->where('schoolID', $schoolId)->update('schools', array('letterhead_file' => $upload['file_name']));
+		$current = $this->db->select('letterhead_file')->get('mis_settings', 1)->row();
+		$this->db->update('mis_settings', array('letterhead_file' => $upload['file_name']));
 		$oldFile = basename((string) ($current->letterhead_file ?? ''));
 		if($oldFile !== '' && $oldFile !== $upload['file_name']){ $oldPath = $directory . $oldFile; if(is_file($oldPath)) @unlink($oldPath); }
-		$this->session->set_flashdata('success', 'Letterhead uploaded. It will appear on printable school reports.'); redirect('Page/school_letterhead');
+		$this->session->set_flashdata('success', 'Letterhead uploaded. It will appear on printable school reports.'); redirect($redirectUrl);
 	}
 
 	function school_personnel_delete($id = 0){
@@ -4542,7 +4550,11 @@ public function memo_delete(){
 		$result['districts'] = $this->db->select('district')->where('district !=', '')->group_by('district')->order_by('district', 'ASC')->get('schools')->result();
 		$result['addressRows'] = $this->db->table_exists('settings_address') ? $this->db->get('settings_address')->result_array() : array();
 		$result['accountEmail'] = '';
-		if($this->db->field_exists('email', 'users')){
+		if($this->db->field_exists('email', 'one_sgod_users')){
+			$account = $this->db->select('email')->where('username', $this->session->userdata('username'))->where('section', 'Private')->get('one_sgod_users', 1)->row();
+			$result['accountEmail'] = trim((string) ($account->email ?? ''));
+		}
+		if($result['accountEmail'] === '' && $this->db->field_exists('email', 'users')){
 			$account = $this->db->select('email')->where('username', $this->session->userdata('username'))->where('position', 'School')->get('users', 1)->row();
 			$result['accountEmail'] = trim((string) ($account->email ?? ''));
 		}
@@ -4577,21 +4589,27 @@ public function memo_delete(){
 			return;
 		}
 		$schoolEmail = trim((string) ($payload['schoolEmail'] ?? ''));
-		if($schoolEmail !== '' && filter_var($schoolEmail, FILTER_VALIDATE_EMAIL) === FALSE){
-			$this->session->set_flashdata('danger', 'Enter a valid School Email address.');
+	if($schoolEmail !== '' && filter_var($schoolEmail, FILTER_VALIDATE_EMAIL) === FALSE){
+		$this->session->set_flashdata('danger', 'Enter a valid School Email address.');
+		redirect('Page/school_profile_edit');
+		return;
+	}
+	if($schoolEmail !== '' && $this->db->field_exists('email', 'one_sgod_users')){
+		$emailAccount = $this->db->select('username')->where('email', $schoolEmail)->get('one_sgod_users', 1)->row();
+		if($emailAccount && (string) $emailAccount->username !== $schoolId){
+			$this->session->set_flashdata('danger', 'That School Email is already used by another account.');
 			redirect('Page/school_profile_edit');
 			return;
 		}
+	}
 		$this->db->where('schoolID', $schoolId)->update('schools', $payload);
 		$this->db->where('username', $schoolId)->where('section', 'Private')->update('one_sgod_users', array('fName' => $payload['schoolName']));
 		$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('fname' => $payload['schoolName']));
-		if($schoolEmail !== ''){
-			if($this->db->field_exists('email', 'one_sgod_users')){
-				$this->db->where('username', $schoolId)->where('section', 'Private')->update('one_sgod_users', array('email' => $schoolEmail));
-			}
-			if($this->db->field_exists('email', 'users')){
-				$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('email' => $schoolEmail));
-			}
+		if($this->db->field_exists('email', 'one_sgod_users')){
+			$this->db->where('username', $schoolId)->where('section', 'Private')->update('one_sgod_users', array('email' => $schoolEmail));
+		}
+		if($this->db->field_exists('email', 'users')){
+			$this->db->where('username', $schoolId)->where('position', 'School')->update('users', array('email' => $schoolEmail));
 		}
 		$this->session->set_userdata('fName', $payload['schoolName']);
 		$this->session->set_flashdata('success', 'School profile updated successfully.');
@@ -4608,6 +4626,20 @@ public function memo_delete(){
 		if(!$this->db->field_exists('letterhead_file', 'schools')){
 			$this->db->query('ALTER TABLE schools ADD COLUMN letterhead_file VARCHAR(255) NULL');
 		}
+	}
+
+	private function ensure_mis_letterhead_column(){
+		if($this->db->table_exists('mis_settings') && !$this->db->field_exists('letterhead_file', 'mis_settings')){
+			$this->db->query('ALTER TABLE mis_settings ADD COLUMN letterhead_file VARCHAR(255) NULL');
+		}
+	}
+
+	private function get_mis_letterhead_url(){
+		$this->ensure_mis_letterhead_column();
+		if(!$this->db->table_exists('mis_settings')) return '';
+		$row = $this->db->select('letterhead_file')->get('mis_settings', 1)->row();
+		$file = basename(trim((string) ($row->letterhead_file ?? '')));
+		return $file !== '' ? base_url() . 'upload/school_letterheads/' . rawurlencode($file) : '';
 	}
 
 	private function ensure_school_profile_schema(){
