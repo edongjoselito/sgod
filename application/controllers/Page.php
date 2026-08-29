@@ -3562,6 +3562,7 @@ public function memo_delete(){
 	}
 	$this->ensure_pbei_requirements_table();
 	$this->ensure_school_pbei_requirement_submissions_table();
+	$this->ensure_pbei_submission_action_history_table();
 	$this->ensure_school_pbei_disclosure_table();
 	$schoolId = (string) $this->session->userdata('username');
 	$result['requirements'] = $this->db
@@ -3570,7 +3571,11 @@ public function memo_delete(){
 		->join('school_pbei_requirement_submissions s', 's.requirement_id = r.id AND s.school_id = ' . $this->db->escape($schoolId), 'left')
 		->order_by('r.sort_order', 'ASC')->order_by('r.id', 'ASC')
 		->get()->result();
+	$result['actionHistoryBySubmission'] = array();
+	$history = $this->db->where('school_id', $schoolId)->order_by('created_at', 'DESC')->get('pbei_submission_action_history')->result();
+	foreach($history as $action){ $result['actionHistoryBySubmission'][(int) $action->submission_id][] = $action; }
 	$result['disclosure'] = $this->db->where('school_id', $schoolId)->get('school_pbei_disclosures', 1)->row();
+	$result['returnedCount'] = $this->db->where('school_id', $schoolId)->where('submission_status', 'Returned')->count_all_results('school_pbei_requirement_submissions');
 	$this->load->view('school_pbei_requirements', $result);
   }
 
@@ -3598,8 +3603,10 @@ public function memo_delete(){
 		return;
 	}
 	$notes = trim((string) $this->input->post('notes', TRUE));
+	$isNotApplicable = $this->input->post('not_applicable') === '1';
+	$wasNotApplicable = $existing && strtoupper(trim((string) $existing->submission_status)) === 'NOT APPLICABLE';
 	$remarks = $existing && trim((string) $existing->remarks) !== '' ? trim((string) $existing->remarks) : 'For Validation';
-	$payload = array('school_id' => $schoolId, 'requirement_id' => $requirementId, 'notes' => $notes, 'remarks' => $remarks, 'updated_at' => date('Y-m-d H:i:s'));
+	$payload = array('school_id' => $schoolId, 'requirement_id' => $requirementId, 'notes' => $notes, 'remarks' => $remarks, 'submission_status' => $isNotApplicable ? 'Not Applicable' : 'For Validation', 'updated_at' => date('Y-m-d H:i:s'));
 	if($existing){
 		$payload['stored_name'] = $existing->stored_name;
 		$payload['original_name'] = $existing->original_name;
@@ -3624,7 +3631,7 @@ public function memo_delete(){
 		$payload['original_name'] = $file['client_name'];
 	}
 
-	if(empty($payload['stored_name']) && $notes === ''){
+	if(empty($payload['stored_name']) && $notes === '' && !$isNotApplicable && !$wasNotApplicable){
 		$this->session->set_flashdata('danger', 'Upload a PDF or enter notes/remarks before saving.');
 		redirect('Page/school_pbei_requirements');
 		return;
@@ -3769,6 +3776,7 @@ public function memo_delete(){
 	if(!$this->require_school_management_access()){ return; }
 	$this->ensure_pbei_requirements_table();
 	$this->ensure_school_pbei_requirement_submissions_table();
+	$this->ensure_pbei_submission_action_history_table();
 	$schoolId = trim((string) $this->input->get('school_id', TRUE));
 	if($schoolId === ''){
 		redirect('Page/pbei_school_submissions');
@@ -3782,6 +3790,9 @@ public function memo_delete(){
 		->order_by('r.sort_order', 'ASC')->order_by('r.id', 'ASC')
 		->get()->result();
 	$result['schoolName'] = !empty($result['submissions']) && trim((string) $result['submissions'][0]->schoolName) !== '' ? $result['submissions'][0]->schoolName : $schoolId;
+	$result['actionHistoryBySubmission'] = array();
+	$history = $this->db->where('school_id', $schoolId)->order_by('created_at', 'DESC')->get('pbei_submission_action_history')->result();
+	foreach($history as $action){ $result['actionHistoryBySubmission'][(int) $action->submission_id][] = $action; }
 	$this->load->view('pbei_school_submission_details', $result);
   }
 
@@ -3789,6 +3800,7 @@ public function memo_delete(){
 	if(!$this->require_school_management_access()){ return; }
 	$this->ensure_school_profile_schema();
 	$this->ensure_school_pbei_requirement_submissions_table();
+	$this->ensure_pbei_submission_action_history_table();
 	$schoolId = trim((string) $this->input->get('school_id', TRUE));
 	if($schoolId === ''){
 		redirect('Page/pbei_school_submissions');
@@ -3976,14 +3988,21 @@ public function memo_delete(){
 	$this->ensure_school_pbei_requirement_submissions_table();
 	$submissionId = (int) $this->input->post('submission_id');
 	$status = trim((string) $this->input->post('submission_status', TRUE));
-	if(!in_array($status, array('For Validation', 'Validated'), TRUE)){
+	if(!in_array($status, array('For Validation', 'Validated', 'Returned', 'Not Applicable'), TRUE)){
 		$status = 'For Validation';
 	}
 	if($submissionId > 0){
+		$divisionRemarks = trim((string) $this->input->post('division_remarks', TRUE));
 		$this->db->where('id', $submissionId)->update('school_pbei_requirement_submissions', array(
 			'submission_status' => $status,
-			'division_remarks' => trim((string) $this->input->post('division_remarks', TRUE)),
+			'division_remarks' => $divisionRemarks,
 			'updated_at' => date('Y-m-d H:i:s')
+		));
+		$this->db->insert('pbei_submission_action_history', array(
+			'submission_id' => $submissionId, 'school_id' => trim((string) $this->input->post('return_school_id', TRUE)),
+			'action' => $status, 'comment' => $divisionRemarks,
+			'actor_name' => trim((string) ($this->session->userdata('fName') ?: $this->session->userdata('username'))),
+			'created_at' => date('Y-m-d H:i:s')
 		));
 		$this->session->set_flashdata('success', 'School submission updated successfully.');
 	}
@@ -4144,6 +4163,7 @@ public function memo_delete(){
   }
 
   private function ensure_school_pbei_disclosure_table(){
+	$this->ensure_pbei_submission_action_history_table();
 	$this->db->query("CREATE TABLE IF NOT EXISTS school_pbei_disclosures (
 		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 		school_id VARCHAR(255) NOT NULL,
@@ -4153,6 +4173,21 @@ public function memo_delete(){
 		updated_at DATETIME NULL,
 		PRIMARY KEY (id),
 		UNIQUE KEY uq_school_pbei_disclosure (school_id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+
+  private function ensure_pbei_submission_action_history_table(){
+	$this->db->query("CREATE TABLE IF NOT EXISTS pbei_submission_action_history (
+		id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		submission_id INT UNSIGNED NOT NULL,
+		school_id VARCHAR(255) NOT NULL,
+		action VARCHAR(50) NOT NULL,
+		comment TEXT NULL,
+		actor_name VARCHAR(255) NULL,
+		created_at DATETIME NOT NULL,
+		PRIMARY KEY (id),
+		KEY idx_pbei_action_submission (submission_id),
+		KEY idx_pbei_action_school (school_id)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   }
 
