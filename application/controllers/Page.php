@@ -1024,6 +1024,280 @@ class Page extends CI_Controller{
 	redirect('Page/section_head_issues_concerns');
   }
 
+  /**
+   * QMS SWOT register. Entries are always scoped to the signed-in SGOD
+   * section, so one section cannot view or alter another section's analysis.
+   */
+  public function swot(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_sgod_swot_table();
+    $section = trim((string) $this->session->userdata('section'));
+    $year = trim((string) $this->input->get('year', TRUE)) ?: date('Y');
+    $effectivity = trim((string) $this->input->get('effectivity', TRUE));
+    $entriesQuery = $this->db->where('section_name', $section)->where('sec_group', 'SGOD')
+      ->where('applicable_year', $year);
+    if ($effectivity !== '') $entriesQuery->where('effectivity_date', $effectivity);
+    $result = array(
+      'sectionName' => $section,
+      'selectedYear' => $year,
+      'selectedEffectivity' => $effectivity,
+      'entries' => $entriesQuery->order_by('effectivity_date', 'DESC')->order_by('swot_type', 'ASC')->order_by('id', 'DESC')->get('one_sgod_swot')->result(),
+      'availableYears' => $this->db->select('applicable_year')->where('section_name', $section)
+        ->where('sec_group', 'SGOD')->group_by('applicable_year')->order_by('applicable_year', 'DESC')
+        ->get('one_sgod_swot')->result(),
+      'availableEffectivities' => $this->db->select('effectivity_date')->where('section_name', $section)
+        ->where('sec_group', 'SGOD')->where('applicable_year', $year)->group_by('effectivity_date')->order_by('effectivity_date', 'DESC')->get('one_sgod_swot')->result()
+    );
+    $this->load->view('swot', $result);
+  }
+
+  public function swot_save(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_sgod_swot_table();
+    $section = trim((string) $this->session->userdata('section'));
+    $type = ucfirst(strtolower(trim((string) $this->input->post('swot_type', TRUE))));
+    $allowedTypes = array('Strength', 'Weakness', 'Opportunity', 'Threat');
+    $description = trim((string) $this->input->post('description', TRUE));
+    if (!in_array($type, $allowedTypes, TRUE) || $description === '') {
+      $this->session->set_flashdata('danger', 'Please select a SWOT category and provide its description.');
+      redirect('Page/swot'); return;
+    }
+    $payload = array(
+      'applicable_year' => trim((string) $this->input->post('applicable_year', TRUE)) ?: date('Y'),
+      'effectivity_date' => trim((string) $this->input->post('effectivity_date', TRUE)) ?: date('Y-m-d'),
+      'swot_type' => $type, 'description' => $description,
+      'username' => (string) $this->session->userdata('username'), 'updated_at' => date('Y-m-d H:i:s')
+    );
+    $id = (int) $this->input->post('id');
+    if ($id > 0) {
+      $this->db->where('id', $id)->where('section_name', $section)->where('sec_group', 'SGOD')->update('one_sgod_swot', $payload);
+      $this->session->set_flashdata('success', 'SWOT entry updated successfully.');
+    } else {
+      $payload['section_name'] = $section; $payload['sec_group'] = 'SGOD'; $payload['created_at'] = date('Y-m-d H:i:s');
+      $this->db->insert('one_sgod_swot', $payload);
+      $this->session->set_flashdata('success', 'SWOT entry added successfully.');
+    }
+    redirect('Page/swot?year=' . rawurlencode($payload['applicable_year']) . '&effectivity=' . rawurlencode($payload['effectivity_date']));
+  }
+
+  public function swot_delete(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_sgod_swot_table();
+    $section = trim((string) $this->session->userdata('section'));
+    $this->db->where('id', (int) $this->input->post('id'))->where('section_name', $section)->where('sec_group', 'SGOD')->delete('one_sgod_swot');
+    $this->session->set_flashdata('success', 'SWOT entry removed.');
+    $year = trim((string) $this->input->post('applicable_year', TRUE)) ?: date('Y');
+    $effectivity = trim((string) $this->input->post('effectivity_date', TRUE));
+    redirect('Page/swot?year=' . rawurlencode($year) . ($effectivity !== '' ? '&effectivity=' . rawurlencode($effectivity) : ''));
+  }
+
+  private function can_access_sgod_swot(){
+    return strtoupper(trim((string) $this->session->userdata('secGroup'))) === 'SGOD'
+      && !in_array(trim((string) $this->session->userdata('section')), array('School', 'Private'), TRUE);
+  }
+
+  private function ensure_sgod_swot_table(){
+    $this->db->query("CREATE TABLE IF NOT EXISTS one_sgod_swot (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT, section_name VARCHAR(255) NOT NULL,
+      sec_group VARCHAR(50) NOT NULL DEFAULT 'SGOD', applicable_year VARCHAR(10) NOT NULL,
+      effectivity_date DATE NOT NULL,
+      swot_type VARCHAR(20) NOT NULL, description TEXT NOT NULL, username VARCHAR(255) NOT NULL,
+      created_at DATETIME NOT NULL, updated_at DATETIME NULL, PRIMARY KEY (id),
+      KEY idx_section_year (section_name, sec_group, applicable_year), KEY idx_swot_type (swot_type)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    if (!$this->db->field_exists('effectivity_date', 'one_sgod_swot')) {
+      $this->db->query("ALTER TABLE one_sgod_swot ADD COLUMN effectivity_date DATE NULL AFTER applicable_year");
+      $this->db->query("UPDATE one_sgod_swot SET effectivity_date = CONCAT(applicable_year, '-01-01') WHERE effectivity_date IS NULL");
+    }
+  }
+
+  public function swot_report(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_sgod_swot_table(); $this->ensure_qms_report_settings_table();
+    $section = trim((string)$this->session->userdata('section'));
+    $effectivity = trim((string)$this->input->get('effectivity', TRUE));
+    $query = $this->db->where('section_name', $section)->where('sec_group', 'SGOD');
+    if ($effectivity !== '') $query->where('effectivity_date', $effectivity);
+    $entries = $query->order_by('effectivity_date', 'DESC')->order_by('id', 'ASC')->get('one_sgod_swot')->result();
+    $settings = $this->db->where('section_name', $section)->where('sec_group', 'SGOD')->get('one_sgod_qms_report_settings', 1)->row();
+    $preparedBy = trim(implode(' ', array_filter(array($this->session->userdata('fName'), $this->session->userdata('mName'), $this->session->userdata('lName')))));
+    $this->load->view('swot_report', array('sectionName' => $section, 'effectivity' => $effectivity, 'entries' => $entries, 'settings' => $settings, 'preparedBy' => $preparedBy ?: (string)$this->session->userdata('username')));
+  }
+
+  public function qms_report_settings(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_qms_report_settings_table();
+    $section = trim((string)$this->session->userdata('section'));
+    $settings = $this->db->where('section_name', $section)->where('sec_group', 'SGOD')->get('one_sgod_qms_report_settings', 1)->row();
+    $this->load->view('qms_report_settings', array('sectionName' => $section, 'settings' => $settings));
+  }
+
+  public function qms_report_settings_save(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_qms_report_settings_table();
+    $section = trim((string)$this->session->userdata('section'));
+    $existing = $this->db->where('section_name', $section)->where('sec_group', 'SGOD')->get('one_sgod_qms_report_settings', 1)->row();
+    $data = array(
+      'monitored_by' => trim((string)$this->input->post('monitored_by', TRUE)),
+      'reviewed_by' => trim((string)$this->input->post('reviewed_by', TRUE)),
+      'acknowledged_by' => trim((string)$this->input->post('acknowledged_by', TRUE)),
+      'risk_prepared_by' => trim((string)$this->input->post('risk_prepared_by', TRUE)),
+      'risk_approved_by' => trim((string)$this->input->post('risk_approved_by', TRUE)),
+      'updated_at' => date('Y-m-d H:i:s')
+    );
+    $directory = FCPATH . 'upload/qms_report_assets/';
+    if (!is_dir($directory) && !mkdir($directory, 0755, TRUE)) { $this->session->set_flashdata('danger', 'The QMS upload folder could not be created.'); redirect('Page/qms_report_settings'); return; }
+    foreach (array('letterhead' => 'letterhead_file', 'footer' => 'footer_file') as $field => $column) {
+      if (empty($_FILES[$field]['name'])) continue;
+      $config = array('upload_path' => $directory, 'allowed_types' => 'jpg|jpeg|png', 'max_size' => 4096, 'encrypt_name' => TRUE, 'remove_spaces' => TRUE);
+      $this->load->library('upload'); $this->upload->initialize($config);
+      if (!$this->upload->do_upload($field)) { $this->session->set_flashdata('danger', strip_tags($this->upload->display_errors('', ''))); redirect('Page/qms_report_settings'); return; }
+      $upload = $this->upload->data(); $data[$column] = $upload['file_name'];
+      $old = $existing ? basename((string)$existing->$column) : '';
+      if ($old !== '' && $old !== $upload['file_name'] && is_file($directory . $old)) @unlink($directory . $old);
+    }
+    if ($existing) $this->db->where('id', $existing->id)->update('one_sgod_qms_report_settings', $data);
+    else { $data['section_name'] = $section; $data['sec_group'] = 'SGOD'; $data['created_at'] = date('Y-m-d H:i:s'); $this->db->insert('one_sgod_qms_report_settings', $data); }
+    $this->session->set_flashdata('success', 'QMS report settings saved.'); redirect('Page/qms_report_settings');
+  }
+
+  private function ensure_qms_report_settings_table(){
+    $this->db->query("CREATE TABLE IF NOT EXISTS one_sgod_qms_report_settings (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT, section_name VARCHAR(255) NOT NULL, sec_group VARCHAR(50) NOT NULL DEFAULT 'SGOD', letterhead_file VARCHAR(255) NULL, footer_file VARCHAR(255) NULL, monitored_by VARCHAR(255) NULL, reviewed_by VARCHAR(255) NULL, acknowledged_by VARCHAR(255) NULL, risk_prepared_by VARCHAR(255) NULL, risk_approved_by VARCHAR(255) NULL, created_at DATETIME NOT NULL, updated_at DATETIME NULL, PRIMARY KEY (id), UNIQUE KEY uq_section (section_name, sec_group)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    foreach (array('monitored_by', 'reviewed_by', 'acknowledged_by', 'risk_prepared_by', 'risk_approved_by') as $column) {
+      if (!$this->db->field_exists($column, 'one_sgod_qms_report_settings')) {
+        $this->db->query("ALTER TABLE one_sgod_qms_report_settings ADD COLUMN {$column} VARCHAR(255) NULL");
+      }
+    }
+  }
+
+  public function risk_registry(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_risk_registry_table();
+    $section = trim((string) $this->session->userdata('section'));
+    $result['entries'] = $this->db->where('section_name', $section)->where('sec_group', 'SGOD')->order_by('id', 'ASC')->get('one_sgod_risk_registry')->result();
+    $result['sectionName'] = $section;
+    $this->load->view('risk_registry', $result);
+  }
+
+  public function risk_registry_add(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->load->view('risk_registry_form', array('sectionName' => trim((string) $this->session->userdata('section'))));
+  }
+
+  public function risk_registry_edit($id = 0){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_risk_registry_table();
+    $section = trim((string) $this->session->userdata('section'));
+    $entry = $this->db->where('id', (int)$id)->where('section_name', $section)->where('sec_group', 'SGOD')->get('one_sgod_risk_registry')->row();
+    if (!$entry) { show_404(); return; }
+    $this->load->view('risk_registry_form', array('entry' => $entry, 'sectionName' => $section));
+  }
+
+  public function risk_registry_save(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_risk_registry_table();
+    $section = trim((string) $this->session->userdata('section'));
+    $likelihood = max(1, min(5, (int)$this->input->post('likelihood')));
+    $impact = max(1, min(5, (int)$this->input->post('impact')));
+    $targetLikelihood = max(1, min(5, (int)$this->input->post('target_likelihood')));
+    $targetImpact = max(1, min(5, (int)$this->input->post('target_impact')));
+    $data = array(
+      'declared_process' => trim((string)$this->input->post('declared_process', TRUE)),
+      'risk_causes_consequences' => trim((string)$this->input->post('risk_causes_consequences', TRUE)),
+      'current_controls' => trim((string)$this->input->post('current_controls', TRUE)),
+      'likelihood' => $likelihood, 'impact' => $impact, 'risk_rating' => $likelihood * $impact,
+      'action_response' => trim((string)$this->input->post('action_response', TRUE)),
+      'person_responsible' => trim((string)$this->input->post('person_responsible', TRUE)),
+      'target_date' => trim((string)$this->input->post('target_date', TRUE)) ?: NULL,
+      'target_likelihood' => $targetLikelihood, 'target_impact' => $targetImpact, 'target_risk_rating' => $targetLikelihood * $targetImpact,
+      'updated_at' => date('Y-m-d H:i:s')
+    );
+    if ($data['declared_process'] === '') { $this->session->set_flashdata('danger', 'Declared process and risk description is required.'); redirect('Page/risk_registry'); return; }
+    $id = (int)$this->input->post('id');
+    if ($id > 0) {
+      $this->db->where('id', $id)->where('section_name', $section)->where('sec_group', 'SGOD')->update('one_sgod_risk_registry', $data);
+      $this->session->set_flashdata('success', 'Risk registry entry updated successfully.');
+    } else {
+      $data['section_name'] = $section; $data['sec_group'] = 'SGOD'; $data['username'] = (string)$this->session->userdata('username'); $data['created_at'] = date('Y-m-d H:i:s');
+      $this->db->insert('one_sgod_risk_registry', $data);
+      $this->session->set_flashdata('success', 'Risk registry entry added successfully.');
+    }
+    redirect('Page/risk_registry');
+  }
+
+  public function risk_registry_delete($id = 0){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_risk_registry_table();
+    $this->db->where('id', (int)$id)->where('section_name', (string)$this->session->userdata('section'))->where('sec_group', 'SGOD')->delete('one_sgod_risk_registry');
+    $this->session->set_flashdata('success', 'Risk registry entry removed.'); redirect('Page/risk_registry');
+  }
+
+  public function risk_registry_report(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_risk_registry_table(); $this->ensure_qms_report_settings_table();
+    $section = trim((string)$this->session->userdata('section'));
+    $preparedBy = trim(implode(' ', array_filter(array($this->session->userdata('fName'), $this->session->userdata('mName'), $this->session->userdata('lName')))));
+    $this->load->view('risk_registry_report', array(
+      'sectionName' => $section,
+      'entries' => $this->db->where('section_name', $section)->where('sec_group', 'SGOD')->order_by('id', 'ASC')->get('one_sgod_risk_registry')->result(),
+      'settings' => $this->db->where('section_name', $section)->where('sec_group', 'SGOD')->get('one_sgod_qms_report_settings', 1)->row(),
+      'preparedBy' => $preparedBy ?: (string)$this->session->userdata('username')
+    ));
+  }
+
+  private function ensure_risk_registry_table(){
+    $this->db->query("CREATE TABLE IF NOT EXISTS one_sgod_risk_registry (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT, section_name VARCHAR(255) NOT NULL, sec_group VARCHAR(50) NOT NULL DEFAULT 'SGOD', username VARCHAR(255) NOT NULL,
+      declared_process TEXT NOT NULL, risk_causes_consequences TEXT NULL, current_controls TEXT NULL, likelihood TINYINT UNSIGNED NOT NULL DEFAULT 1, impact TINYINT UNSIGNED NOT NULL DEFAULT 1, risk_rating TINYINT UNSIGNED NOT NULL DEFAULT 1,
+      action_response TEXT NULL, person_responsible VARCHAR(255) NULL, target_date DATE NULL, target_likelihood TINYINT UNSIGNED NOT NULL DEFAULT 1, target_impact TINYINT UNSIGNED NOT NULL DEFAULT 1, target_risk_rating TINYINT UNSIGNED NOT NULL DEFAULT 1,
+      created_at DATETIME NOT NULL, updated_at DATETIME NULL, PRIMARY KEY (id), KEY idx_section (section_name, sec_group)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+
+  public function opportunity_registry(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $this->ensure_opportunity_registry_table(); $section = trim((string)$this->session->userdata('section'));
+    $this->load->view('opportunity_registry', array('sectionName' => $section, 'entries' => $this->db->where('section_name', $section)->where('sec_group', 'SGOD')->order_by('id', 'ASC')->get('one_sgod_opportunity_registry')->result()));
+  }
+  public function opportunity_registry_add(){ if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; } $this->load->view('opportunity_registry_form', array('sectionName' => trim((string)$this->session->userdata('section')))); }
+  public function opportunity_registry_edit($id = 0){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; } $this->ensure_opportunity_registry_table(); $section = trim((string)$this->session->userdata('section'));
+    $entry = $this->db->where('id',(int)$id)->where('section_name',$section)->where('sec_group','SGOD')->get('one_sgod_opportunity_registry')->row(); if(!$entry){show_404();return;} $this->load->view('opportunity_registry_form',array('sectionName'=>$section,'entry'=>$entry));
+  }
+  public function opportunity_registry_save(){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; } $this->ensure_opportunity_registry_table(); $section=trim((string)$this->session->userdata('section'));
+    $l=max(1,min(5,(int)$this->input->post('likelihood'))); $i=max(1,min(5,(int)$this->input->post('impact')));
+    $data=array('declared_process_opportunity'=>trim((string)$this->input->post('declared_process_opportunity',TRUE)),'likelihood'=>$l,'impact'=>$i,'opportunity_rating'=>$l*$i,'pursuit_action_plan'=>trim((string)$this->input->post('pursuit_action_plan',TRUE)),'person_responsible'=>trim((string)$this->input->post('person_responsible',TRUE)),'target_date'=>trim((string)$this->input->post('target_date',TRUE))?:NULL,'updated_at'=>date('Y-m-d H:i:s'));
+    if($data['declared_process_opportunity']===''){ $this->session->set_flashdata('danger','Declared process and opportunity statement is required.'); redirect('Page/opportunity_registry'); return; }
+    $id=(int)$this->input->post('id'); if($id>0){$this->db->where('id',$id)->where('section_name',$section)->where('sec_group','SGOD')->update('one_sgod_opportunity_registry',$data);$this->session->set_flashdata('success','Opportunity updated successfully.');}else{$data['section_name']=$section;$data['sec_group']='SGOD';$data['username']=(string)$this->session->userdata('username');$data['created_at']=date('Y-m-d H:i:s');$this->db->insert('one_sgod_opportunity_registry',$data);$this->session->set_flashdata('success','Opportunity added successfully.');} redirect('Page/opportunity_registry');
+  }
+  public function opportunity_registry_delete($id=0){if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$this->ensure_opportunity_registry_table();$this->db->where('id',(int)$id)->where('section_name',(string)$this->session->userdata('section'))->where('sec_group','SGOD')->delete('one_sgod_opportunity_registry');$this->session->set_flashdata('success','Opportunity removed.');redirect('Page/opportunity_registry');}
+  public function opportunity_registry_report(){
+    if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$this->ensure_opportunity_registry_table();$this->ensure_qms_report_settings_table();$section=trim((string)$this->session->userdata('section'));$prepared=trim(implode(' ',array_filter(array($this->session->userdata('fName'),$this->session->userdata('mName'),$this->session->userdata('lName')))));
+    $this->load->view('opportunity_registry_report',array('sectionName'=>$section,'entries'=>$this->db->where('section_name',$section)->where('sec_group','SGOD')->order_by('id','ASC')->get('one_sgod_opportunity_registry')->result(),'settings'=>$this->db->where('section_name',$section)->where('sec_group','SGOD')->get('one_sgod_qms_report_settings',1)->row(),'preparedBy'=>$prepared?:$this->session->userdata('username')));
+  }
+  private function ensure_opportunity_registry_table(){ $this->db->query("CREATE TABLE IF NOT EXISTS one_sgod_opportunity_registry (id INT UNSIGNED NOT NULL AUTO_INCREMENT, section_name VARCHAR(255) NOT NULL, sec_group VARCHAR(50) NOT NULL DEFAULT 'SGOD', username VARCHAR(255) NOT NULL, declared_process_opportunity TEXT NOT NULL, likelihood TINYINT UNSIGNED NOT NULL DEFAULT 1, impact TINYINT UNSIGNED NOT NULL DEFAULT 1, opportunity_rating TINYINT UNSIGNED NOT NULL DEFAULT 1, pursuit_action_plan TEXT NULL, person_responsible VARCHAR(255) NULL, target_date DATE NULL, created_at DATETIME NOT NULL, updated_at DATETIME NULL, PRIMARY KEY(id), KEY idx_section(section_name,sec_group)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"); }
+
+  public function risk_opportunity_monitoring(){if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$this->ensure_monitoring_table();$s=trim((string)$this->session->userdata('section'));$this->load->view('risk_opportunity_monitoring',array('sectionName'=>$s,'entries'=>$this->db->where('section_name',$s)->where('sec_group','SGOD')->order_by('monitoring_date','DESC')->order_by('id','ASC')->get('one_sgod_risk_opportunity_monitoring')->result()));}
+  public function risk_opportunity_monitoring_add(){if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$this->load->view('risk_opportunity_monitoring_form',array('sectionName'=>trim((string)$this->session->userdata('section'))));}
+  public function risk_opportunity_monitoring_save(){if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$this->ensure_monitoring_table();$s=trim((string)$this->session->userdata('section'));$type=$this->input->post('item_type',TRUE)==='Opportunity'?'Opportunity':'Risk';$d=array('monitoring_date'=>trim((string)$this->input->post('monitoring_date',TRUE))?:date('Y-m-d'),'item_type'=>$type,'statement'=>trim((string)$this->input->post('statement',TRUE)),'before_rating'=>max(1,min(25,(int)$this->input->post('before_rating'))),'after_rating'=>max(1,min(25,(int)$this->input->post('after_rating'))),'status'=>in_array($this->input->post('status',TRUE),array('Increased','Reduced','Recurring'),TRUE)?$this->input->post('status',TRUE):'Reduced','explanation'=>trim((string)$this->input->post('explanation',TRUE)),'recommendation'=>trim((string)$this->input->post('recommendation',TRUE)),'updated_at'=>date('Y-m-d H:i:s'));if($d['statement']===''){ $this->session->set_flashdata('danger','Declared process and statement is required.');redirect('Page/risk_opportunity_monitoring');return;}$d['section_name']=$s;$d['sec_group']='SGOD';$d['username']=(string)$this->session->userdata('username');$d['created_at']=date('Y-m-d H:i:s');$this->db->insert('one_sgod_risk_opportunity_monitoring',$d);$this->session->set_flashdata('success','Monitoring entry added.');redirect('Page/risk_opportunity_monitoring');}
+  public function risk_opportunity_monitoring_delete($id=0){if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$this->ensure_monitoring_table();$this->db->where('id',(int)$id)->where('section_name',(string)$this->session->userdata('section'))->where('sec_group','SGOD')->delete('one_sgod_risk_opportunity_monitoring');$this->session->set_flashdata('success','Monitoring entry removed.');redirect('Page/risk_opportunity_monitoring');}
+  public function risk_opportunity_monitoring_report(){if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$this->ensure_monitoring_table();$this->ensure_qms_report_settings_table();$s=trim((string)$this->session->userdata('section'));$date=trim((string)$this->input->get('date',TRUE));$q=$this->db->where('section_name',$s)->where('sec_group','SGOD');if($date!=='')$q->where('monitoring_date',$date);$this->load->view('risk_opportunity_monitoring_report',array('sectionName'=>$s,'monitoringDate'=>$date,'entries'=>$q->order_by('item_type','ASC')->get('one_sgod_risk_opportunity_monitoring')->result(),'settings'=>$this->db->where('section_name',$s)->where('sec_group','SGOD')->get('one_sgod_qms_report_settings',1)->row()));}
+  private function ensure_monitoring_table(){$this->db->query("CREATE TABLE IF NOT EXISTS one_sgod_risk_opportunity_monitoring (id INT UNSIGNED NOT NULL AUTO_INCREMENT,section_name VARCHAR(255) NOT NULL,sec_group VARCHAR(50) NOT NULL DEFAULT 'SGOD',username VARCHAR(255) NOT NULL,monitoring_date DATE NOT NULL,item_type VARCHAR(20) NOT NULL,statement TEXT NOT NULL,before_rating TINYINT UNSIGNED NOT NULL,after_rating TINYINT UNSIGNED NOT NULL,status VARCHAR(20) NOT NULL,explanation TEXT NULL,recommendation TEXT NULL,created_at DATETIME NOT NULL,updated_at DATETIME NULL,PRIMARY KEY(id),KEY idx_section_date(section_name,sec_group,monitoring_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");}
+
+  public function iso_qms($module = 'document_control'){
+    if (!$this->can_access_sgod_swot()) { show_error('Access Denied', 403); return; }
+    $module = $this->iso_qms_module($module); $this->ensure_iso_qms_records_table(); $section = trim((string)$this->session->userdata('section'));
+    $this->load->view('iso_qms_records', array('module'=>$module, 'sectionName'=>$section, 'records'=>$this->db->where('section_name',$section)->where('sec_group','SGOD')->where('module',$module['key'])->order_by('record_date','DESC')->get('one_sgod_iso_qms_records')->result()));
+  }
+  public function iso_qms_add($module='document_control'){if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$this->load->view('iso_qms_form',array('module'=>$this->iso_qms_module($module),'sectionName'=>trim((string)$this->session->userdata('section'))));}
+  public function iso_qms_save(){if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$module=$this->iso_qms_module($this->input->post('module',TRUE));$this->ensure_iso_qms_records_table();$s=trim((string)$this->session->userdata('section'));$d=array('record_date'=>trim((string)$this->input->post('record_date',TRUE))?:date('Y-m-d'),'reference_no'=>trim((string)$this->input->post('reference_no',TRUE)),'title'=>trim((string)$this->input->post('title',TRUE)),'details'=>trim((string)$this->input->post('details',TRUE)),'owner'=>trim((string)$this->input->post('owner',TRUE)),'status'=>trim((string)$this->input->post('status',TRUE))?:'Open','due_date'=>trim((string)$this->input->post('due_date',TRUE))?:NULL,'updated_at'=>date('Y-m-d H:i:s'));if($d['title']===''){ $this->session->set_flashdata('danger','Title is required.');redirect('Page/iso_qms/'.$module['key']);return;}$d['module']=$module['key'];$d['section_name']=$s;$d['sec_group']='SGOD';$d['username']=(string)$this->session->userdata('username');$d['created_at']=date('Y-m-d H:i:s');$this->db->insert('one_sgod_iso_qms_records',$d);$this->session->set_flashdata('success',$module['label'].' record saved.');redirect('Page/iso_qms/'.$module['key']);}
+  public function iso_qms_delete($module='document_control',$id=0){if(!$this->can_access_sgod_swot()){show_error('Access Denied',403);return;}$module=$this->iso_qms_module($module);$this->ensure_iso_qms_records_table();$this->db->where('id',(int)$id)->where('section_name',(string)$this->session->userdata('section'))->where('sec_group','SGOD')->where('module',$module['key'])->delete('one_sgod_iso_qms_records');redirect('Page/iso_qms/'.$module['key']);}
+  private function iso_qms_module($key){$modules=array('document_control'=>'Document Control','internal_audit'=>'Internal Audit','corrective_action'=>'Nonconformity & Corrective Action','quality_objectives'=>'Quality Objectives & KPI','customer_feedback'=>'Customer Feedback','management_review'=>'Management Review');$key=array_key_exists($key,$modules)?$key:'document_control';return array('key'=>$key,'label'=>$modules[$key]);}
+  private function ensure_iso_qms_records_table(){$this->db->query("CREATE TABLE IF NOT EXISTS one_sgod_iso_qms_records (id INT UNSIGNED NOT NULL AUTO_INCREMENT,section_name VARCHAR(255) NOT NULL,sec_group VARCHAR(50) NOT NULL DEFAULT 'SGOD',module VARCHAR(50) NOT NULL,username VARCHAR(255) NOT NULL,record_date DATE NOT NULL,reference_no VARCHAR(100) NULL,title VARCHAR(500) NOT NULL,details TEXT NULL,owner VARCHAR(255) NULL,status VARCHAR(50) NULL,due_date DATE NULL,created_at DATETIME NOT NULL,updated_at DATETIME NULL,PRIMARY KEY(id),KEY idx_section_module(section_name,sec_group,module)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");}
+
   function switch_managed_section(){
 	$sectionName = trim((string) $this->input->post('section', TRUE));
 	$sectionRecord = $this->get_section_head_record_for_user(

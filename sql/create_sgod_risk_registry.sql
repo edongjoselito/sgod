@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS `one_sgod_risk_registry` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `section_name` VARCHAR(255) NOT NULL,
+  `sec_group` VARCHAR(50) NOT NULL DEFAULT 'SGOD',
+  `username` VARCHAR(255) NOT NULL,
+  `declared_process` TEXT NOT NULL,
+  `risk_causes_consequences` TEXT NULL,
+  `current_controls` TEXT NULL,
+  `likelihood` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `impact` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `risk_rating` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `action_response` TEXT NULL,
+  `person_responsible` VARCHAR(255) NULL,
+  `target_date` DATE NULL,
+  `target_likelihood` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `target_impact` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `target_risk_rating` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NULL,
+  PRIMARY KEY (`id`), KEY `idx_section` (`section_name`, `sec_group`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
