@@ -13,23 +13,22 @@
 
         <!-- Plugins css-->
         <link href="<?= base_url(); ?>assets/css/renren.css" rel="stylesheet" type="text/css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <script src="<?= base_url(); ?>assets/libs/jspdf/jspdf.umd.min.js"></script>
         <script>
-              
-                var doc = new jsPDF();
-                var specialElementHandlers = {
-                    '#editor': function (element, renderer) {
-                        return true;
-                    }
-                };
-
-                $('#cmd').click(function () {
-                    doc.fromHTML($('#content').html(), 15, 15, {
-                        'width': 170,
-                            'elementHandlers': specialElementHandlers
+                var jsPDF = window.jspdf && window.jspdf.jsPDF;
+                var doc = jsPDF ? new jsPDF() : null;
+                document.addEventListener('DOMContentLoaded', function () {
+                    var button = document.getElementById('cmd');
+                    var content = document.getElementById('content');
+                    if (!button || !content || !doc) return;
+                    button.addEventListener('click', function () {
+                        doc.html(content, {
+                            callback: function (pdf) { pdf.save('sample-file.pdf'); },
+                            x: 15,
+                            y: 15,
+                            width: 170
+                        });
                     });
-                    doc.save('sample-file.pdf');
                 });
         </script>
 

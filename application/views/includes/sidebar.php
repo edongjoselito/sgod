@@ -112,6 +112,10 @@
                     var item = link.closest('li');
                     if (item) item.remove();
                 });
+                document.querySelectorAll('.left-side-menu a[href*="Page/positions"]').forEach(function (link) {
+                    var item = link.closest('li');
+                    if (item) item.remove();
+                });
             });
         </script>
         <style>.left-side-menu li[data-ipcr-menu-group], .left-side-menu a[href*="Ipcrf"] { display:none !important; }</style>
@@ -1381,7 +1385,7 @@
             var monitoringUrl = <?= json_encode(site_url('Page/risk_opportunity_monitoring')); ?>;
             var isoQmsUrl = <?= json_encode(site_url('Page/iso_qms')); ?>;
             var reportSettingsUrl = <?= json_encode(site_url('Page/qms_report_settings')); ?>;
-            item.innerHTML = '<a href="javascript: void(0);" class="waves-effect qms-menu-toggle" aria-expanded="false"><i class="mdi mdi-clipboard-check-outline"></i><span> QMS </span><span class="menu-arrow"></span></a><ul class="nav-second-level qms-submenu" style="display:none" aria-expanded="false"><li><a href="javascript: void(0);" class="qms-risk-toggle" aria-expanded="false">Risk Management <span class="menu-arrow"></span></a><ul class="nav-third-level qms-risk-submenu" style="display:none" aria-expanded="false"><li><a href="' + swotUrl + '">SWOT</a></li><li><a href="' + riskRegistryUrl + '">Risk Registry Template</a></li><li><a href="' + opportunityRegistryUrl + '">Opportunity Registry</a></li><li><a href="' + monitoringUrl + '">Monitoring &amp; Review</a></li></ul></li><li><a href="' + isoQmsUrl + '/document_control">Document Control</a></li><li><a href="' + isoQmsUrl + '/internal_audit">Internal Audit</a></li><li><a href="' + isoQmsUrl + '/corrective_action">Corrective Action</a></li><li><a href="' + isoQmsUrl + '/quality_objectives">Quality Objectives &amp; KPI</a></li><li><a href="' + isoQmsUrl + '/customer_feedback">Customer Feedback</a></li><li><a href="' + isoQmsUrl + '/management_review">Management Review</a></li><li><a href="' + reportSettingsUrl + '">Report Settings</a></li></ul>';
+            item.innerHTML = '<a href="javascript: void(0);" class="waves-effect qms-menu-toggle" aria-expanded="false"><i class="mdi mdi-clipboard-check-outline"></i><span> QMS </span><span class="menu-arrow"></span></a><ul class="nav-second-level qms-submenu" style="display:none" aria-expanded="false"><li><a href="javascript: void(0);" class="qms-risk-toggle" aria-expanded="false">Risk Management <span class="menu-arrow"></span></a><ul class="nav-third-level qms-risk-submenu" style="display:none" aria-expanded="false"><li><a href="' + swotUrl + '">SWOT</a></li><li><a href="' + riskRegistryUrl + '">Risk Registry Template</a></li><li><a href="' + opportunityRegistryUrl + '">Opportunity Registry</a></li><li><a href="' + monitoringUrl + '">Monitoring &amp; Review</a></li></ul></li><li><a href="javascript: void(0);" class="qms-iso-toggle" aria-expanded="false">ISO 9001:2015 <span class="menu-arrow"></span></a><ul class="nav-third-level qms-iso-submenu" style="display:none" aria-expanded="false"><li><a href="' + isoQmsUrl + '/document_control">Document Control</a></li><li><a href="' + isoQmsUrl + '/internal_audit">Internal Audit</a></li><li><a href="' + isoQmsUrl + '/corrective_action">Corrective Action</a></li><li><a href="' + isoQmsUrl + '/quality_objectives">Quality Objectives &amp; KPI</a></li><li><a href="' + isoQmsUrl + '/customer_feedback">Customer Feedback</a></li><li><a href="' + isoQmsUrl + '/management_review">Management Review</a></li></ul></li><li><a href="' + reportSettingsUrl + '">Report Settings</a></li></ul>';
             menu.appendChild(item);
             var toggle = item.querySelector('.qms-menu-toggle');
             var submenu = item.querySelector('.qms-submenu');
@@ -1401,6 +1405,15 @@
                 riskSubmenu.style.display = isOpen ? 'none' : 'block';
                 riskSubmenu.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
                 riskToggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+            });
+            var isoToggle = item.querySelector('.qms-iso-toggle');
+            var isoSubmenu = item.querySelector('.qms-iso-submenu');
+            isoToggle.addEventListener('click', function (event) {
+                event.preventDefault();
+                var isOpen = isoSubmenu.style.display !== 'none';
+                isoSubmenu.style.display = isOpen ? 'none' : 'block';
+                isoSubmenu.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+                isoToggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
             });
         });
         <?php endif; ?>

@@ -3,7 +3,7 @@
 
 <head>
     <title>Brigada Records</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= base_url(); ?>assets/libs/bootstrap/bootstrap-5.3.0.min.css" rel="stylesheet">
     <style>
         .modal-header {
             background-color: rgb(112, 163, 239);
@@ -140,7 +140,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="<?= base_url(); ?>assets/libs/bootstrap/bootstrap-5.3.0.bundle.min.js"></script>
     <script>
         document.querySelectorAll('.editBtn').forEach(button => {
             button.addEventListener('click', function() {

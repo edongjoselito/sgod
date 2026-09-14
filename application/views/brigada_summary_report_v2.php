@@ -11,8 +11,6 @@
         <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-stylesheet" />
         <link href="<?= base_url(); ?>assets/css/dashboard-unified.css" rel="stylesheet" type="text/css" />
         <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-
   * { box-sizing: border-box; }
   :root {
     --c-ink: #0f172a;
@@ -49,7 +47,8 @@
     --radius-md: 16px;
     --radius-lg: 22px;
 
-    --font: 'Inter', sans-serif;
+    --font: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
     --mono: 'JetBrains Mono', monospace;
   }
 

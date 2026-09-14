@@ -14,7 +14,6 @@ $partnerValue = function($key) use ($partnerSignupValues) {
     <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
     <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { --navy:#062a4d; --blue:#0864a6; --gold:#f6bf26; --ink:#17324c; --muted:#6b7c8e; --line:#dbe7ef; --pale:#f4f9fc; }
         * { box-sizing:border-box; }

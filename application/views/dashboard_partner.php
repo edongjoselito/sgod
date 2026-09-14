@@ -11,15 +11,12 @@ $name = trim(implode(' ', array_filter(array($this->session->userdata('fName'), 
     <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
     <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { --navy:#092b4c; --blue:#0875c3; --gold:#f5b336; --ink:#172c43; --muted:#5f6f87; --line:#dbe5ef; --surface:#ffffff; --surface-soft:#f8fbff; --border:#d6e2ee; }
-        body { min-height:100vh; color:var(--ink); background:#eef5fb; font-family:"Inter",system-ui,Arial,sans-serif; }
+        body { min-height:100vh; color:var(--ink); background:#eef5fb; font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
         .topline { height:6px; background:linear-gradient(90deg, #0f4dac 0%, #0c8cca 100%); } .nav { background:rgba(255,255,255,.98); backdrop-filter:blur(12px); box-shadow:0 1px 24px rgba(15,58,90,.08); }
         .shell { width:min(1140px, calc(100% - 36px)); margin:auto; } .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px 0; }
-        .brand { color:var(--navy); font:700 20px/1.1 "Georgia",serif; } .brand small { display:block; color:var(--blue); font:800 10px/1.3 "Inter",system-ui,Arial,sans-serif; letter-spacing:.18em; text-transform:uppercase; }
+        .brand { color:var(--navy); font:700 20px/1.1 "Georgia",serif; } .brand small { display:block; color:var(--blue); font:800 10px/1.3 system-ui,-apple-system,"Segoe UI",Arial,sans-serif; letter-spacing:.18em; text-transform:uppercase; }
         .logout { padding:11px 18px; border-radius:999px; color:#0d2c52; background:#fff; border:1px solid #d7e3f1; font-size:14px; font-weight:700; text-decoration:none; }
         main { padding:50px 0 72px; }
         .hero { display:grid; grid-template-columns:1.5fr 1fr; gap:26px; padding:36px; border-radius:24px; color:#fff; background:linear-gradient(150deg, #0a2750 0%, #1070bf 100%); box-shadow:0 26px 60px rgba(8,28,63,.16); }

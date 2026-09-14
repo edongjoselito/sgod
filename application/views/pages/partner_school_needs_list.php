@@ -6,23 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $esc($title); ?> | SDO Davao Oriental</title>
     <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { --navy:#102d4e; --blue:#1269aa; --aqua:#55c5c4; --gold:#f4bd4f; --ink:#1b2a41; --muted:#64748b; --border:#e3eaf2; }
         * { box-sizing:border-box; }
-        body { margin:0; color:var(--ink); background:radial-gradient(circle at 8% 8%,rgba(85,197,196,.11),transparent 24rem),#f6f8fb; font-family:"DM Sans","Segoe UI",system-ui,sans-serif; }
+        body { margin:0; color:var(--ink); background:radial-gradient(circle at 8% 8%,rgba(85,197,196,.11),transparent 24rem),#f6f8fb; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
         .topline { height:5px; background:linear-gradient(90deg,var(--aqua),#388ec5 48%,var(--gold)); }
         .shell { width:min(1180px,calc(100% - 32px)); margin:auto; }
         .nav { background:rgba(255,255,255,.86); border-bottom:1px solid var(--border); backdrop-filter:blur(18px); }
         .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:17px 0; }
-        .brand { color:var(--navy); font:700 21px/1.1 "Playfair Display",Georgia,serif; }
-        .brand small { display:block; margin-bottom:3px; color:var(--blue); font:700 10px/1.3 "DM Sans",sans-serif; letter-spacing:.13em; text-transform:uppercase; }
+        .brand { color:var(--navy); font:700 21px/1.1 Georgia,serif; }
+        .brand small { display:block; margin-bottom:3px; color:var(--blue); font:700 10px/1.3 system-ui,-apple-system,"Segoe UI",sans-serif; letter-spacing:.13em; text-transform:uppercase; }
         .back { padding:10px 17px; border:1px solid var(--border); border-radius:999px; color:var(--navy); background:#fff; font-size:14px; font-weight:700; text-decoration:none; }
         main { padding:38px 0 80px; }
         .hero { position:relative; overflow:hidden; padding:42px; border-radius:26px; color:#fff; background:linear-gradient(125deg,#102d4e,#155e96); box-shadow:0 24px 58px rgba(16,45,78,.18); }
         .hero::after { position:absolute; right:-55px; bottom:-110px; width:230px; height:230px; content:""; border:42px solid rgba(255,255,255,.10); border-radius:50%; }
         .eyebrow { margin:0 0 12px; color:#ffe09a; font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; }
-        h1 { position:relative; margin:0; font:700 clamp(2rem,4vw,3rem)/1.12 "Playfair Display",Georgia,serif; }
+        h1 { position:relative; margin:0; font:700 clamp(2rem,4vw,3rem)/1.12 Georgia,serif; }
         .hero p:last-child { position:relative; max-width:620px; margin:13px 0 0; color:rgba(255,255,255,.86); line-height:1.65; }
         .panel { margin-top:20px; padding:12px; border:1px solid var(--border); border-radius:20px; background:#fff; box-shadow:0 16px 40px rgba(18,45,78,.07); }
         table { width:100%; border-collapse:collapse; }

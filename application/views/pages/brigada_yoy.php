@@ -149,7 +149,7 @@ $isUp = $delta >= 0;
         </main>
     </div><?php include(__DIR__ . '/../includes/footer.php'); ?></div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="<?= base_url(); ?>assets/libs/chart-js/chart.umd.min.js"></script>
 <script>
 const P = ['#1a1f71','#3c40c6','#6c70ef','#00b8a9','#ff6b6b','#ffa94d','#2bb673','#e84a8d','#4dabf7','#4263eb'];
 function bar(ctx, labels, values, title, colorIdx) {
