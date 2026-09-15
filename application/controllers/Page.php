@@ -3893,7 +3893,7 @@ public function memo_delete(){
 			redirect('Page/school_pbei_requirements');
 			return;
 		}
-		$config = array('upload_path' => $uploadPath, 'allowed_types' => 'pdf', 'max_size' => 2048, 'encrypt_name' => TRUE);
+		$config = array('upload_path' => $uploadPath, 'allowed_types' => 'pdf', 'max_size' => 5120, 'encrypt_name' => TRUE);
 		$this->load->library('upload', $config);
 		if(!$this->upload->do_upload('requirement_pdf')){
 			$this->session->set_flashdata('danger', strip_tags($this->upload->display_errors('', '')));
