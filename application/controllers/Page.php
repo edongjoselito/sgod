@@ -4043,6 +4043,29 @@ public function memo_delete(){
 		->group_by('s.school_id')->group_by('sch.schoolName')
 		->order_by('sch.schoolName', 'ASC')->order_by('s.school_id', 'ASC')
 		->get()->result();
+	$requirementCount = (int) $this->db->count_all('pbei_requirements');
+	$completionRows = $this->db
+		->select("s.school_id,
+			SUM(CASE WHEN UPPER(TRIM(COALESCE(s.submission_status, ''))) = 'NOT APPLICABLE' THEN 1 ELSE 0 END) AS not_applicable_count,
+			SUM(CASE WHEN UPPER(TRIM(COALESCE(s.submission_status, ''))) <> 'NOT APPLICABLE' THEN 1 ELSE 0 END) AS submitted_count", FALSE)
+		->from('school_pbei_requirement_submissions s')
+		->join('pbei_requirements r', 'r.id = s.requirement_id')
+		->group_by('s.school_id')
+		->get()->result();
+	$completionBySchool = array();
+	foreach($completionRows as $completionRow){
+		$completionBySchool[(string) $completionRow->school_id] = $completionRow;
+	}
+	foreach($result['schools'] as $school){
+		$counts = $completionBySchool[(string) $school->school_id] ?? NULL;
+		$applicableCount = max(0, $requirementCount - (int) ($counts->not_applicable_count ?? 0));
+		$submittedCount = (int) ($counts->submitted_count ?? 0);
+		$school->applicable_requirement_count = $applicableCount;
+		$school->submitted_requirement_count = $submittedCount;
+		$school->submission_completion_percentage = $applicableCount > 0
+			? round(($submittedCount / $applicableCount) * 100)
+			: 0;
+	}
 	$this->load->view('pbei_school_submissions', $result);
   }
 
@@ -4063,6 +4086,28 @@ public function memo_delete(){
 		->join('schools sch', 'sch.schoolID = ' . $this->db->escape($schoolId), 'left', FALSE)
 		->order_by('r.sort_order', 'ASC')->order_by('r.id', 'ASC')
 		->get()->result();
+	$result['applicableRequirementCount'] = 0;
+	$result['submittedRequirementCount'] = 0;
+	$result['validatedRequirementCount'] = 0;
+	foreach($result['submissions'] as $submission){
+		$status = strtoupper(trim((string) $submission->submission_status));
+		if($status === 'NOT APPLICABLE'){
+			continue;
+		}
+		$result['applicableRequirementCount']++;
+		if(!empty($submission->id)){
+			$result['submittedRequirementCount']++;
+		}
+		if($status === 'VALIDATED'){
+			$result['validatedRequirementCount']++;
+		}
+	}
+	$result['submissionCompletionPercentage'] = $result['applicableRequirementCount'] > 0
+		? round(($result['submittedRequirementCount'] / $result['applicableRequirementCount']) * 100)
+		: 0;
+	$result['validationCompletionPercentage'] = $result['applicableRequirementCount'] > 0
+		? round(($result['validatedRequirementCount'] / $result['applicableRequirementCount']) * 100)
+		: 0;
 	$result['schoolName'] = !empty($result['submissions']) && trim((string) $result['submissions'][0]->schoolName) !== '' ? $result['submissions'][0]->schoolName : $schoolId;
 	$result['actionHistoryBySubmission'] = array();
 	$history = $this->db->where('school_id', $schoolId)->order_by('created_at', 'DESC')->get('pbei_submission_action_history')->result();
