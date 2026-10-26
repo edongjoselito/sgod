@@ -462,6 +462,15 @@
                         </a>
                     </li>
 
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
                     <li>
                         <a href="javascript: void(0);" class="waves-effect">
                             <i class="mdi mdi-trophy-outline"></i>
@@ -633,6 +642,15 @@
                         </a>
                     </li>
 
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
                     <li>
                         <a href="usersListv2" class="waves-effect">
                             <i class="mdi mdi-account-multiple-outline"></i>
@@ -720,6 +738,15 @@
                             <span> Schools </span>
                         </a>
                     </li>
+
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
 
                     <li>
                         <a href="usersListv2" class="waves-effect">
@@ -810,6 +837,15 @@
                         </a>
                     </li>
 
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
                     <li>
                         <a href="usersListv2" class="waves-effect">
                             <i class="mdi mdi-account-multiple-outline"></i>
@@ -891,6 +927,15 @@
                             <span> Schools </span>
                         </a>
                     </li>
+
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
 
                     <li>
                         <a href="usersListv2" class="waves-effect">
@@ -974,6 +1019,15 @@
                         </a>
                     </li>
 
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
                     <li>
                         <a href="usersListv2" class="waves-effect">
                             <i class="mdi mdi-account-multiple-outline"></i>
@@ -1055,6 +1109,15 @@
                             <span> Schools </span>
                         </a>
                     </li>
+
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
 
                     <li>
                         <a href="usersListv2" class="waves-effect">
@@ -1176,6 +1239,15 @@
                         </a>
                     </li>
 
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
                     <li>
                         <a href="usersListv2" class="waves-effect">
                             <i class="mdi mdi-account-multiple-outline"></i>
@@ -1256,6 +1328,15 @@
                             <span> Schools </span>
                         </a>
                     </li>
+
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
 
                     <li>
                         <a href="usersListv2" class="waves-effect">
@@ -1341,6 +1422,15 @@
                             </a>
                         </li>
 
+                    <?php if ($isSectionHeadDashboardUser): ?>
+                    <li>
+                        <a href="<?= site_url('Page/authority_to_travel'); ?>" class="waves-effect">
+                            <i class="mdi mdi-airplane"></i>
+                            <span> Authority to Travel </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
                         <li>
                             <a href="<?= base_url(); ?>Page/usersListv2" class="waves-effect">
                                 <i class="mdi mdi-account-multiple-outline"></i>
@@ -1356,6 +1446,22 @@
         <?php endif; ?>
 
         <script>
+        <?php
+        $showReimbursementMenu = $currentSidebarUsername !== '' && !$isSchoolSidebar;
+        if ($showReimbursementMenu): ?>
+        document.addEventListener('DOMContentLoaded', function () {
+            var menu = document.getElementById('side-menu');
+            if (!menu) return;
+            var item = document.createElement('li');
+            var link = document.createElement('a');
+            link.href = <?= json_encode(site_url('Reimbursement')); ?>;
+            link.className = 'waves-effect';
+            link.innerHTML = '<i class="mdi mdi-cash-multiple"></i><span> Travel Reimbursement </span>';
+            item.appendChild(link);
+            menu.appendChild(item);
+        });
+        <?php endif; ?>
+
         // Keep Issues / Concerns available in role-specific sidebars, except School.
 		<?php if (!$isSchoolSidebar): ?>
         document.addEventListener('DOMContentLoaded', function () {

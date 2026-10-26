@@ -2,7 +2,8 @@
 $sectionName = $this->session->userdata('section') ?: 'Section';
 $secGroupName = $this->session->userdata('secGroup') ?: '';
 $postedAccomplishmentScope = $this->input->post('accomplishmentScope');
-$selectedAccomplishmentScopes = is_array($postedAccomplishmentScope) ? $postedAccomplishmentScope : array($postedAccomplishmentScope ?: 'section');
+$defaultAccomplishmentScope = !empty($travelRequest) ? 'personal' : 'section';
+$selectedAccomplishmentScopes = is_array($postedAccomplishmentScope) ? $postedAccomplishmentScope : array($postedAccomplishmentScope ?: $defaultAccomplishmentScope);
 $selectedAccomplishmentScopes = array_map(function($scope) {
     return strtolower(trim((string) $scope));
 }, $selectedAccomplishmentScopes);
@@ -24,6 +25,13 @@ $notesValue = $this->input->post('notes') ? (string) $this->input->post('notes')
 $remarksValue = $this->input->post('remarks') ? (string) $this->input->post('remarks') : '';
 $uploadError = isset($uploadError) ? trim((string) $uploadError) : '';
 $weeklyReportUrl = base_url() . 'Page/sec_filterv2/2/' . rawurlencode($sectionName);
+// Prefill only on first opening; preserve submitted values after validation errors.
+if (!empty($travelRequest) && $this->input->method() !== 'post') {
+    $activityValue = (string) ($travelRequest->purpose ?? '');
+    $venueValue = (string) ($travelRequest->destination ?? '');
+    $activityDateFromValue = substr((string) ($travelRequest->date_start ?? ''), 0, 10);
+    $activityDateToValue = substr((string) ($travelRequest->date_end ?? ''), 0, 10);
+}
 $activityRangeSummary = $activityDateFromValue;
 if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromValue) {
     $activityRangeSummary .= ' to ' . $activityDateToValue;
@@ -640,6 +648,15 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
                                     <?php } ?>
 
                                     <form method="post" action="<?= base_url(); ?>Page/addAccomplishments" enctype="multipart/form-data">
+                                        <?php if (!empty($travelRequest)): ?>
+                                            <input type="hidden" name="travel_request_id" value="<?= (int) $travelRequest->id; ?>">
+                                            <div class="alert alert-info">
+                                                <strong>Accomplishment for travel request #<?= (int) $travelRequest->id; ?></strong><br>
+                                                <?= htmlspecialchars((string) ($travelRequest->purpose ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                                                <br><?= htmlspecialchars((string) ($travelRequest->destination ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                                                · <?= htmlspecialchars((string) ($travelRequest->inclusive_date ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                                            </div>
+                                        <?php endif; ?>
                                         <div class="section-block">
                                             <div class="section-title">
                                                 <i class="mdi mdi-calendar-range"></i>
@@ -780,7 +797,7 @@ if ($activityDateToValue !== '' && $activityDateToValue !== $activityDateFromVal
 
                                         <div class="form-actions">
                                             <div class="action-group">
-                                                <a href="<?= base_url(); ?>Page/viewSecAccomplishments" class="shell-button shell-button--secondary">
+                                                <a href="<?= site_url(!empty($travelRequest) ? 'Page/authority_to_travel' : 'Page/viewSecAccomplishments'); ?>" class="shell-button shell-button--secondary">
                                                     <i class="mdi mdi-arrow-left"></i>
                                                     Cancel
                                                 </a>

@@ -925,6 +925,54 @@ class Page extends CI_Controller{
     }
   }
 
+  function travel_details($id = ''){
+    if(!$this->get_current_section_head_record()){
+      show_error('Access denied.', 403);
+      return;
+    }
+    $employeeId = trim((string) $this->session->userdata('username'));
+    if(!ctype_digit((string) $id) || (int) $id < 1 || $employeeId === '' || !$this->db->table_exists('travel_requests')){
+      show_404();
+      return;
+    }
+    $travel = $this->db->where('id', (int) $id)->where('IDNumber', $employeeId)
+      ->get('travel_requests', 1)->row();
+    if(!$travel){ show_404(); return; }
+    $this->load->view('travel_details', array('travel' => $travel));
+  }
+
+  function authority_to_travel(){
+    if(!$this->get_current_section_head_record()){
+      show_error('Access denied.', 403);
+      return;
+    }
+    // Employee numbers are the usernames used by section-head accounts.
+    $employeeId = trim((string) $this->session->userdata('username'));
+    if($employeeId === ''){
+      show_error('An employee number is required.', 403);
+      return;
+    }
+    $result['employeeId'] = $employeeId;
+    $result['travelAvailable'] = $this->db->table_exists('travel_requests');
+    $result['requests'] = array();
+    if($result['travelAvailable']){
+      $result['requests'] = $this->db->where('IDNumber', $employeeId)
+        ->order_by('id', 'DESC')->get('travel_requests')->result();
+    }
+    $result['encodedTravelIds'] = array();
+    if(!empty($result['requests']) && $this->db->table_exists('one_sgod_accomplishments')
+        && $this->db->field_exists('travel_request_id', 'one_sgod_accomplishments')){
+      $travelIds = array_map(function($request){ return (int) $request->id; }, $result['requests']);
+      $encoded = $this->db->distinct()->select('travel_request_id')
+        ->where('encoder', $employeeId)->where_in('travel_request_id', $travelIds)
+        ->get('one_sgod_accomplishments')->result();
+      foreach($encoded as $entry){
+        $result['encodedTravelIds'][(int) $entry->travel_request_id] = TRUE;
+      }
+    }
+    $this->load->view('authority_to_travel', $result);
+  }
+
   function section_head_dashboard(){
 	$sectionRecord = $this->get_current_section_head_record();
 	if(!$sectionRecord){
@@ -3470,6 +3518,36 @@ public function memo_delete(){
 	
 	function addAccomplishments(){
 		$result = array();
+        $travelIdValue = $this->input->method() === 'post'
+            ? $this->input->post('travel_request_id') : $this->input->get('travel_request_id');
+        $travelRequest = NULL;
+        if($travelIdValue !== NULL && $travelIdValue !== ''){
+            if(!is_scalar($travelIdValue) || !ctype_digit((string) $travelIdValue) || (int) $travelIdValue < 1){
+                show_error('Invalid travel request.', 400);
+                return;
+            }
+            if(!$this->get_current_section_head_record()){
+                show_error('Access denied.', 403);
+                return;
+            }
+            $employeeId = trim((string) $this->session->userdata('username'));
+            if($employeeId === '' || !$this->db->table_exists('travel_requests')){
+                show_404();
+                return;
+            }
+            $travelRequest = $this->db->where('id', (int) $travelIdValue)
+                ->where('IDNumber', $employeeId)->get('travel_requests', 1)->row();
+            if(!$travelRequest){
+                show_404();
+                return;
+            }
+            $result['travelRequest'] = $travelRequest;
+            if(!$this->db->field_exists('travel_request_id', 'one_sgod_accomplishments')){
+                $this->dbforge->add_column('one_sgod_accomplishments', array(
+                    'travel_request_id' => array('type' => 'INT', 'unsigned' => TRUE, 'null' => TRUE)
+                ));
+            }
+        }
 		$this->ensure_accomplishment_scope_column();
 		$this->ensure_accomplishment_activity_date_columns();
 	$this->ensure_kra_objective_columns();
@@ -3515,7 +3593,8 @@ public function memo_delete(){
 	  $remarks=trim((string) $this->input->post('remarks'));
 	  $encoder=$this->session->userdata('username');
 	  $secGroup=$this->session->userdata('secGroup');
-	  $accomplishmentScope=$this->normalize_accomplishment_scope($this->input->post('accomplishmentScope'));
+	  $postedScope = $this->input->post('accomplishmentScope');
+	  $accomplishmentScope=$this->normalize_accomplishment_scope($postedScope ?: ($travelRequest ? 'personal' : 'section'));
 
 	  $perIndicators=trim((string) $this->input->post('perIndicators'));
 	  $target=trim((string) $this->input->post('target'));
@@ -3573,6 +3652,9 @@ public function memo_delete(){
 		'secGroup' => $secGroup
 	  );
 
+      if($travelRequest){
+          $accomplishmentData['travel_request_id'] = (int) $travelRequest->id;
+      }
 	  $saved = $this->db->insert('one_sgod_accomplishments', $accomplishmentData);
 	  if(!$saved){
 		if($featuredPhoto !== ''){
@@ -3591,6 +3673,11 @@ public function memo_delete(){
 	  }
 	  if(!empty($reportUpload['uploaded'])) $this->db->insert('one_sgod_accomplishment_reports', array('acc_id' => $accomplishmentId, 'document_name' => trim((string) $this->input->post('signed_report_name')) ?: 'Signed Accomplishment Report', 'original_name' => $reportUpload['data']['orig_name'], 'stored_name' => $reportUpload['data']['file_name'], 'uploaded_at' => date('Y-m-d H:i:s')));
 
+      if($travelRequest){
+          $this->session->set_flashdata('success', 'Accomplishment saved for travel request #' . (int) $travelRequest->id . '.');
+          redirect('Page/authority_to_travel');
+          return;
+      }
 	  $this->session->set_flashdata('success', ' Add Successfully!');
 	  redirect('Page/viewSecAccomplishments');
 	  return;
