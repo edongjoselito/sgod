@@ -27,14 +27,14 @@ $summaryCards = array(
         'label' => 'Public Schools',
         'context' => $totalSchools > 0 ? $publicShare . '% of total' : 'No schools yet',
         'icon' => 'mdi-domain',
-        'href' => base_url() . 'Page/schools'
+        'href' => base_url() . 'Page/schools?type=Public'
     ),
     array(
         'value' => $privateSchoolCount,
         'label' => 'Private Schools',
         'context' => $totalSchools > 0 ? $privateShare . '% of total' : 'No schools yet',
         'icon' => 'mdi-home-city-outline',
-        'href' => base_url() . 'Page/schools'
+        'href' => base_url() . 'Page/schools?type=Private'
     ),
     array(
         'value' => $accomplishmentCount,
@@ -42,13 +42,6 @@ $summaryCards = array(
         'context' => 'View submitted reports',
         'icon' => 'mdi-file-check-outline',
         'href' => base_url() . 'Page/viewSecAccomplishments'
-    ),
-    array(
-        'value' => 'Add',
-        'label' => 'Activity Design',
-        'context' => 'DepEd-aligned activity entry',
-        'icon' => 'mdi-clipboard-edit-outline',
-        'href' => base_url() . 'Page/activity_design_add'
     )
 );
 
@@ -61,7 +54,7 @@ if (!empty($nameParts)) {
     }
 }
 $sectionHeadInitials = $sectionHeadInitials !== '' ? $sectionHeadInitials : 'SH';
-$dashboardDate = date('l, F j, Y');
+$dashboardDate = (new DateTime('now', new DateTimeZone('Asia/Manila')))->format('l, F j, Y');
 $shouldPromptAvatarUpdate = !empty($shouldPromptAvatarUpdate);
 $managedSections = isset($managedSections) ? (array) $managedSections : array();
 ?>
@@ -755,6 +748,10 @@ $managedSections = isset($managedSections) ? (array) $managedSections : array();
                 }
 
             }
+
+            .dashboard-hero{background:linear-gradient(115deg,#253b77,#5056b8);border-radius:18px;padding:28px 30px;margin-bottom:22px;min-height:0;box-shadow:0 8px 28px #263e7614}.dashboard-hero::after{display:none}.hero-eyebrow{font-size:10px;letter-spacing:1.8px;background:none;border:0;padding:0}.hero-title{font-size:28px;line-height:1.3;margin:12px 0 10px}.hero-subtitle{font-size:13px;line-height:1.6;margin:0;color:#dfe6ff}.dashboard-profile{display:flex;gap:13px;align-items:center;border-left:1px solid #ffffff30;padding-left:24px;margin-left:16px}.dashboard-profile-initials{display:grid;place-items:center;flex-shrink:0;width:48px;height:48px;border:1px solid #ffffff45;background:#ffffff18;border-radius:14px;font-size:16px;font-weight:700}.dashboard-profile strong,.dashboard-profile span,.dashboard-profile small{display:block}.dashboard-profile strong{font-size:13px;color:#fff}.dashboard-profile div>span{font-size:11px;color:#dde5ff;margin:3px 0}.dashboard-profile small{font-size:10px;color:#bbc9ef;margin-top:7px}.managed-section-switcher{margin-top:18px}.managed-section-switcher select{border-radius:8px;max-width:100%}.summary-row{margin:0 -8px 4px;padding:0}.summary-row>[class*="col-"]{padding:0 8px}.summary-card{border:1px solid #e1e7f1;border-radius:14px;box-shadow:none;padding:20px 30px 20px 20px;min-height:112px}.summary-icon{width:44px;height:44px;font-size:23px;border-radius:12px;background:#eef0ff;color:#535bb4}.summary-value{font-size:27px;line-height:1.3}.summary-label{font-size:12px;color:#536680}.summary-context{font-size:10px;color:#8997ac;margin-top:5px}.summary-arrow{color:#9daac0}.summary-card:hover,.summary-card:focus{box-shadow:0 6px 18px #23395b10;transform:translateY(-2px)}.distribution-card{border:1px solid #e1e7f1;border-radius:14px;box-shadow:none;padding:22px}.distribution-title{font-size:13px}.distribution-total{font-size:11px}.distribution-bar{height:9px;border-radius:8px;margin:18px 0}.distribution-legend{font-size:11px;gap:24px}.legend-item{font-size:11px}.distribution-segment.is-public{background:#5166bd}.distribution-segment.is-private{background:#69aaa4}.legend-dot.is-public{background:#5166bd}.legend-dot.is-private{background:#69aaa4}.dashboard-insights-row{margin-bottom:16px}.dashboard-quick-panel{padding:24px;background:#fff;border:1px solid #e1e7f1;border-radius:16px;margin:0 0 24px;box-shadow:0 5px 22px #21375805}.dashboard-quick-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.dashboard-kicker{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:#647aab}.dashboard-quick-heading h2{font-size:20px;color:#283e64;margin:7px 0 0}.dashboard-quick-heading>span{font-size:12px;color:#8794a9}.dashboard-quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.dashboard-quick-link{display:flex;align-items:center;gap:10px;padding:16px 13px;background:#f8faff;border:1px solid #e5ebf6;border-radius:10px;color:#40558a;text-decoration:none}.dashboard-quick-link>i:first-child{font-size:24px;color:#5b6cba}.dashboard-quick-link>i:last-child{margin-left:auto;color:#9cabc4}.dashboard-quick-link strong{display:block;font-size:12px;color:#344b75}.dashboard-quick-link small{display:block;font-size:10px;color:#8190a8;margin-top:4px}.dashboard-quick-link:hover{background:#edf2ff;border-color:#cdd8f4;text-decoration:none}.dashboard-card{border:1px solid #e1e7f1;border-radius:16px;box-shadow:0 5px 22px #21375805}.card-heading{padding:24px}.card-title{font-size:21px}.card-caption{font-size:12px}.heading-icon{width:42px;height:42px;border-radius:10px;font-size:22px}.today-badge{font-size:11px;border-radius:8px;padding:9px 12px}.dashboard-shell :focus-visible{outline:3px solid #a4b7ef;outline-offset:3px}
+            @media(max-width:1199px){.dashboard-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:991px){.dashboard-profile{border-left:0;border-top:1px solid #ffffff30;margin:20px 0 0;padding:18px 0 0}}@media(max-width:575px){.dashboard-hero{padding:24px}.hero-title{font-size:24px}.summary-card{min-height:96px;padding:16px 30px 16px 16px}.summary-value{font-size:24px}.dashboard-quick-panel{padding:18px}.dashboard-quick-grid{grid-template-columns:1fr}.dashboard-quick-heading>span{display:none}.card-heading{padding:18px;flex-wrap:wrap}.distribution-legend{gap:12px}.managed-section-switcher{align-items:stretch;flex-direction:column}.managed-section-switcher select{width:100%}}
+            @media(prefers-reduced-motion:reduce){.summary-card,.dashboard-quick-link{transition:none}.summary-card:hover{transform:none}}
         </style>
         <link href="<?= base_url(); ?>assets/css/dashboard-unified.css" rel="stylesheet" type="text/css" />
     </head>
@@ -772,13 +769,14 @@ $managedSections = isset($managedSections) ? (array) $managedSections : array();
                     <div class="container-fluid dashboard-shell">
                         <section class="dashboard-hero">
                             <div class="row align-items-center">
-                                <div class="col-lg-8">
+                                <div class="col-12">
                                     <div class="hero-content">
                                         <span class="hero-eyebrow">
                                             <i class="mdi mdi-view-dashboard-outline"></i>
                                             Section Head Dashboard
                                         </span>
                                         <h1 class="hero-title"><?= htmlspecialchars($sectionName, ENT_QUOTES, 'UTF-8'); ?></h1>
+                                        <p class="hero-subtitle">Your section overview, daily schedules, and essential workspaces.</p>
                                         <?php if (count($managedSections) > 1): ?>
                                             <form class="managed-section-switcher" method="post" action="<?= base_url(); ?>Page/switch_managed_section">
                                                 <label for="managed-section">Managing Section</label>
@@ -794,12 +792,13 @@ $managedSections = isset($managedSections) ? (array) $managedSections : array();
                                     </div>
                                 </div>
 
+
                             </div>
                         </section>
 
                         <div class="row summary-row">
                             <?php foreach ($summaryCards as $summaryCard) { ?>
-                                <div class="col-xl col-md-4 col-sm-6 mb-2">
+                                <div class="col-xl-3 col-md-6 mb-3">
                                     <a href="<?= htmlspecialchars($summaryCard['href'], ENT_QUOTES, 'UTF-8'); ?>" class="summary-card">
                                         <span class="summary-icon"><i class="mdi <?= htmlspecialchars($summaryCard['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i></span>
                                         <div class="summary-copy">
@@ -847,13 +846,27 @@ $managedSections = isset($managedSections) ? (array) $managedSections : array();
                                     <span class="summary-icon"><i class="mdi mdi-account-group-outline"></i></span>
                                     <div class="summary-copy">
                                         <strong class="summary-value" data-count="<?= (int) $sectionUserCount; ?>"><?= number_format($sectionUserCount); ?></strong>
-                                        <span class="summary-label">Active Users</span>
+                                        <span class="summary-label">Section Users</span>
                                         <span class="summary-context">Manage section accounts</span>
                                     </div>
                                     <i class="mdi mdi-chevron-right summary-arrow"></i>
                                 </a>
                             </div>
                         </div>
+
+                        <section class="dashboard-quick-panel" aria-labelledby="dashboardQuickTitle">
+                            <div class="dashboard-quick-heading"><div><span class="dashboard-kicker">Common tasks</span><h2 id="dashboardQuickTitle">Quick Actions</h2></div><span>Open a workspace to get started</span></div>
+                            <nav class="dashboard-quick-grid" aria-label="Section workspaces">
+                                <?php foreach (array(
+                                    array('Page/addAccomplishments', 'Add Accomplishment', 'Record activities and results', 'mdi-file-document-edit-outline'),
+                                    array('Page/activity_design_add', 'Create Activity Design', 'Prepare an activity proposal', 'mdi-clipboard-edit-outline'),
+                                    array('Page/authority_to_travel', 'Authority to Travel', 'Track requests and approvals', 'mdi-airplane'),
+                                    array('Reimbursement', 'Travel Reimbursement', 'Manage itineraries and expenses', 'mdi-cash-multiple')
+                                ) as $quickAction): ?>
+                                <a href="<?= site_url($quickAction[0]); ?>" class="dashboard-quick-link"><i class="mdi <?= $quickAction[3]; ?>" aria-hidden="true"></i><span><strong><?= htmlspecialchars($quickAction[1], ENT_QUOTES, 'UTF-8'); ?></strong><small><?= htmlspecialchars($quickAction[2], ENT_QUOTES, 'UTF-8'); ?></small></span><i class="mdi mdi-chevron-right" aria-hidden="true"></i></a>
+                                <?php endforeach; ?>
+                            </nav>
+                        </section>
 
                         <div class="row dashboard-main-row">
                             <div class="col-12">

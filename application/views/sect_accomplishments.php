@@ -3,14 +3,22 @@ $sectionName = $this->session->userdata('section') ?: 'Section';
 $secGroupName = $this->session->userdata('secGroup') ?: '';
 $filterDateFrom = isset($filterDateFrom) ? (string) $filterDateFrom : '';
 $filterDateTo = isset($filterDateTo) ? (string) $filterDateTo : '';
-$selectedScope = isset($selectedScope) && strtolower((string) $selectedScope) === 'personal' ? 'personal' : 'section';
-$scopeLabel = $selectedScope === 'personal' ? 'Personal Accomplishments' : 'Section Accomplishments';
+$selectedScope = isset($selectedScope) && in_array($selectedScope, array('all', 'personal', 'section'), TRUE) ? $selectedScope : 'all';
+$scopeLabel = $selectedScope === 'all' ? 'My Accomplishments in This Section' : ($selectedScope === 'personal' ? 'Personal Accomplishments' : 'Section Accomplishments');
 $isFiltered = (bool) $this->input->post('submit');
 $records = is_array($data) ? $data : array();
 $reportGroups = isset($reportGroups) && is_array($reportGroups) ? $reportGroups : array();
 $attachmentModalAccId = (int) $this->session->flashdata('attachment_modal_acc_id');
 $attachmentDocumentName = (string) $this->session->flashdata('attachment_document_name');
 $recordCount = count($records);
+$attachmentTotal = 0;
+$recordsWithAttachments = 0;
+foreach ($records as $summaryRecord) {
+    $fileCount = isset($reportGroups[(int) $summaryRecord->id]) ? count($reportGroups[(int) $summaryRecord->id]) : 0;
+    $attachmentTotal += $fileCount;
+    if ($fileCount > 0) $recordsWithAttachments++;
+}
+
 $filterSummary = $isFiltered && ($filterDateFrom !== '' || $filterDateTo !== '')
     ? sprintf('Showing %s from %s to %s.', $scopeLabel, $filterDateFrom ?: 'the beginning', $filterDateTo ?: 'the present')
     : sprintf('Showing all %s.', strtolower($scopeLabel));
@@ -900,6 +908,22 @@ if (!function_exists('sect_accom_resource_markup')) {
                     align-items: stretch;
                 }
             }
+
+            /* List workspace */
+            .accom-shell::before{display:none}.dashboard-hero{border-radius:18px;margin-bottom:20px;background:linear-gradient(115deg,#253b77,#5056b8);box-shadow:0 8px 28px #263e7614}.dashboard-hero-body{padding:28px 30px}.hero-title{font-size:30px;margin:12px 0 8px}.hero-eyebrow{border:0;background:transparent;padding:0;font-size:10px;letter-spacing:1.7px}.hero-copy{font-size:13px}.accom-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:22px}.overview-card{background:#fff;border:1px solid #e2e8f1;border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:16px}.overview-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:12px;background:#eeeefe;color:#5558ba;font-size:23px;flex-shrink:0}.overview-icon--green{color:#28817c;background:#e9f6f2}.overview-icon--blue{color:#397eb7;background:#eaf3fc}.overview-card strong{display:block;font-size:25px;line-height:1.3;color:#263b60}.overview-card strong small{font-size:13px;font-weight:500;color:#8a96ab}.overview-card div>span{font-size:12px;color:#728199}.quick-action-menu{gap:10px;margin-bottom:22px}.quick-action{border-radius:9px;font-size:12px;padding:11px 16px}.panel-card.table-shell{border:1px solid #e1e7f1;border-radius:16px;box-shadow:0 5px 22px #21375805}.panel-head{padding:24px}.panel-title{font-size:21px}.panel-copy{font-size:12px}.active-filter-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 24px;margin-bottom:20px;background:#f7f9fd;border-top:1px solid #eaf0f6;border-bottom:1px solid #eaf0f6;flex-wrap:wrap}.active-filter-bar>div{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.active-scope{font-size:12px;font-weight:600;color:#3b5181}.active-date{font-size:12px;color:#8190a8}.filter-bar-actions button,.filter-bar-actions a{border:0;background:transparent;color:#4a58b5;font-size:12px;font-weight:600;padding:3px;cursor:pointer}.datatable-modern thead th{background:#f4f7fc;font-size:10px;text-transform:uppercase;letter-spacing:.7px;white-space:nowrap}.datatable-modern tbody td{padding:18px 14px;vertical-align:top;font-size:12px;border-bottom:1px solid #edf1f7}.datatable-modern tbody tr:hover{background:#f8faff}.datatable-modern .activity-cell{font-weight:600;color:#2a4167;min-width:200px;line-height:1.65}.datatable-modern .manage-actions{display:grid;grid-template-columns:repeat(2,max-content);gap:7px;min-width:180px}.manage-button{font-size:11px;padding:7px 10px;border-radius:7px;justify-content:center;box-shadow:none}.manage-button--attach{grid-column:1/-1}.manage-button--delete{background:#fff5f5;color:#b44e58}.attachment-link{padding:8px 10px;border-radius:8px;font-size:12px}.dataTables_wrapper .dataTables_filter input{min-width:220px;font-size:12px}.accom-shell :focus-visible{outline:3px solid #a4b7ef;outline-offset:3px}
+            @media(max-width:767px){.accom-overview{grid-template-columns:1fr;gap:9px}.overview-card{padding:12px 16px}.overview-card strong{font-size:21px}.overview-card div{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:1}.overview-icon{width:36px;height:36px;font-size:19px}.hero-title{font-size:26px}.dashboard-hero-body{padding:24px}.active-filter-bar{padding:14px 18px}.panel-head{padding:20px}.quick-action-menu{display:grid;grid-template-columns:1fr 1fr}.quick-action{justify-content:center;padding:11px 8px}.dataTables_wrapper .dataTables_filter input{min-width:0}}
+            .accomplishment-actions-toggle{background:#eef1fc;color:#40549b;border:1px solid #dce3f3;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600}
+            .accomplishment-actions-menu{min-width:205px;border:1px solid #e1e7f1;border-radius:10px;padding:6px;box-shadow:0 12px 30px #23395b24;z-index:1060}
+            .accomplishment-actions-menu .dropdown-item{font-size:13px;padding:9px 12px;border-radius:6px}
+            .accomplishment-actions-menu .dropdown-item i{margin-right:8px}
+            .accomplishment-actions-menu .dropdown-item:focus,.accomplishment-actions-menu .dropdown-item:hover{background:#f0f3fc;color:#34477f}
+            details.accomplishment-actions{display:inline-block;max-width:100%;text-align:left;vertical-align:top}
+            .accomplishment-actions>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;user-select:none}
+            .accomplishment-actions>summary::-webkit-details-marker{display:none}
+            .accomplishment-actions>.accomplishment-actions-menu{position:static;float:none;transform:none;margin-top:6px;display:none;background:#fff;min-width:205px}
+            .accomplishment-actions[open]>.accomplishment-actions-menu{display:block}
+            .accomplishment-actions[open]>summary{background:#dfe7fb}
+            .accomplishment-actions-menu .dropdown-item{display:block}
         </style>
     </head>
 
@@ -921,13 +945,19 @@ if (!function_exists('sect_accom_resource_markup')) {
                                         <i class="mdi mdi-clipboard-text-outline"></i>
                                         Section Workspace
                                     </span>
-                                    <h1 class="hero-title">Section Accomplishments</h1>
+                                    <h1 class="hero-title">Accomplishments</h1><p class="hero-copy"><?= sect_accom_escape($sectionName); ?> · <?= sect_accom_escape($secGroupName); ?></p>
                                 </div>
                             </div>
                         </div>
 
+                        <div class="accom-overview" aria-label="Current list summary">
+                            <div class="overview-card"><span class="overview-icon"><i class="mdi mdi-clipboard-text-outline" aria-hidden="true"></i></span><div><strong><?= number_format($recordCount); ?></strong><span>Accomplishments</span></div></div>
+                            <div class="overview-card"><span class="overview-icon overview-icon--green"><i class="mdi mdi-paperclip" aria-hidden="true"></i></span><div><strong><?= number_format($attachmentTotal); ?></strong><span>Attached documents</span></div></div>
+                            <div class="overview-card"><span class="overview-icon overview-icon--blue"><i class="mdi mdi-folder-check-outline" aria-hidden="true"></i></span><div><strong><?= number_format($recordsWithAttachments); ?><small> / <?= number_format($recordCount); ?></small></strong><span>Entries with attachments</span></div></div>
+                        </div>
+
                         <nav class="quick-action-menu" aria-label="Quick actions">
-                            <a href="<?= base_url(); ?>Page/addAccomplishments" class="quick-action quick-action--primary"><i class="mdi mdi-plus-circle-outline"></i><span>Add Entry</span></a>
+                            <a href="<?= base_url(); ?>Page/addAccomplishments" class="quick-action quick-action--primary"><i class="mdi mdi-plus-circle-outline"></i><span>Add Accomplishment</span></a>
                             <button type="button" class="quick-action" data-toggle="modal" data-target="#accomplishmentFilterModal"><i class="mdi mdi-filter-outline"></i><span>Filter List</span></button>
                             <button type="button" class="quick-action" data-toggle="modal" data-target="#accomplishmentReportModal"><i class="mdi mdi-printer-outline"></i><span>Generate Report</span></button>
                             <a href="<?= base_url(); ?>Page/accomplishment_flipbook_filter?scope=<?= rawurlencode($selectedScope); ?>" class="quick-action"><i class="mdi mdi-book-open-page-variant"></i><span>Generate Flipbook</span></a>
@@ -956,7 +986,7 @@ if (!function_exists('sect_accom_resource_markup')) {
                                 <div>
                                     <div class="panel-kicker">Records</div>
                                     <h4 class="panel-title">Accomplishment list</h4>
-                                    <p class="panel-copy">Review, copy, update, or remove accomplishment entries for your section. Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to jump to search.</p>
+                                    <p class="panel-copy">Browse your entries and supporting documents. Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to search.</p>
                                 </div>
                                 <div class="panel-summary">
                                     <i class="mdi mdi-format-list-checks"></i>
@@ -964,26 +994,24 @@ if (!function_exists('sect_accom_resource_markup')) {
                                 </div>
                             </div>
 
+                            <div class="active-filter-bar"><div><span class="active-scope"><i class="mdi mdi-filter-variant" aria-hidden="true"></i> <?= sect_accom_escape($scopeLabel); ?></span><span class="active-date"><?= sect_accom_escape(($filterDateFrom !== '' || $filterDateTo !== '') ? (($filterDateFrom ?: 'Beginning') . ' — ' . ($filterDateTo ?: 'Present')) : 'All dates'); ?></span></div><div class="filter-bar-actions"><button type="button" data-toggle="modal" data-target="#accomplishmentFilterModal">Change filters</button><?php if ($selectedScope !== 'all' || $filterDateFrom !== '' || $filterDateTo !== ''): ?><a href="<?= site_url('Page/viewSecAccomplishments'); ?>">Reset</a><?php endif; ?></div></div>
                             <div class="table-responsive">
                                 <table id="datatable" class="table datatable-modern">
                                     <thead>
                                         <tr>
                                             <th>Activity</th>
-                                            <th>Category</th>
                                             <th>Venue</th>
                                             <th>Date</th>
                                             <th>Resources</th>
                                             <th>Notes</th>
                                             <th>Remarks</th>
                                             <th>Attachments</th>
-                                            <th style="text-align:center">Manage</th>
+                                            <th style="text-align:center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($records as $row) { ?>
                                             <?php
-                                                $category = trim((string) $row->activityCategory);
-                                                $categoryClass = strtolower($category) === 'updates' ? 'category-pill category-pill--updates' : 'category-pill';
                                                 $activityTimestamp = strtotime((string) $row->targetDate);
                                                 $activityDateOrder = $activityTimestamp ? $activityTimestamp : 0;
                                                 $reportRecords = isset($reportGroups[(int) $row->id]) ? $reportGroups[(int) $row->id] : array();
@@ -1001,7 +1029,6 @@ if (!function_exists('sect_accom_resource_markup')) {
                                             ?>
                                             <tr>
                                                 <td class="activity-cell"><?= sect_accom_escape($row->activity); ?></td>
-                                                <td><span class="<?= $categoryClass; ?>"><?= sect_accom_escape($category ?: 'Uncategorized'); ?></span></td>
                                                 <td class="wide-cell"><?= sect_accom_escape($row->venue); ?></td>
                                                 <td class="date-cell" data-order="<?= $activityDateOrder; ?>"><?= sect_accom_escape($row->dateConducted); ?></td>
                                                 <td class="wide-cell"><?= sect_accom_resource_markup($row->resources); ?></td>
@@ -1014,46 +1041,44 @@ if (!function_exists('sect_accom_resource_markup')) {
                                                                 <?php
                                                                     $documentLabel = trim((string) $attachmentRow->document_name) !== ''
                                                                         ? (string) $attachmentRow->document_name
-                                                                        : (string) $attachmentRow->original_name;
+                                                                        : 'Attachment';
                                                                 ?>
-                                                                <a href="<?= base_url(); ?>upload/accomplishment_reports/<?= rawurlencode($attachmentRow->stored_name); ?>" target="_blank" rel="noopener noreferrer" class="attachment-link" title="<?= sect_accom_escape($attachmentRow->original_name); ?>">
-                                                                    <i class="mdi mdi-file-pdf-box"></i>
+                                                                <a href="<?= base_url(); ?>upload/accomplishment_reports/<?= rawurlencode($attachmentRow->stored_name); ?>" target="_blank" rel="noopener noreferrer" class="attachment-link" title="<?= sect_accom_escape($documentLabel); ?>">
+                                                                    <i class="mdi mdi-file-document-outline" aria-hidden="true"></i>
                                                                     <span class="attachment-meta">
                                                                         <span class="attachment-name"><?= sect_accom_escape($documentLabel); ?></span>
-                                                                        <?php if (trim((string) $attachmentRow->original_name) !== '' && $attachmentRow->original_name !== $documentLabel) { ?>
-                                                                            <span class="attachment-file"><?= sect_accom_escape($attachmentRow->original_name); ?></span>
-                                                                        <?php } ?>
+
                                                                     </span>
                                                                 </a>
                                                             <?php } ?>
                                                         </div>
                                                     <?php } else { ?>
-                                                        <span class="table-muted">No PDF attached</span>
+                                                        <span class="table-muted">No attachments</span>
                                                     <?php } ?>
                                                 </td>
                                                 <td style="text-align:center">
-                                                    <div class="manage-actions">
-                                                        <a href="<?= base_url(); ?>Page/accomplishment_report/<?= (int) $row->id; ?>" target="_blank" class="manage-button manage-button--report">
+                                                    <details class="accomplishment-actions">
+                                                        <summary class="accomplishment-actions-toggle" aria-label="<?= sect_accom_escape('Actions for ' . $row->activity); ?>">Actions <span aria-hidden="true">▾</span></summary>
+                                                        <div class="accomplishment-actions-menu">
+                                                        <a href="<?= base_url(); ?>Page/accomplishment_report/<?= (int) $row->id; ?>" target="_blank" rel="noopener noreferrer" class="dropdown-item">
                                                             <i class="mdi mdi-printer"></i>
                                                             Print
                                                         </a>
-                                                        <button type="button" class="manage-button manage-button--attach js-open-attachment-modal" data-acc-id="<?= (int) $row->id; ?>" data-activity="<?= sect_accom_escape($row->activity); ?>" data-attachments="<?= $attachmentPayloadJson; ?>">
-                                                            <i class="mdi mdi-paperclip"></i>
-                                                            <?= empty($reportRecords) ? 'Add Attachment' : 'Add More' ?>
-                                                        </button>
-                                                        <a href="<?= base_url(); ?>Page/copy_acc/<?= (int) $row->id; ?>" class="manage-button manage-button--copy">
+                                                        <a class="dropdown-item" href="<?= site_url('Page/accomplishmentAttachments/' . (int) $row->id); ?>"><i class="mdi mdi-paperclip"></i> Manage Attachments</a>
+                                                        <a href="<?= base_url(); ?>Page/copy_acc/<?= (int) $row->id; ?>" class="dropdown-item">
                                                             <i class="mdi mdi-content-copy"></i>
                                                             Copy
                                                         </a>
-                                                        <a href="<?= base_url(); ?>Page/updateAccomplishments?id=<?= (int) $row->id; ?>" class="manage-button manage-button--edit">
+                                                        <a href="<?= base_url(); ?>Page/updateAccomplishments?id=<?= (int) $row->id; ?>" class="dropdown-item">
                                                             <i class="mdi mdi-pencil-outline"></i>
                                                             Update
                                                         </a>
-                                                        <a href="<?= base_url(); ?>Page/deleteAccomplishment?id=<?= (int) $row->id; ?>" class="manage-button manage-button--delete js-delete-accomplishment">
+                                                        <a href="<?= base_url(); ?>Page/deleteAccomplishment?id=<?= (int) $row->id; ?>" class="dropdown-item text-danger js-delete-accomplishment">
                                                             <i class="mdi mdi-delete-outline"></i>
                                                             Delete
                                                         </a>
-                                                    </div>
+                                                        </div>
+                                                    </details>
                                                 </td>
                                             </tr>
                                         <?php } ?>
@@ -1085,6 +1110,7 @@ if (!function_exists('sect_accom_resource_markup')) {
                                 <div class="smart-field">
                                     <label class="smart-label" for="filterScope">Scope</label>
                                     <select class="smart-select" id="filterScope" name="scope" required>
+                                        <option value="all" <?= $selectedScope === 'all' ? 'selected' : ''; ?>>All My Accomplishments</option>
                                         <option value="section" <?= $selectedScope === 'section' ? 'selected' : ''; ?>>Section Accomplishments</option>
                                         <option value="personal" <?= $selectedScope === 'personal' ? 'selected' : ''; ?>>Personal Accomplishments</option>
                                     </select>
@@ -1178,6 +1204,18 @@ if (!function_exists('sect_accom_resource_markup')) {
             </div>
         </div>
 
+        <div class="modal fade" id="attachmentViewerModal" tabindex="-1" role="dialog" aria-labelledby="attachmentViewerTitle" aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document"><div class="modal-content">
+                <div class="modal-header"><div><h5 class="modal-title" id="attachmentViewerTitle">View Attachments</h5><p class="text-muted mb-0" id="attachmentViewerActivity"></p></div><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
+                <div class="modal-body">
+                    <div id="attachmentViewerControls" class="mb-3"><label for="attachmentViewerSelect">Document/Attachment</label><div class="d-flex flex-wrap align-items-center" style="gap:12px"><select id="attachmentViewerSelect" class="form-control" style="flex:1;min-width:200px"></select><a id="attachmentViewerOpen" class="btn btn-outline-primary" target="_blank" rel="noopener noreferrer">Open / Download</a></div></div>
+                    <p id="attachmentViewerNotice" class="alert alert-info" role="status" hidden></p>
+                    <iframe id="attachmentViewerFrame" title="PDF attachment viewer" style="width:100%;height:65vh;border:1px solid #dce3ef;border-radius:8px" hidden></iframe>
+                    <p id="attachmentViewerHelp" class="text-muted mt-2 mb-0" hidden>If the PDF does not display, use Open / Download to view it in a new tab.</p>
+                </div>
+            </div></div>
+        </div>
+
         <div class="modal fade attachment-modal" id="attachmentModal" tabindex="-1" role="dialog" aria-labelledby="attachmentModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
@@ -1249,12 +1287,57 @@ if (!function_exists('sect_accom_resource_markup')) {
 
         <script>
             $(document).ready(function() {
+                var viewerFiles = [];
+                var viewerFrame = document.getElementById('attachmentViewerFrame');
+                function showViewerAttachment() {
+                    var file = viewerFiles[Number($('#attachmentViewerSelect').val())];
+                    viewerFrame.removeAttribute('src');
+                    viewerFrame.hidden = true;
+                    $('#attachmentViewerHelp').prop('hidden', true);
+                    $('#attachmentViewerNotice').prop('hidden', true);
+                    if (!file) {
+                        $('#attachmentViewerNotice').text('No attachments have been added to this accomplishment. Use Manage Attachments to add files.').prop('hidden', false);
+                        return;
+                    }
+                    $('#attachmentViewerOpen').attr('href', file.url);
+                    if (/\.pdf$/i.test(file.original_name) || /\.pdf$/i.test(file.url)) {
+                        viewerFrame.src = file.url + '#toolbar=1&navpanes=1';
+                        viewerFrame.hidden = false;
+                        $('#attachmentViewerHelp').prop('hidden', false);
+                    } else {
+                        $('#attachmentViewerNotice').text('This file is not a PDF. Use Open / Download to view it with a compatible application.').prop('hidden', false);
+                    }
+                }
+                $(document).on('click', '.js-view-attachments', function() {
+                    try { viewerFiles = JSON.parse($(this).attr('data-attachments') || '[]'); }
+                    catch (error) { viewerFiles = []; }
+                    if (!Array.isArray(viewerFiles)) viewerFiles = [];
+                    $('#attachmentViewerActivity').text($(this).attr('data-activity') || 'Selected accomplishment');
+                    var select = $('#attachmentViewerSelect').empty();
+                    viewerFiles.forEach(function(file, index) {
+                        select.append($('<option>', {value: index, text: file.document_name || file.original_name || 'Attachment'}));
+                    });
+                    $('#attachmentViewerControls').prop('hidden', viewerFiles.length === 0);
+                    $('#attachmentViewerOpen').removeAttr('href');
+                    showViewerAttachment();
+                    $('#attachmentViewerModal').modal('show');
+                });
+                $('#attachmentViewerSelect').on('change', showViewerAttachment);
+                $('#attachmentViewerModal').on('hidden.bs.modal', function() {
+                    viewerFrame.removeAttribute('src');
+                    viewerFiles = [];
+                });
+
                 var accomplishmentTable = $('#datatable').DataTable({
                     responsive: true,
                     autoWidth: false,
                     pageLength: 10,
-                    order: [[3, 'desc']],
+                    order: [[2, 'desc']],
                     columnDefs: [
+                        { targets: 0, responsivePriority: 1 },
+                        { targets: 7, responsivePriority: 2 },
+                        { targets: 2, responsivePriority: 3 },
+                        { targets: 6, responsivePriority: 4 },
                         {
                             targets: -1,
                             orderable: false,
@@ -1267,7 +1350,8 @@ if (!function_exists('sect_accom_resource_markup')) {
                         lengthMenu: 'Show _MENU_ entries',
                         info: 'Showing _START_ to _END_ of _TOTAL_ entries',
                         infoEmpty: 'No accomplishment entries available',
-                        emptyTable: 'No accomplishments found for the selected filter.'
+                        emptyTable: 'No accomplishments in this view. Add an accomplishment or change your filters.',
+                        zeroRecords: 'No matching entries. Try a different search.'
                     }
                 });
 

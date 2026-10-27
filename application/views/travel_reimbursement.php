@@ -2,9 +2,21 @@
 $esc=function($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');};
 $money=function($v){return 'PHP '.number_format((int)$v/100,2);};
 $hidden=function()use($token,$esc){echo '<input type="hidden" name="claim_token" value="'.$esc($token).'">';};
+if ($mode === 'queue') {
+    $totalExpenses = 0; $totalNet = 0; $documentCount = 0;
+    foreach ($claims as $queueClaim) {
+        $totalExpenses += (int) $queueClaim['total_cents'];
+        $totalNet += max(0, (int) $queueClaim['total_cents'] - (int) $queueClaim['advance_cents']);
+        if (!empty($queueClaim['document_path'])) $documentCount++;
+    }
+}
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Travel Reimbursement</title>
 <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet"><link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet"><link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet"><link href="<?= base_url(); ?>assets/css/dashboard-unified.css" rel="stylesheet">
+<?php if ($mode === 'queue'): ?>
+<link href="<?= base_url(); ?>assets/libs/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+<link href="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet">
+<?php endif; ?>
 <style>
 .claim-hero{padding:28px;border-radius:18px;background:linear-gradient(120deg,#222968,#415bc0);color:white;margin-bottom:24px}
 .claim-hero h1{color:white;font-size:1.7rem}
@@ -68,16 +80,35 @@ $hidden=function()use($token,$esc){echo '<input type="hidden" name="claim_token"
     .itinerary-entry tbody td[data-label="Actions"]{grid-column:1}
 }
 @media(max-width:575px){.claim-card{padding:16px}.claim-hero{padding:20px}.claim-form .btn{margin-bottom:8px}.claim-summary{gap:16px}.claim-summary>div{flex-basis:100%}}
+
+.reimbursement-queue .claim-hero{background:linear-gradient(115deg,#253b77,#5056b8);padding:28px 30px;border-radius:18px;box-shadow:0 8px 28px #263e7614;margin-bottom:20px}.reimbursement-queue .claim-hero h1{font-size:30px;margin-bottom:10px}.reimbursement-queue .claim-hero p{font-size:13px;color:#dfe6ff}.claim-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}.claim-metric{display:flex;align-items:center;gap:12px;padding:19px;border:1px solid #e1e7f1;border-radius:14px;background:#fff}.claim-metric-icon{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:12px;background:#eef0ff;color:#535bb4;font-size:22px}.claim-metric:nth-child(2) .claim-metric-icon{background:#eaf3fc;color:#397eb7}.claim-metric:nth-child(3) .claim-metric-icon{background:#e9f6f0;color:#288169}.claim-metric strong{display:block;font-size:21px;color:#263b60;line-height:1.4;overflow-wrap:anywhere}.claim-metric div{min-width:0}.claim-metric div>span{font-size:11px;color:#728199}.reimbursement-queue .claim-card{box-shadow:0 5px 22px #21375805}.claim-list-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.claim-list-heading h2{font-size:22px;color:#283e64;margin:8px 0}.claim-kicker{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:#647aab}.reimbursement-queue .btn{font-size:12px;border-radius:8px;padding:10px 14px}.reimbursement-queue .btn-primary{background:#4054a4;border-color:#4054a4}.reimbursement-queue .claim-note{font-size:12px;margin-bottom:20px}.claim-directory-tools{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;padding:16px 18px;border:1px solid #e7edf5;background:#f7f9fd;border-radius:10px;margin-bottom:22px}.claim-directory-tools>div{flex:0 1 260px}.claim-directory-tools label{display:block;font-size:11px;font-weight:600;color:#687c9c;margin-bottom:6px}.claim-directory-tools select{height:40px;font-size:12px;border:1px solid #dce4f0;border-radius:8px}.claim-directory-tools>span{margin:auto 0 10px;font-size:12px;color:#70819c}.claim-directory-tools>button{margin-left:auto;border:1px solid #dce4f0;background:#fff;color:#4a6098}.claim-queue-table thead th{background:#f4f7fc;font-size:10px;text-transform:uppercase;letter-spacing:.7px;white-space:nowrap;color:#647793}.claim-queue-table td{padding:17px 12px;font-size:12px;vertical-align:top;border-bottom:1px solid #edf1f7;overflow-wrap:anywhere}.claim-queue-table tbody tr:hover{background:#f8faff}.claim-purpose{min-width:180px;color:#2c4269;line-height:1.65}.claim-reference{display:block;font-size:10px;color:#8997ac;margin-top:5px}.claim-amount{white-space:nowrap;color:#304777;font-weight:600;font-variant-numeric:tabular-nums}.claim-document-badge{display:inline-block;padding:5px 8px;font-size:10px;border-radius:6px;background:#f0f2f7;color:#77869d;white-space:nowrap}.has-documents{background:#e9f6ef;color:#287354}.claim-empty-note{padding:18px;background:#f7f9fd;border-radius:10px;font-size:13px;color:#70819c}.reimbursement-queue .dataTables_filter input,.reimbursement-queue .dataTables_length select{border:1px solid #dce4f0;border-radius:8px;min-height:40px;font-size:12px}.reimbursement-queue .dataTables_info,.reimbursement-queue .dataTables_length label{font-size:12px;color:#70819c}.reimbursement-queue :focus-visible{outline:3px solid #a4b7ef;outline-offset:3px}
+@media(max-width:1200px){.claim-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:575px){.claim-overview{grid-template-columns:1fr;gap:10px}.claim-metric{padding:14px 18px}.claim-metric strong{font-size:22px}.claim-directory-tools>div{flex:1 1 100%}.claim-directory-tools>button{width:100%}.reimbursement-queue .claim-hero{padding:24px}.reimbursement-queue .claim-hero h1{font-size:26px}.reimbursement-queue .dataTables_filter label{display:block}.reimbursement-queue .dataTables_filter input{width:100%;margin:6px 0}.claim-queue-table .pagination{flex-wrap:wrap}.claim-list-heading>.btn{width:100%}}
 </style></head>
-<body class="dashboard-root-theme"><div id="wrapper"><?php include(__DIR__.'/includes/top-bar.php'); ?><?php include(__DIR__.'/includes/sidebar.php'); ?><div class="content-page"><div class="content"><main class="container-fluid dashboard-shell py-4">
+<body class="dashboard-root-theme"><div id="wrapper"><?php include(__DIR__.'/includes/top-bar.php'); ?><?php include(__DIR__.'/includes/sidebar.php'); ?><div class="content-page"><div class="content"><main class="container-fluid dashboard-shell py-4 <?= $mode === 'queue' ? 'reimbursement-queue' : ''; ?>">
 <div class="claim-links"><a class="btn btn-light" href="<?= site_url('Page/authority_to_travel'); ?>">Authority to Travel</a><a class="btn btn-light" href="<?= site_url('Reimbursement'); ?>">Reimbursement Claims</a></div>
 <header class="claim-hero"><h1>Travel Reimbursement</h1><p class="mb-0">Prepare your itinerary, keep personal reimbursement records, and print documents for submission.</p></header>
 <?php foreach(array('success','error') as $messageType): if($message=$this->session->flashdata($messageType)): ?><div role="alert" class="alert alert-<?= $messageType==='error'?'danger':'success'; ?>"><?= $esc($message); ?></div><?php endif; endforeach; ?>
 <?php if($mode==='queue'): ?>
-<section class="claim-card"><h2>My Reimbursement Records</h2><p class="claim-note">Open a claim to see the documents and available actions. Start a new claim from a travel request’s Actions menu.</p>
-<div class="table-responsive"><table class="table"><thead><tr><th>Employee</th><th>Travel / Purpose</th><th>Net Claimed</th><th>Updated</th><th>Action</th></tr></thead><tbody>
-<?php foreach($claims as $row): ?><tr><td><?= $esc($row['employee_id']); ?></td><td><?= $esc($row['purpose']); ?></td><td><?= $money(max(0,$row['total_cents']-$row['advance_cents'])); ?></td><td><?= $esc($row['updated_at']); ?></td><td><a class="btn btn-outline-primary btn-sm" href="<?= site_url('Reimbursement/travel/'.$row['travel_id']); ?>">Open Claim</a></td></tr><?php endforeach; ?>
-<?php if(!$claims): ?><tr><td colspan="5">No reimbursement claims yet.</td></tr><?php endif; ?></tbody></table></div></section>
+<div class="claim-overview" aria-label="Reimbursement summary">
+<?php foreach (array(array(count($claims), 'Reimbursement records', 'mdi-folder-outline'), array($money($totalExpenses), 'Total recorded expenses', 'mdi-receipt'), array($money($totalNet), 'Total net claimed', 'mdi-cash-multiple'), array($documentCount, 'Records with documents', 'mdi-paperclip')) as $metric): ?>
+<div class="claim-metric"><span class="claim-metric-icon"><i class="mdi <?= $esc($metric[2]); ?>" aria-hidden="true"></i></span><div><strong><?= $esc($metric[0]); ?></strong><span><?= $esc($metric[1]); ?></span></div></div>
+<?php endforeach; ?>
+</div>
+<section class="claim-card"><div class="claim-list-heading"><div><span class="claim-kicker">Personal travel records</span><h2>My Reimbursement Records</h2></div><a class="btn btn-primary" href="<?= site_url('Page/authority_to_travel'); ?>"><i class="mdi mdi-plus" aria-hidden="true"></i> Start from a Travel Request</a></div>
+<p class="claim-note">Open a record to manage your itinerary, expenses, and supporting documents.</p>
+<div class="claim-directory-tools"><div><label for="claimDocumentFilter">Supporting documents</label><select id="claimDocumentFilter" class="form-control"><option value="">All records</option><option value="Attached">With documents</option><option value="Not attached">Without documents</option></select></div><span id="claimResults" role="status"><?= count($claims); ?> records</span><button type="button" id="resetClaimFilters" class="btn btn-light"><i class="mdi mdi-refresh" aria-hidden="true"></i> Reset filters</button></div>
+<div class="claim-queue-table"><table id="claimQueueTable" class="table" style="width:100%"><thead><tr><th>Employee</th><th>Travel / Purpose</th><th>Destination</th><th>Net Claimed</th><th>Updated</th><th>Documents</th><th>Action</th></tr></thead><tbody>
+<?php foreach($claims as $row): $hasDocuments = !empty($row['document_path']); ?><tr>
+<td><?= $esc($row['employee_id']); ?></td>
+<td class="claim-purpose"><strong><?= $esc($row['purpose']); ?></strong><span class="claim-reference">Travel #<?= (int) $row['travel_id']; ?></span></td>
+<td><?= $esc($row['destination'] ?? ''); ?></td>
+<td class="claim-amount" data-order="<?= max(0,(int)$row['total_cents']-(int)$row['advance_cents']); ?>"><?= $money(max(0,$row['total_cents']-$row['advance_cents'])); ?></td>
+<td><?= $esc($row['updated_at']); ?></td>
+<td data-search="<?= $hasDocuments ? 'Attached' : 'Not attached'; ?>"><span class="claim-document-badge <?= $hasDocuments ? 'has-documents' : ''; ?>"><?= $hasDocuments ? 'Attached' : 'Not attached'; ?></span></td>
+<td><a class="btn btn-outline-primary btn-sm" href="<?= site_url('Reimbursement/travel/'.$row['travel_id']); ?>">Open Claim <i class="mdi mdi-arrow-right ml-1" aria-hidden="true"></i></a></td></tr><?php endforeach; ?>
+</tbody></table></div>
+<?php if (!$claims): ?><p class="claim-empty-note">To create your first record, open a travel request and choose <strong>Process Reimbursement</strong> from its Actions menu.</p><?php endif; ?>
+</section>
 <?php else:
 $items=$rules->itinerary_display_rows($claim ? json_decode($claim['items_json'],TRUE) : array()); $checks=$claim ? json_decode($claim['checklist_json'],TRUE) : array();
 $advance=number_format(($claim['advance_cents'] ?? 0)/100,2,'.',''); $notes=$claim['notes'] ?? '';
@@ -117,6 +148,28 @@ if(!$items) $items=array(array('date'=>'','date_to'=>'','places'=>'','departure'
 <p><a class="btn btn-outline-secondary" href="<?= site_url('Reimbursement/history/'.(int)$travel->id); ?>">View Record History</a></p>
 <?php endif; ?>
 </main></div><?php include(__DIR__.'/includes/footer.php'); ?></div></div><script src="<?= base_url(); ?>assets/js/vendor.min.js"></script><script src="<?= base_url(); ?>assets/js/app.min.js"></script>
+<?php if ($mode === 'queue'): ?>
+<script src="<?= base_url(); ?>assets/libs/datatables/jquery.dataTables.min.js"></script>
+<script src="<?= base_url(); ?>assets/libs/datatables/dataTables.bootstrap4.min.js"></script>
+<script src="<?= base_url(); ?>assets/libs/datatables/dataTables.responsive.min.js"></script>
+<script src="<?= base_url(); ?>assets/libs/datatables/responsive.bootstrap4.min.js"></script>
+<script>
+$(function () {
+    var table = $('#claimQueueTable').DataTable({
+        pageLength: 10, lengthMenu: [10,25,50,100], autoWidth: false, responsive: true,
+        order: [[4, 'desc']],
+        columnDefs: [{targets:1,responsivePriority:1},{targets:6,responsivePriority:2,orderable:false,searchable:false},{targets:3,responsivePriority:3}],
+        language: {search:'',searchPlaceholder:'Search purpose, destination, travel or employee number…',lengthMenu:'Show _MENU_ records',info:'Showing _START_ to _END_ of _TOTAL_ records',infoEmpty:'No reimbursement records',emptyTable:'No reimbursement records yet.',zeroRecords:'No records match your filters. Try another search or reset filters.'}
+    });
+    function updateSummary() { $('#claimResults').text(table.rows({search:'applied'}).count() + ' of ' + <?= count($claims); ?> + ' records'); }
+    table.on('draw', updateSummary); updateSummary();
+    $('#claimDocumentFilter').on('change', function () {
+        table.column(5).search(this.value ? '^' + $.fn.dataTable.util.escapeRegex(this.value) + '$' : '', true, false).draw();
+    });
+    $('#resetClaimFilters').on('click', function () { $('#claimDocumentFilter').val(''); table.search('').columns().search('').draw(); });
+});
+</script>
+<?php endif; ?>
 <script>
 (function(){
 var table=document.getElementById('expense-table'); if(!table)return;

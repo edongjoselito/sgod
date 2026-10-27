@@ -118,7 +118,9 @@ class SGODModel extends CI_Model
 	private function apply_accomplishment_scope($section, $secGroup, $scope = 'section', $username = ''){
 		$this->db->where('section', $section);
 		$this->db->where('secGroup', $secGroup);
-		if($scope === 'personal' && trim((string) $username) !== ''){
+		if($scope === 'all'){
+			$this->db->where('encoder', trim((string) $username));
+		}elseif($scope === 'personal' && trim((string) $username) !== ''){
 			$this->db->where_in('accomplishmentScope', array('personal', 'both'));
 			$this->db->where('encoder', trim((string) $username));
 		}else{
@@ -242,7 +244,11 @@ class SGODModel extends CI_Model
 	}
 
 	function get_accomplishment_report_groups($accIds){
-		$cleanIds = array_values(array_filter(array_map('intval', (array) $accIds)));
+		// Legacy accomplishments can have ID 0; do not discard it as empty.
+		$validIds = array_filter((array) $accIds, function($id){
+			return (is_int($id) && $id >= 0) || (is_string($id) && ctype_digit($id));
+		});
+		$cleanIds = array_values(array_unique(array_map('intval', $validIds)));
 		if(empty($cleanIds)){
 			return array();
 		}

@@ -1,7 +1,7 @@
 <?php
 $sectionName = isset($sectionName) && trim((string) $sectionName) !== '' ? (string) $sectionName : 'Section';
-$scope = isset($scope) && $scope === 'personal' ? 'personal' : 'section';
-$scopeLabel = $scope === 'personal' ? 'Personal Accomplishments' : 'Section Accomplishments';
+$scope = isset($scope) && in_array($scope, array('all', 'personal', 'section'), TRUE) ? $scope : 'section';
+$scopeLabel = $scope === 'all' ? 'My Accomplishments in This Section' : ($scope === 'personal' ? 'Personal Accomplishments' : 'Section Accomplishments');
 $records = isset($records) && is_array($records) ? $records : array();
 $reportGroups = isset($reportGroups) && is_array($reportGroups) ? $reportGroups : array();
 $additionalPhotoGroups = isset($additionalPhotoGroups) && is_array($additionalPhotoGroups) ? $additionalPhotoGroups : array();

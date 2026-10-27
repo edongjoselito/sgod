@@ -59,6 +59,7 @@ foreach ($records as $schoolRow) {
     }
 }
 
+uksort($districtMap, 'strnatcasecmp');
 $districtCount = count($districtMap);
 $metricCards = array(
     array(
@@ -694,6 +695,10 @@ $metricCards = array(
                     flex: 1 1 auto;
                 }
             }
+
+            /* School directory workspace */
+            .schools-shell::before{display:none}.schools-hero{border-radius:18px;background:linear-gradient(115deg,#253b77,#5056b8);box-shadow:0 8px 28px #263e7614;margin-bottom:20px}.schools-hero-body{padding:28px 30px;align-items:center}.schools-eyebrow{background:none;border:0;padding:0;font-size:10px;letter-spacing:1.8px}.schools-title{font-size:30px;margin:12px 0 10px}.schools-hero-description{margin:0;font-size:13px;color:#dfe6ff}.hero-actions{min-width:220px;max-width:300px}.hero-actions-copy{font-size:12px}.hero-actions .btn{border-radius:9px;padding:11px 18px;align-self:flex-start}.metric-card{border-radius:14px;padding:19px 22px;box-shadow:none;border:1px solid #e1e7f1}.metric-card::before{display:none}.metric-body{display:grid;grid-template-columns:48px 1fr;column-gap:15px}.metric-head{grid-row:1/3;margin:0;align-items:center}.metric-icon{width:44px;height:44px;border-radius:12px;font-size:23px}.metric-badge{display:none}.metric-value{font-size:27px;margin:0 0 5px}.metric-label{font-size:12px;font-weight:500}.panel-card{border-radius:16px;box-shadow:0 5px 22px #21375805;padding:24px;border:1px solid #e1e7f1}.panel-head{align-items:center;margin-bottom:20px}.panel-kicker{font-size:10px;letter-spacing:1.3px;background:none;padding:0}.panel-title{font-size:22px;margin:8px 0}.panel-copy{font-size:12px;max-width:500px}.panel-controls{gap:10px;align-items:center}.panel-summary{padding:9px 12px;font-size:11px;border-radius:8px}.directory-filter-group--panel{padding:4px;background:#f2f5fb;border-radius:10px;gap:3px}.directory-filter-group--panel .directory-filter-btn{min-height:34px;padding:7px 14px;border:0;background:transparent;border-radius:7px;font-size:12px}.directory-filter-group--panel .directory-filter-btn.is-active{background:#4054a4;color:white;box-shadow:0 3px 9px #4054a422}.school-directory-tools{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;padding:16px 18px;background:#f7f9fd;border:1px solid #e7edf5;border-radius:10px;margin-bottom:22px}.district-select-field{min-width:210px;flex:0 1 280px}.district-select-field label{display:block;font-size:11px;font-weight:600;color:#687c9c;margin-bottom:6px}.district-select-field select{border:1px solid #dce4f0;border-radius:8px;font-size:12px;height:40px}.directory-search-tip{flex:1;font-size:12px;color:#7d8ca4;margin:0 0 10px}.directory-reset{background:white;border:1px solid #dce4f0;border-radius:8px;font-size:12px;color:#4a6098;padding:10px 14px;cursor:pointer}.schools-table thead th{background:#f4f7fc;font-size:10px;text-transform:uppercase;letter-spacing:.7px;white-space:nowrap}.schools-table tbody td{font-size:12px;padding:17px 12px;vertical-align:top;border-bottom:1px solid #edf1f7}.schools-table tbody tr:hover{background:#f8faff}.school-name strong{font-size:13px;line-height:1.6;color:#2c4269}.school-id-chip{font-size:10px;margin-top:7px;background:#f2f5fa;color:#6d7d96;border-radius:5px}.type-chip,.district-chip{font-size:10px;padding:5px 8px;border-radius:6px}.schools-shell :focus-visible{outline:3px solid #a4b7ef;outline-offset:3px}.schools-shell .dataTables_filter input{border-radius:8px;min-width:260px;font-size:12px}.schools-shell .dataTables_info,.schools-shell .dataTables_length label{font-size:12px}
+            @media(max-width:767px){.schools-hero-body{padding:24px}.schools-title{font-size:26px}.hero-actions{max-width:none;min-width:0}.hero-actions-copy{display:none}.metric-card{padding:15px}.metric-body{column-gap:10px}.metric-value{font-size:24px}.panel-card{padding:16px}.school-directory-tools{gap:12px;padding:14px}.district-select-field{flex:1 1 100%}.directory-search-tip{display:none}.directory-reset{width:100%}.panel-controls{justify-content:flex-start}.schools-shell .dataTables_filter input{min-width:0;width:100%;margin:0}.schools-shell .dataTables_filter label{display:block}.directory-filter-group--panel{width:100%}}
         </style>
     </head>
 
@@ -712,28 +717,15 @@ $metricCards = array(
                                         <i class="mdi mdi-school-outline"></i>
                                         Directory
                                     </span>
-                                    <h1 class="schools-title">Schools Directory</h1>
+                                    <h1 class="schools-title">Schools Directory</h1><p class="schools-hero-description">Find schools, explore their profiles, and access school records.</p>
                                 </div>
 
                                 <div class="hero-actions">
-                                    <p class="hero-actions-copy"><?= $canManageSchools ? 'Manage school records for the SMME section.' : 'Choose a view without leaving the page.'; ?></p>
+                                    <p class="hero-actions-copy"><?= $canManageSchools ? 'Keep school information and profiles up to date.' : 'Browse public and private schools in your division.'; ?></p>
                                     <?php if ($canManageSchools): ?>
                                         <button type="button" class="btn btn-light font-weight-bold" data-toggle="modal" data-target="#schoolModal" data-school-mode="add"><i class="mdi mdi-plus-circle-outline mr-1"></i> Add School</button>
                                     <?php endif; ?>
-                                    <div class="directory-filter-group" id="heroDirectoryFilters">
-                                        <button type="button" class="directory-filter-btn" data-filter="All">
-                                            <i class="mdi mdi-view-grid-outline"></i>
-                                            All
-                                        </button>
-                                        <button type="button" class="directory-filter-btn" data-filter="Public">
-                                            <i class="mdi mdi-domain"></i>
-                                            Public
-                                        </button>
-                                        <button type="button" class="directory-filter-btn" data-filter="Private">
-                                            <i class="mdi mdi-office-building"></i>
-                                            Private
-                                        </button>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -764,7 +756,7 @@ $metricCards = array(
                             <div class="panel-head">
                                 <div>
                                     <div class="panel-kicker">School List</div>
-                                    <h4 class="panel-title">All School Records</h4>
+                                    <h4 class="panel-title">School Records</h4>
                                     <p class="panel-copy">Search by school name, type, district, address, or school head to quickly open a school dashboard.</p>
                                 </div>
                                 <div class="panel-controls">
@@ -782,6 +774,11 @@ $metricCards = array(
                                 </div>
                             </div>
 
+                            <div class="school-directory-tools">
+                                <div class="district-select-field"><label for="schoolDistrictFilter">District</label><select id="schoolDistrictFilter" class="form-control"><option value="">All districts</option><?php foreach (array_keys($districtMap) as $districtOption): ?><option value="<?= schools_escape($districtOption); ?>"><?= schools_escape($districtOption); ?></option><?php endforeach; ?></select></div>
+                                <p class="directory-search-tip"><i class="mdi mdi-magnify" aria-hidden="true"></i> Search by name, school ID, address, or school head.</p>
+                                <button type="button" class="directory-reset" id="resetSchoolFilters"><i class="mdi mdi-refresh" aria-hidden="true"></i> Reset filters</button>
+                            </div>
                             <div class="table-responsive">
                                 <table id="schoolsTable" class="table schools-table">
                                     <thead>
@@ -821,7 +818,7 @@ $metricCards = array(
                                                 $recognitionNo = trim((string) ($schoolRow->recogNo ?? ''));
                                                 $typeClass = strtolower($schoolType);
                                                 ?>
-                                                <tr data-school-type="<?= schools_escape($schoolType); ?>">
+                                                <tr data-school-type="<?= schools_escape($schoolType); ?>" data-school-district="<?= schools_escape($district); ?>">
                                                     <td class="school-name">
                                                         <strong><?= schools_escape($schoolName !== '' ? $schoolName : 'Unnamed School'); ?></strong>
                                                         <?php if ($schoolId !== '') { ?>
@@ -943,6 +940,7 @@ $metricCards = array(
                     Private: 'Private schools'
                 };
                 var activeSchoolTypeFilter = 'All';
+                var activeDistrictFilter = '';
 
                 var table = $('#schoolsTable').DataTable({
                     destroy: true,
@@ -951,6 +949,10 @@ $metricCards = array(
                     responsive: true,
                     order: [[0, 'asc']],
                     columnDefs: [
+                        { targets: 0, responsivePriority: 1 },
+                        { targets: 8, responsivePriority: 2 },
+                        { targets: 1, responsivePriority: 3 },
+                        { targets: 2, responsivePriority: 4 },
                         {
                             targets: -1,
                             orderable: false,
@@ -964,6 +966,7 @@ $metricCards = array(
                         info: 'Showing _START_ to _END_ of _TOTAL_ schools',
                         infoEmpty: 'No school records available',
                         emptyTable: 'No school records found',
+                        zeroRecords: 'No schools match your filters. Try another search or reset the filters.',
                         paginate: {
                             previous: '&lsaquo;',
                             next: '&rsaquo;'
@@ -971,19 +974,18 @@ $metricCards = array(
                     }
                 });
 
-                // Normalize the Type column before comparing it. The rendered cell
-                // includes icon markup and whitespace, so an exact raw search fails.
                 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-                    if (settings.nTable.id !== 'schoolsTable' || activeSchoolTypeFilter === 'All') {
-                        return true;
-                    }
-                    var schoolType = $('<div>').html(data[1] || '').text().replace(/\s+/g, ' ').trim().toLowerCase();
-                    return schoolType === activeSchoolTypeFilter.toLowerCase();
+                    if (settings.nTable.id !== 'schoolsTable') return true;
+                    var row = settings.aoData[dataIndex].nTr;
+                    var schoolType = row.getAttribute('data-school-type');
+                    var district = row.getAttribute('data-school-district');
+                    return (activeSchoolTypeFilter === 'All' || schoolType === activeSchoolTypeFilter)
+                        && (activeDistrictFilter === '' || district === activeDistrictFilter);
                 });
 
                 function setActiveFilterButtons(filter) {
-                    $('.directory-filter-btn').removeClass('is-active');
-                    $('.directory-filter-btn[data-filter="' + filter + '"]').addClass('is-active');
+                    $('.directory-filter-btn').removeClass('is-active').attr('aria-pressed', 'false');
+                    $('.directory-filter-btn[data-filter="' + filter + '"]').addClass('is-active').attr('aria-pressed', 'true');
                 }
 
                 function updateSummary(filter) {
@@ -1025,6 +1027,18 @@ $metricCards = array(
                     updateSummary(activeButton);
                 });
 
+                $('#schoolDistrictFilter').on('change', function () {
+                    activeDistrictFilter = this.value;
+                    table.draw();
+                });
+                $('#resetSchoolFilters').on('click', function () {
+                    activeDistrictFilter = '';
+                    $('#schoolDistrictFilter').val('');
+                    table.search('');
+                    table.columns().search('');
+                    applyDirectoryFilter('All');
+                });
+                $('#schoolsSummaryText').attr('aria-live', 'polite');
                 applyDirectoryFilter(initialFilter);
 
                 <?php if ($canManageSchools): ?>

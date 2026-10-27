@@ -1458,7 +1458,27 @@
             link.className = 'waves-effect';
             link.innerHTML = '<i class="mdi mdi-cash-multiple"></i><span> Travel Reimbursement </span>';
             item.appendChild(link);
-            menu.appendChild(item);
+            var authorityLink = menu.querySelector('a[href$="Page/authority_to_travel"]');
+            if (authorityLink) {
+                var authorityItem = authorityLink.closest('li');
+                var travelsItem = document.createElement('li');
+                travelsItem.innerHTML = '<a href="javascript: void(0);" class="waves-effect travels-menu-toggle" aria-expanded="false"><i class="mdi mdi-airplane"></i><span> Travels </span><span class="menu-arrow"></span></a><ul class="nav-second-level travels-submenu" style="display:none" aria-expanded="false"></ul>';
+                menu.insertBefore(travelsItem, authorityItem);
+                var submenu = travelsItem.querySelector('.travels-submenu');
+                submenu.appendChild(authorityItem);
+                submenu.appendChild(item);
+                var toggle = travelsItem.querySelector('.travels-menu-toggle');
+                toggle.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    var isOpen = submenu.style.display !== 'none';
+                    submenu.style.display = isOpen ? 'none' : 'block';
+                    submenu.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+                    toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+                    travelsItem.classList.toggle('mm-active', !isOpen);
+                });
+            } else {
+                menu.appendChild(item);
+            }
         });
         <?php endif; ?>
 
@@ -1494,6 +1514,12 @@
             item.innerHTML = '<a href="javascript: void(0);" class="waves-effect qms-menu-toggle" aria-expanded="false"><i class="mdi mdi-clipboard-check-outline"></i><span> QMS </span><span class="menu-arrow"></span></a><ul class="nav-second-level qms-submenu" style="display:none" aria-expanded="false"><li><a href="javascript: void(0);" class="qms-risk-toggle" aria-expanded="false">Risk Management <span class="menu-arrow"></span></a><ul class="nav-third-level qms-risk-submenu" style="display:none" aria-expanded="false"><li><a href="' + swotUrl + '">SWOT</a></li><li><a href="' + riskRegistryUrl + '">Risk Registry Template</a></li><li><a href="' + opportunityRegistryUrl + '">Opportunity Registry</a></li><li><a href="' + monitoringUrl + '">Monitoring &amp; Review</a></li></ul></li><li><a href="javascript: void(0);" class="qms-iso-toggle" aria-expanded="false">ISO 9001:2015 <span class="menu-arrow"></span></a><ul class="nav-third-level qms-iso-submenu" style="display:none" aria-expanded="false"><li><a href="' + isoQmsUrl + '/document_control">Document Control</a></li><li><a href="' + isoQmsUrl + '/internal_audit">Internal Audit</a></li><li><a href="' + isoQmsUrl + '/corrective_action">Corrective Action</a></li><li><a href="' + isoQmsUrl + '/quality_objectives">Quality Objectives &amp; KPI</a></li><li><a href="' + isoQmsUrl + '/customer_feedback">Customer Feedback</a></li><li><a href="' + isoQmsUrl + '/management_review">Management Review</a></li></ul></li><li><a href="' + reportSettingsUrl + '">Report Settings</a></li></ul>';
             menu.appendChild(item);
             var toggle = item.querySelector('.qms-menu-toggle');
+            <?php if ($isSectionHeadDashboardUser): ?>
+            var manageUsersLink = menu.querySelector('a[href$="usersListv2"]');
+            if (manageUsersLink) {
+                menu.insertBefore(manageUsersLink.closest('li'), item.nextSibling);
+            }
+            <?php endif; ?>
             var submenu = item.querySelector('.qms-submenu');
             toggle.addEventListener('click', function (event) {
                 event.preventDefault();

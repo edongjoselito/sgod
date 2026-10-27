@@ -21,6 +21,7 @@ if (!empty($data)) {
 }
 
 
+uksort($coveredSectionsMap, 'strnatcasecmp');
 $managedSections = is_array($data1) ? count($data1) : 0;
 $coveredSections = count($coveredSectionsMap);
 
@@ -716,6 +717,9 @@ $metrics = array(
                     width: 100%;
                 }
             }
+
+            .users-shell::before{display:none}.users-hero{border-radius:18px;background:linear-gradient(115deg,#253b77,#5056b8);box-shadow:0 8px 28px #263e7614}.users-hero-body{padding:28px 30px}.users-eyebrow{background:none;border:0;padding:0;font-size:10px;letter-spacing:1.8px}.users-title{font-size:30px;margin:12px 0 10px}.users-copy{font-size:13px;color:#dfe6ff}.hero-side-card{background:none;border:0;box-shadow:none;padding:0}.hero-add-btn{border-radius:9px;padding:11px 18px;font-size:12px}.users-shell .metric-card{padding:19px 22px;border:1px solid #e1e7f1;border-radius:14px;box-shadow:none;animation:none}.users-shell .metric-card::before,.users-shell .metric-card::after{display:none}.metric-card-body{display:grid;grid-template-columns:48px 1fr;column-gap:15px}.metric-head{grid-row:1/3;margin:0;align-items:center}.metric-icon{width:44px;height:44px;font-size:23px;border-radius:12px}.metric-badge{display:none}.metric-value{font-size:27px;line-height:1.3;margin:0 0 5px}.metric-label{font-size:12px;color:#728199}.table-panel{border:1px solid #e1e7f1;border-radius:16px;box-shadow:0 5px 22px #21375805;overflow:hidden}.table-panel-head{padding:24px}.table-panel-title{font-size:22px;color:#283e64}.table-panel-copy{font-size:12px}.users-directory-tools{display:flex;align-items:flex-end;flex-wrap:wrap;gap:16px;margin:0 24px 20px;padding:16px 18px;background:#f7f9fd;border:1px solid #e7edf5;border-radius:10px}.users-directory-tools>div{flex:0 1 220px}.users-directory-tools label{display:block;font-size:11px;color:#687c9c;font-weight:600;margin-bottom:6px}.users-directory-tools select{height:40px;font-size:12px;border:1px solid #dce4f0;border-radius:8px}.users-directory-tools>span{font-size:12px;color:#70819c;margin:auto 0 10px}.users-directory-tools>button{margin-left:auto;border:1px solid #dce4f0;border-radius:8px;padding:10px 14px;font-size:12px;background:#fff;color:#4a6098;cursor:pointer}.users-table thead th{background:#f4f7fc;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#647793}.users-table tbody td{padding:17px 12px;font-size:12px;border-bottom:1px solid #edf1f7;vertical-align:middle}.users-table tbody tr:hover{background:#f8faff}.user-name{font-size:13px;color:#2c4269}.user-name small{font-size:11px;color:#8997ac}.user-chip,.section-pill{font-size:11px;border-radius:6px;padding:5px 8px}.status-pill{font-size:10px;border-radius:6px;padding:5px 8px}.manage-select{border-radius:8px;font-size:12px;min-height:40px}.users-shell .dataTables_filter input,.users-shell .dataTables_length select{border:1px solid #dce4f0;border-radius:8px;min-height:40px;font-size:12px}.users-shell .dataTables_info,.users-shell .dataTables_length label{font-size:12px;color:#70819c}.users-shell :focus-visible{outline:3px solid #a4b7ef;outline-offset:3px}
+            @media(max-width:767px){.users-hero-body{padding:24px}.users-title{font-size:26px}.hero-side{margin-top:16px}.users-shell .metric-card{padding:15px}.metric-value{font-size:24px}.table-panel-head{padding:20px}.users-directory-tools{margin:0 16px 16px;padding:14px;gap:12px}.users-directory-tools>div{flex:1 1 100%}.users-directory-tools>button{width:100%}.users-shell .dataTables_filter label{display:block}.users-shell .dataTables_filter input{width:100%;margin:6px 0}}
         </style>
     </head>
 
@@ -739,7 +743,7 @@ $metrics = array(
                                         </span>
                                         <h1 class="users-title">Users &amp; Access</h1>
                                         <p class="users-copy">
-                                            Create, update, and manage department user accounts in one clean workspace.
+                                            Find user accounts, review access, and manage account details.
                                         </p>
                                     </div>
                                     <div class="col-xl-4">
@@ -811,6 +815,11 @@ $metrics = array(
                                         </div>
                                     </div>
 
+                                    <div class="users-directory-tools">
+                                        <div><label for="userStatusFilter">Account status</label><select id="userStatusFilter" class="form-control"><option value="">All statuses</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+                                        <div><label for="userSectionFilter">Section</label><select id="userSectionFilter" class="form-control"><option value="">All sections</option><?php foreach (array_keys($coveredSectionsMap) as $sectionOption): ?><option value="<?= htmlspecialchars($sectionOption, ENT_QUOTES, 'UTF-8'); ?>"><?= htmlspecialchars($sectionOption, ENT_QUOTES, 'UTF-8'); ?></option><?php endforeach; ?></select></div>
+                                        <span id="userResults" role="status"><?= $totalUsers; ?> users</span><button type="button" id="resetUserFilters"><i class="mdi mdi-refresh" aria-hidden="true"></i> Reset filters</button>
+                                    </div>
                                     <div class="table-shell">
                                         <div class="table-responsive">
                                             <table id="datatable" class="table table-borderless dt-responsive nowrap users-table w-100">
@@ -821,7 +830,7 @@ $metrics = array(
 										<th>Email</th>
                                                         <th>Section</th>
                                                         <th>Status</th>
-                                                        <th class="text-center">Manage</th>
+                                                        <th class="text-center">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -844,7 +853,7 @@ $metrics = array(
                                                             $toggleUrl = base_url() . 'Page/deactivate_user?username=' . rawurlencode($username) . '&status=' . rawurlencode($toggleStatus);
                                                             $deleteUrl = base_url() . 'Page/delete_account?id=' . rawurlencode($username);
                                                             ?>
-                                                            <tr>
+                                                            <tr data-user-status="<?= htmlspecialchars($accountStatus, ENT_QUOTES, 'UTF-8'); ?>" data-user-section="<?= htmlspecialchars($section, ENT_QUOTES, 'UTF-8'); ?>">
                                                                 <td>
                                                                     <div class="user-name">
                                                                         <?= htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>
@@ -880,27 +889,6 @@ $metrics = array(
                                                                         <a href="<?= htmlspecialchars($toggleUrl, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-sm <?= $accountStatus === 'Active' ? 'btn-warning' : 'btn-success'; ?>" onclick="return confirm('Are you sure you want to <?= strtolower($toggleLabel); ?> for <?= htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>?');"><?= htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?></a>
                                                                     <?php elseif ($partnerReadOnly) : ?>
                                                                         <span class="text-muted small">Partner account<br>view only</span>
-                                                                    <?php else : ?>
-                                                                    <div class="manage-combo">
-                                                                        <div class="manage-select-wrap">
-                                                                            <i class="mdi mdi-tune-variant manage-select-icon"></i>
-                                                                            <select
-                                                                                class="manage-select js-manage-select"
-                                                                                data-username="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>"
-                                                                                data-toggle-url="<?= htmlspecialchars($toggleUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                                                                data-delete-url="<?= htmlspecialchars($deleteUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                                                                data-edit-target="#editModal<?= $index; ?>"
-                                                                                data-password-target="#changePasswordModal<?= $index; ?>"
-                                                                            >
-                                                                                <option value="">Manage user...</option>
-                                                                                <option value="toggle"><?= htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?></option>
-                                                                                <option value="reset">Reset password</option>
-                                                                                <option value="edit">Edit profile</option>
-                                                                                <option value="delete">Delete account</option>
-                                                                            </select>
-                                                                            <i class="mdi mdi-chevron-down manage-select-arrow"></i>
-                                                                        </div>
-                                                                    </div>
                                                                     <?php endif; ?>
                                                                 </td>
                                                             </tr>
@@ -1190,14 +1178,20 @@ $metrics = array(
 
         <script type="text/javascript">
             $(function () {
-                $('#datatable').DataTable({
+                var userStatusFilter = '';
+                var userSectionFilter = '';
+                var userTable = $('#datatable').DataTable({
                     destroy: true,
                     autoWidth: false,
                     pageLength: 10,
                     order: [],
                     responsive: true,
+                    columnDefs: [{targets:0,responsivePriority:1},{targets:5,responsivePriority:2,orderable:false,searchable:false},{targets:4,responsivePriority:3}],
                     language: {
-                        search: "Search:",
+                        search: "",
+                        emptyTable: "No user accounts yet. Use Add New User to create an account.",
+                        zeroRecords: "No users match your filters. Try another search or reset filters.",
+                        infoEmpty: "No users to display",
                         lengthMenu: "Show _MENU_ users",
                         info: "Showing _START_ to _END_ of _TOTAL_ users",
                         paginate: {
@@ -1207,7 +1201,25 @@ $metrics = array(
                     }
                 });
 
-                $('#datatable_filter input').attr('placeholder', 'Search users');
+                $('#datatable_filter input').attr('placeholder', 'Search name, username, email, or section…');
+                $.fn.dataTable.ext.search.push(function(settings, values, index) {
+                    if (settings.nTable.id !== 'datatable') return true;
+                    var row = settings.aoData[index].nTr;
+                    return (!userStatusFilter || row.getAttribute('data-user-status') === userStatusFilter)
+                        && (!userSectionFilter || row.getAttribute('data-user-section') === userSectionFilter);
+                });
+                function updateUserSummary() { $('#userResults').text(userTable.rows({search:'applied'}).count() + ' of ' + <?= $totalUsers; ?> + ' users'); }
+                userTable.on('draw', updateUserSummary); updateUserSummary();
+                $('#userStatusFilter, #userSectionFilter').on('change', function() {
+                    userStatusFilter = $('#userStatusFilter').val();
+                    userSectionFilter = $('#userSectionFilter').val();
+                    userTable.draw();
+                });
+                $('#resetUserFilters').on('click', function() {
+                    userStatusFilter = ''; userSectionFilter = '';
+                    $('#userStatusFilter, #userSectionFilter').val('');
+                    userTable.search('').columns().search('').draw();
+                });
 
                 $('#sectionSelect').select2({
                     placeholder: '-- Select Section --',
